@@ -2,6 +2,21 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from '@/hooks/use-toast';
+import { z } from 'zod';
+
+// Validation schema for profile data
+const profileSchema = z.object({
+  full_name: z.string().trim().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100, 'Nome muito longo').optional(),
+  phone: z.string()
+    .transform(val => val?.replace(/\D/g, '') || '')
+    .refine(val => !val || val.length === 10 || val.length === 11, {
+      message: 'Telefone deve ter 10 ou 11 dígitos'
+    }).optional(),
+  street: z.string().trim().max(200, 'Nome da rua muito longo').optional(),
+  street_number: z.string().trim().max(20, 'Número muito longo').optional(),
+  neighborhood: z.string().trim().max(100, 'Nome do bairro muito longo').optional(),
+  complement: z.string().trim().max(100, 'Complemento muito longo').optional(),
+});
 
 export interface ProfileData {
   full_name?: string;
@@ -37,9 +52,12 @@ export const useProfile = () => {
     mutationFn: async (profileData: ProfileData) => {
       if (!user) throw new Error('Usuário não autenticado');
 
+      // Validate input data
+      const validatedData = profileSchema.parse(profileData);
+
       const { data, error } = await supabase
         .from('profiles')
-        .update(profileData)
+        .update(validatedData)
         .eq('id', user.id)
         .select()
         .single();
@@ -55,9 +73,13 @@ export const useProfile = () => {
       });
     },
     onError: (error: Error) => {
+      const errorMessage = error instanceof z.ZodError 
+        ? error.errors[0]?.message || 'Dados inválidos'
+        : error.message;
+      
       toast({
         title: 'Erro ao atualizar perfil',
-        description: error.message,
+        description: errorMessage,
         variant: 'destructive',
       });
     },

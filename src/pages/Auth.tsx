@@ -5,6 +5,9 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { Loader2, User, Lock, Check } from "lucide-react";
 import { Navigation } from "@/components/layout/Navigation";
+import { signUpSchema, signInSchema } from "@/hooks/useAuthValidation";
+import { toast } from "@/hooks/use-toast";
+import { z } from "zod";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -28,13 +31,27 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
 
-    if (isLogin) {
-      await signIn(email, password);
-    } else {
-      await signUp(email, password, fullName, phone);
+    try {
+      if (isLogin) {
+        // Validate login data
+        const validatedData = signInSchema.parse({ email, password });
+        await signIn(validatedData.email, validatedData.password);
+      } else {
+        // Validate signup data
+        const validatedData = signUpSchema.parse({ email, password, fullName, phone });
+        await signUp(validatedData.email, validatedData.password, validatedData.fullName, validatedData.phone);
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: 'Dados inválidos',
+          description: error.errors[0]?.message || 'Por favor, verifique os campos',
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const benefits = [

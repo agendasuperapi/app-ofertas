@@ -1,9 +1,15 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.0'
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+// Validation schema for request body
+const emailCheckSchema = z.object({
+  email: z.string().trim().email('Invalid email address').max(255, 'Email too long'),
+});
 
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
@@ -12,14 +18,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { email } = await req.json()
-
-    if (!email) {
-      return new Response(
-        JSON.stringify({ error: 'Email is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
+    const rawData = await req.json()
+    
+    // Validate email input
+    const { email } = emailCheckSchema.parse(rawData);
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',

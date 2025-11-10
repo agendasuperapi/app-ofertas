@@ -15,6 +15,8 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useStoreManagement } from "@/hooks/useStoreManagement";
 import { Store, Rocket, CheckCircle, TrendingUp, Users, DollarSign } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { storeSchema } from "@/hooks/useStoreValidation";
+import { z } from "zod";
 
 const categories = [
   "Restaurante",
@@ -89,51 +91,23 @@ export default function BecomePartner() {
   };
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    // Validate store data
-    if (!formData.name.trim()) {
-      newErrors.name = "Nome da loja é obrigatório";
-    }
-
-    if (!formData.slug.trim()) {
-      newErrors.slug = "URL da loja é obrigatória";
-    } else if (!/^[a-z0-9-]+$/.test(formData.slug)) {
-      newErrors.slug = "URL deve conter apenas letras minúsculas, números e hífens";
-    }
-
-    if (formData.phone && !/^\([0-9]{2}\)\s?[0-9]{4,5}-?[0-9]{4}$/.test(formData.phone.replace(/\s/g, ""))) {
-      newErrors.phone = "Formato inválido. Use: (00) 00000-0000";
-    }
-
-    // Validate owner data
-    if (!formData.owner_name.trim()) {
-      newErrors.owner_name = "Nome do proprietário é obrigatório";
-    }
-
-    if (!formData.owner_phone.trim()) {
-      newErrors.owner_phone = "Telefone do proprietário é obrigatório";
-    } else if (!/^\([0-9]{2}\)\s?[0-9]{4,5}-?[0-9]{4}$/.test(formData.owner_phone.replace(/\s/g, ""))) {
-      newErrors.owner_phone = "Formato inválido. Use: (00) 00000-0000";
-    }
-
-    // Email e senha são obrigatórios apenas se o usuário não estiver logado
-    if (!user) {
-      if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-        newErrors.email = "E-mail válido é obrigatório";
+    try {
+      // Validate using zod schema
+      storeSchema.parse(formData);
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const newErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          if (err.path[0]) {
+            newErrors[err.path[0] as string] = err.message;
+          }
+        });
+        setErrors(newErrors);
       }
-
-      if (!formData.password || formData.password.length < 6) {
-        newErrors.password = "Senha deve ter no mínimo 6 caracteres";
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        newErrors.confirmPassword = "As senhas não coincidem";
-      }
+      return false;
     }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {

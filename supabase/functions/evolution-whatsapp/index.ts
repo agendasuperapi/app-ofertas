@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const EVOLUTION_API_URL = "https://evolu-evolution-buttons.12l3kp.easypanel.host";
 const EVOLUTION_API_KEY = Deno.env.get('EVOLUTION_API_KEY');
@@ -12,6 +13,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
+
+// Validation schemas for different actions
+const createInstanceSchema = z.object({
+  action: z.literal('create_instance'),
+  instanceName: z.string().trim().min(1).max(100).regex(/^[a-zA-Z0-9_-]+$/, 'Instance name must contain only letters, numbers, hyphens, and underscores'),
+  phoneNumber: z.string().optional(),
+});
+
+const checkStatusSchema = z.object({
+  action: z.literal('check_status'),
+  instanceName: z.string().trim().min(1).max(100),
+});
+
+const disconnectSchema = z.object({
+  action: z.literal('disconnect'),
+  instanceName: z.string().trim().min(1).max(100),
+});
+
+const requestSchema = z.discriminatedUnion('action', [
+  createInstanceSchema,
+  checkStatusSchema,
+  disconnectSchema,
+]);
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -30,9 +54,13 @@ serve(async (req) => {
   }
 
   try {
-    const { action, instanceName, phoneNumber } = await req.json();
+    const rawData = await req.json();
+    
+    // Validate request data
+    const validatedData = requestSchema.parse(rawData);
+    const { action, instanceName } = validatedData;
 
-    console.log('Evolution API Request:', { action, instanceName, phoneNumber });
+    console.log('Evolution API Request:', { action, instanceName });
 
     if (action === 'create_instance') {
       // Create instance

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const EVOLUTION_API_URL = "https://evolu-evolution-buttons.12l3kp.easypanel.host";
 const EVOLUTION_API_KEY = Deno.env.get('EVOLUTION_API_KEY');
@@ -12,6 +13,18 @@ const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Validation schema for webhook payload
+const webhookPayloadSchema = z.object({
+  type: z.enum(['INSERT', 'UPDATE', 'DELETE']),
+  record: z.object({
+    id: z.string().uuid(),
+    status: z.string().optional(),
+  }),
+  old_record: z.object({
+    status: z.string().optional(),
+  }).optional(),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -31,8 +44,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const payload = await req.json();
-    console.log('Webhook payload:', payload);
+    const rawPayload = await req.json();
+    console.log('Webhook payload:', rawPayload);
+
+    // Validate webhook payload
+    const payload = webhookPayloadSchema.parse(rawPayload);
 
     const { type, record, old_record } = payload;
     const orderId = record.id;
@@ -155,6 +171,14 @@ serve(async (req) => {
       message += `\n\n*Observações:* ${order.notes}`;
     }
 
+    // Sanitize phone number (remove all non-digits)
+    const sanitizedPhone = order.customer_phone.replace(/\D/g, '');
+    
+    // Validate phone number (must be 10 or 11 digits)
+    if (sanitizedPhone.length < 10 || sanitizedPhone.length > 11) {
+      throw new Error('Invalid phone number format');
+    }
+
     // Enviar mensagem via Evolution API
     const sendResponse = await fetch(`${EVOLUTION_API_URL}/message/sendText/${store.whatsapp_instance}`, {
       method: 'POST',
@@ -163,7 +187,7 @@ serve(async (req) => {
         'apikey': EVOLUTION_API_KEY,
       },
       body: JSON.stringify({
-        number: order.customer_phone.replace(/\D/g, ''),
+        number: sanitizedPhone,
         text: message
       }),
     });
