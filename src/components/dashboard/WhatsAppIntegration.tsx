@@ -32,15 +32,10 @@ const invokeEvolution = async (payload: any) => {
 };
 const isConnectedState = (status?: string) => {
   if (!status) return false;
-  const s = String(status).toLowerCase();
-  // Aceitar mais estados de conexão válidos
-  return s === 'open' || 
-         s === 'connected' || 
-         s === 'authenticated' || 
-         s === 'ready' ||
-         s === 'qr' ||
-         s.includes('open') ||
-         s.includes('connect');
+  const s = String(status).toLowerCase().trim();
+  // Considerar conectado apenas em estados finais estáveis
+  const connectedStates = ['open', 'connected', 'authenticated', 'ready'];
+  return connectedStates.includes(s);
 };
 
 interface WhatsAppIntegrationProps {
@@ -83,9 +78,9 @@ export const WhatsAppIntegration = ({ storeId }: WhatsAppIntegrationProps) => {
         setInstanceName(data.whatsapp_instance);
         setPhoneNumber(data.whatsapp_phone || "");
         
-        // Se tem instância salva, assumir que está conectado até provar o contrário
-        setIsConnected(true);
-        setConnectionStatus('checking...');
+// Inicialmente, não marcar como conectado até confirmar
+setIsConnected(false);
+setConnectionStatus('checking...');
         
         // Verificar status real
         await checkConnectionStatus(data.whatsapp_instance);
