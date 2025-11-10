@@ -35,15 +35,13 @@ Deno.serve(async (req) => {
     
     console.log('Request received:', { url: url.toString(), userAgent });
 
-    // Extract store slug and product ID/short_id from query params
-    const storeSlug = url.searchParams.get('store') || '';
-    const productId = url.searchParams.get('product');
+    // Extract short_id from query params for /p/{shortId} route
     const productShortId = url.searchParams.get('short_id');
     
-    console.log('Processing request:', { storeSlug, productId, productShortId, userAgent, isCrawler: isCrawler(userAgent) });
+    console.log('Processing request:', { productShortId, userAgent, isCrawler: isCrawler(userAgent) });
 
-    if (!storeSlug) {
-      return new Response('Store slug is required', { 
+    if (!productShortId) {
+      return new Response('Product short_id is required', { 
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
       });
@@ -53,87 +51,65 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get store
-    const { data: store } = await supabase
-      .from('stores')
-      .select('*')
-      .eq('slug', storeSlug)
+    // Get product by short_id with store info
+    const { data: product, error: productError } = await supabase
+      .from('products')
+      .select('*, stores(name, slug)')
+      .eq('short_id', productShortId)
       .single();
 
-    if (!store) {
-      return new Response('Store not found', { 
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
+    console.log('Product query result:', { product, error: productError });
+
+    if (!product || productError) {
+      console.error('Product not found for short_id:', productShortId);
+      
+      // Fallback meta-tags
+      const fallbackHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Produto - Ofertas App</title>
+  <meta name="title" content="Produto - Ofertas App" />
+  <meta name="description" content="Faça seu pedido online" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Produto - Ofertas App" />
+  <meta property="og:description" content="Faça seu pedido online" />
+  <meta property="og:site_name" content="Ofertas App" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta http-equiv="refresh" content="0; url=https://ofertasapp.lovable.app" />
+</head>
+<body>
+  <h1>Produto não encontrado</h1>
+  <p>Redirecionando...</p>
+</body>
+</html>`;
+      
+      return new Response(fallbackHtml, {
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Cache-Control': 'no-cache',
+          'X-Robots-Tag': 'all',
+          ...corsHeaders
+        }
       });
     }
 
-    let product = null;
-
-    // Get product by short_id (preferred) or by id (fallback)
-    if (productShortId) {
-      const { data: productData } = await supabase
-        .from('products')
-        .select('*, stores(name, slug)')
-        .eq('short_id', productShortId)
-        .single();
-
-      product = productData;
-    } else if (productId) {
-      const { data: productData } = await supabase
-        .from('products')
-        .select('*, stores(name, slug)')
-        .eq('id', productId)
-        .eq('store_id', store.id)
-        .single();
-
-      product = productData;
-    }
+    const store = product.stores;
 
     // Determine the app URL (where users will be redirected)
     const appOrigin = 'https://ofertasapp.lovable.app';
+    const redirectUrl = `${appOrigin}/p/${product.short_id}`;
     
-    // This is the friendly URL that will be shown in WhatsApp preview
-    let redirectUrl: string;
-    if (product && product.short_id) {
-      // Nova rota limpa /p/{short_id}
-      redirectUrl = `${appOrigin}/p/${product.short_id}`;
-    } else if (product) {
-      // Fallback para rota antiga se short_id não existir
-      redirectUrl = `${appOrigin}/${store.slug}?product=${product.id}`;
-    } else {
-      redirectUrl = `${appOrigin}/${store.slug}`;
-    }
+    // Product image URL - directly from bucket
+    const pageImage = product.image_url;
     
-    // Use product image with proper dimensions for social media
-    // Ensure image URLs are absolute and properly formatted
-    let pageImage = product?.image_url || store.banner_url || store.logo_url;
-    
-    // Ensure the image URL is absolute
-    if (pageImage) {
-      if (!pageImage.startsWith('http://') && !pageImage.startsWith('https://')) {
-        // If it's a relative URL or just a domain, make it absolute
-        if (pageImage.startsWith('//')) {
-          pageImage = `https:${pageImage}`;
-        } else if (pageImage.startsWith('/')) {
-          pageImage = `${appOrigin}${pageImage}`;
-        } else if (!pageImage.includes('://')) {
-          pageImage = `https://${pageImage}`;
-        }
-      }
-      
-      // Log the final image URL for debugging
-      console.log('Final image URL:', pageImage);
-    }
+    console.log('Product image URL:', pageImage);
     
     // Generate meta tags
-    const storeName = product?.stores?.name || store.name;
-    const pageTitle = product 
-      ? `${product.name} - ${storeName}` 
-      : `${store.name} - Cardápio`;
-    
-    const pageDescription = product
-      ? `${product.description || product.name} - R$ ${Number(product.promotional_price || product.price).toFixed(2)} - Peça agora em ${storeName}`
-      : store.description || `Confira o cardápio completo de ${store.name}`;
+    const storeName = store?.name || 'Ofertas App';
+    const pageTitle = product.name;
+    const pageDescription = product.description || 'Pedido online';
     
     console.log('Meta tags prepared:', { pageTitle, pageDescription, pageImage, redirectUrl });
     
@@ -157,11 +133,11 @@ Deno.serve(async (req) => {
   <link rel="canonical" href="${redirectUrl}" />
   
   <!-- Open Graph / Facebook / WhatsApp -->
-  <meta property="og:type" content="${product ? 'product' : 'website'}" />
+  <meta property="og:type" content="product" />
   <meta property="og:url" content="${redirectUrl}" />
   <meta property="og:title" content="${pageTitle}" />
   <meta property="og:description" content="${pageDescription}" />
-  <meta property="og:site_name" content="App Delivery" />
+  <meta property="og:site_name" content="${storeName}" />
   <meta property="og:locale" content="pt_BR" />
   ${pageImage ? `
   <meta property="og:image" content="${pageImage}" />
@@ -170,11 +146,10 @@ Deno.serve(async (req) => {
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="${pageTitle}" />` : ''}
-  ${product ? `
   <meta property="product:price:amount" content="${product.promotional_price || product.price}" />
   <meta property="product:price:currency" content="BRL" />
   <meta property="product:availability" content="${product.is_available ? 'in stock' : 'out of stock'}" />
-  <meta property="product:condition" content="new" />` : ''}
+  <meta property="product:condition" content="new" />
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
@@ -198,7 +173,8 @@ Deno.serve(async (req) => {
       return new Response(html, {
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400',
+          'Cache-Control': 'no-cache',
+          'X-Robots-Tag': 'all',
           ...corsHeaders
         }
       });
