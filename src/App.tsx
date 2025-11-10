@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import { CartProvider } from "./contexts/CartContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -26,50 +26,48 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <CartProvider>
-            <div className="pb-20 md:pb-0">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route 
-                  path="/dashboard" 
-                  element={
-                    <ProtectedRoute>
-                      <Dashboard />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/profile" 
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/become-partner" element={<BecomePartner />} />
-                <Route path="/login-lojista" element={<LoginLojista />} />
-                <Route
-                  path="/admin" 
-                  element={
-                    <ProtectedRoute requireAuth={true} requireRole="admin">
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  } 
-                />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="/:slug" element={<StoreDetails />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </div>
-            <MobileBottomNav />
-          </CartProvider>
-        </AuthProvider>
-      </BrowserRouter>
+      <AuthProvider>
+        <CartProvider>
+          <div className="pb-20 md:pb-0">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/profile" 
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/become-partner" element={<BecomePartner />} />
+              <Route path="/login-lojista" element={<LoginLojista />} />
+              <Route
+                path="/admin" 
+                element={
+                  <ProtectedRoute requireAuth={true} requireRole="admin">
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/:slug" element={<StoreDetails />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+          <MobileBottomNav />
+        </CartProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
