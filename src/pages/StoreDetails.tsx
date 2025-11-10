@@ -81,9 +81,7 @@ export default function StoreDetails() {
     if (!store) return;
     
     // Nova URL limpa usando short_id
-    const shareUrl = product.short_id 
-      ? `https://ofertasapp.lovable.app/p/${product.short_id}`
-      : `https://ofertasapp.lovable.app/${store.slug}?product=${product.id}`;
+    const shareUrl = `https://ofertasapp.lovable.app/p/${product.short_id}`;
     
     const shareText = `🛍️ ${product.name}\n💰 R$ ${Number(product.promotional_price || product.price).toFixed(2)}\n\n${product.description || ''}\n\n📍 ${store.name}`;
 
