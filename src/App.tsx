@@ -61,8 +61,9 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              {/* Rotas específicas devem vir ANTES das rotas genéricas */}
               <Route path="/p/:shortId" element={<ProductPage />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "/:slug" ROUTE */}
               <Route path="/:slug" element={<StoreDetails />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
