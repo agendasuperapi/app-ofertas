@@ -1,7 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const EVOLUTION_API_URL = "https://evolu-evolution-buttons.12l3kp.easypanel.host";
-const EVOLUTION_API_KEY = "56456215648789745645648";
+const EVOLUTION_API_KEY = Deno.env.get('EVOLUTION_API_KEY');
+
+if (!EVOLUTION_API_KEY) {
+  console.error('EVOLUTION_API_KEY not configured');
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +20,13 @@ serve(async (req) => {
       status: 200,
       headers: corsHeaders 
     });
+  }
+
+  if (!EVOLUTION_API_KEY) {
+    return new Response(
+      JSON.stringify({ error: 'EVOLUTION_API_KEY not configured' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
 
   try {
