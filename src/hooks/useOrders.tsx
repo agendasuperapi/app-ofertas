@@ -12,12 +12,12 @@ const orderSchema = z.object({
     productName: z.string().trim().min(1).max(200),
     quantity: z.number().int().positive().max(1000),
     unitPrice: z.number().positive().max(100000),
-    observation: z.string().trim().max(500).optional(),
+    observation: z.string().trim().max(500).optional().transform(val => val || undefined),
     addons: z.array(z.object({
       id: z.string(),
       name: z.string().trim().min(1).max(200),
       price: z.number().positive().max(10000),
-    })).optional(),
+    })).optional().default([]).transform(val => val && val.length > 0 ? val : []),
   })).min(1),
   customerName: z.string().trim().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100, 'Nome muito longo'),
   customerPhone: z.string()
@@ -178,15 +178,23 @@ export const useOrders = () => {
       }
 
       // Create order item addons if any
-      const addonsToInsert: any[] = [];
+      const addonsToInsert: Array<{
+        order_item_id: string;
+        addon_name: string;
+        addon_price: number;
+      }> = [];
+      
       validatedData.items.forEach((item, index) => {
-        if (item.addons && item.addons.length > 0 && createdItems && createdItems[index]) {
+        if (Array.isArray(item.addons) && item.addons.length > 0 && createdItems && createdItems[index]) {
           item.addons.forEach(addon => {
-            addonsToInsert.push({
-              order_item_id: createdItems[index].id,
-              addon_name: addon.name,
-              addon_price: addon.price,
-            });
+            // Validar que o addon tem os campos necessários
+            if (addon && addon.name && typeof addon.price === 'number') {
+              addonsToInsert.push({
+                order_item_id: createdItems[index].id,
+                addon_name: String(addon.name).trim(),
+                addon_price: Number(addon.price),
+              });
+            }
           });
         }
       });
