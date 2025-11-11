@@ -1,0 +1,21 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Não reescreve se for arquivo ou pasta real
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # BOT de rede social acessando produto ou loja
+  RewriteCond %{HTTP_USER_AGENT} facebookexternalhit|WhatsApp|Twitterbot|Slackbot|LinkedInBot [NC]
+
+  # /p/short_id  (produtos)
+  RewriteRule ^p/([a-zA-Z0-9_-]+)$ share.php?tipo=produto&id=$1 [QSA,L]
+
+  # /nomedaloja  (lojas)
+  RewriteRule ^([a-zA-Z0-9_-]+)$ share.php?tipo=loja&username=$1 [QSA,L]
+
+  # Todo o resto -> app web
+  RewriteRule ^.*$ /index.html [L]
+</IfModule>

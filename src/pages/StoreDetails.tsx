@@ -21,7 +21,6 @@ import { useState, useRef, useEffect } from "react";
 import { isStoreOpen, getStoreStatusText } from "@/lib/storeUtils";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-
 export default function StoreDetails() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();

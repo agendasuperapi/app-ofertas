@@ -96,7 +96,7 @@ export const useStoreManagement = () => {
           email: storeData.email,
           password: storeData.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `https://ofertas.app/dashboard`,
             data: {
               full_name: storeData.owner_name || storeData.name,
               phone: storeData.owner_phone || storeData.phone,
