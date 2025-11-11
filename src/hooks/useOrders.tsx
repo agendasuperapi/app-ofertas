@@ -39,6 +39,10 @@ export const useOrders = () => {
       // 🧾 Valida entrada com Zod
       const validatedData = orderSchema.parse(orderInput);
 
+      if (!user?.id) {
+        throw new Error("Usuário não autenticado");
+      }
+
       // 🧮 Calcular totais
       const subtotal = validatedData.items.reduce(
         (sum, item) => sum + item.unitPrice * item.quantity,
@@ -50,64 +54,46 @@ export const useOrders = () => {
       // 🔢 Gerar número do pedido
       const orderNumber = `#${Date.now().toString().slice(-8)}`;
 
-      // 📦 Payload limpo - apenas valores primitivos, sem JSON aninhado
-      const orderInsertData = {
-        store_id: validatedData.storeId,
-        customer_id: user?.id ?? null,
-        customer_name: validatedData.customerName,
-        customer_phone: validatedData.customerPhone,
-        delivery_type: validatedData.deliveryType,
-        order_number: orderNumber,
-        subtotal,
-        delivery_fee: deliveryFee,
-        total,
-        status: "pending" as const,
-        payment_method: validatedData.paymentMethod,
-        delivery_street: validatedData.deliveryStreet || null,
-        delivery_number: validatedData.deliveryNumber || null,
-        delivery_neighborhood: validatedData.deliveryNeighborhood || null,
-        delivery_complement: validatedData.deliveryComplement || null,
-        change_amount: validatedData.changeAmount || null,
-      };
+      console.log("🧾 Criando pedido diretamente via INSERT...");
 
-      console.log("🧾 FINAL PAYLOAD INSERT:", orderInsertData);
-      console.log("🧾 ITEMS:", validatedData.items);
+      // 🟢 INSERT DIRETO - Sem RPC para evitar problemas com triggers!
+      const { data: createdOrder, error: orderError } = await supabase
+        .from("orders")
+        .insert({
+          store_id: validatedData.storeId,
+          customer_id: user.id,
+          customer_name: validatedData.customerName,
+          customer_phone: validatedData.customerPhone,
+          delivery_type: validatedData.deliveryType,
+          order_number: orderNumber,
+          subtotal,
+          delivery_fee: deliveryFee,
+          total,
+          status: "pending",
+          payment_method: validatedData.paymentMethod,
+          delivery_street: validatedData.deliveryStreet || null,
+          delivery_number: validatedData.deliveryNumber || null,
+          delivery_neighborhood: validatedData.deliveryNeighborhood || null,
+          delivery_complement: validatedData.deliveryComplement || null,
+          change_amount: validatedData.changeAmount || null,
+        })
+        .select()
+        .single();
 
-      // 🟢 Criar pedido via RPC (retorna UUID como TEXT)
-      const { data: orderData, error: rpcError } = await supabase.rpc('create_order_rpc', {
-        p_store_id: orderInsertData.store_id,
-        p_customer_name: orderInsertData.customer_name,
-        p_customer_phone: orderInsertData.customer_phone,
-        p_delivery_type: orderInsertData.delivery_type,
-        p_order_number: orderInsertData.order_number,
-        p_subtotal: orderInsertData.subtotal,
-        p_delivery_fee: orderInsertData.delivery_fee,
-        p_total: orderInsertData.total,
-        p_payment_method: orderInsertData.payment_method,
-        p_delivery_street: orderInsertData.delivery_street,
-        p_delivery_number: orderInsertData.delivery_number,
-        p_delivery_neighborhood: orderInsertData.delivery_neighborhood,
-        p_delivery_complement: orderInsertData.delivery_complement,
-        p_change_amount: orderInsertData.change_amount,
-      });
-
-      if (rpcError) {
-        console.error("❌ Order RPC error:", rpcError);
-        throw rpcError;
+      if (orderError) {
+        console.error("❌ Order insert error:", orderError);
+        throw orderError;
       }
 
-      console.log("✅ Order RPC success - returned ID:", orderData);
-
-      if (!orderData || typeof orderData !== 'string') {
-        console.error("❌ Invalid order data:", orderData);
-        throw new Error("Falha ao criar pedido - ID inválido");
+      if (!createdOrder) {
+        throw new Error("Falha ao criar pedido");
       }
 
-      const order = { id: orderData };
+      console.log("✅ Order created:", createdOrder.id);
 
       // 🟦 Inserir itens da ordem
       const itemsToInsert = validatedData.items.map((item) => ({
-        order_id: order.id,
+        order_id: createdOrder.id,
         product_id: item.productId,
         product_name: item.productName,
         quantity: item.quantity,
@@ -145,7 +131,7 @@ export const useOrders = () => {
         if (addonsError) throw addonsError;
       }
 
-      return order;
+      return createdOrder;
     },
 
     onSuccess: () => {
