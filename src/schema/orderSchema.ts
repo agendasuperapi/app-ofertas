@@ -17,7 +17,7 @@ export const orderItemSchema = z.object({
 export const orderSchema = z.object({
   storeId: z.string(),
   customerName: z.string(),
-  customerPhone: z.string(),
+  customerPhone: z.string().transform(val => val.replace(/\D/g, '')),
   deliveryType: z.enum(["pickup", "delivery"]),
   paymentMethod: z.string(),
 

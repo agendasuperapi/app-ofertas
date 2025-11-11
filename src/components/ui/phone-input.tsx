@@ -18,41 +18,52 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
       // Remove tudo que não é número
       const numbers = input.replace(/\D/g, '');
       
-      // Limita a 11 dígitos
-      const limited = numbers.slice(0, 11);
+      // Limita a 13 dígitos (55 + 11 dígitos)
+      const limited = numbers.slice(0, 13);
       
       // Sem dígitos
       if (limited.length === 0) {
         return '';
       }
       
-      // Apenas DDD
-      if (limited.length <= 2) {
-        return `(${limited}`;
+      // Adiciona +55 se não começar com 55
+      let withCountryCode = limited;
+      if (!limited.startsWith('55') && limited.length > 0) {
+        withCountryCode = '55' + limited;
       }
       
-      // DDD completo + início do número
-      if (limited.length <= 6) {
-        return `(${limited.slice(0, 2)}) ${limited.slice(2)}`;
+      // Apenas código do país
+      if (withCountryCode.length <= 2) {
+        return `+${withCountryCode}`;
       }
       
-      // Telefone fixo (10 dígitos) ou celular (11 dígitos)
-      if (limited.length <= 10) {
-        // Formato fixo: (DD) DDDD-DDDD
-        return `(${limited.slice(0, 2)}) ${limited.slice(2, 6)}-${limited.slice(6)}`;
+      // Código do país + DDD parcial
+      if (withCountryCode.length <= 4) {
+        return `+${withCountryCode.slice(0, 2)} (${withCountryCode.slice(2)}`;
       }
       
-      // Celular com 11 dígitos: (DD) 9DDDD-DDDD
-      return `(${limited.slice(0, 2)}) ${limited.slice(2, 7)}-${limited.slice(7)}`;
+      // Código do país + DDD completo + início do número
+      if (withCountryCode.length <= 8) {
+        return `+${withCountryCode.slice(0, 2)} (${withCountryCode.slice(2, 4)}) ${withCountryCode.slice(4)}`;
+      }
+      
+      // Telefone fixo (12 dígitos) ou celular (13 dígitos)
+      if (withCountryCode.length <= 12) {
+        // Formato: +55 (DD) DDDD-DDDD
+        return `+${withCountryCode.slice(0, 2)} (${withCountryCode.slice(2, 4)}) ${withCountryCode.slice(4, 8)}-${withCountryCode.slice(8)}`;
+      }
+      
+      // Celular com 13 dígitos: +55 (DD) 9DDDD-DDDD
+      return `+${withCountryCode.slice(0, 2)} (${withCountryCode.slice(2, 4)}) ${withCountryCode.slice(4, 9)}-${withCountryCode.slice(9)}`;
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const formatted = formatPhoneNumber(e.target.value);
       onChange(formatted);
       
-      // Validação: aceita 10 dígitos (fixo) ou 11 dígitos (celular)
+      // Validação: aceita 12 dígitos (fixo) ou 13 dígitos (celular) com código do país
       const numbers = formatted.replace(/\D/g, '');
-      setIsValid(numbers.length === 0 || numbers.length === 10 || numbers.length === 11);
+      setIsValid(numbers.length === 0 || numbers.length === 12 || numbers.length === 13);
     };
 
     const handleFocus = () => {
@@ -80,7 +91,7 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
             onChange={handleChange}
             onFocus={handleFocus}
             onBlur={handleBlur}
-            placeholder="(00) 00000-0000"
+            placeholder="+55 (00) 00000-0000"
             className={cn(
               "transition-all duration-300",
               isFocused && "ring-2 ring-primary/20 border-primary",
@@ -99,7 +110,7 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
             exit={{ opacity: 0, y: -10 }}
             className="absolute -bottom-6 left-0 text-xs text-muted-foreground"
           >
-            {value.replace(/\D/g, '').length} dígitos (10-11)
+            {value.replace(/\D/g, '').length} dígitos (12-13)
           </motion.div>
         )}
         

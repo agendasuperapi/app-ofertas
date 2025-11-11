@@ -9,8 +9,8 @@ const profileSchema = z.object({
   full_name: z.string().trim().min(2, 'Nome deve ter pelo menos 2 caracteres').max(100, 'Nome muito longo').optional(),
   phone: z.string()
     .transform(val => val?.replace(/\D/g, '') || '')
-    .refine(val => !val || val.length === 10 || val.length === 11, {
-      message: 'Telefone deve ter 10 ou 11 dígitos'
+    .refine(val => !val || val.length === 12 || val.length === 13, {
+      message: 'Telefone deve ter 12 ou 13 dígitos com código do país'
     }).optional(),
   street: z.string().trim().max(200, 'Nome da rua muito longo').optional(),
   street_number: z.string().trim().max(20, 'Número muito longo').optional(),
