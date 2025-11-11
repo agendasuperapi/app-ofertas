@@ -20,7 +20,7 @@ import { Minus, Plus, Trash2, ShoppingBag, Clock, Store, Pencil, ArrowLeft, Pack
 import { toast } from "@/hooks/use-toast";
 import { isStoreOpen, getStoreStatusText } from "@/lib/storeUtils";
 import { EditCartItemDialog } from "@/components/cart/EditCartItemDialog";
-import { LoginModal } from "@/components/auth/LoginModal";
+
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -43,16 +43,13 @@ export default function Cart() {
   const [changeAmount, setChangeAmount] = useState("");
   const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>('delivery');
   
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
-  const [authModalEmail, setAuthModalEmail] = useState("");
-  const [authModalFullName, setAuthModalFullName] = useState("");
-  const [authModalPhone, setAuthModalPhone] = useState("");
-  const [authModalMessage, setAuthModalMessage] = useState<string | undefined>(undefined);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | undefined>(undefined);
-  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authFullName, setAuthFullName] = useState("");
+  const [authPhone, setAuthPhone] = useState("");
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
-  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   
   const [storeData, setStoreData] = useState<any>(null);
   const storeIsOpen = storeData ? isStoreOpen(storeData.operating_hours) : true;
@@ -84,18 +81,6 @@ export default function Cart() {
     
     loadStoreData();
   }, [cart.storeId]);
-
-  // Check authentication on mount
-  useEffect(() => {
-    if (!hasCheckedAuth && cart.items.length > 0) {
-      setHasCheckedAuth(true);
-      if (!user) {
-        setAuthModalMode('signup');
-        setAuthModalMessage("Para finalizar seu pedido, faça login ou crie uma conta");
-        setShowAuthDialog(true);
-      }
-    }
-  }, [user, hasCheckedAuth, cart.items.length]);
 
   // Load user profile data when logged in
   useEffect(() => {
@@ -129,43 +114,77 @@ export default function Cart() {
   const deliveryFee = deliveryType === 'pickup' ? 0 : 5;
   const total = getTotal() + deliveryFee;
 
-  const handleModalSignUp = async (email: string, password: string, fullName: string, phone: string) => {
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsAuthLoading(true);
 
     try {
-      const { error } = await signUp(email, password, fullName, phone, true);
-
-      if (error) {
-        if (error.message.includes('already') || error.message.includes('exists') || error.message.includes('registered')) {
-          setAuthModalEmail(email);
-          setAuthModalFullName("");
-          setAuthModalPhone("");
-          setAuthModalMessage("Esse email já possui cadastro, efetue login para continuar");
-          setAuthModalMode('login');
+      if (authMode === 'signup') {
+        if (!authEmail || !authPassword || !authFullName || !authPhone) {
           toast({
-            title: "Email já cadastrado",
-            description: "Por favor, faça login",
+            title: "Campos obrigatórios",
+            description: "Preencha todos os campos para criar sua conta",
+            variant: "destructive",
           });
           setIsAuthLoading(false);
           return;
         }
-        
-        toast({
-          title: "Erro ao criar conta",
-          description: error.message,
-          variant: "destructive",
-        });
+
+        const { error } = await signUp(authEmail, authPassword, authFullName, authPhone, true);
+
+        if (error) {
+          if (error.message.includes('already') || error.message.includes('exists') || error.message.includes('registered')) {
+            setAuthMode('login');
+            setAuthPassword("");
+            toast({
+              title: "Email já cadastrado",
+              description: "Por favor, faça login",
+            });
+            setIsAuthLoading(false);
+            return;
+          }
+          
+          toast({
+            title: "Erro ao criar conta",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Conta criada com sucesso!",
+            description: "Agora preencha seus dados para continuar",
+          });
+        }
       } else {
-        toast({
-          title: "Conta criada com sucesso!",
-          description: "Agora preencha seus dados para continuar",
-        });
-        setShowAuthDialog(false);
+        if (!authEmail || !authPassword) {
+          toast({
+            title: "Campos obrigatórios",
+            description: "Preencha email e senha para fazer login",
+            variant: "destructive",
+          });
+          setIsAuthLoading(false);
+          return;
+        }
+
+        const { error } = await signIn(authEmail, authPassword, true);
+
+        if (error) {
+          toast({
+            title: "Erro ao fazer login",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Login realizado!",
+            description: "Agora preencha seus dados para continuar",
+          });
+        }
       }
     } catch (err: any) {
-      console.error('Signup error:', err);
+      console.error('Auth error:', err);
       toast({
-        title: "Erro ao criar conta",
+        title: "Erro",
         description: "Tente novamente",
         variant: "destructive",
       });
@@ -174,44 +193,9 @@ export default function Cart() {
     }
   };
 
-  const handleModalSignIn = async (email: string, password: string) => {
-    setIsAuthLoading(true);
-
-    try {
-      const { error } = await signIn(email, password, true);
-
-      if (error) {
-        toast({
-          title: "Erro ao fazer login",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Login realizado!",
-          description: "Agora preencha seus dados para continuar",
-        });
-        setShowAuthDialog(false);
-      }
-    } finally {
-      setIsAuthLoading(false);
-    }
-  };
 
 
   const handleNextStep = () => {
-    if (!user) {
-      toast({
-        title: "Login necessário",
-        description: "Por favor, faça login para continuar",
-        variant: "destructive",
-      });
-      setAuthModalMode('signup');
-      setAuthModalMessage("Para continuar, faça login ou crie uma conta");
-      setShowAuthDialog(true);
-      return;
-    }
-
     if (!customerName || !customerEmail || !customerPhone) {
       toast({
         title: "Campos obrigatórios",
@@ -231,9 +215,7 @@ export default function Cart() {
         description: "Por favor, faça login para finalizar o pedido",
         variant: "destructive",
       });
-      setAuthModalMode('signup');
-      setAuthModalMessage("Para finalizar seu pedido, faça login ou crie uma conta");
-      setShowAuthDialog(true);
+      setCurrentStep(1);
       return;
     }
 
@@ -514,7 +496,7 @@ export default function Cart() {
                   </div>
                 </div>
 
-                {/* Step 1: Customer Data */}
+                {/* Step 1: Authentication & Customer Data */}
                 {currentStep === 1 && (
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
@@ -522,76 +504,137 @@ export default function Cart() {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
-                     <div>
-                      <h3 className="text-xl font-bold mb-4">Dados do Cliente</h3>
-                      
-                      {!user && (
-                        <Alert className="mb-4">
-                          <AlertDescription>
-                            Você precisa estar logado para continuar. Clique no botão abaixo para fazer login.
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                      
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="name">Nome Completo *</Label>
-                          <Input
-                            id="name"
-                            value={customerName}
-                            onChange={(e) => setCustomerName(e.target.value)}
-                            placeholder="Seu nome"
-                            required
-                            disabled={!user}
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="email">Email *</Label>
-                          <Input
-                            id="email"
-                            type="email"
-                            value={customerEmail}
-                            onChange={(e) => setCustomerEmail(e.target.value)}
-                            placeholder="seu@email.com"
-                            required
-                            disabled={!user}
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="phone">Telefone *</Label>
-                          <PhoneInput
-                            id="phone"
-                            value={customerPhone}
-                            onChange={setCustomerPhone}
-                            disabled={!user}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
                     {!user ? (
-                      <Button
-                        className="w-full bg-gradient-primary"
-                        size="lg"
-                        onClick={() => {
-                          setAuthModalMode('signup');
-                          setAuthModalMessage("Para continuar, faça login ou crie uma conta");
-                          setShowAuthDialog(true);
-                        }}
-                      >
-                        Fazer Login para Continuar
-                      </Button>
+                      <div>
+                        <h3 className="text-xl font-bold mb-4">
+                          {authMode === 'login' ? 'Fazer Login' : 'Criar Conta'}
+                        </h3>
+                        
+                        <form onSubmit={handleAuthSubmit} className="space-y-4">
+                          {authMode === 'signup' && (
+                            <>
+                              <div>
+                                <Label htmlFor="auth-name">Nome Completo *</Label>
+                                <Input
+                                  id="auth-name"
+                                  value={authFullName}
+                                  onChange={(e) => setAuthFullName(e.target.value)}
+                                  placeholder="Seu nome completo"
+                                  required
+                                />
+                              </div>
+                              
+                              <div>
+                                <Label htmlFor="auth-phone">Telefone *</Label>
+                                <PhoneInput
+                                  id="auth-phone"
+                                  value={authPhone}
+                                  onChange={setAuthPhone}
+                                />
+                              </div>
+                            </>
+                          )}
+                          
+                          <div>
+                            <Label htmlFor="auth-email">Email *</Label>
+                            <Input
+                              id="auth-email"
+                              type="email"
+                              value={authEmail}
+                              onChange={(e) => setAuthEmail(e.target.value)}
+                              placeholder="seu@email.com"
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="auth-password">Senha *</Label>
+                            <Input
+                              id="auth-password"
+                              type="password"
+                              value={authPassword}
+                              onChange={(e) => setAuthPassword(e.target.value)}
+                              placeholder="••••••••"
+                              required
+                            />
+                          </div>
+
+                          <Button
+                            type="submit"
+                            className="w-full bg-gradient-primary"
+                            size="lg"
+                            disabled={isAuthLoading}
+                          >
+                            {isAuthLoading 
+                              ? 'Aguarde...' 
+                              : authMode === 'login' 
+                                ? 'Entrar' 
+                                : 'Criar Conta'}
+                          </Button>
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="w-full"
+                            onClick={() => {
+                              setAuthMode(authMode === 'login' ? 'signup' : 'login');
+                              setAuthPassword("");
+                            }}
+                          >
+                            {authMode === 'login' 
+                              ? 'Não tem conta? Cadastre-se' 
+                              : 'Já tem conta? Faça login'}
+                          </Button>
+                        </form>
+                      </div>
                     ) : (
-                      <Button
-                        className="w-full bg-gradient-primary"
-                        size="lg"
-                        onClick={handleNextStep}
-                        disabled={!customerName || !customerEmail || !customerPhone}
-                      >
-                        Avançar
-                      </Button>
+                      <div>
+                        <h3 className="text-xl font-bold mb-4">Dados do Cliente</h3>
+                        
+                        <div className="space-y-4">
+                          <div>
+                            <Label htmlFor="name">Nome Completo *</Label>
+                            <Input
+                              id="name"
+                              value={customerName}
+                              onChange={(e) => setCustomerName(e.target.value)}
+                              placeholder="Seu nome"
+                              required
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="email">Email *</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              value={customerEmail}
+                              onChange={(e) => setCustomerEmail(e.target.value)}
+                              placeholder="seu@email.com"
+                              required
+                              disabled
+                            />
+                          </div>
+                          
+                          <div>
+                            <Label htmlFor="phone">Telefone *</Label>
+                            <PhoneInput
+                              id="phone"
+                              value={customerPhone}
+                              onChange={setCustomerPhone}
+                            />
+                          </div>
+                        </div>
+
+                        <Button
+                          className="w-full bg-gradient-primary mt-6"
+                          size="lg"
+                          onClick={handleNextStep}
+                          disabled={!customerName || !customerEmail || !customerPhone}
+                        >
+                          Avançar
+                        </Button>
+                      </div>
                     )}
                   </motion.div>
                 )}
@@ -805,26 +848,6 @@ export default function Cart() {
         </div>
       </main>
 
-      {/* Login Modal */}
-      <LoginModal
-        open={showAuthDialog}
-        onClose={() => {
-          setShowAuthDialog(false);
-          setAuthModalEmail("");
-          setAuthModalFullName("");
-          setAuthModalPhone("");
-          setAuthModalMessage(undefined);
-          setAuthModalMode(undefined);
-        }}
-        onSignUp={handleModalSignUp}
-        onSignIn={handleModalSignIn}
-        isLoading={isAuthLoading}
-        initialEmail={authModalEmail}
-        initialFullName={authModalFullName}
-        initialPhone={authModalPhone}
-        customMessage={authModalMessage}
-        forceMode={authModalMode}
-      />
       
       {/* Edit Item Dialog */}
       {editingItem && (
