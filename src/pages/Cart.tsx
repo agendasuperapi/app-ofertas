@@ -647,6 +647,49 @@ export default function Cart() {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
+                    {/* Customer Data Section */}
+                    <div>
+                      <h3 className="text-xl font-bold mb-4">Dados do Cliente</h3>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="name-step2">Nome Completo *</Label>
+                          <Input
+                            id="name-step2"
+                            value={customerName}
+                            onChange={(e) => setCustomerName(e.target.value)}
+                            placeholder="Seu nome"
+                            required
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="email-step2">Email *</Label>
+                          <Input
+                            id="email-step2"
+                            type="email"
+                            value={customerEmail}
+                            onChange={(e) => setCustomerEmail(e.target.value)}
+                            placeholder="seu@email.com"
+                            required
+                            disabled
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="phone-step2">Telefone *</Label>
+                          <PhoneInput
+                            id="phone-step2"
+                            value={customerPhone}
+                            onChange={setCustomerPhone}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    {/* Delivery Type and Address Section */}
                     <div>
                       <h3 className="text-xl font-bold mb-4">Tipo de Entrega</h3>
                       
@@ -741,48 +784,49 @@ export default function Cart() {
                           </AlertDescription>
                         </Alert>
                       )}
+                    </div>
 
-                      <Separator className="my-6" />
+                    <Separator />
 
-                      <div className="space-y-4">
+                    {/* Payment Section */}
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="payment">Forma de Pagamento *</Label>
+                        <Select value={paymentMethod} onValueChange={(value: 'pix' | 'dinheiro' | 'cartao') => setPaymentMethod(value)}>
+                          <SelectTrigger id="payment">
+                            <SelectValue placeholder="Selecione a forma de pagamento" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pix">PIX</SelectItem>
+                            <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                            <SelectItem value="cartao">Cartão</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {paymentMethod === 'dinheiro' && (
                         <div>
-                          <Label htmlFor="payment">Forma de Pagamento *</Label>
-                          <Select value={paymentMethod} onValueChange={(value: 'pix' | 'dinheiro' | 'cartao') => setPaymentMethod(value)}>
-                            <SelectTrigger id="payment">
-                              <SelectValue placeholder="Selecione a forma de pagamento" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="pix">PIX</SelectItem>
-                              <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                              <SelectItem value="cartao">Cartão</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {paymentMethod === 'dinheiro' && (
-                          <div>
-                            <Label htmlFor="change">Troco para quanto? (opcional)</Label>
-                            <Input
-                              id="change"
-                              type="number"
-                              step="0.01"
-                              value={changeAmount}
-                              onChange={(e) => setChangeAmount(e.target.value)}
-                              placeholder="R$ 50,00"
-                            />
-                          </div>
-                        )}
-
-                        <div>
-                          <Label htmlFor="notes">Observações (opcional)</Label>
-                          <Textarea
-                            id="notes"
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            placeholder="Alguma observação sobre seu pedido?"
-                            rows={3}
+                          <Label htmlFor="change">Troco para quanto? (opcional)</Label>
+                          <Input
+                            id="change"
+                            type="number"
+                            step="0.01"
+                            value={changeAmount}
+                            onChange={(e) => setChangeAmount(e.target.value)}
+                            placeholder="R$ 50,00"
                           />
                         </div>
+                      )}
+
+                      <div>
+                        <Label htmlFor="notes">Observações (opcional)</Label>
+                        <Textarea
+                          id="notes"
+                          value={notes}
+                          onChange={(e) => setNotes(e.target.value)}
+                          placeholder="Alguma observação sobre seu pedido?"
+                          rows={3}
+                        />
                       </div>
                     </div>
 
@@ -830,6 +874,8 @@ export default function Cart() {
                         disabled={
                           !storeIsOpen || 
                           isCreating || 
+                          !customerName ||
+                          !customerPhone ||
                           (deliveryType === 'delivery' && (!deliveryStreet || !deliveryNumber || !deliveryNeighborhood))
                         }
                       >
