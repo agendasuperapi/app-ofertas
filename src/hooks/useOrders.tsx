@@ -26,11 +26,11 @@ const orderSchema = z.object({
       message: 'Telefone deve ter 10 ou 11 dígitos'
     }),
   deliveryType: z.enum(['delivery', 'pickup']),
-  deliveryStreet: z.string().trim().max(200, 'Nome da rua muito longo').optional(),
-  deliveryNumber: z.string().trim().max(20, 'Número muito longo').optional(),
-  deliveryNeighborhood: z.string().trim().max(100, 'Nome do bairro muito longo').optional(),
-  deliveryComplement: z.string().trim().max(100, 'Complemento muito longo').optional(),
-  notes: z.string().trim().max(500, 'Observações muito longas').optional(),
+  deliveryStreet: z.string().trim().max(200, 'Nome da rua muito longo').optional().transform(val => val || undefined),
+  deliveryNumber: z.string().trim().max(20, 'Número muito longo').optional().transform(val => val || undefined),
+  deliveryNeighborhood: z.string().trim().max(100, 'Nome do bairro muito longo').optional().transform(val => val || undefined),
+  deliveryComplement: z.string().trim().max(100, 'Complemento muito longo').optional().transform(val => val || undefined),
+  notes: z.string().trim().max(500, 'Observações muito longas').optional().transform(val => val || undefined),
   paymentMethod: z.enum(['pix', 'dinheiro', 'cartao'], { errorMap: () => ({ message: 'Método de pagamento inválido' }) }),
   changeAmount: z.number().positive().max(100000).optional(),
 }).refine((data) => {
@@ -116,27 +116,29 @@ export const useOrders = () => {
       // Generate order number
       const orderNumber = `#${Date.now().toString().slice(-8)}`;
 
-      // Create order with validated data (without notes to avoid cache issue)
+      // Create order with validated data (remove undefined values)
+      const orderInsertData = {
+        store_id: validatedData.storeId,
+        customer_id: user!.id,
+        customer_name: validatedData.customerName,
+        customer_phone: validatedData.customerPhone,
+        delivery_type: validatedData.deliveryType,
+        order_number: orderNumber,
+        subtotal,
+        delivery_fee: deliveryFee,
+        total,
+        status: 'pending' as const,
+        payment_method: validatedData.paymentMethod,
+        ...(validatedData.deliveryStreet && { delivery_street: validatedData.deliveryStreet }),
+        ...(validatedData.deliveryNumber && { delivery_number: validatedData.deliveryNumber }),
+        ...(validatedData.deliveryNeighborhood && { delivery_neighborhood: validatedData.deliveryNeighborhood }),
+        ...(validatedData.deliveryComplement && { delivery_complement: validatedData.deliveryComplement }),
+        ...(validatedData.changeAmount && { change_amount: validatedData.changeAmount }),
+      };
+
       const { data: order, error: orderError } = await supabase
         .from('orders')
-        .insert({
-          store_id: validatedData.storeId,
-          customer_id: user!.id,
-          customer_name: validatedData.customerName,
-          customer_phone: validatedData.customerPhone,
-          delivery_type: validatedData.deliveryType,
-          delivery_street: validatedData.deliveryStreet || null,
-          delivery_number: validatedData.deliveryNumber || null,
-          delivery_neighborhood: validatedData.deliveryNeighborhood || null,
-          delivery_complement: validatedData.deliveryComplement || null,
-          order_number: orderNumber,
-          subtotal,
-          delivery_fee: deliveryFee,
-          total,
-          status: 'pending',
-          payment_method: validatedData.paymentMethod,
-          change_amount: validatedData.changeAmount,
-        })
+        .insert(orderInsertData)
         .select()
         .single();
 
