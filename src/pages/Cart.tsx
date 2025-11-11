@@ -52,6 +52,7 @@ export default function Cart() {
   const [authModalPhone, setAuthModalPhone] = useState("");
   const [authModalMessage, setAuthModalMessage] = useState<string | undefined>(undefined);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | undefined>(undefined);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   
   const [storeData, setStoreData] = useState<any>(null);
   const storeIsOpen = storeData ? isStoreOpen(storeData.operating_hours) : true;
@@ -197,6 +198,38 @@ export default function Cart() {
       }
     } finally {
       setIsAuthLoading(false);
+    }
+  };
+
+  const handleEmailBlur = async () => {
+    // Only check if user is not logged in and email is valid
+    if (user || !customerEmail || isCheckingEmail) return;
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(customerEmail.trim())) return;
+
+    setIsCheckingEmail(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('check-email-exists', {
+        body: { email: customerEmail.trim() }
+      });
+      
+      if (!error && data?.exists) {
+        // Email exists - open login modal with email prefilled
+        setAuthModalEmail(customerEmail.trim());
+        setAuthModalFullName("");
+        setAuthModalPhone("");
+        setAuthModalMessage("Este e-mail já possui cadastro. Digite a senha e efetue o login.");
+        setAuthModalMode('login');
+        setShowAuthDialog(true);
+      }
+    } catch (error) {
+      console.error('Error checking email:', error);
+      // Silently fail - don't interrupt the user experience
+    } finally {
+      setIsCheckingEmail(false);
     }
   };
 
@@ -565,7 +598,8 @@ export default function Cart() {
                       <EmailInput
                         id="email"
                         value={customerEmail}
-                        onChange={setCustomerEmail}
+                        onChange={(value) => setCustomerEmail(value)}
+                        onBlur={handleEmailBlur}
                       />
                     </div>
                     
