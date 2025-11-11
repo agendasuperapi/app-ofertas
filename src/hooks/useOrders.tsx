@@ -135,15 +135,21 @@ export const useOrders = () => {
         ...(validatedData.deliveryComplement && { delivery_complement: validatedData.deliveryComplement }),
         ...(validatedData.changeAmount && { change_amount: validatedData.changeAmount }),
         ...(validatedData.notes && { notes: validatedData.notes }),
-      };
+      } as const;
+
+      // Debug payload to help identify invalid JSON issues
+      console.log('🧾 Creating order payload:', orderInsertData);
 
       const { data: order, error: orderError } = await supabase
         .from('orders')
-        .insert(orderInsertData)
+        .insert([orderInsertData])
         .select()
-        .single();
+        .maybeSingle();
 
-      if (orderError) throw orderError;
+      if (orderError) {
+        console.error('❌ Order insert error:', orderError);
+        throw orderError;
+      }
 
       // Create order items
       const { data: createdItems, error: itemsError } = await supabase
@@ -198,10 +204,12 @@ export const useOrders = () => {
       });
     },
     onError: (error: Error) => {
+      const anyErr = error as any;
       const errorMessage = error instanceof z.ZodError 
         ? error.errors[0]?.message || 'Dados do pedido inválidos'
-        : error.message;
+        : [anyErr?.message, anyErr?.details].filter(Boolean).join(' - ') || 'Erro desconhecido ao criar pedido';
       
+      console.error('❌ Order creation failed:', anyErr);
       toast({
         title: 'Erro ao criar pedido',
         description: errorMessage,
