@@ -45,8 +45,6 @@ export default function Cart() {
   
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
-  const [pendingOrderAfterSignup, setPendingOrderAfterSignup] = useState(false);
-  const [pendingOrderAfterLogin, setPendingOrderAfterLogin] = useState(false);
   const [authModalEmail, setAuthModalEmail] = useState("");
   const [authModalFullName, setAuthModalFullName] = useState("");
   const [authModalPhone, setAuthModalPhone] = useState("");
@@ -54,6 +52,7 @@ export default function Cart() {
   const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | undefined>(undefined);
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
   
   const [storeData, setStoreData] = useState<any>(null);
   const storeIsOpen = storeData ? isStoreOpen(storeData.operating_hours) : true;
@@ -86,6 +85,18 @@ export default function Cart() {
     loadStoreData();
   }, [cart.storeId]);
 
+  // Check authentication on mount
+  useEffect(() => {
+    if (!hasCheckedAuth && cart.items.length > 0) {
+      setHasCheckedAuth(true);
+      if (!user) {
+        setAuthModalMode('signup');
+        setAuthModalMessage("Para finalizar seu pedido, faça login ou crie uma conta");
+        setShowAuthDialog(true);
+      }
+    }
+  }, [user, hasCheckedAuth, cart.items.length]);
+
   // Load user profile data when logged in
   useEffect(() => {
     const loadUserProfile = async () => {
@@ -109,20 +120,11 @@ export default function Cart() {
         if (user.email) {
           setCustomerEmail(user.email);
         }
-
-        // If there's a pending order after signup or login, finalize it
-        if (pendingOrderAfterSignup) {
-          setPendingOrderAfterSignup(false);
-          handleCheckout();
-        } else if (pendingOrderAfterLogin) {
-          setPendingOrderAfterLogin(false);
-          handleCheckout();
-        }
       }
     };
 
     loadUserProfile();
-  }, [user, pendingOrderAfterSignup, pendingOrderAfterLogin]);
+  }, [user]);
 
   const deliveryFee = deliveryType === 'pickup' ? 0 : 5;
   const total = getTotal() + deliveryFee;
@@ -131,26 +133,23 @@ export default function Cart() {
     setIsAuthLoading(true);
 
     try {
-      // Tentar criar conta
       const { error } = await signUp(email, password, fullName, phone, true);
 
       if (error) {
-        // Se o erro for que o usuário já existe, redirecionar para login
         if (error.message.includes('already') || error.message.includes('exists') || error.message.includes('registered')) {
           setAuthModalEmail(email);
           setAuthModalFullName("");
           setAuthModalPhone("");
-          setAuthModalMessage("Esse email já possui cadastro, efetue login para finalizar");
+          setAuthModalMessage("Esse email já possui cadastro, efetue login para continuar");
           setAuthModalMode('login');
           toast({
             title: "Email já cadastrado",
-            description: "Redirecionando para login...",
+            description: "Por favor, faça login",
           });
           setIsAuthLoading(false);
           return;
         }
         
-        // Outros erros
         toast({
           title: "Erro ao criar conta",
           description: error.message,
@@ -159,13 +158,11 @@ export default function Cart() {
       } else {
         toast({
           title: "Conta criada com sucesso!",
-          description: "Finalizando seu pedido...",
+          description: "Agora preencha seus dados para continuar",
         });
         setShowAuthDialog(false);
-        setPendingOrderAfterSignup(true);
       }
     } catch (err: any) {
-      // Capturar qualquer outro erro
       console.error('Signup error:', err);
       toast({
         title: "Erro ao criar conta",
@@ -192,95 +189,36 @@ export default function Cart() {
       } else {
         toast({
           title: "Login realizado!",
-          description: "Finalizando seu pedido...",
+          description: "Agora preencha seus dados para continuar",
         });
         setShowAuthDialog(false);
-        setPendingOrderAfterLogin(true);
       }
     } finally {
       setIsAuthLoading(false);
     }
   };
 
-  const handleEmailBlur = async () => {
-    // Only check if user is not logged in and email is valid
-    if (user || !customerEmail || isCheckingEmail) return;
-    
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(customerEmail.trim())) return;
 
-    setIsCheckingEmail(true);
-
-    try {
-      const { data, error } = await supabase.functions.invoke('check-email-exists', {
-        body: { email: customerEmail.trim() }
+  const handleNextStep = () => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Por favor, faça login para continuar",
+        variant: "destructive",
       });
-      
-      if (!error && data?.exists) {
-        // Email exists - open login modal with email prefilled
-        setAuthModalEmail(customerEmail.trim());
-        setAuthModalFullName("");
-        setAuthModalPhone("");
-        setAuthModalMessage("Este e-mail já possui cadastro. Digite a senha e efetue o login.");
-        setAuthModalMode('login');
-        setShowAuthDialog(true);
-      }
-    } catch (error) {
-      console.error('Error checking email:', error);
-      // Silently fail - don't interrupt the user experience
-    } finally {
-      setIsCheckingEmail(false);
+      setAuthModalMode('signup');
+      setAuthModalMessage("Para continuar, faça login ou crie uma conta");
+      setShowAuthDialog(true);
+      return;
     }
-  };
 
-  const handleNextStep = async () => {
-    // Validate step 1 fields
     if (!customerName || !customerEmail || !customerPhone) {
       toast({
         title: "Campos obrigatórios",
-        description: "Por favor, preencha nome, email e telefone para continuar.",
+        description: "Por favor, preencha todos os campos para continuar.",
         variant: "destructive",
       });
       return;
-    }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(customerEmail.trim())) {
-      toast({
-        title: "Email inválido",
-        description: "Por favor, digite um email válido.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // If user is not logged in, check if email already exists
-    if (!user) {
-      setIsCheckingEmail(true);
-      try {
-        const { data, error } = await supabase.functions.invoke('check-email-exists', {
-          body: { email: customerEmail.trim() }
-        });
-        
-        if (!error && data?.exists) {
-          // Email exists - open login modal with email prefilled
-          setAuthModalEmail(customerEmail.trim());
-          setAuthModalFullName("");
-          setAuthModalPhone("");
-          setAuthModalMessage("Este e-mail já possui cadastro. Digite a senha e efetue o login.");
-          setAuthModalMode('login');
-          setShowAuthDialog(true);
-          setIsCheckingEmail(false);
-          return;
-        }
-      } catch (error) {
-        console.error('Error checking email:', error);
-        // Continue to next step even if check fails
-      } finally {
-        setIsCheckingEmail(false);
-      }
     }
 
     setCurrentStep(2);
@@ -288,53 +226,15 @@ export default function Cart() {
 
   const handleCheckout = async () => {
     if (!user) {
-      // Verificar campos obrigatórios antes de continuar
-      if (!customerName || !customerEmail || !customerPhone) {
-        toast({
-          title: "Campos obrigatórios",
-          description: "Por favor, preencha nome, email e telefone antes de continuar.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Verificar se o email já existe no sistema
-      try {
-        const { data, error } = await supabase.functions.invoke('check-email-exists', {
-          body: { email: customerEmail }
-        });
-        
-        if (!error && data?.exists) {
-          // Email já existe - abrir modal em modo signup para mostrar botão "Já tem conta? Faça login"
-          setAuthModalEmail(customerEmail);
-          setAuthModalFullName(customerName);
-          setAuthModalPhone(customerPhone);
-          setAuthModalMessage("Esse email já possui cadastro, efetue login para finalizar");
-          setAuthModalMode('signup');
-          setShowAuthDialog(true);
-          return;
-        } else {
-          // Email não existe - direcionar para cadastro com dados preenchidos
-          setAuthModalEmail(customerEmail);
-          setAuthModalFullName(customerName);
-          setAuthModalPhone(customerPhone);
-          setAuthModalMessage(undefined);
-          setAuthModalMode('signup');
-          setShowAuthDialog(true);
-          return;
-        }
-      } catch (error) {
-        console.error('Error checking email:', error);
-        // Se edge function falhar, apenas abrir modal de signup
-        // O tratamento de email existente será feito no handleModalSignUp
-        setAuthModalEmail(customerEmail);
-        setAuthModalFullName(customerName);
-        setAuthModalPhone(customerPhone);
-        setAuthModalMessage(undefined);
-        setAuthModalMode('signup');
-        setShowAuthDialog(true);
-        return;
-      }
+      toast({
+        title: "Login necessário",
+        description: "Por favor, faça login para finalizar o pedido",
+        variant: "destructive",
+      });
+      setAuthModalMode('signup');
+      setAuthModalMessage("Para finalizar seu pedido, faça login ou crie uma conta");
+      setShowAuthDialog(true);
+      return;
     }
 
     if (!storeIsOpen) {
@@ -622,8 +522,16 @@ export default function Cart() {
                     exit={{ opacity: 0, x: -20 }}
                     className="space-y-6"
                   >
-                    <div>
+                     <div>
                       <h3 className="text-xl font-bold mb-4">Dados do Cliente</h3>
+                      
+                      {!user && (
+                        <Alert className="mb-4">
+                          <AlertDescription>
+                            Você precisa estar logado para continuar. Clique no botão abaixo para fazer login.
+                          </AlertDescription>
+                        </Alert>
+                      )}
                       
                       <div className="space-y-4">
                         <div>
@@ -634,16 +542,20 @@ export default function Cart() {
                             onChange={(e) => setCustomerName(e.target.value)}
                             placeholder="Seu nome"
                             required
+                            disabled={!user}
                           />
                         </div>
                         
                         <div>
                           <Label htmlFor="email">Email *</Label>
-                          <EmailInput
+                          <Input
                             id="email"
+                            type="email"
                             value={customerEmail}
-                            onChange={(value) => setCustomerEmail(value)}
-                            onBlur={handleEmailBlur}
+                            onChange={(e) => setCustomerEmail(e.target.value)}
+                            placeholder="seu@email.com"
+                            required
+                            disabled={!user}
                           />
                         </div>
                         
@@ -653,19 +565,34 @@ export default function Cart() {
                             id="phone"
                             value={customerPhone}
                             onChange={setCustomerPhone}
+                            disabled={!user}
                           />
                         </div>
                       </div>
                     </div>
 
-                    <Button
-                      className="w-full bg-gradient-primary"
-                      size="lg"
-                      onClick={handleNextStep}
-                      disabled={!customerName || !customerEmail || !customerPhone}
-                    >
-                      Avançar
-                    </Button>
+                    {!user ? (
+                      <Button
+                        className="w-full bg-gradient-primary"
+                        size="lg"
+                        onClick={() => {
+                          setAuthModalMode('signup');
+                          setAuthModalMessage("Para continuar, faça login ou crie uma conta");
+                          setShowAuthDialog(true);
+                        }}
+                      >
+                        Fazer Login para Continuar
+                      </Button>
+                    ) : (
+                      <Button
+                        className="w-full bg-gradient-primary"
+                        size="lg"
+                        onClick={handleNextStep}
+                        disabled={!customerName || !customerEmail || !customerPhone}
+                      >
+                        Avançar
+                      </Button>
+                    )}
                   </motion.div>
                 )}
 
