@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,15 +84,6 @@ export const StoreOwnerDashboard = () => {
 
   const handleCreateProduct = () => {
     if (!myStore) return;
-
-    if (!productForm.category.trim()) {
-      toast({
-        title: 'Categoria obrigatória',
-        description: 'Por favor, selecione uma categoria para o produto.',
-        variant: 'destructive',
-      });
-      return;
-    }
     
     createProduct({
       ...productForm,
@@ -136,15 +126,6 @@ export const StoreOwnerDashboard = () => {
 
   const handleUpdateProduct = () => {
     if (!editingProduct) return;
-
-    if (!productForm.category.trim()) {
-      toast({
-        title: 'Categoria obrigatória',
-        description: 'Por favor, selecione uma categoria para o produto.',
-        variant: 'destructive',
-      });
-      return;
-    }
 
     updateProduct({
       ...productForm,
@@ -199,7 +180,7 @@ export const StoreOwnerDashboard = () => {
     setIsHoursDialogOpen(false);
   };
 
-  const storeUrl = myStore ? `https://ofertas.app/${myStore.slug}` : '';
+  const storeUrl = myStore ? `${window.location.origin}/${myStore.slug}` : '';
 
   const handleCopyUrl = async () => {
     if (storeUrl) {

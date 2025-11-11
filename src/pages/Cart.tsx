@@ -20,7 +20,7 @@ import { Minus, Plus, Trash2, ShoppingBag, Clock, Store, Pencil, ArrowLeft, Pack
 import { toast } from "@/hooks/use-toast";
 import { isStoreOpen, getStoreStatusText } from "@/lib/storeUtils";
 import { EditCartItemDialog } from "@/components/cart/EditCartItemDialog";
-
+import { LoginModal } from "@/components/auth/LoginModal";
 
 export default function Cart() {
   const navigate = useNavigate();
@@ -43,24 +43,19 @@ export default function Cart() {
   const [changeAmount, setChangeAmount] = useState("");
   const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>('delivery');
   
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
-  const [authEmail, setAuthEmail] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [authFullName, setAuthFullName] = useState("");
-  const [authPhone, setAuthPhone] = useState("");
-  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
+  const [pendingOrderAfterSignup, setPendingOrderAfterSignup] = useState(false);
+  const [pendingOrderAfterLogin, setPendingOrderAfterLogin] = useState(false);
+  const [authModalEmail, setAuthModalEmail] = useState("");
+  const [authModalFullName, setAuthModalFullName] = useState("");
+  const [authModalPhone, setAuthModalPhone] = useState("");
+  const [authModalMessage, setAuthModalMessage] = useState<string | undefined>(undefined);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup' | undefined>(undefined);
   
   const [storeData, setStoreData] = useState<any>(null);
   const storeIsOpen = storeData ? isStoreOpen(storeData.operating_hours) : true;
   const storeStatusText = storeData ? getStoreStatusText(storeData.operating_hours) : '';
-
-  // Auto-advance to step 2 if user is already logged in
-  useEffect(() => {
-    if (user) {
-      setCurrentStep(2);
-    }
-  }, [user]);
 
   // Load last visited store from localStorage
   useEffect(() => {
@@ -112,90 +107,66 @@ export default function Cart() {
         if (user.email) {
           setCustomerEmail(user.email);
         }
+
+        // If there's a pending order after signup or login, finalize it
+        if (pendingOrderAfterSignup) {
+          setPendingOrderAfterSignup(false);
+          handleCheckout();
+        } else if (pendingOrderAfterLogin) {
+          setPendingOrderAfterLogin(false);
+          handleCheckout();
+        }
       }
     };
 
     loadUserProfile();
-  }, [user]);
+  }, [user, pendingOrderAfterSignup, pendingOrderAfterLogin]);
 
   const deliveryFee = deliveryType === 'pickup' ? 0 : 5;
   const total = getTotal() + deliveryFee;
 
-  const handleAuthSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleModalSignUp = async (email: string, password: string, fullName: string, phone: string) => {
     setIsAuthLoading(true);
 
     try {
-      if (authMode === 'signup') {
-        if (!authEmail || !authPassword || !authFullName || !authPhone) {
+      // Tentar criar conta
+      const { error } = await signUp(email, password, fullName, phone, true);
+
+      if (error) {
+        // Se o erro for que o usuário já existe, redirecionar para login
+        if (error.message.includes('already') || error.message.includes('exists') || error.message.includes('registered')) {
+          setAuthModalEmail(email);
+          setAuthModalFullName("");
+          setAuthModalPhone("");
+          setAuthModalMessage("Esse email já possui cadastro, efetue login para finalizar");
+          setAuthModalMode('login');
           toast({
-            title: "Campos obrigatórios",
-            description: "Preencha todos os campos para criar sua conta",
-            variant: "destructive",
+            title: "Email já cadastrado",
+            description: "Redirecionando para login...",
           });
           setIsAuthLoading(false);
           return;
         }
-
-        const { error } = await signUp(authEmail, authPassword, authFullName, authPhone, true);
-
-        if (error) {
-          if (error.message.includes('already') || error.message.includes('exists') || error.message.includes('registered')) {
-            setAuthMode('login');
-            setAuthPassword("");
-            toast({
-              title: "Email já cadastrado",
-              description: "Por favor, faça login",
-            });
-            setIsAuthLoading(false);
-            return;
-          }
-          
-          toast({
-            title: "Erro ao criar conta",
-            description: error.message,
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Conta criada com sucesso!",
-            description: "Agora preencha seus dados para continuar",
-          });
-          // Avançar para Step 2 após signup
-          setTimeout(() => setCurrentStep(2), 500);
-        }
+        
+        // Outros erros
+        toast({
+          title: "Erro ao criar conta",
+          description: error.message,
+          variant: "destructive",
+        });
       } else {
-        if (!authEmail || !authPassword) {
-          toast({
-            title: "Campos obrigatórios",
-            description: "Preencha email e senha para fazer login",
-            variant: "destructive",
-          });
-          setIsAuthLoading(false);
-          return;
-        }
-
-        const { error } = await signIn(authEmail, authPassword, true);
-
-        if (error) {
-          toast({
-            title: "Erro ao fazer login",
-            description: error.message,
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Login realizado!",
-            description: "Agora preencha seus dados para continuar",
-          });
-          // Avançar para Step 2 após login
-          setTimeout(() => setCurrentStep(2), 500);
-        }
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Finalizando seu pedido...",
+        });
+        setShowAuthDialog(false);
+        setPendingOrderAfterSignup(true);
       }
     } catch (err: any) {
-      console.error('Auth error:', err);
+      // Capturar qualquer outro erro
+      console.error('Signup error:', err);
       toast({
-        title: "Erro",
+        title: "Erro ao criar conta",
         description: "Tente novamente",
         variant: "destructive",
       });
@@ -204,30 +175,80 @@ export default function Cart() {
     }
   };
 
+  const handleModalSignIn = async (email: string, password: string) => {
+    setIsAuthLoading(true);
 
+    try {
+      const { error } = await signIn(email, password, true);
 
-  const handleNextStep = () => {
-    if (!customerName || !customerEmail || !customerPhone) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos para continuar.",
-        variant: "destructive",
-      });
-      return;
+      if (error) {
+        toast({
+          title: "Erro ao fazer login",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Login realizado!",
+          description: "Finalizando seu pedido...",
+        });
+        setShowAuthDialog(false);
+        setPendingOrderAfterLogin(true);
+      }
+    } finally {
+      setIsAuthLoading(false);
     }
-
-    setCurrentStep(2);
   };
 
   const handleCheckout = async () => {
     if (!user) {
-      toast({
-        title: "Login necessário",
-        description: "Por favor, faça login para finalizar o pedido",
-        variant: "destructive",
-      });
-      setCurrentStep(1);
-      return;
+      // Verificar campos obrigatórios antes de continuar
+      if (!customerName || !customerEmail || !customerPhone) {
+        toast({
+          title: "Campos obrigatórios",
+          description: "Por favor, preencha nome, email e telefone antes de continuar.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Verificar se o email já existe no sistema
+      try {
+        const { data, error } = await supabase.functions.invoke('check-email-exists', {
+          body: { email: customerEmail }
+        });
+        
+        if (!error && data?.exists) {
+          // Email já existe - abrir modal em modo signup para mostrar botão "Já tem conta? Faça login"
+          setAuthModalEmail(customerEmail);
+          setAuthModalFullName(customerName);
+          setAuthModalPhone(customerPhone);
+          setAuthModalMessage("Esse email já possui cadastro, efetue login para finalizar");
+          setAuthModalMode('signup');
+          setShowAuthDialog(true);
+          return;
+        } else {
+          // Email não existe - direcionar para cadastro com dados preenchidos
+          setAuthModalEmail(customerEmail);
+          setAuthModalFullName(customerName);
+          setAuthModalPhone(customerPhone);
+          setAuthModalMessage(undefined);
+          setAuthModalMode('signup');
+          setShowAuthDialog(true);
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking email:', error);
+        // Se edge function falhar, apenas abrir modal de signup
+        // O tratamento de email existente será feito no handleModalSignUp
+        setAuthModalEmail(customerEmail);
+        setAuthModalFullName(customerName);
+        setAuthModalPhone(customerPhone);
+        setAuthModalMessage(undefined);
+        setAuthModalMode('signup');
+        setShowAuthDialog(true);
+        return;
+      }
     }
 
     if (!storeIsOpen) {
@@ -248,6 +269,8 @@ export default function Cart() {
       return;
     }
 
+    console.log('Starting checkout process...');
+    
     // Update user profile with current data
     const { error: profileError } = await supabase
       .from('profiles')
@@ -271,6 +294,8 @@ export default function Cart() {
       return;
     }
 
+    console.log('Profile updated, creating order...');
+
     // Create order
     try {
       await createOrder({
@@ -280,26 +305,19 @@ export default function Cart() {
           productName: item.productName,
           quantity: item.quantity,
           unitPrice: item.promotionalPrice || item.price,
-          observation: item.observation || undefined,
-          addons: Array.isArray(item.addons) 
-            ? item.addons
-                .filter(addon => addon && addon.name && typeof addon.price === 'number')
-                .map(addon => ({
-                  name: String(addon.name),
-                  price: Number(addon.price),
-                }))
-            : [],
+          observation: item.observation,
+          addons: item.addons,
         })),
         customerName,
         customerPhone,
         deliveryType,
-        deliveryStreet: deliveryType === 'delivery' ? (deliveryStreet || undefined) : undefined,
-        deliveryNumber: deliveryType === 'delivery' ? (deliveryNumber || undefined) : undefined,
-        deliveryNeighborhood: deliveryType === 'delivery' ? (deliveryNeighborhood || undefined) : undefined,
-        deliveryComplement: deliveryType === 'delivery' ? (deliveryComplement || undefined) : undefined,
-        notes: notes || undefined,
+        deliveryStreet: deliveryType === 'delivery' ? deliveryStreet : '',
+        deliveryNumber: deliveryType === 'delivery' ? deliveryNumber : '',
+        deliveryNeighborhood: deliveryType === 'delivery' ? deliveryNeighborhood : '',
+        deliveryComplement: deliveryType === 'delivery' ? deliveryComplement : '',
+        notes,
         paymentMethod,
-        changeAmount: paymentMethod === 'dinheiro' && changeAmount ? Number(parseFloat(changeAmount)) : undefined,
+        changeAmount: paymentMethod === 'dinheiro' && changeAmount ? parseFloat(changeAmount) : undefined,
       });
 
       console.log('Order created successfully, clearing cart...');
@@ -495,379 +513,234 @@ export default function Cart() {
           >
             <Card className="sticky top-24">
               <CardContent className="p-6 space-y-6">
-                {/* Step Indicator */}
-                <div className="flex items-center justify-center gap-2 mb-6">
-                  <div className={`flex flex-col items-center ${
-                    currentStep === 1 ? 'text-primary' : 'text-muted-foreground'
-                  }`}>
-                    <div className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold ${
-                      currentStep === 1 ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                    }`}>
-                      1
-                    </div>
-                    <span className="text-xs mt-1">Login</span>
+                <div>
+                  <h3 className="text-xl font-bold mb-4">Tipo de Entrega</h3>
+                  
+                  <div className="grid grid-cols-2 gap-3 mb-6">
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryType('pickup')}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        deliveryType === 'pickup'
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <Store className="w-6 h-6 mx-auto mb-2" />
+                      <div className="font-semibold">Retirar na Loja</div>
+                      <div className="text-xs text-muted-foreground">Grátis</div>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => setDeliveryType('delivery')}
+                      className={`p-4 rounded-lg border-2 transition-all ${
+                        deliveryType === 'delivery'
+                          ? 'border-primary bg-primary/10'
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <Package className="w-6 h-6 mx-auto mb-2" />
+                      <div className="font-semibold">Entrega</div>
+                      <div className="text-xs text-muted-foreground">R$ 5,00</div>
+                    </button>
                   </div>
-                  <div className={`h-1 w-12 ${currentStep === 2 ? 'bg-primary' : 'bg-muted'}`} />
-                  <div className={`flex flex-col items-center ${
-                    currentStep === 2 ? 'text-primary' : 'text-muted-foreground'
-                  }`}>
-                    <div className={`flex items-center justify-center w-8 h-8 rounded-full font-semibold ${
-                      currentStep === 2 ? 'bg-primary text-primary-foreground' : 'bg-muted'
-                    }`}>
-                      2
-                    </div>
-                    <span className="text-xs mt-1">Finalizar</span>
-                  </div>
-                </div>
-
-                {/* Step 1: Authentication Only */}
-                {currentStep === 1 && (
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
-                  >
+                  
+                  <h3 className="text-xl font-bold mb-4">Dados do Cliente</h3>
+                  
+                  <div className="space-y-4">
                     <div>
-                      <h3 className="text-xl font-bold mb-4">
-                        {authMode === 'login' ? 'Fazer Login' : 'Criar Conta'}
-                      </h3>
-                      
-                      <form onSubmit={handleAuthSubmit} className="space-y-4">
-                        {authMode === 'signup' && (
-                          <>
-                            <div>
-                              <Label htmlFor="auth-name">Nome Completo *</Label>
-                              <Input
-                                id="auth-name"
-                                value={authFullName}
-                                onChange={(e) => setAuthFullName(e.target.value)}
-                                placeholder="Seu nome completo"
-                                required
-                              />
-                            </div>
-                            
-                            <div>
-                              <Label htmlFor="auth-phone">Telefone *</Label>
-                              <PhoneInput
-                                id="auth-phone"
-                                value={authPhone}
-                                onChange={setAuthPhone}
-                              />
-                            </div>
-                          </>
-                        )}
-                        
-                        <div>
-                          <Label htmlFor="auth-email">Email *</Label>
-                          <Input
-                            id="auth-email"
-                            type="email"
-                            value={authEmail}
-                            onChange={(e) => setAuthEmail(e.target.value)}
-                            placeholder="seu@email.com"
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="auth-password">Senha *</Label>
-                          <Input
-                            id="auth-password"
-                            type="password"
-                            value={authPassword}
-                            onChange={(e) => setAuthPassword(e.target.value)}
-                            placeholder="••••••••"
-                            required
-                          />
-                        </div>
-
-                        <Button
-                          type="submit"
-                          className="w-full bg-gradient-primary"
-                          size="lg"
-                          disabled={isAuthLoading}
-                        >
-                          {isAuthLoading 
-                            ? 'Aguarde...' 
-                            : authMode === 'login' 
-                              ? 'Entrar' 
-                              : 'Criar Conta'}
-                        </Button>
-
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          className="w-full"
-                          onClick={() => {
-                            setAuthMode(authMode === 'login' ? 'signup' : 'login');
-                            setAuthPassword("");
-                          }}
-                        >
-                          {authMode === 'login' 
-                            ? 'Não tem conta? Cadastre-se' 
-                            : 'Já tem conta? Faça login'}
-                        </Button>
-                      </form>
+                      <Label htmlFor="name">Nome Completo *</Label>
+                      <Input
+                        id="name"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        placeholder="Seu nome"
+                        required
+                      />
                     </div>
-                  </motion.div>
-                )}
-
-                {/* Step 2: Delivery & Payment */}
-                {currentStep === 2 && (
-                  <motion.div
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
-                  >
-                    {/* Customer Data Section */}
+                    
                     <div>
-                      <h3 className="text-xl font-bold mb-4">Dados do Cliente</h3>
-                      
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="name-step2">Nome Completo *</Label>
-                          <Input
-                            id="name-step2"
-                            value={customerName}
-                            onChange={(e) => setCustomerName(e.target.value)}
-                            placeholder="Seu nome"
-                            required
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="email-step2">Email *</Label>
-                          <Input
-                            id="email-step2"
-                            type="email"
-                            value={customerEmail}
-                            onChange={(e) => setCustomerEmail(e.target.value)}
-                            placeholder="seu@email.com"
-                            required
-                            disabled
-                          />
-                        </div>
-                        
-                        <div>
-                          <Label htmlFor="phone-step2">Telefone *</Label>
-                          <PhoneInput
-                            id="phone-step2"
-                            value={customerPhone}
-                            onChange={setCustomerPhone}
-                          />
-                        </div>
-                      </div>
+                      <Label htmlFor="email">Email *</Label>
+                      <EmailInput
+                        id="email"
+                        value={customerEmail}
+                        onChange={setCustomerEmail}
+                      />
                     </div>
-
-                    <Separator />
-
-                    {/* Delivery Type and Address Section */}
+                    
                     <div>
-                      <h3 className="text-xl font-bold mb-4">Tipo de Entrega</h3>
-                      
-                      <div className="grid grid-cols-2 gap-3 mb-6">
-                        <button
-                          type="button"
-                          onClick={() => setDeliveryType('pickup')}
-                          className={`p-4 rounded-lg border-2 transition-all ${
-                            deliveryType === 'pickup'
-                              ? 'border-primary bg-primary/10'
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <Store className="w-6 h-6 mx-auto mb-2" />
-                          <div className="font-semibold">Retirar na Loja</div>
-                          <div className="text-xs text-muted-foreground">Grátis</div>
-                        </button>
+                      <Label htmlFor="phone">Telefone *</Label>
+                      <PhoneInput
+                        id="phone"
+                        value={customerPhone}
+                        onChange={setCustomerPhone}
+                      />
+                    </div>
+                    
+                    {deliveryType === 'delivery' && (
+                      <>
+                        <Separator className="my-4" />
+                        <h3 className="text-lg font-semibold mb-4">Endereço de Entrega</h3>
                         
-                        <button
-                          type="button"
-                          onClick={() => setDeliveryType('delivery')}
-                          className={`p-4 rounded-lg border-2 transition-all ${
-                            deliveryType === 'delivery'
-                              ? 'border-primary bg-primary/10'
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <Package className="w-6 h-6 mx-auto mb-2" />
-                          <div className="font-semibold">Entrega</div>
-                          <div className="text-xs text-muted-foreground">R$ 5,00</div>
-                        </button>
-                      </div>
-
-                      {deliveryType === 'delivery' && (
-                        <>
-                          <h3 className="text-lg font-semibold mb-4">Endereço de Entrega</h3>
-                          
-                          <div className="space-y-4">
-                            <div>
-                              <Label htmlFor="street">Rua *</Label>
-                              <Input
-                                id="street"
-                                value={deliveryStreet}
-                                onChange={(e) => setDeliveryStreet(e.target.value)}
-                                placeholder="Nome da rua"
-                                required
-                              />
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="number">Número *</Label>
-                                <Input
-                                  id="number"
-                                  value={deliveryNumber}
-                                  onChange={(e) => setDeliveryNumber(e.target.value)}
-                                  placeholder="123"
-                                  required
-                                />
-                              </div>
-                              
-                              <div>
-                                <Label htmlFor="neighborhood">Bairro *</Label>
-                                <Input
-                                  id="neighborhood"
-                                  value={deliveryNeighborhood}
-                                  onChange={(e) => setDeliveryNeighborhood(e.target.value)}
-                                  placeholder="Nome do bairro"
-                                  required
-                                />
-                              </div>
-                            </div>
-                            
-                            <div>
-                              <Label htmlFor="complement">Complemento (opcional)</Label>
-                              <Input
-                                id="complement"
-                                value={deliveryComplement}
-                                onChange={(e) => setDeliveryComplement(e.target.value)}
-                                placeholder="Apto, bloco, etc."
-                              />
-                            </div>
+                        <div>
+                          <Label htmlFor="street">Rua *</Label>
+                          <Input
+                            id="street"
+                            value={deliveryStreet}
+                            onChange={(e) => setDeliveryStreet(e.target.value)}
+                            placeholder="Nome da rua"
+                            required
+                          />
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="number">Número *</Label>
+                            <Input
+                              id="number"
+                              value={deliveryNumber}
+                              onChange={(e) => setDeliveryNumber(e.target.value)}
+                              placeholder="123"
+                              required
+                            />
                           </div>
-                        </>
-                      )}
-                      
-                      {deliveryType === 'pickup' && (
-                        <Alert className="mb-4">
-                          <Store className="h-4 w-4" />
-                          <AlertDescription>
-                            Você poderá retirar seu pedido diretamente na loja após a confirmação.
-                          </AlertDescription>
-                        </Alert>
-                      )}
-                    </div>
-
-                    <Separator />
-
-                    {/* Payment Section */}
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="payment">Forma de Pagamento *</Label>
-                        <Select value={paymentMethod} onValueChange={(value: 'pix' | 'dinheiro' | 'cartao') => setPaymentMethod(value)}>
-                          <SelectTrigger id="payment">
-                            <SelectValue placeholder="Selecione a forma de pagamento" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pix">PIX</SelectItem>
-                            <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                            <SelectItem value="cartao">Cartão</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {paymentMethod === 'dinheiro' && (
+                          
+                          <div>
+                            <Label htmlFor="neighborhood">Bairro *</Label>
+                            <Input
+                              id="neighborhood"
+                              value={deliveryNeighborhood}
+                              onChange={(e) => setDeliveryNeighborhood(e.target.value)}
+                              placeholder="Nome do bairro"
+                              required
+                            />
+                          </div>
+                        </div>
+                        
                         <div>
-                          <Label htmlFor="change">Troco para quanto? (opcional)</Label>
+                          <Label htmlFor="complement">Complemento (opcional)</Label>
                           <Input
-                            id="change"
-                            type="number"
-                            step="0.01"
-                            value={changeAmount}
-                            onChange={(e) => setChangeAmount(e.target.value)}
-                            placeholder="R$ 50,00"
+                            id="complement"
+                            value={deliveryComplement}
+                            onChange={(e) => setDeliveryComplement(e.target.value)}
+                            placeholder="Apto, bloco, etc."
                           />
                         </div>
-                      )}
-
-                      <div>
-                        <Label htmlFor="notes">Observações (opcional)</Label>
-                        <Textarea
-                          id="notes"
-                          value={notes}
-                          onChange={(e) => setNotes(e.target.value)}
-                          placeholder="Alguma observação sobre seu pedido?"
-                          rows={3}
-                        />
-                      </div>
-                    </div>
-
-                    <Separator />
-
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Subtotal</span>
-                        <span>R$ {getTotal().toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>{deliveryType === 'pickup' ? 'Retirada' : 'Taxa de entrega'}</span>
-                        <span>{deliveryType === 'pickup' ? 'Grátis' : `R$ ${deliveryFee.toFixed(2)}`}</span>
-                      </div>
-                      <Separator />
-                      <div className="flex justify-between text-lg font-bold">
-                        <span>Total</span>
-                        <span className="text-primary">R$ {total.toFixed(2)}</span>
-                      </div>
-                    </div>
-
-                    {!storeIsOpen && storeData && (
-                      <Alert variant="destructive">
-                        <Clock className="h-4 w-4" />
+                      </>
+                    )}
+                    
+                    {deliveryType === 'pickup' && (
+                      <Alert>
+                        <Store className="h-4 w-4" />
                         <AlertDescription>
-                          <strong>{storeData.name} está fechada.</strong> {storeStatusText}. Você pode adicionar itens ao carrinho, mas não poderá finalizar o pedido até que a loja abra.
+                          Você poderá retirar seu pedido diretamente na loja após a confirmação.
                         </AlertDescription>
                       </Alert>
                     )}
-
-                    <div className="flex gap-3">
-                      <Button
-                        variant="outline"
-                        size="lg"
-                        onClick={() => setCurrentStep(1)}
-                        className="flex-1"
-                      >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Voltar
-                      </Button>
-                      <Button
-                        className="flex-1 bg-gradient-primary"
-                        size="lg"
-                        onClick={handleCheckout}
-                        disabled={
-                          !storeIsOpen || 
-                          isCreating || 
-                          !customerName ||
-                          !customerPhone ||
-                          (deliveryType === 'delivery' && (!deliveryStreet || !deliveryNumber || !deliveryNeighborhood))
-                        }
-                      >
-                        {!storeIsOpen 
-                          ? 'Loja Fechada' 
-                          : isCreating 
-                            ? 'Finalizando...' 
-                            : 'Finalizar Pedido'}
-                      </Button>
+                    
+                    <div>
+                      <Label htmlFor="payment">Forma de Pagamento *</Label>
+                      <Select value={paymentMethod} onValueChange={(value: 'pix' | 'dinheiro' | 'cartao') => setPaymentMethod(value)}>
+                        <SelectTrigger id="payment">
+                          <SelectValue placeholder="Selecione a forma de pagamento" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pix">PIX</SelectItem>
+                          <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                          <SelectItem value="cartao">Cartão</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  </motion.div>
+
+                    {paymentMethod === 'dinheiro' && (
+                      <div>
+                        <Label htmlFor="change">Troco para quanto? (opcional)</Label>
+                        <Input
+                          id="change"
+                          type="number"
+                          step="0.01"
+                          value={changeAmount}
+                          onChange={(e) => setChangeAmount(e.target.value)}
+                          placeholder="R$ 50,00"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Subtotal</span>
+                    <span>R$ {getTotal().toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>{deliveryType === 'pickup' ? 'Retirada' : 'Taxa de entrega'}</span>
+                    <span>{deliveryType === 'pickup' ? 'Grátis' : `R$ ${deliveryFee.toFixed(2)}`}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span className="text-primary">R$ {total.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                {!storeIsOpen && storeData && (
+                  <Alert variant="destructive">
+                    <Clock className="h-4 w-4" />
+                    <AlertDescription>
+                      <strong>{storeData.name} está fechada.</strong> {storeStatusText}. Você pode adicionar itens ao carrinho, mas não poderá finalizar o pedido até que a loja abra.
+                    </AlertDescription>
+                  </Alert>
                 )}
+
+                <Button
+                  className="w-full bg-gradient-primary"
+                  size="lg"
+                  onClick={handleCheckout}
+                  disabled={
+                    !storeIsOpen || 
+                    isCreating || 
+                    !customerName || 
+                    !customerEmail ||
+                    !customerPhone || 
+                    (deliveryType === 'delivery' && (!deliveryStreet || !deliveryNumber || !deliveryNeighborhood))
+                  }
+                >
+                  {!storeIsOpen 
+                    ? 'Loja Fechada - Pedido Indisponível' 
+                    : isCreating 
+                      ? 'Finalizando...' 
+                      : 'Finalizar Pedido'}
+                </Button>
               </CardContent>
             </Card>
           </motion.div>
         </div>
       </main>
 
+      {/* Login Modal */}
+      <LoginModal
+        open={showAuthDialog}
+        onClose={() => {
+          setShowAuthDialog(false);
+          setAuthModalEmail("");
+          setAuthModalFullName("");
+          setAuthModalPhone("");
+          setAuthModalMessage(undefined);
+          setAuthModalMode(undefined);
+        }}
+        onSignUp={handleModalSignUp}
+        onSignIn={handleModalSignIn}
+        isLoading={isAuthLoading}
+        initialEmail={authModalEmail}
+        initialFullName={authModalFullName}
+        initialPhone={authModalPhone}
+        customMessage={authModalMessage}
+        forceMode={authModalMode}
+      />
       
       {/* Edit Item Dialog */}
       {editingItem && (

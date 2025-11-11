@@ -1,7 +1,4 @@
-project_id = "mgpzowiahnwcmcaelogf"
-
-[functions.check-email-exists]
-verify_jwt = false
+project_id = "aqxgwdwuhgdxlwmbxxbi"
 
 [functions.evolution-whatsapp]
 verify_jwt = false
@@ -10,7 +7,4 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.meta-tags-proxy]
-verify_jwt = false
-
-[functions.migrate-product-images]
 verify_jwt = false

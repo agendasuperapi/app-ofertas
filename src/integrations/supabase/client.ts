@@ -13,18 +13,14 @@ const ENV_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsIn
 
 // Função para obter configurações
 const getSupabaseConfig = () => {
-  // Preferir variáveis do Vite (.env/.env.local) se existirem; caso contrário, usar valores gerados
-  const viteEnv = (typeof import.meta !== 'undefined' ? (import.meta as unknown as { env?: Record<string, unknown> }).env : undefined) || undefined;
-  const viteUrl = viteEnv && typeof viteEnv.VITE_SUPABASE_URL === 'string' ? viteEnv.VITE_SUPABASE_URL as string : '';
-  const viteKey = viteEnv && typeof viteEnv.VITE_SUPABASE_ANON_KEY === 'string' ? viteEnv.VITE_SUPABASE_ANON_KEY as string : '';
-
-  const url = viteUrl || ENV_URL;
-  const key = viteKey || ENV_KEY;
+  // Usar variáveis de ambiente 
+  const url = ENV_URL;
+  const key = ENV_KEY;
   
   return {
     url,
     key,
-    isPlaceholder: !url || !key || (url === ENV_URL && key === ENV_KEY)
+    isPlaceholder: !ENV_URL || !ENV_KEY
   };
 };
 
@@ -43,5 +39,5 @@ export const SUPABASE_PUBLISHABLE_KEY = initialConfig.key;
 
 // Função para verificar se o Supabase está configurado corretamente
 export const isSupabaseConfigured = () => {
-  return !!(initialConfig.url && initialConfig.key);
+  return !!(ENV_URL && ENV_KEY);
 };

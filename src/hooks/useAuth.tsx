@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string, phone?: string, skipNavigation?: boolean) => {
-    const redirectUrl = `https://ofertas.app/`;
+    const redirectUrl = `${window.location.origin}/`;
     
     const { error, data } = await supabase.auth.signUp({
       email,
