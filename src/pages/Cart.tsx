@@ -41,7 +41,7 @@ export default function Cart() {
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'dinheiro' | 'cartao'>('pix');
   const [changeAmount, setChangeAmount] = useState("");
-  const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>('delivery');
+  const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>('pickup');
   
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
