@@ -116,7 +116,7 @@ export const useOrders = () => {
       // Generate order number
       const orderNumber = `#${Date.now().toString().slice(-8)}`;
 
-      // Create order with validated data
+      // Create order with validated data (without notes to avoid cache issue)
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -129,7 +129,6 @@ export const useOrders = () => {
           delivery_number: validatedData.deliveryNumber || null,
           delivery_neighborhood: validatedData.deliveryNeighborhood || null,
           delivery_complement: validatedData.deliveryComplement || null,
-          notes: validatedData.notes || null,
           order_number: orderNumber,
           subtotal,
           delivery_fee: deliveryFee,
@@ -143,6 +142,19 @@ export const useOrders = () => {
 
       if (orderError) {
         throw orderError;
+      }
+
+      // Update order with notes field separately to avoid PostgREST cache issue
+      if (validatedData.notes) {
+        const { error: notesError } = await supabase
+          .from('orders')
+          .update({ notes: validatedData.notes })
+          .eq('id', order.id);
+        
+        if (notesError) {
+          console.error('Error updating order notes:', notesError);
+          // Don't throw - order is already created
+        }
       }
 
       // Create order items with validated data
