@@ -9,9 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 // Removed extra Supabase client to avoid multiple instances warning
 
-// Edge Function (Cloud) URL - public call, JWT not required
-const CLOUD_FUNCTION_URL = 'https://aqxgwdwuhgdxlwmbxxbi.functions.supabase.co/evolution-whatsapp';
-const CLOUD_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+// Edge Function URL - usando variável de ambiente
+const CLOUD_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/evolution-whatsapp`;
+const CLOUD_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Unified invoker to Evolution function (keeps same return shape as supabase.functions.invoke)
 const invokeEvolution = async (payload: any) => {
