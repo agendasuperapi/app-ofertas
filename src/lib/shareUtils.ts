@@ -4,8 +4,7 @@
  * for social media crawlers (WhatsApp, Facebook, etc.)
  */
 export const getShareableProductUrl = (shortId: string): string => {
-  const supabaseProjectId = 'aqxgwdwuhgdxlwmbxxbi';
-  return `https://${supabaseProjectId}.supabase.co/functions/v1/meta-tags-proxy?short_id=${shortId}`;
+  return `https://ofertas.app/p/${shortId}`;
 };
 
 /**
