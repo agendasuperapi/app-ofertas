@@ -250,6 +250,39 @@ export default function Cart() {
 
     console.log('Starting checkout process...');
     
+    // Prepare order data
+    const orderData = {
+      storeId: cart.storeId!,
+      items: cart.items.map(item => ({
+        productId: item.productId,
+        productName: item.productName,
+        quantity: item.quantity,
+        unitPrice: item.promotionalPrice || item.price,
+        observation: item.observation || undefined,
+        addons: Array.isArray(item.addons) 
+          ? item.addons
+              .filter(addon => addon && addon.id && addon.name && typeof addon.price === 'number')
+              .map(addon => ({
+                id: String(addon.id),
+                name: String(addon.name),
+                price: Number(addon.price),
+              }))
+          : [],
+      })),
+      customerName,
+      customerPhone,
+      deliveryType,
+      deliveryStreet: deliveryType === 'delivery' ? (deliveryStreet || undefined) : undefined,
+      deliveryNumber: deliveryType === 'delivery' ? (deliveryNumber || undefined) : undefined,
+      deliveryNeighborhood: deliveryType === 'delivery' ? (deliveryNeighborhood || undefined) : undefined,
+      deliveryComplement: deliveryType === 'delivery' ? (deliveryComplement || undefined) : undefined,
+      notes: notes || undefined,
+      paymentMethod,
+      changeAmount: paymentMethod === 'dinheiro' && changeAmount ? Number(parseFloat(changeAmount)) : undefined,
+    };
+    
+    console.log('📤 [CART] Enviando dados do pedido:', JSON.stringify(orderData, null, 2));
+    
     // Update user profile with current data
     const { error: profileError } = await supabase
       .from('profiles')
@@ -277,35 +310,7 @@ export default function Cart() {
 
     // Create order
     try {
-      await createOrder({
-        storeId: cart.storeId!,
-        items: cart.items.map(item => ({
-          productId: item.productId,
-          productName: item.productName,
-          quantity: item.quantity,
-          unitPrice: item.promotionalPrice || item.price,
-          observation: item.observation || undefined,
-          addons: Array.isArray(item.addons) 
-            ? item.addons
-                .filter(addon => addon && addon.id && addon.name && typeof addon.price === 'number')
-                .map(addon => ({
-                  id: String(addon.id),
-                  name: String(addon.name),
-                  price: Number(addon.price),
-                }))
-            : [],
-        })),
-        customerName,
-        customerPhone,
-        deliveryType,
-        deliveryStreet: deliveryType === 'delivery' ? (deliveryStreet || undefined) : undefined,
-        deliveryNumber: deliveryType === 'delivery' ? (deliveryNumber || undefined) : undefined,
-        deliveryNeighborhood: deliveryType === 'delivery' ? (deliveryNeighborhood || undefined) : undefined,
-        deliveryComplement: deliveryType === 'delivery' ? (deliveryComplement || undefined) : undefined,
-        notes: notes || undefined,
-        paymentMethod,
-        changeAmount: paymentMethod === 'dinheiro' && changeAmount ? parseFloat(changeAmount) : undefined,
-      });
+      await createOrder(orderData);
 
       console.log('Order created successfully, clearing cart...');
       
