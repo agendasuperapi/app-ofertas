@@ -283,9 +283,8 @@ export default function Cart() {
           observation: item.observation || undefined,
           addons: Array.isArray(item.addons) 
             ? item.addons
-                .filter(addon => addon && addon.id && addon.name && typeof addon.price === 'number')
+                .filter(addon => addon && addon.name && typeof addon.price === 'number')
                 .map(addon => ({
-                  id: String(addon.id),
                   name: String(addon.name),
                   price: Number(addon.price),
                 }))
