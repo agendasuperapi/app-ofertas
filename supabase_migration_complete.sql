@@ -127,6 +127,7 @@ CREATE TABLE public.orders (
   delivery_number text DEFAULT '',
   delivery_neighborhood text DEFAULT '',
   delivery_complement text,
+  notes text,
   payment_method text NOT NULL DEFAULT 'pix',
   change_amount numeric,
   subtotal numeric NOT NULL,

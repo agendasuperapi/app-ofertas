@@ -22,70 +22,24 @@ No dashboard do Supabase, vá em **Authentication > Providers**:
 ### 3. Executar Migrations
 
 1. No dashboard do Supabase, vá em **SQL Editor**
-2. Execute todos os arquivos de migration da pasta `supabase/migrations/` na ordem cronológica
-3. Execute também as functions e triggers
+2. Abra o arquivo **`setup_supabase.sql`** na raiz do projeto
+3. **Copie todo o conteúdo** deste arquivo
+4. **Cole no SQL Editor** do Supabase
+5. **Execute** o script (botão RUN)
+6. Aguarde a conclusão (leva ~1 minuto)
 
-### 4. Configurar Storage Buckets
-
-Execute no SQL Editor:
-
-```sql
--- Criar buckets
-INSERT INTO storage.buckets (id, name, public)
-VALUES 
-  ('store-logos', 'store-logos', true),
-  ('store-banners', 'store-banners', true),
-  ('product-images', 'product-images', true);
-
--- Políticas de storage para store-logos
-CREATE POLICY "Store logos são públicos"
-ON storage.objects FOR SELECT
-USING (bucket_id = 'store-logos');
-
-CREATE POLICY "Donos podem fazer upload de logos"
-ON storage.objects FOR INSERT
-WITH CHECK (
-  bucket_id = 'store-logos' 
-  AND auth.uid() IS NOT NULL
-);
-
--- Políticas de storage para store-banners
-CREATE POLICY "Store banners são públicos"
-ON storage.objects FOR SELECT
-USING (bucket_id = 'store-banners');
-
-CREATE POLICY "Donos podem fazer upload de banners"
-ON storage.objects FOR INSERT
-WITH CHECK (
-  bucket_id = 'store-banners' 
-  AND auth.uid() IS NOT NULL
-);
-
--- Políticas de storage para product-images
-CREATE POLICY "Product images são públicos"
-ON storage.objects FOR SELECT
-USING (bucket_id = 'product-images');
-
-CREATE POLICY "Donos podem fazer upload de imagens de produtos"
-ON storage.objects FOR INSERT
-WITH CHECK (
-  bucket_id = 'product-images' 
-  AND auth.uid() IS NOT NULL
-);
-```
-
-### 5. Configurar Secrets no Supabase
+### 4. Configurar Secrets no Supabase
 
 No dashboard, vá em **Project Settings > Edge Functions > Secrets**:
 - Adicione `EVOLUTION_API_KEY` (se usar WhatsApp)
 
-### 6. Atualizar Credenciais no Projeto Lovable
+### 5. Atualizar Credenciais no Projeto Lovable
 
 1. No Lovable, vá em **Settings > Tools**
 2. **Desconecte** do Lovable Cloud
 3. **Conecte** ao seu Supabase usando as credenciais que você anotou
 
-### 7. Importar Dados (Opcional)
+### 6. Importar Dados (Opcional)
 
 Se você tem dados no Lovable Cloud que quer migrar:
 
@@ -93,7 +47,7 @@ Se você tem dados no Lovable Cloud que quer migrar:
 2. Salve os resultados
 3. No seu Supabase, use o SQL Editor para importar os dados
 
-### 8. Testar a Aplicação
+### 7. Testar a Aplicação
 
 1. Faça login/cadastro para testar autenticação
 2. Teste upload de imagens
