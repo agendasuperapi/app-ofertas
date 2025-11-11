@@ -199,7 +199,7 @@ export const StoreOwnerDashboard = () => {
     setIsHoursDialogOpen(false);
   };
 
-  const storeUrl = myStore ? `https://ofertas.app/${myStore.slug}` : '';
+  const storeUrl = myStore ? `https://appofertas.lovable.app/${myStore.slug}` : '';
 
   const handleCopyUrl = async () => {
     if (storeUrl) {

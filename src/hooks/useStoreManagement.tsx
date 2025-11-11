@@ -96,7 +96,7 @@ export const useStoreManagement = () => {
           email: storeData.email,
           password: storeData.password,
           options: {
-            emailRedirectTo: `https://ofertas.app/dashboard`,
+            emailRedirectTo: `https://appofertas.lovable.app/dashboard`,
             data: {
               full_name: storeData.owner_name || storeData.name,
               phone: storeData.owner_phone || storeData.phone,
