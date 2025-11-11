@@ -234,7 +234,7 @@ export default function Cart() {
     }
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = async () => {
     // Validate step 1 fields
     if (!customerName || !customerEmail || !customerPhone) {
       toast({
@@ -254,6 +254,33 @@ export default function Cart() {
         variant: "destructive",
       });
       return;
+    }
+
+    // If user is not logged in, check if email already exists
+    if (!user) {
+      setIsCheckingEmail(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('check-email-exists', {
+          body: { email: customerEmail.trim() }
+        });
+        
+        if (!error && data?.exists) {
+          // Email exists - open login modal with email prefilled
+          setAuthModalEmail(customerEmail.trim());
+          setAuthModalFullName("");
+          setAuthModalPhone("");
+          setAuthModalMessage("Este e-mail já possui cadastro. Digite a senha e efetue o login.");
+          setAuthModalMode('login');
+          setShowAuthDialog(true);
+          setIsCheckingEmail(false);
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking email:', error);
+        // Continue to next step even if check fails
+      } finally {
+        setIsCheckingEmail(false);
+      }
     }
 
     setCurrentStep(2);
