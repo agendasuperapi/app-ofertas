@@ -506,20 +506,6 @@ export const StoreOwnerDashboard = () => {
       <DashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} />
       
       <div className="flex-1 ml-28">
-        {/* Header */}
-        <motion.header
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="bg-card border-b border-border px-8 py-4 flex items-center justify-between shadow-sm"
-        >
-          <div className="flex items-center gap-4">
-            <span className="text-foreground font-medium">{myStore?.name || 'Lojista'}</span>
-            <button className="p-2 hover:bg-muted rounded-lg transition-colors">
-              <Menu className="w-5 h-5 text-foreground" />
-            </button>
-          </div>
-        </motion.header>
-
         {activeTab === 'home' && (
           <motion.div
             initial={{ opacity: 0 }}
