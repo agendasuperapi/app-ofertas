@@ -28,18 +28,7 @@ const Dashboard = () => {
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
           {hasRole('store_owner') ? (
-            <>
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="mb-8"
-              >
-                <h1 className="text-5xl font-bold gradient-text mb-2">Dashboard do Lojista</h1>
-                <p className="text-muted-foreground text-lg">Gerencie sua loja e produtos</p>
-              </motion.div>
-              <StoreOwnerDashboard />
-            </>
+            <StoreOwnerDashboard />
           ) : hasRole('admin') ? (
             <>
               <motion.div
