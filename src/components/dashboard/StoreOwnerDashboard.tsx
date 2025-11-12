@@ -1026,48 +1026,38 @@ export const StoreOwnerDashboard = () => {
 
               {/* Filtros de Data */}
               <div className="space-y-3 mb-4">
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant={dateFilter === 'daily' ? 'default' : 'outline'}
-                    onClick={() => setDateFilter('daily')}
-                    size="sm"
-                    className="flex items-center gap-2"
+                <div className="flex flex-wrap items-center gap-3">
+                  <Label className="text-sm font-medium">Filtrar por período:</Label>
+                  <Select
+                    value={dateFilter}
+                    onValueChange={(value: 'daily' | 'weekly' | 'monthly' | 'custom') => setDateFilter(value)}
                   >
-                    <CalendarIcon className="w-4 h-4" />
-                    Diário
-                  </Button>
-                  <Button
-                    variant={dateFilter === 'weekly' ? 'default' : 'outline'}
-                    onClick={() => setDateFilter('weekly')}
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <CalendarIcon className="w-4 h-4" />
-                    Semanal
-                  </Button>
-                  <Button
-                    variant={dateFilter === 'monthly' ? 'default' : 'outline'}
-                    onClick={() => setDateFilter('monthly')}
-                    size="sm"
-                    className="flex items-center gap-2"
-                  >
-                    <CalendarIcon className="w-4 h-4" />
-                    Mensal
-                  </Button>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant={dateFilter === 'custom' ? 'default' : 'outline'}
-                        onClick={() => setDateFilter('custom')}
-                        size="sm"
-                        className="flex items-center gap-2"
-                      >
-                        <CalendarIcon className="w-4 h-4" />
-                        Personalizado
-                      </Button>
-                    </PopoverTrigger>
-                    {dateFilter === 'custom' && (
-                      <PopoverContent className="w-auto p-0" align="start">
+                    <SelectTrigger className="w-[200px] bg-background z-50">
+                      <SelectValue placeholder="Selecione o período" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="daily">📅 Diário</SelectItem>
+                      <SelectItem value="weekly">📆 Semanal</SelectItem>
+                      <SelectItem value="monthly">🗓️ Mensal</SelectItem>
+                      <SelectItem value="custom">⚙️ Personalizado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  {dateFilter === 'custom' && (
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
+                          <CalendarIcon className="w-4 h-4" />
+                          {customDateRange.from && customDateRange.to
+                            ? `${format(customDateRange.from, "dd/MM/yyyy")} - ${format(customDateRange.to, "dd/MM/yyyy")}`
+                            : 'Selecionar datas'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0 bg-background z-50" align="start">
                         <div className="p-4 space-y-2">
                           <Label>Selecione o período</Label>
                           <Calendar
@@ -1088,8 +1078,8 @@ export const StoreOwnerDashboard = () => {
                           />
                         </div>
                       </PopoverContent>
-                    )}
-                  </Popover>
+                    </Popover>
+                  )}
                   
                   {dateFilter !== 'daily' && (
                     <Button
@@ -1106,12 +1096,6 @@ export const StoreOwnerDashboard = () => {
                     </Button>
                   )}
                 </div>
-                
-                {dateFilter === 'custom' && customDateRange.from && customDateRange.to && (
-                  <div className="text-sm text-muted-foreground">
-                    Período: {format(customDateRange.from, "dd/MM/yyyy", { locale: ptBR })} até {format(customDateRange.to, "dd/MM/yyyy", { locale: ptBR })}
-                  </div>
-                )}
               </div>
 
               {/* Botões de Status */}
