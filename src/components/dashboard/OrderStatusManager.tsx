@@ -39,6 +39,7 @@ export const OrderStatusManager = ({ storeId }: OrderStatusManagerProps) => {
   const [loading, setLoading] = useState(true);
   const [editingStatus, setEditingStatus] = useState<OrderStatus | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<'active' | 'inactive' | 'all'>('active');
 
   useEffect(() => {
     loadStatuses();
@@ -301,8 +302,38 @@ export const OrderStatusManager = ({ storeId }: OrderStatusManagerProps) => {
         </div>
       </CardHeader>
       <CardContent>
+        <div className="flex gap-2 mb-4">
+          <Button
+            variant={activeFilter === 'active' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveFilter('active')}
+          >
+            Ativas
+          </Button>
+          <Button
+            variant={activeFilter === 'inactive' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveFilter('inactive')}
+          >
+            Inativas
+          </Button>
+          <Button
+            variant={activeFilter === 'all' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveFilter('all')}
+          >
+            Todas
+          </Button>
+        </div>
+
         <div className="space-y-2">
-          {statuses.map((status) => (
+          {statuses
+            .filter((status) => {
+              if (activeFilter === 'active') return status.is_active;
+              if (activeFilter === 'inactive') return !status.is_active;
+              return true;
+            })
+            .map((status) => (
             <div
               key={status.id}
               className="flex items-center gap-3 p-4 border rounded-lg hover:bg-accent/5 transition-colors"
@@ -351,9 +382,16 @@ export const OrderStatusManager = ({ storeId }: OrderStatusManagerProps) => {
             </div>
           ))}
 
-          {statuses.length === 0 && (
+          {statuses.filter((status) => {
+            if (activeFilter === 'active') return status.is_active;
+            if (activeFilter === 'inactive') return !status.is_active;
+            return true;
+          }).length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
-              Nenhuma etapa configurada. Clique em "Adicionar Etapa" para começar.
+              {statuses.length === 0 
+                ? 'Nenhuma etapa configurada. Clique em "Adicionar Etapa" para começar.'
+                : `Nenhuma etapa ${activeFilter === 'active' ? 'ativa' : 'inativa'} encontrada.`
+              }
             </div>
           )}
         </div>
