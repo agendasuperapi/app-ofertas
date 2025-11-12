@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useOrders } from "@/hooks/useOrders";
 import { useFavorites } from "@/hooks/useFavorites";
+import { useProfile } from "@/hooks/useProfile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingBag, Heart, Store, TrendingUp, Eye, X, Sparkles, Calendar, DollarSign, Package, Clock } from "lucide-react";
@@ -27,8 +28,12 @@ import { ptBR } from "date-fns/locale";
 export const CustomerDashboard = () => {
   const { orders, isLoading: ordersLoading } = useOrders();
   const { favorites } = useFavorites();
+  const { profile } = useProfile();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [periodFilter, setPeriodFilter] = useState<string>("all");
+
+  // Extract first name from full name
+  const firstName = profile?.full_name?.split(' ')[0] || 'Visitante';
 
   // Helper functions
   const getStatusLabel = (status: string) => {
@@ -165,10 +170,25 @@ export const CustomerDashboard = () => {
 
   return (
     <div className="space-y-6">
+      {/* Welcome Message */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center py-6"
+      >
+        <h1 className="text-4xl font-bold gradient-text mb-2">
+          Seja bem-vindo(a), {firstName}!
+        </h1>
+        <p className="text-muted-foreground text-lg">
+          Acompanhe seus pedidos e estatísticas
+        </p>
+      </motion.div>
+
       {/* Period Filter */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
         className="flex items-center justify-between"
       >
         <div>
