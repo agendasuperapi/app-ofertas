@@ -132,6 +132,22 @@ export const useOrders = () => {
         if (addonsError) throw addonsError;
       }
 
+      // 📱 Enviar WhatsApp DEPOIS de todos os items inseridos
+      try {
+        console.log("📱 Enviando WhatsApp...");
+        const { error: whatsappError } = await supabase.functions.invoke('send-order-whatsapp', {
+          body: { record: createdOrder }
+        });
+
+        if (whatsappError) {
+          console.error("❌ WhatsApp error:", whatsappError);
+        } else {
+          console.log("✅ WhatsApp enviado com sucesso");
+        }
+      } catch (error) {
+        console.error("❌ WhatsApp exception:", error);
+      }
+
       return createdOrder;
     },
 

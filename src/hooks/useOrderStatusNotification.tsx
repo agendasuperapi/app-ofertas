@@ -8,7 +8,7 @@ export const useOrderStatusNotification = (storeId: string | undefined) => {
   useEffect(() => {
     if (!storeId) return;
 
-    // Subscribe to order updates
+    // Subscribe to order status changes (not creation)
     const channel = supabase
       .channel('order-status-changes')
       .on(
@@ -20,7 +20,10 @@ export const useOrderStatusNotification = (storeId: string | undefined) => {
           filter: `store_id=eq.${storeId}`
         },
         async (payload) => {
-          console.log('Order status changed:', payload);
+          // Only send WhatsApp if status changed
+          if (payload.old.status === payload.new.status) return;
+
+          console.log('Order status changed:', payload.old.status, '->', payload.new.status);
           
           // Send WhatsApp notification
           try {
@@ -37,7 +40,7 @@ export const useOrderStatusNotification = (storeId: string | undefined) => {
               console.log('WhatsApp notification sent successfully');
               toast({
                 title: "Mensagem enviada",
-                description: `WhatsApp enviado para o cliente sobre o pedido #${payload.new.order_number}`,
+                description: `WhatsApp enviado para o cliente sobre o pedido ${payload.new.order_number}`,
               });
             }
           } catch (error) {
