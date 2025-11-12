@@ -11,11 +11,6 @@ interface DashboardSidebarProps {
 
 export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarProps) => {
   const [cadastrosOpen, setCadastrosOpen] = useState(false);
-  const [homeOpen, setHomeOpen] = useState(false);
-
-  const homeSubItems = [
-    { id: 'home', label: 'dashboard', icon: Home },
-  ];
 
   const cadastrosSubItems = [
     { id: 'produtos', label: 'produtos', icon: Package },
@@ -29,7 +24,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
   ];
 
   const menuItems = [
-    { id: 'home', label: 'home', icon: Home, hasSubmenu: true },
+    { id: 'home', label: 'home', icon: Home },
     { id: 'cadastros', label: 'cadastros', icon: FolderOpen, hasSubmenu: true },
     { id: 'metricas', label: 'métricas', icon: TrendingUp },
     { id: 'result', label: 'result', icon: BarChart3 },
@@ -55,11 +50,9 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
           const isActive = activeTab === item.id;
           
           if (item.hasSubmenu) {
-            const isHomeMenu = item.id === 'home';
-            const isCadastrosMenu = item.id === 'cadastros';
-            const isOpen = isHomeMenu ? homeOpen : cadastrosOpen;
-            const setOpen = isHomeMenu ? setHomeOpen : setCadastrosOpen;
-            const subItems = isHomeMenu ? homeSubItems : cadastrosSubItems;
+            const isOpen = cadastrosOpen;
+            const setOpen = setCadastrosOpen;
+            const subItems = cadastrosSubItems;
             
             return (
               <div key={item.id}>
