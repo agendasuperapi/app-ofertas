@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useOrders } from "@/hooks/useOrders";
 import { useFavorites } from "@/hooks/useFavorites";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Heart, Store, TrendingUp, Eye, X, Sparkles } from "lucide-react";
+import { ShoppingBag, Heart, Store, TrendingUp, Eye, X, Sparkles, Calendar, DollarSign, Package, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -13,15 +13,99 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { format, subDays, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export const CustomerDashboard = () => {
   const { orders, isLoading: ordersLoading } = useOrders();
   const { favorites } = useFavorites();
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [periodFilter, setPeriodFilter] = useState<string>("all");
 
-  const totalOrders = orders?.length || 0;
-  const totalSpent = orders?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
-  const recentOrders = orders?.slice(0, 3) || [];
+  // Filter orders based on period
+  const filteredOrders = useMemo(() => {
+    if (!orders) return [];
+    
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date = now;
+
+    switch (periodFilter) {
+      case "today":
+        startDate = startOfDay(now);
+        endDate = endOfDay(now);
+        break;
+      case "week":
+        startDate = startOfWeek(now, { locale: ptBR });
+        endDate = endOfWeek(now, { locale: ptBR });
+        break;
+      case "month":
+        startDate = startOfMonth(now);
+        endDate = endOfMonth(now);
+        break;
+      case "7days":
+        startDate = subDays(now, 7);
+        break;
+      case "30days":
+        startDate = subDays(now, 30);
+        break;
+      default:
+        return orders;
+    }
+
+    return orders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      return isWithinInterval(orderDate, { start: startDate, end: endDate });
+    });
+  }, [orders, periodFilter]);
+
+  // Calculate metrics
+  const totalOrders = filteredOrders?.length || 0;
+  const totalSpent = filteredOrders?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
+  const averageOrder = totalOrders > 0 ? totalSpent / totalOrders : 0;
+  const recentOrders = filteredOrders?.slice(0, 3) || [];
+
+  // Orders by status
+  const ordersByStatus = useMemo(() => {
+    const statusCount: Record<string, number> = {};
+    filteredOrders?.forEach(order => {
+      const status = getStatusLabel(order.status);
+      statusCount[status] = (statusCount[status] || 0) + 1;
+    });
+    return Object.entries(statusCount).map(([name, value]) => ({ name, value }));
+  }, [filteredOrders]);
+
+  // Orders over time
+  const ordersOverTime = useMemo(() => {
+    if (!filteredOrders || filteredOrders.length === 0) return [];
+
+    const ordersByDate: Record<string, { date: string; pedidos: number; valor: number }> = {};
+    
+    filteredOrders.forEach(order => {
+      const date = format(new Date(order.created_at), "dd/MM", { locale: ptBR });
+      if (!ordersByDate[date]) {
+        ordersByDate[date] = { date, pedidos: 0, valor: 0 };
+      }
+      ordersByDate[date].pedidos += 1;
+      ordersByDate[date].valor += Number(order.total);
+    });
+
+    return Object.values(ordersByDate).sort((a, b) => {
+      const [dayA, monthA] = a.date.split('/').map(Number);
+      const [dayB, monthB] = b.date.split('/').map(Number);
+      return monthA === monthB ? dayA - dayB : monthA - monthB;
+    });
+  }, [filteredOrders]);
+
+  const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
   const getStatusLabel = (status: string) => {
     const statusMap: Record<string, string> = {
@@ -80,6 +164,32 @@ export const CustomerDashboard = () => {
 
   return (
     <div className="space-y-6">
+      {/* Period Filter */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <h2 className="text-2xl font-bold gradient-text">Minhas Estatísticas</h2>
+          <p className="text-muted-foreground">Acompanhe seus pedidos e gastos</p>
+        </div>
+        <Select value={periodFilter} onValueChange={setPeriodFilter}>
+          <SelectTrigger className="w-[200px]">
+            <Calendar className="h-4 w-4 mr-2" />
+            <SelectValue placeholder="Período" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos os Pedidos</SelectItem>
+            <SelectItem value="today">Hoje</SelectItem>
+            <SelectItem value="7days">Últimos 7 Dias</SelectItem>
+            <SelectItem value="week">Esta Semana</SelectItem>
+            <SelectItem value="30days">Últimos 30 Dias</SelectItem>
+            <SelectItem value="month">Este Mês</SelectItem>
+          </SelectContent>
+        </Select>
+      </motion.div>
+
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <motion.div
@@ -142,6 +252,34 @@ export const CustomerDashboard = () => {
           animate="visible"
           variants={cardVariants}
         >
+          <Card className="hover-scale overflow-hidden relative border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full -mr-16 -mt-16" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+              <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
+              <motion.div
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+              >
+                <DollarSign className="h-5 w-5 text-purple-500" />
+              </motion.div>
+            </CardHeader>
+            <CardContent className="relative z-10">
+              <div className="text-3xl font-bold text-purple-500">
+                R$ {averageOrder.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Valor médio por pedido
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          custom={3}
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+        >
           <Card className="hover-scale overflow-hidden relative border-pink-500/20 bg-gradient-to-br from-pink-500/5 to-transparent">
             <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 rounded-full -mr-16 -mt-16" />
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
@@ -161,37 +299,182 @@ export const CustomerDashboard = () => {
             </CardContent>
           </Card>
         </motion.div>
+      </div>
 
-        <motion.div
-          custom={3}
-          initial="hidden"
-          animate="visible"
-          variants={cardVariants}
-        >
-          <Card className="hover-scale overflow-hidden relative border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full -mr-16 -mt-16" />
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
-              <CardTitle className="text-sm font-medium">Ações Rápidas</CardTitle>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              >
-                <Sparkles className="h-5 w-5 text-blue-500" />
-              </motion.div>
-            </CardHeader>
-            <CardContent className="relative z-10">
-              <div className="flex flex-col gap-2">
-                <Button asChild size="sm" className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600">
+      {/* Charts Section */}
+      {totalOrders > 0 && (
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Orders Over Time */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Card className="shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-primary" />
+                  Pedidos ao Longo do Tempo
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={ordersOverTime}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                      }}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="pedidos" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={3}
+                      dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+                      name="Pedidos"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Value Over Time */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <Card className="shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-green-500/5 to-transparent">
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-green-500" />
+                  Valor Gasto ao Longo do Tempo
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={ordersOverTime}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                    />
+                    <YAxis 
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={12}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px',
+                      }}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
+                      formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Valor']}
+                    />
+                    <Bar 
+                      dataKey="valor" 
+                      fill="hsl(142 76% 36%)"
+                      radius={[8, 8, 0, 0]}
+                      name="Valor"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Orders by Status */}
+          {ordersByStatus.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+            >
+              <Card className="shadow-lg">
+                <CardHeader className="bg-gradient-to-r from-blue-500/5 to-transparent">
+                  <CardTitle className="flex items-center gap-2">
+                    <Package className="h-5 w-5 text-blue-500" />
+                    Pedidos por Status
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={ordersByStatus}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                        outerRadius={100}
+                        fill="hsl(var(--primary))"
+                        dataKey="value"
+                      >
+                        {ordersByStatus.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px',
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Quick Actions */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+          >
+            <Card className="shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-purple-500/5 to-transparent">
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-purple-500" />
+                  Ações Rápidas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6 space-y-3">
+                <Button asChild className="w-full bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90">
                   <Link to="/">
                     <Store className="h-4 w-4 mr-2" />
                     Explorar Lojas
                   </Link>
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+                <Button asChild variant="outline" className="w-full">
+                  <Link to="/orders">
+                    <ShoppingBag className="h-4 w-4 mr-2" />
+                    Ver Todos os Pedidos
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      )}
 
       {/* Recent Orders */}
       <motion.div
