@@ -124,7 +124,7 @@ export const PersonalDataSettings = () => {
           Informações Pessoais
         </CardTitle>
         <CardDescription>
-          Atualize seus dados pessoais e endereço de entrega
+          Atualize seus dados pessoais
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -184,73 +184,7 @@ export const PersonalDataSettings = () => {
               </div>
             </div>
 
-            {/* Address Section */}
-            <div className="space-y-4 pt-6 border-t">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Endereço de Entrega
-              </h3>
-
-              <FormField
-                control={form.control}
-                name="street"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Rua</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Nome da rua" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="street_number"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Número</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nº" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="neighborhood"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bairro</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Bairro" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="complement"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Complemento (Opcional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Apto, bloco, etc" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <Button type="submit" className="w-full" disabled={isUpdating}>
+            <Button type="submit" className="w-full mt-6" disabled={isUpdating}>
               {isUpdating ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </form>
