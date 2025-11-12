@@ -1005,6 +1005,340 @@ export const StoreOwnerDashboard = () => {
           </motion.div>
         )}
 
+        {activeTab === 'produtos' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="p-8 space-y-6"
+          >
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold gradient-text">Meus Produtos</h2>
+                <p className="text-muted-foreground">Gerencie o cardápio da sua loja</p>
+              </div>
+              <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => setEditingProduct(null)} size="lg">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Novo Produto
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+                  <DialogHeader className="flex-shrink-0">
+                    <DialogTitle>
+                      {editingProduct ? 'Editar Produto' : 'Novo Produto'}
+                    </DialogTitle>
+                  </DialogHeader>
+                  
+                  <ScrollArea className="flex-1 h-0 -mx-6 px-6">
+                    <div className="pr-4 space-y-4">
+                      <Tabs defaultValue="info" className="w-full">
+                        <TabsList className={`grid w-full ${productForm.is_pizza ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                          <TabsTrigger value="info">Informações</TabsTrigger>
+                          {productForm.is_pizza && (
+                            <TabsTrigger value="flavors" disabled={!editingProduct}>
+                              Sabores {!editingProduct && <span className="text-xs ml-1">(salve primeiro)</span>}
+                            </TabsTrigger>
+                          )}
+                          <TabsTrigger value="addons" disabled={!editingProduct}>
+                            Adicionais {!editingProduct && <span className="text-xs ml-1">(salve primeiro)</span>}
+                          </TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="info" className="space-y-4 mt-4">
+                      
+                          <ImageUpload
+                            bucket="product-images"
+                            folder="temp"
+                            productId={editingProduct?.id}
+                            currentImageUrl={productForm.image_url}
+                            onUploadComplete={(url) => setProductForm({ ...productForm, image_url: url })}
+                            label="Imagem do Produto"
+                            aspectRatio="aspect-video"
+                          />
+                          <div>
+                            <Label>Nome *</Label>
+                            <Input
+                              value={productForm.name}
+                              onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                            />
+                          </div>
+                          <div>
+                            <Label>Categoria *</Label>
+                            <div className="flex gap-2">
+                              <Select 
+                                value={productForm.category} 
+                                onValueChange={(value) => setProductForm({ ...productForm, category: value })}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Selecione uma categoria" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {categories.map((cat) => (
+                                    <SelectItem key={cat.id} value={cat.name}>
+                                      {cat.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="icon">
+                                    <Plus className="w-4 h-4" />
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Nova Categoria</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <div>
+                                      <Label>Nome da Categoria</Label>
+                                      <Input
+                                        value={newCategoryName}
+                                        onChange={(e) => setNewCategoryName(e.target.value)}
+                                        placeholder="Ex: Hambúrgueres, Bebidas..."
+                                      />
+                                    </div>
+                                    <Button
+                                      onClick={async () => {
+                                        if (newCategoryName.trim()) {
+                                          await addCategory(newCategoryName.trim());
+                                          setNewCategoryName('');
+                                          setIsCategoryDialogOpen(false);
+                                        }
+                                      }}
+                                      className="w-full"
+                                    >
+                                      Adicionar Categoria
+                                    </Button>
+                                    
+                                    {categories.length > 0 && (
+                                      <>
+                                        <Separator />
+                                        <div>
+                                          <Label className="text-sm font-semibold mb-2 block">Categorias Cadastradas</Label>
+                                          <div className="space-y-2 max-h-48 overflow-y-auto">
+                                            {categories.map((cat) => (
+                                              <div key={cat.id} className="flex items-center justify-between p-2 rounded-md bg-muted">
+                                                <span className="text-sm">{cat.name}</span>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  className="h-6 w-6"
+                                                  onClick={() => deleteCategory(cat.id)}
+                                                >
+                                                  <X className="w-3 h-3" />
+                                                </Button>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                            </div>
+                          </div>
+                          <div>
+                            <Label>Descrição</Label>
+                            <Textarea
+                              value={productForm.description}
+                              onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                              rows={3}
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label>Preço *</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={productForm.price}
+                                onChange={(e) => setProductForm({ ...productForm, price: parseFloat(e.target.value) })}
+                              />
+                            </div>
+                            <div>
+                              <Label>Preço Promocional</Label>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={productForm.promotional_price}
+                                onChange={(e) => setProductForm({ ...productForm, promotional_price: parseFloat(e.target.value) })}
+                              />
+                            </div>
+                          </div>
+                          <Separator />
+                          
+                          <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                            <div className="flex items-center justify-between">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <Pizza className="w-4 h-4" />
+                                  <Label>Este produto permite múltiplos sabores (Pizza)</Label>
+                                </div>
+                                <p className="text-xs text-muted-foreground">
+                                  Ative para permitir que clientes escolham mais de um sabor
+                                </p>
+                              </div>
+                              <Switch
+                                checked={productForm.is_pizza}
+                                onCheckedChange={(checked) => setProductForm({ ...productForm, is_pizza: checked })}
+                              />
+                            </div>
+
+                            {productForm.is_pizza && (
+                              <div>
+                                <Label>Número máximo de sabores</Label>
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  max="4"
+                                  value={productForm.max_flavors}
+                                  onChange={(e) => setProductForm({ ...productForm, max_flavors: parseInt(e.target.value) || 2 })}
+                                />
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  Define quantos sabores o cliente pode escolher (ex: 2 para meio a meio)
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={productForm.is_available}
+                              onCheckedChange={(checked) => setProductForm({ ...productForm, is_available: checked })}
+                            />
+                            <Label>Disponível</Label>
+                          </div>
+                        </TabsContent>
+
+                        {productForm.is_pizza && (
+                          <TabsContent value="flavors" className="mt-4">
+                            {editingProduct && (
+                              <ProductFlavorsManager productId={editingProduct.id} />
+                            )}
+                          </TabsContent>
+                        )}
+
+                        <TabsContent value="addons" className="mt-4">
+                          {editingProduct && (
+                            <ProductAddonsManager productId={editingProduct.id} />
+                          )}
+                        </TabsContent>
+                      </Tabs>
+                    </div>
+                  </ScrollArea>
+                  
+                  <div className="flex-shrink-0 pt-4 border-t mt-4">
+                    <Button
+                      onClick={editingProduct ? handleUpdateProduct : handleCreateProduct}
+                      className="w-full"
+                    >
+                      {editingProduct ? 'Salvar Alterações' : 'Criar Produto'}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {/* Category Filter */}
+            <div className="flex items-center gap-2">
+              <Tag className="w-4 h-4 text-muted-foreground" />
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Filtrar por categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas as Categorias</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.name}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {categoryFilter !== 'all' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCategoryFilter('all')}
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Limpar
+                </Button>
+              )}
+            </div>
+
+            {/* Products Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {products
+                ?.filter(product => categoryFilter === 'all' || product.category === categoryFilter)
+                .map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card className="hover-scale border-muted/50 hover:border-primary/30 transition-all hover:shadow-lg">
+                    <CardContent className="p-4">
+                      {product.image_url && (
+                        <div className="aspect-video w-full rounded-lg overflow-hidden mb-3 bg-muted">
+                          <img
+                            src={product.image_url}
+                            alt={product.name}
+                            className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                          />
+                        </div>
+                      )}
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-semibold">{product.name}</h4>
+                          <p className="text-sm text-muted-foreground">{product.category}</p>
+                        </div>
+                        <Badge variant={product.is_available ? 'default' : 'secondary'}>
+                          {product.is_available ? 'Disponível' : 'Indisponível'}
+                        </Badge>
+                      </div>
+                      {product.description && (
+                        <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                          {product.description}
+                        </p>
+                      )}
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-primary text-lg">
+                          R$ {Number(product.price).toFixed(2)}
+                        </span>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditProduct(product)}
+                            className="hover-scale"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => deleteProduct(product.id)}
+                            className="hover-scale hover:border-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         {activeTab === 'result' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1072,12 +1406,8 @@ export const StoreOwnerDashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <Tabs defaultValue="products" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-5 bg-muted/50">
-                  <TabsTrigger value="products" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
-                    <Package className="w-4 h-4 mr-2" />
-                    Produtos
-                  </TabsTrigger>
+              <Tabs defaultValue="orders" className="space-y-6">
+                <TabsList className="grid w-full grid-cols-4 bg-muted/50">
                   <TabsTrigger value="orders" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
                     <ShoppingBag className="w-4 h-4 mr-2" />
                     Pedidos
@@ -1095,333 +1425,6 @@ export const StoreOwnerDashboard = () => {
                     Configurações
                   </TabsTrigger>
                 </TabsList>
-
-        {/* Products Tab */}
-        <TabsContent value="products" className="space-y-4">
-          <div className="flex flex-col gap-4 mb-6">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-bold">Meus Produtos</h3>
-              <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={() => setEditingProduct(null)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Novo Produto
-                  </Button>
-                </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-                <DialogHeader className="flex-shrink-0">
-                  <DialogTitle>
-                    {editingProduct ? 'Editar Produto' : 'Novo Produto'}
-                  </DialogTitle>
-                </DialogHeader>
-                
-                <ScrollArea className="flex-1 h-0 -mx-6 px-6">
-                  <div className="pr-4 space-y-4">
-                    <Tabs defaultValue="info" className="w-full">
-                      <TabsList className={`grid w-full ${productForm.is_pizza ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                        <TabsTrigger value="info">Informações</TabsTrigger>
-                        {productForm.is_pizza && (
-                          <TabsTrigger value="flavors" disabled={!editingProduct}>
-                            Sabores {!editingProduct && <span className="text-xs ml-1">(salve primeiro)</span>}
-                          </TabsTrigger>
-                        )}
-                        <TabsTrigger value="addons" disabled={!editingProduct}>
-                          Adicionais {!editingProduct && <span className="text-xs ml-1">(salve primeiro)</span>}
-                        </TabsTrigger>
-                      </TabsList>
-                      
-                      <TabsContent value="info" className="space-y-4 mt-4">
-                  
-                    <ImageUpload
-                      bucket="product-images"
-                      folder="temp"
-                      productId={editingProduct?.id}
-                      currentImageUrl={productForm.image_url}
-                      onUploadComplete={(url) => setProductForm({ ...productForm, image_url: url })}
-                      label="Imagem do Produto"
-                      aspectRatio="aspect-video"
-                    />
-                    <div>
-                      <Label>Nome *</Label>
-                      <Input
-                        value={productForm.name}
-                        onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <Label>Categoria *</Label>
-                      <div className="flex gap-2">
-                        <Select 
-                          value={productForm.category} 
-                          onValueChange={(value) => setProductForm({ ...productForm, category: value })}
-                        >
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione uma categoria" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {categories.map((cat) => (
-                              <SelectItem key={cat.id} value={cat.name}>
-                                {cat.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-                          <DialogTrigger asChild>
-                            <Button variant="outline" size="icon">
-                              <Plus className="w-4 h-4" />
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Nova Categoria</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div>
-                                <Label>Nome da Categoria</Label>
-                                <Input
-                                  value={newCategoryName}
-                                  onChange={(e) => setNewCategoryName(e.target.value)}
-                                  placeholder="Ex: Hambúrgueres, Bebidas..."
-                                />
-                              </div>
-                              <Button
-                                onClick={async () => {
-                                  if (newCategoryName.trim()) {
-                                    await addCategory(newCategoryName.trim());
-                                    setNewCategoryName('');
-                                    setIsCategoryDialogOpen(false);
-                                  }
-                                }}
-                                className="w-full"
-                              >
-                                Adicionar Categoria
-                              </Button>
-                              
-                              {categories.length > 0 && (
-                                <>
-                                  <Separator />
-                                  <div>
-                                    <Label className="text-sm font-semibold mb-2 block">Categorias Cadastradas</Label>
-                                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                                      {categories.map((cat) => (
-                                        <div key={cat.id} className="flex items-center justify-between p-2 rounded-md bg-muted">
-                                          <span className="text-sm">{cat.name}</span>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6"
-                                            onClick={() => deleteCategory(cat.id)}
-                                          >
-                                            <X className="w-3 h-3" />
-                                          </Button>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Descrição</Label>
-                      <Textarea
-                        value={productForm.description}
-                        onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                        rows={3}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Preço *</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={productForm.price}
-                          onChange={(e) => setProductForm({ ...productForm, price: parseFloat(e.target.value) })}
-                        />
-                      </div>
-                      <div>
-                        <Label>Preço Promocional</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={productForm.promotional_price}
-                          onChange={(e) => setProductForm({ ...productForm, promotional_price: parseFloat(e.target.value) })}
-                        />
-                      </div>
-                    </div>
-                    <Separator />
-                    
-                    <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
-                      <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Pizza className="w-4 h-4" />
-                            <Label>Este produto permite múltiplos sabores (Pizza)</Label>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            Ative para permitir que clientes escolham mais de um sabor
-                          </p>
-                        </div>
-                        <Switch
-                          checked={productForm.is_pizza}
-                          onCheckedChange={(checked) => setProductForm({ ...productForm, is_pizza: checked })}
-                        />
-                      </div>
-
-                      {productForm.is_pizza && (
-                        <div>
-                          <Label>Número máximo de sabores</Label>
-                          <Input
-                            type="number"
-                            min="1"
-                            max="4"
-                            value={productForm.max_flavors}
-                            onChange={(e) => setProductForm({ ...productForm, max_flavors: parseInt(e.target.value) || 2 })}
-                          />
-                          <p className="text-xs text-muted-foreground mt-1">
-                            Define quantos sabores o cliente pode escolher (ex: 2 para meio a meio)
-                          </p>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        checked={productForm.is_available}
-                        onCheckedChange={(checked) => setProductForm({ ...productForm, is_available: checked })}
-                      />
-                      <Label>Disponível</Label>
-                    </div>
-                  </TabsContent>
-
-                  {productForm.is_pizza && (
-                    <TabsContent value="flavors" className="mt-4">
-                      {editingProduct && (
-                        <ProductFlavorsManager productId={editingProduct.id} />
-                      )}
-                    </TabsContent>
-                  )}
-
-                      <TabsContent value="addons" className="mt-4">
-                        {editingProduct && (
-                          <ProductAddonsManager productId={editingProduct.id} />
-                        )}
-                      </TabsContent>
-                    </Tabs>
-                  </div>
-                </ScrollArea>
-                
-                {/* Botão Salvar fixo no rodapé */}
-                <div className="flex-shrink-0 pt-4 border-t mt-4">
-                  <Button
-                    onClick={editingProduct ? handleUpdateProduct : handleCreateProduct}
-                    className="w-full"
-                  >
-                    {editingProduct ? 'Salvar Alterações' : 'Criar Produto'}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-          
-          {/* Category Filter */}
-          <div className="flex items-center gap-2">
-            <Tag className="w-4 h-4 text-muted-foreground" />
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filtrar por categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as Categorias</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.name}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {categoryFilter !== 'all' && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setCategoryFilter('all')}
-              >
-                <X className="w-4 h-4 mr-1" />
-                Limpar
-              </Button>
-            )}
-          </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {products
-              ?.filter(product => categoryFilter === 'all' || product.category === categoryFilter)
-              .map((product, index) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card className="hover-scale border-muted/50 hover:border-primary/30 transition-all hover:shadow-lg">
-                  <CardContent className="p-4">
-                    {product.image_url && (
-                      <div className="aspect-video w-full rounded-lg overflow-hidden mb-3 bg-muted">
-                        <img
-                          src={product.image_url}
-                          alt={product.name}
-                          className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-                        />
-                      </div>
-                    )}
-                    <div className="flex justify-between items-start mb-2">
-                      <div>
-                        <h4 className="font-semibold">{product.name}</h4>
-                        <p className="text-sm text-muted-foreground">{product.category}</p>
-                      </div>
-                      <Badge variant={product.is_available ? 'default' : 'secondary'}>
-                        {product.is_available ? 'Disponível' : 'Indisponível'}
-                      </Badge>
-                    </div>
-                    {product.description && (
-                      <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                        {product.description}
-                      </p>
-                    )}
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-primary text-lg">
-                        R$ {Number(product.price).toFixed(2)}
-                      </span>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEditProduct(product)}
-                          className="hover-scale"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => deleteProduct(product.id)}
-                          className="hover-scale hover:border-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </TabsContent>
 
         {/* Orders Tab */}
         <TabsContent value="orders" className="space-y-4">
