@@ -80,7 +80,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
                       cadastrosOpen && "drop-shadow-sm"
                     )} />
                     <span className={cn(
-                      "text-[10px] relative z-10 transition-colors font-medium",
+                      "text-xs relative z-10 transition-colors font-medium uppercase",
                       cadastrosOpen && "font-semibold"
                     )}>
                       {item.label}
@@ -127,7 +127,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
                             isSubActive && "drop-shadow-sm"
                           )} />
                           <span className={cn(
-                            "text-[9px] relative z-10 transition-colors font-medium text-center leading-tight",
+                            "text-[10px] relative z-10 transition-colors font-medium text-center leading-tight uppercase",
                             isSubActive && "font-semibold"
                           )}>
                             {subItem.label}
@@ -169,7 +169,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
                 isActive && "drop-shadow-sm"
               )} />
               <span className={cn(
-                "text-[10px] relative z-10 transition-colors font-medium",
+                "text-xs relative z-10 transition-colors font-medium uppercase",
                 isActive && "font-semibold"
               )}>
                 {item.label}
