@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,17 +15,16 @@ import { useStoreManagement } from "@/hooks/useStoreManagement";
 import { useProductManagement } from "@/hooks/useProductManagement";
 import { useStoreOrders } from "@/hooks/useStoreOrders";
 import { useCategories } from "@/hooks/useCategories";
-import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu } from "lucide-react";
+import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, DollarSign, Calendar as CalendarIcon } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProductAddonsManager } from "./ProductAddonsManager";
 import { ProductFlavorsManager } from "./ProductFlavorsManager";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { format, isToday, isThisWeek, isThisMonth, startOfDay, endOfDay, isWithinInterval } from "date-fns";
+import { format, isToday, isThisWeek, isThisMonth, startOfDay, endOfDay, isWithinInterval, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
 import { ImageUpload } from "./ImageUpload";
 import { OperatingHoursManager } from "./OperatingHoursManager";
 import { isStoreOpen, getStoreStatusText } from "@/lib/storeUtils";
@@ -38,6 +37,8 @@ import { MiniChart } from "./MiniChart";
 import { OrderStatusManager } from "./OrderStatusManager";
 import { useOrderStatusNotification } from "@/hooks/useOrderStatusNotification";
 import { useOrderStatuses } from "@/hooks/useOrderStatuses";
+import { cn } from "@/lib/utils";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 
 export const StoreOwnerDashboard = () => {
   const navigate = useNavigate();
@@ -85,6 +86,12 @@ export const StoreOwnerDashboard = () => {
   const [dateFilter, setDateFilter] = useState<'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
   const [customDate, setCustomDate] = useState<Date | undefined>(new Date());
   const [activeTab, setActiveTab] = useState('home');
+  const [periodFilter, setPeriodFilter] = useState<string>("all");
+  const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
+  const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
 
   useEffect(() => {
     if (myStore) {
@@ -269,6 +276,122 @@ export const StoreOwnerDashboard = () => {
   const storeIsOpen = myStore ? isStoreOpen(myStore.operating_hours) : false;
   const storeStatusText = myStore ? getStoreStatusText(myStore.operating_hours) : '';
 
+  // Filter orders based on period
+  const filteredOrders = useMemo(() => {
+    if (!orders) return [];
+    
+    const now = new Date();
+    let startDate: Date;
+    let endDate: Date = now;
+
+    switch (periodFilter) {
+      case "today":
+        startDate = startOfDay(now);
+        endDate = endOfDay(now);
+        break;
+      case "week":
+        startDate = startOfWeek(now, { locale: ptBR });
+        endDate = endOfWeek(now, { locale: ptBR });
+        break;
+      case "month":
+        startDate = startOfMonth(now);
+        endDate = endOfMonth(now);
+        break;
+      case "7days":
+        startDate = subDays(now, 7);
+        break;
+      case "30days":
+        startDate = subDays(now, 30);
+        break;
+      case "custom":
+        if (customDateRange.from && customDateRange.to) {
+          startDate = startOfDay(customDateRange.from);
+          endDate = endOfDay(customDateRange.to);
+        } else {
+          return orders;
+        }
+        break;
+      default:
+        return orders;
+    }
+
+    return orders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      return isWithinInterval(orderDate, { start: startDate, end: endDate });
+    });
+  }, [orders, periodFilter, customDateRange]);
+
+  // Calculate metrics
+  const totalOrders = filteredOrders?.length || 0;
+  const totalRevenue = filteredOrders?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
+  const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+  const completedOrders = filteredOrders?.filter(o => o.status === 'delivered').length || 0;
+  const pendingOrders = filteredOrders?.filter(o => ['pending', 'confirmed', 'preparing'].includes(o.status)).length || 0;
+
+  // Orders by status
+  const ordersByStatus = useMemo(() => {
+    const statusCount: Record<string, number> = {};
+    filteredOrders?.forEach(order => {
+      statusCount[order.status] = (statusCount[order.status] || 0) + 1;
+    });
+    return Object.entries(statusCount).map(([name, value]) => ({ name, value }));
+  }, [filteredOrders]);
+
+  // Orders over time
+  const ordersOverTime = useMemo(() => {
+    if (!filteredOrders || filteredOrders.length === 0) return [];
+
+    const ordersByDate: Record<string, { date: string; pedidos: number; valor: number }> = {};
+    
+    filteredOrders.forEach(order => {
+      const date = format(new Date(order.created_at), "dd/MM", { locale: ptBR });
+      if (!ordersByDate[date]) {
+        ordersByDate[date] = { date, pedidos: 0, valor: 0 };
+      }
+      ordersByDate[date].pedidos += 1;
+      ordersByDate[date].valor += Number(order.total);
+    });
+
+    return Object.values(ordersByDate).sort((a, b) => {
+      const [dayA, monthA] = a.date.split('/').map(Number);
+      const [dayB, monthB] = b.date.split('/').map(Number);
+      return monthA === monthB ? dayA - dayB : monthA - monthB;
+    });
+  }, [filteredOrders]);
+
+  // Payment methods distribution
+  const paymentMethodsData = useMemo(() => {
+    const methodCount: Record<string, number> = {};
+    filteredOrders?.forEach(order => {
+      methodCount[order.payment_method] = (methodCount[order.payment_method] || 0) + 1;
+    });
+    return Object.entries(methodCount).map(([name, value]) => ({ 
+      name: name === 'pix' ? 'PIX' : name === 'dinheiro' ? 'Dinheiro' : 'Cartão', 
+      value 
+    }));
+  }, [filteredOrders]);
+
+  // Top products
+  const topProducts = useMemo(() => {
+    const productCount: Record<string, { name: string; quantity: number; revenue: number }> = {};
+    
+    filteredOrders?.forEach(order => {
+      order.order_items?.forEach((item: any) => {
+        if (!productCount[item.product_name]) {
+          productCount[item.product_name] = { name: item.product_name, quantity: 0, revenue: 0 };
+        }
+        productCount[item.product_name].quantity += item.quantity;
+        productCount[item.product_name].revenue += Number(item.subtotal);
+      });
+    });
+
+    return Object.values(productCount)
+      .sort((a, b) => b.quantity - a.quantity)
+      .slice(0, 5);
+  }, [filteredOrders]);
+
+  const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
+
   const filterOrdersByDate = (orders: any[] | undefined) => {
     if (!orders) return [];
     
@@ -295,24 +418,6 @@ export const StoreOwnerDashboard = () => {
   };
 
   const filteredOrdersByDate = filterOrdersByDate(orders);
-
-  // Mock data for charts
-  const salesData = [65, 59, 80, 81, 56, 55, 70, 75, 85, 90, 88, 92];
-  const revenueData = [28, 48, 40, 19, 86, 27, 90, 75, 60, 80, 95, 85];
-  const barChartData = [
-    { name: 'Jan', value: 45 },
-    { name: 'Feb', value: 52 },
-    { name: 'Mar', value: 38 },
-    { name: 'Apr', value: 68 },
-    { name: 'May', value: 55 },
-    { name: 'Jun', value: 72 },
-    { name: 'Jul', value: 48 },
-    { name: 'Aug', value: 85 },
-    { name: 'Sep', value: 62 },
-    { name: 'Oct', value: 70 },
-    { name: 'Nov', value: 58 },
-    { name: 'Dec', value: 78 },
-  ];
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -342,73 +447,430 @@ export const StoreOwnerDashboard = () => {
             animate={{ opacity: 1 }}
             className="p-8 space-y-6"
           >
-            {/* Circular Progress Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-6">
-              <CircularProgress 
-                value={orders?.filter(o => isThisMonth(new Date(o.created_at))).length || 285} 
-                maxValue={400}
-                label="Pedidos"
-                period="Month"
-                color="text-primary"
-              />
-              <CircularProgress 
-                value={orders?.filter(o => isThisWeek(new Date(o.created_at), { weekStartsOn: 0 })).length || 197}
-                maxValue={300}
-                label="Vendas"
-                period="Day"
-                color="text-accent"
-              />
-              <CircularProgress 
-                value={orders?.filter(o => isToday(new Date(o.created_at))).length || 352}
-                maxValue={500}
-                label="Visualizações"
-                period="Year"
-                color="text-secondary"
-              />
+            {/* Period Filter */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center justify-between flex-wrap gap-4"
+            >
+              <div>
+                <h2 className="text-2xl font-bold gradient-text">Estatísticas da Loja</h2>
+                <p className="text-muted-foreground">Acompanhe o desempenho do seu negócio</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Select value={periodFilter} onValueChange={(value) => {
+                  if (value === "custom") {
+                    setShowCustomDatePicker(true);
+                  } else {
+                    setPeriodFilter(value);
+                  }
+                }}>
+                  <SelectTrigger className="w-[200px]">
+                    <CalendarIcon className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Período" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os Pedidos</SelectItem>
+                    <SelectItem value="today">Hoje</SelectItem>
+                    <SelectItem value="7days">Últimos 7 Dias</SelectItem>
+                    <SelectItem value="week">Esta Semana</SelectItem>
+                    <SelectItem value="30days">Últimos 30 Dias</SelectItem>
+                    <SelectItem value="month">Este Mês</SelectItem>
+                    <SelectItem value="custom">Data Personalizada</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {periodFilter === "custom" && customDateRange.from && customDateRange.to && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowCustomDatePicker(true)}
+                    className="gap-2"
+                  >
+                    <CalendarIcon className="h-4 w-4" />
+                    {format(customDateRange.from, "dd/MM/yy")} - {format(customDateRange.to, "dd/MM/yy")}
+                  </Button>
+                )}
+              </div>
+            </motion.div>
+
+            {/* Custom Date Range Dialog */}
+            <Dialog open={showCustomDatePicker} onOpenChange={setShowCustomDatePicker}>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle>Selecionar Período Personalizado</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-6 py-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Data Inicial</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !customDateRange.from && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {customDateRange.from ? format(customDateRange.from, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={customDateRange.from}
+                            onSelect={(date) => setCustomDateRange(prev => ({ ...prev, from: date }))}
+                            initialFocus
+                            locale={ptBR}
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Data Final</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !customDateRange.to && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {customDateRange.to ? format(customDateRange.to, "dd/MM/yyyy", { locale: ptBR }) : "Selecione a data"}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={customDateRange.to}
+                            onSelect={(date) => setCustomDateRange(prev => ({ ...prev, to: date }))}
+                            initialFocus
+                            locale={ptBR}
+                            disabled={(date) => customDateRange.from ? date < customDateRange.from : false}
+                            className="pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setShowCustomDatePicker(false);
+                        if (!customDateRange.from || !customDateRange.to) {
+                          setPeriodFilter("all");
+                        }
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (customDateRange.from && customDateRange.to) {
+                          setPeriodFilter("custom");
+                          setShowCustomDatePicker(false);
+                        }
+                      }}
+                      disabled={!customDateRange.from || !customDateRange.to}
+                    >
+                      Aplicar Filtro
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Stats Cards */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <Card className="hover-scale overflow-hidden relative border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full -mr-16 -mt-16" />
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                    <CardTitle className="text-sm font-medium">Total de Pedidos</CardTitle>
+                    <ShoppingBag className="h-5 w-5 text-primary" />
+                  </CardHeader>
+                  <CardContent className="relative z-10">
+                    <div className="text-3xl font-bold gradient-text">{totalOrders}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {pendingOrders} pendentes
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Card className="hover-scale overflow-hidden relative border-green-500/20 bg-gradient-to-br from-green-500/5 to-transparent">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full -mr-16 -mt-16" />
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                    <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
+                    <DollarSign className="h-5 w-5 text-green-500" />
+                  </CardHeader>
+                  <CardContent className="relative z-10">
+                    <div className="text-3xl font-bold text-green-500">
+                      R$ {totalRevenue.toFixed(2)}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      No período selecionado
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <Card className="hover-scale overflow-hidden relative border-purple-500/20 bg-gradient-to-br from-purple-500/5 to-transparent">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full -mr-16 -mt-16" />
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                    <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
+                    <TrendingUp className="h-5 w-5 text-purple-500" />
+                  </CardHeader>
+                  <CardContent className="relative z-10">
+                    <div className="text-3xl font-bold text-purple-500">
+                      R$ {averageOrderValue.toFixed(2)}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Valor médio por pedido
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <Card className="hover-scale overflow-hidden relative border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-transparent">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full -mr-16 -mt-16" />
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative z-10">
+                    <CardTitle className="text-sm font-medium">Pedidos Concluídos</CardTitle>
+                    <Check className="h-5 w-5 text-blue-500" />
+                  </CardHeader>
+                  <CardContent className="relative z-10">
+                    <div className="text-3xl font-bold text-blue-500">{completedOrders}</div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Taxa: {totalOrders > 0 ? ((completedOrders / totalOrders) * 100).toFixed(1) : 0}%
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </div>
 
-            {/* Data Cards and Charts Row */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <DataCard 
-                  letter="A"
-                  value={68209}
-                  subtitle="Lorem ipsum dolor"
-                  trend="up"
-                  data={salesData}
-                  color="from-primary to-primary-glow"
-                />
-                <DataCard 
-                  letter="B"
-                  value={27393}
-                  subtitle="Lorem ipsum dolor"
-                  trend="up"
-                  data={revenueData}
-                  color="from-accent to-accent-glow"
-                />
-              </div>
+            {/* Charts Section */}
+            {totalOrders > 0 && (
+              <>
+                <div className="grid gap-6 md:grid-cols-2">
+                  {/* Orders Over Time */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                  >
+                    <Card className="shadow-lg">
+                      <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+                        <CardTitle className="flex items-center gap-2">
+                          <TrendingUp className="h-5 w-5 text-primary" />
+                          Pedidos ao Longo do Tempo
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        <ResponsiveContainer width="100%" height={300}>
+                          <LineChart data={ordersOverTime}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis 
+                              dataKey="date" 
+                              stroke="hsl(var(--muted-foreground))"
+                              fontSize={12}
+                            />
+                            <YAxis 
+                              stroke="hsl(var(--muted-foreground))"
+                              fontSize={12}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: 'hsl(var(--card))',
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '8px',
+                              }}
+                              labelStyle={{ color: 'hsl(var(--foreground))' }}
+                            />
+                            <Line 
+                              type="monotone" 
+                              dataKey="pedidos" 
+                              stroke="hsl(var(--primary))" 
+                              strokeWidth={3}
+                              dot={{ fill: 'hsl(var(--primary))', r: 4 }}
+                              name="Pedidos"
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
 
-              <div className="space-y-4">
-                <MiniChart 
-                  title="Data A"
-                  subtitle="Jan"
-                  data={[30, 40, 35, 50, 49, 60, 70, 65]}
-                  color="hsl(var(--primary))"
-                />
-                <MiniChart 
-                  title="Data B"
-                  subtitle="Feb"
-                  data={[20, 30, 25, 35, 40, 38, 45, 50]}
-                  color="hsl(var(--accent))"
-                />
-              </div>
-            </div>
+                  {/* Revenue Over Time */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 }}
+                  >
+                    <Card className="shadow-lg">
+                      <CardHeader className="bg-gradient-to-r from-green-500/5 to-transparent">
+                        <CardTitle className="flex items-center gap-2">
+                          <DollarSign className="h-5 w-5 text-green-500" />
+                          Receita ao Longo do Tempo
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        <ResponsiveContainer width="100%" height={300}>
+                          <BarChart data={ordersOverTime}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis 
+                              dataKey="date" 
+                              stroke="hsl(var(--muted-foreground))"
+                              fontSize={12}
+                            />
+                            <YAxis 
+                              stroke="hsl(var(--muted-foreground))"
+                              fontSize={12}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: 'hsl(var(--card))',
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '8px',
+                              }}
+                              labelStyle={{ color: 'hsl(var(--foreground))' }}
+                              formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Receita']}
+                            />
+                            <Bar 
+                              dataKey="valor" 
+                              fill="hsl(142 76% 36%)"
+                              radius={[8, 8, 0, 0]}
+                              name="Receita"
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
 
-            {/* Bar Chart */}
-            <BarChartCard 
-              title="Vendas Mensais"
-              data={barChartData}
-            />
+                  {/* Payment Methods */}
+                  {paymentMethodsData.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.7 }}
+                    >
+                      <Card className="shadow-lg">
+                        <CardHeader className="bg-gradient-to-r from-blue-500/5 to-transparent">
+                          <CardTitle className="flex items-center gap-2">
+                            <DollarSign className="h-5 w-5 text-blue-500" />
+                            Métodos de Pagamento
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-6">
+                          <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                              <Pie
+                                data={paymentMethodsData}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                                outerRadius={100}
+                                fill="hsl(var(--primary))"
+                                dataKey="value"
+                              >
+                                {paymentMethodsData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: 'hsl(var(--card))',
+                                  border: '1px solid hsl(var(--border))',
+                                  borderRadius: '8px',
+                                }}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )}
+
+                  {/* Top Products */}
+                  {topProducts.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.8 }}
+                    >
+                      <Card className="shadow-lg">
+                        <CardHeader className="bg-gradient-to-r from-purple-500/5 to-transparent">
+                          <CardTitle className="flex items-center gap-2">
+                            <Package className="h-5 w-5 text-purple-500" />
+                            Produtos Mais Vendidos
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-6">
+                          <div className="space-y-4">
+                            {topProducts.map((product, index) => (
+                              <div key={index} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                                <div className="flex items-center gap-3">
+                                  <Badge className="bg-primary text-primary-foreground">{index + 1}</Badge>
+                                  <div>
+                                    <p className="font-medium">{product.name}</p>
+                                    <p className="text-sm text-muted-foreground">{product.quantity} unidades</p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="font-bold text-green-500">R$ {product.revenue.toFixed(2)}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  )}
+                </div>
+              </>
+            )}
+
+            {totalOrders === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-12"
+              >
+                <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                <h3 className="text-xl font-semibold mb-2">Nenhum pedido encontrado</h3>
+                <p className="text-muted-foreground">
+                  Não há pedidos no período selecionado
+                </p>
+              </motion.div>
+            )}
           </motion.div>
         )}
 
