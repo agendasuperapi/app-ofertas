@@ -529,6 +529,60 @@ export const StoreOwnerDashboard = () => {
             animate={{ opacity: 1 }}
             className="p-8 space-y-6"
           >
+            {/* Store Header */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className="border-primary/30 shadow-lg overflow-hidden relative bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-full -mr-32 -mt-32 blur-3xl" />
+                <CardContent className="p-6 relative z-10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <motion.h2 
+                          className="text-3xl font-bold gradient-text"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.3 }}
+                        >
+                          {myStore?.name}
+                        </motion.h2>
+                        <Badge 
+                          className={`${
+                            storeIsOpen 
+                              ? 'bg-green-500 hover:bg-green-600' 
+                              : 'bg-red-500 hover:bg-red-600'
+                          } text-white px-3 py-1`}
+                        >
+                          <Clock className="w-3 h-3 mr-1" />
+                          {storeStatusText}
+                        </Badge>
+                      </div>
+                      <motion.p
+                        className="text-muted-foreground text-lg"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.4 }}
+                      >
+                        {myStore?.category}
+                      </motion.p>
+                    </div>
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.5, type: "spring" }}
+                    >
+                      <Badge className={`${storeStatus.color} text-white text-sm px-4 py-1.5`}>
+                        {storeStatus.label}
+                      </Badge>
+                    </motion.div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
             {/* Period Filter */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
@@ -1941,60 +1995,6 @@ export const StoreOwnerDashboard = () => {
             transition={{ duration: 0.5 }}
             className="p-8 space-y-6"
           >
-            {/* Store Header */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              <Card className="border-primary/30 shadow-lg overflow-hidden relative bg-gradient-to-br from-primary/5 via-transparent to-purple-500/5">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-full -mr-32 -mt-32 blur-3xl" />
-                <CardContent className="p-6 relative z-10">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="flex items-center gap-3 mb-2">
-                        <motion.h2 
-                          className="text-3xl font-bold gradient-text"
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.3 }}
-                        >
-                          {myStore.name}
-                        </motion.h2>
-                        <Badge 
-                          className={`${
-                            storeIsOpen 
-                              ? 'bg-green-500 hover:bg-green-600' 
-                              : 'bg-red-500 hover:bg-red-600'
-                          } text-white px-3 py-1`}
-                        >
-                          <Clock className="w-3 h-3 mr-1" />
-                          {storeStatusText}
-                        </Badge>
-                      </div>
-                      <motion.p
-                        className="text-muted-foreground text-lg"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.4 }}
-                      >
-                        {myStore.category}
-                      </motion.p>
-                    </div>
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: 0.5, type: "spring" }}
-                    >
-                      <Badge className={`${storeStatus.color} text-white text-sm px-4 py-1.5`}>
-                        {storeStatus.label}
-                      </Badge>
-                    </motion.div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
             {/* Tabs */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
