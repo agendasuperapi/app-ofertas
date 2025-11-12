@@ -15,7 +15,7 @@ import { useStoreManagement } from "@/hooks/useStoreManagement";
 import { useProductManagement } from "@/hooks/useProductManagement";
 import { useStoreOrders } from "@/hooks/useStoreOrders";
 import { useCategories } from "@/hooks/useCategories";
-import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, DollarSign, Calendar as CalendarIcon } from "lucide-react";
+import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, ArrowUp, ArrowDown } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProductAddonsManager } from "./ProductAddonsManager";
 import { ProductFlavorsManager } from "./ProductFlavorsManager";
@@ -321,12 +321,87 @@ export const StoreOwnerDashboard = () => {
     });
   }, [orders, periodFilter, customDateRange]);
 
+  // Calculate previous period for comparison
+  const previousPeriodOrders = useMemo(() => {
+    if (!orders || periodFilter === "all") return [];
+    
+    const now = new Date();
+    let currentStartDate: Date;
+    let currentEndDate: Date = now;
+    let previousStartDate: Date;
+    let previousEndDate: Date;
+
+    switch (periodFilter) {
+      case "today":
+        currentStartDate = startOfDay(now);
+        currentEndDate = endOfDay(now);
+        previousStartDate = startOfDay(subDays(now, 1));
+        previousEndDate = endOfDay(subDays(now, 1));
+        break;
+      case "week":
+        currentStartDate = startOfWeek(now, { locale: ptBR });
+        currentEndDate = endOfWeek(now, { locale: ptBR });
+        previousStartDate = startOfWeek(subDays(currentStartDate, 7), { locale: ptBR });
+        previousEndDate = endOfWeek(subDays(currentStartDate, 7), { locale: ptBR });
+        break;
+      case "month":
+        currentStartDate = startOfMonth(now);
+        currentEndDate = endOfMonth(now);
+        const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        previousStartDate = startOfMonth(previousMonth);
+        previousEndDate = endOfMonth(previousMonth);
+        break;
+      case "7days":
+        currentStartDate = subDays(now, 7);
+        currentEndDate = now;
+        previousStartDate = subDays(now, 14);
+        previousEndDate = subDays(now, 7);
+        break;
+      case "30days":
+        currentStartDate = subDays(now, 30);
+        currentEndDate = now;
+        previousStartDate = subDays(now, 60);
+        previousEndDate = subDays(now, 30);
+        break;
+      case "custom":
+        if (customDateRange.from && customDateRange.to) {
+          currentStartDate = startOfDay(customDateRange.from);
+          currentEndDate = endOfDay(customDateRange.to);
+          const daysDiff = Math.ceil((currentEndDate.getTime() - currentStartDate.getTime()) / (1000 * 60 * 60 * 24));
+          previousStartDate = subDays(currentStartDate, daysDiff + 1);
+          previousEndDate = subDays(currentStartDate, 1);
+        } else {
+          return [];
+        }
+        break;
+      default:
+        return [];
+    }
+
+    return orders.filter(order => {
+      const orderDate = new Date(order.created_at);
+      return isWithinInterval(orderDate, { start: previousStartDate, end: previousEndDate });
+    });
+  }, [orders, periodFilter, customDateRange]);
+
   // Calculate metrics
   const totalOrders = filteredOrders?.length || 0;
   const totalRevenue = filteredOrders?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
   const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
   const completedOrders = filteredOrders?.filter(o => o.status === 'delivered').length || 0;
   const pendingOrders = filteredOrders?.filter(o => ['pending', 'confirmed', 'preparing'].includes(o.status)).length || 0;
+
+  // Calculate previous period metrics
+  const previousTotalOrders = previousPeriodOrders?.length || 0;
+  const previousTotalRevenue = previousPeriodOrders?.reduce((sum, order) => sum + Number(order.total), 0) || 0;
+  const previousAverageOrderValue = previousTotalOrders > 0 ? previousTotalRevenue / previousTotalOrders : 0;
+  const previousCompletedOrders = previousPeriodOrders?.filter(o => o.status === 'delivered').length || 0;
+
+  // Calculate percentage changes
+  const ordersChange = previousTotalOrders > 0 ? ((totalOrders - previousTotalOrders) / previousTotalOrders) * 100 : 0;
+  const revenueChange = previousTotalRevenue > 0 ? ((totalRevenue - previousTotalRevenue) / previousTotalRevenue) * 100 : 0;
+  const averageOrderValueChange = previousAverageOrderValue > 0 ? ((averageOrderValue - previousAverageOrderValue) / previousAverageOrderValue) * 100 : 0;
+  const completedOrdersChange = previousCompletedOrders > 0 ? ((completedOrders - previousCompletedOrders) / previousCompletedOrders) * 100 : 0;
 
   // Orders by status
   const ordersByStatus = useMemo(() => {
@@ -602,7 +677,18 @@ export const StoreOwnerDashboard = () => {
                     <ShoppingBag className="h-5 w-5 text-primary" />
                   </CardHeader>
                   <CardContent className="relative z-10">
-                    <div className="text-3xl font-bold gradient-text">{totalOrders}</div>
+                    <div className="flex items-end justify-between">
+                      <div className="text-3xl font-bold gradient-text">{totalOrders}</div>
+                      {periodFilter !== "all" && previousTotalOrders > 0 && (
+                        <div className={cn(
+                          "flex items-center gap-1 text-sm font-semibold px-2 py-1 rounded-md",
+                          ordersChange >= 0 ? "text-green-600 bg-green-100 dark:bg-green-900/30" : "text-red-600 bg-red-100 dark:bg-red-900/30"
+                        )}>
+                          {ordersChange >= 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                          {Math.abs(ordersChange).toFixed(1)}%
+                        </div>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       {pendingOrders} pendentes
                     </p>
@@ -622,8 +708,19 @@ export const StoreOwnerDashboard = () => {
                     <DollarSign className="h-5 w-5 text-green-500" />
                   </CardHeader>
                   <CardContent className="relative z-10">
-                    <div className="text-3xl font-bold text-green-500">
-                      R$ {totalRevenue.toFixed(2)}
+                    <div className="flex items-end justify-between gap-2">
+                      <div className="text-3xl font-bold text-green-500">
+                        R$ {totalRevenue.toFixed(2)}
+                      </div>
+                      {periodFilter !== "all" && previousTotalRevenue > 0 && (
+                        <div className={cn(
+                          "flex items-center gap-1 text-sm font-semibold px-2 py-1 rounded-md",
+                          revenueChange >= 0 ? "text-green-600 bg-green-100 dark:bg-green-900/30" : "text-red-600 bg-red-100 dark:bg-red-900/30"
+                        )}>
+                          {revenueChange >= 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                          {Math.abs(revenueChange).toFixed(1)}%
+                        </div>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       No período selecionado
@@ -644,8 +741,19 @@ export const StoreOwnerDashboard = () => {
                     <TrendingUp className="h-5 w-5 text-purple-500" />
                   </CardHeader>
                   <CardContent className="relative z-10">
-                    <div className="text-3xl font-bold text-purple-500">
-                      R$ {averageOrderValue.toFixed(2)}
+                    <div className="flex items-end justify-between gap-2">
+                      <div className="text-3xl font-bold text-purple-500">
+                        R$ {averageOrderValue.toFixed(2)}
+                      </div>
+                      {periodFilter !== "all" && previousAverageOrderValue > 0 && (
+                        <div className={cn(
+                          "flex items-center gap-1 text-sm font-semibold px-2 py-1 rounded-md",
+                          averageOrderValueChange >= 0 ? "text-green-600 bg-green-100 dark:bg-green-900/30" : "text-red-600 bg-red-100 dark:bg-red-900/30"
+                        )}>
+                          {averageOrderValueChange >= 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                          {Math.abs(averageOrderValueChange).toFixed(1)}%
+                        </div>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       Valor médio por pedido
@@ -666,7 +774,18 @@ export const StoreOwnerDashboard = () => {
                     <Check className="h-5 w-5 text-blue-500" />
                   </CardHeader>
                   <CardContent className="relative z-10">
-                    <div className="text-3xl font-bold text-blue-500">{completedOrders}</div>
+                    <div className="flex items-end justify-between">
+                      <div className="text-3xl font-bold text-blue-500">{completedOrders}</div>
+                      {periodFilter !== "all" && previousCompletedOrders > 0 && (
+                        <div className={cn(
+                          "flex items-center gap-1 text-sm font-semibold px-2 py-1 rounded-md",
+                          completedOrdersChange >= 0 ? "text-green-600 bg-green-100 dark:bg-green-900/30" : "text-red-600 bg-red-100 dark:bg-red-900/30"
+                        )}>
+                          {completedOrdersChange >= 0 ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                          {Math.abs(completedOrdersChange).toFixed(1)}%
+                        </div>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground mt-1">
                       Taxa: {totalOrders > 0 ? ((completedOrders / totalOrders) * 100).toFixed(1) : 0}%
                     </p>
