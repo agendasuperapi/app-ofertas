@@ -31,7 +31,6 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName 
     { id: 'pedidos', label: 'pedidos', icon: ShoppingCart },
     { id: 'cadastros', label: 'cadastros', icon: FolderOpen, hasSubmenu: true },
     { id: 'result', label: 'result', icon: BarChart3 },
-    { id: 'setting', label: 'Configurações', icon: Settings },
   ];
 
   return (
