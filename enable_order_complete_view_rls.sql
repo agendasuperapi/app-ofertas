@@ -1,9 +1,11 @@
--- Create or replace order_complete_view
+-- Create order_complete_view with security_invoker
 -- Execute this in Supabase SQL Editor
 
 DROP VIEW IF EXISTS public.order_complete_view;
 
-CREATE VIEW public.order_complete_view AS
+CREATE VIEW public.order_complete_view
+WITH (security_invoker = true)
+AS
 SELECT 
   o.id,
   o.customer_id,
@@ -63,3 +65,7 @@ SELECT
 FROM orders o
 LEFT JOIN order_items oi ON oi.order_id = o.id
 GROUP BY o.id;
+
+-- Grant access to authenticated users (view inherits RLS from base tables)
+GRANT SELECT ON public.order_complete_view TO authenticated;
+GRANT SELECT ON public.order_complete_view TO service_role;
