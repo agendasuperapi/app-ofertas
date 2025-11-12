@@ -62,7 +62,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
             
             return (
               <div key={item.id}>
-                {index > 0 && <div className="h-px bg-primary/20 my-2 mx-2" />}
+                {index > 0 && <div className="h-0.5 bg-primary/20 my-2 mx-2" />}
                 <Collapsible 
                   open={isOpen} 
                   onOpenChange={setOpen}
@@ -155,7 +155,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
           
           return (
             <div key={item.id}>
-              {index > 0 && <div className="h-px bg-primary/20 my-2 mx-2" />}
+              {index > 0 && <div className="h-0.5 bg-primary/20 my-2 mx-2" />}
               <motion.button
               onClick={() => onTabChange(item.id)}
               whileHover={{ scale: 1.02 }}
