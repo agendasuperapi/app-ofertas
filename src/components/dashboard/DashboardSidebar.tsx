@@ -44,17 +44,18 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
       </div>
 
       <nav className="flex-1 w-full space-y-1 px-2">
-        {menuItems.map((item) => {
+        {menuItems.map((item, index) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           
           if (item.hasSubmenu) {
             return (
-              <Collapsible 
-                key={item.id} 
-                open={cadastrosOpen} 
-                onOpenChange={setCadastrosOpen}
-              >
+              <div key={item.id}>
+                {index > 0 && <div className="h-px bg-border/30 my-2 mx-2" />}
+                <Collapsible 
+                  open={cadastrosOpen} 
+                  onOpenChange={setCadastrosOpen}
+                >
                 <CollapsibleTrigger asChild>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
@@ -137,12 +138,14 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
                   </AnimatePresence>
                 </CollapsibleContent>
               </Collapsible>
+              </div>
             );
           }
           
           return (
-            <motion.button
-              key={item.id}
+            <div key={item.id}>
+              {index > 0 && <div className="h-px bg-border/30 my-2 mx-2" />}
+              <motion.button
               onClick={() => onTabChange(item.id)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -172,6 +175,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
                 {item.label}
               </span>
             </motion.button>
+            </div>
           );
         })}
       </nav>
