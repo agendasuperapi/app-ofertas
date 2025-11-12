@@ -39,6 +39,7 @@ import { useOrderStatusNotification } from "@/hooks/useOrderStatusNotification";
 import { useOrderStatuses } from "@/hooks/useOrderStatuses";
 import { cn } from "@/lib/utils";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { MetricsComparison } from "./MetricsComparison";
 
 export const StoreOwnerDashboard = () => {
   const navigate = useNavigate();
@@ -990,6 +991,17 @@ export const StoreOwnerDashboard = () => {
                 </p>
               </motion.div>
             )}
+          </motion.div>
+        )}
+
+        {activeTab === 'metricas' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="p-8"
+          >
+            <MetricsComparison orders={orders} products={products} />
           </motion.div>
         )}
 
