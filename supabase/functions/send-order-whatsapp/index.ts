@@ -70,37 +70,53 @@ serve(async (req) => {
       );
     }
 
-    // Fetch complete order data with items
-    const { data: orderData, error: orderError } = await supabaseClient
-      .from('orders')
-      .select(`
-        *,
-        order_items (
-          id,
-          product_name,
-          quantity,
-          unit_price,
-          subtotal,
-          observation,
-          order_item_addons (
-            addon_name,
-            addon_price
-          ),
-          order_item_flavors (
-            flavor_name,
-            flavor_price
+    // Fetch complete order data with items (with retry logic)
+    let order: any = null;
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount < maxRetries && !order) {
+      const { data: orderData, error: orderError } = await supabaseClient
+        .from('orders')
+        .select(`
+          *,
+          order_items (
+            id,
+            product_name,
+            quantity,
+            unit_price,
+            subtotal,
+            observation,
+            order_item_addons (
+              addon_name,
+              addon_price
+            ),
+            order_item_flavors (
+              flavor_name,
+              flavor_price
+            )
           )
-        )
-      `)
-      .eq('id', record.id || record.order_id)
-      .single();
+        `)
+        .eq('id', record.id || record.order_id)
+        .single();
 
-    if (orderError || !orderData) {
-      console.error('Order not found:', orderError);
-      // Fallback to record data if full fetch fails
-      var order = record;
-    } else {
-      var order = orderData;
+      if (orderError || !orderData) {
+        console.error(`Order fetch attempt ${retryCount + 1} failed:`, orderError);
+        retryCount++;
+        if (retryCount < maxRetries) {
+          // Wait 500ms before retry
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      } else {
+        order = orderData;
+        console.log('Order fetched successfully with items:', orderData.order_items?.length || 0);
+      }
+    }
+
+    // If still no order data after retries, use record as fallback
+    if (!order) {
+      console.warn('Using fallback record data (no order_items available)');
+      order = record;
     }
 
     // Get store details
