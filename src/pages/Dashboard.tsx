@@ -30,26 +30,15 @@ const Dashboard = () => {
           {hasRole('store_owner') ? (
             <StoreOwnerDashboard />
           ) : hasRole('admin') ? (
-            <>
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="mb-8"
-              >
-                <h1 className="text-5xl font-bold gradient-text mb-2">Dashboard Administrativo</h1>
-                <p className="text-muted-foreground text-lg">Painel de controle do sistema</p>
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
-                className="glass-card p-8 rounded-xl"
-              >
-                <h2 className="text-2xl font-bold mb-4">Área Administrativa</h2>
-                <p>Bem-vindo à área administrativa!</p>
-              </motion.div>
-            </>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+              className="glass-card p-8 rounded-xl"
+            >
+              <h2 className="text-2xl font-bold mb-4">Área Administrativa</h2>
+              <p>Bem-vindo à área administrativa!</p>
+            </motion.div>
           ) : (
             <CustomerDashboard />
           )}

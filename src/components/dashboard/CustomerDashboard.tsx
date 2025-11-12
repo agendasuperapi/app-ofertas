@@ -186,20 +186,6 @@ export const CustomerDashboard = () => {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Message */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center py-6"
-      >
-        <h1 className="text-4xl font-bold gradient-text mb-2">
-          Seja bem-vindo(a), {firstName}!
-        </h1>
-        <p className="text-muted-foreground text-lg">
-          Acompanhe seus pedidos e estatísticas
-        </p>
-      </motion.div>
-
       {/* Period Filter */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
