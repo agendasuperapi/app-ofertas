@@ -1209,7 +1209,7 @@ export const StoreOwnerDashboard = () => {
 
             {/* Lista de Pedidos */}
             {orders && orders.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {orders
                   .filter(order => {
                     // Filtro de status
@@ -1235,102 +1235,111 @@ export const StoreOwnerDashboard = () => {
                     
                     return true;
                   })
-                  .map((order) => (
-                    <Card key={order.id} className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="font-semibold text-lg">Pedido #{order.order_number}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(order.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                            </p>
-                          </div>
-                          <Badge variant="outline" className="capitalize">
-                            {customStatuses.find(s => s.status_key === order.status)?.status_label || order.status}
-                          </Badge>
-                        </div>
-
-                        <Separator className="my-4" />
-
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Cliente:</span>
-                            <span className="font-medium">{order.customer_name}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Telefone:</span>
-                            <span className="font-medium">{order.customer_phone}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Tipo:</span>
-                            <span className="font-medium capitalize">{order.delivery_type}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Pagamento:</span>
-                            <span className="font-medium capitalize">{order.payment_method}</span>
-                          </div>
-                          <div className="flex justify-between text-lg font-bold">
-                            <span>Total:</span>
-                            <span className="text-primary">R$ {order.total.toFixed(2)}</span>
-                          </div>
-                        </div>
-
-                        {order.delivery_type === 'delivery' && (
-                          <>
-                            <Separator className="my-4" />
-                            <div className="space-y-1 text-sm">
-                              <p className="font-medium">Endereço de Entrega:</p>
-                              <p className="text-muted-foreground">
-                                {order.delivery_street}, {order.delivery_number}
-                                {order.delivery_complement && ` - ${order.delivery_complement}`}
+                  .map((order, index, filteredOrders) => (
+                    <div key={order.id}>
+                      <Card className="hover:shadow-lg transition-shadow">
+                        <CardContent className="p-6">
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <h3 className="font-semibold text-lg">Pedido #{order.order_number}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {format(new Date(order.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                               </p>
-                              <p className="text-muted-foreground">{order.delivery_neighborhood}</p>
                             </div>
-                          </>
-                        )}
+                            <Badge variant="outline" className="capitalize">
+                              {customStatuses.find(s => s.status_key === order.status)?.status_label || order.status}
+                            </Badge>
+                          </div>
 
-                        {order.notes && (
-                          <>
-                            <Separator className="my-4" />
-                            <div className="text-sm">
-                              <p className="font-medium mb-1">Observações:</p>
-                              <p className="text-muted-foreground">{order.notes}</p>
+                          <Separator className="my-4" />
+
+                          <div className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Cliente:</span>
+                              <span className="font-medium">{order.customer_name}</span>
                             </div>
-                          </>
-                        )}
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Telefone:</span>
+                              <span className="font-medium">{order.customer_phone}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Tipo:</span>
+                              <span className="font-medium capitalize">{order.delivery_type}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Pagamento:</span>
+                              <span className="font-medium capitalize">{order.payment_method}</span>
+                            </div>
+                            <div className="flex justify-between text-lg font-bold">
+                              <span>Total:</span>
+                              <span className="text-primary">R$ {order.total.toFixed(2)}</span>
+                            </div>
+                          </div>
 
-                        <Separator className="my-4" />
+                          {order.delivery_type === 'delivery' && (
+                            <>
+                              <Separator className="my-4" />
+                              <div className="space-y-1 text-sm">
+                                <p className="font-medium">Endereço de Entrega:</p>
+                                <p className="text-muted-foreground">
+                                  {order.delivery_street}, {order.delivery_number}
+                                  {order.delivery_complement && ` - ${order.delivery_complement}`}
+                                </p>
+                                <p className="text-muted-foreground">{order.delivery_neighborhood}</p>
+                              </div>
+                            </>
+                          )}
 
-                        <div className="flex gap-2">
-                          <Select
-                            value={order.status}
-                            onValueChange={(newStatus) => updateOrderStatus({ orderId: order.id, status: newStatus })}
-                          >
-                            <SelectTrigger className="flex-1">
-                              <SelectValue placeholder="Alterar status" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {customStatuses.length > 0 ? (
-                                customStatuses.map((status) => (
-                                  <SelectItem key={status.status_key} value={status.status_key}>
-                                    {status.status_label}
-                                  </SelectItem>
-                                ))
-                              ) : (
-                                <>
-                                  <SelectItem value="pending">Pendente</SelectItem>
-                                  <SelectItem value="confirmed">Confirmado</SelectItem>
-                                  <SelectItem value="preparing">Preparando</SelectItem>
-                                  <SelectItem value="ready">Pronto</SelectItem>
-                                  <SelectItem value="delivered">Entregue</SelectItem>
-                                  <SelectItem value="cancelled">Cancelado</SelectItem>
-                                </>
-                              )}
-                            </SelectContent>
-                          </Select>
+                          {order.notes && (
+                            <>
+                              <Separator className="my-4" />
+                              <div className="text-sm">
+                                <p className="font-medium mb-1">Observações:</p>
+                                <p className="text-muted-foreground">{order.notes}</p>
+                              </div>
+                            </>
+                          )}
+
+                          <Separator className="my-4" />
+
+                          <div className="flex gap-2">
+                            <Select
+                              value={order.status}
+                              onValueChange={(newStatus) => updateOrderStatus({ orderId: order.id, status: newStatus })}
+                            >
+                              <SelectTrigger className="flex-1">
+                                <SelectValue placeholder="Alterar status" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {customStatuses.length > 0 ? (
+                                  customStatuses.map((status) => (
+                                    <SelectItem key={status.status_key} value={status.status_key}>
+                                      {status.status_label}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <>
+                                    <SelectItem value="pending">Pendente</SelectItem>
+                                    <SelectItem value="confirmed">Confirmado</SelectItem>
+                                    <SelectItem value="preparing">Preparando</SelectItem>
+                                    <SelectItem value="ready">Pronto</SelectItem>
+                                    <SelectItem value="delivered">Entregue</SelectItem>
+                                    <SelectItem value="cancelled">Cancelado</SelectItem>
+                                  </>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      
+                      {/* Separador grosso entre pedidos */}
+                      {index < filteredOrders.length - 1 && (
+                        <div className="relative py-4">
+                          <Separator className="h-[3px] bg-border" />
                         </div>
-                      </CardContent>
-                    </Card>
+                      )}
+                    </div>
                   ))}
               </div>
             ) : (
