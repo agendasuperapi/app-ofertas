@@ -86,6 +86,7 @@ export const StoreOwnerDashboard = () => {
   const [isEditCategoryDialogOpen, setIsEditCategoryDialogOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [editCategoryName, setEditCategoryName] = useState('');
+  const [categoryStatusFilter, setCategoryStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [orderStatusFilter, setOrderStatusFilter] = useState('all');
@@ -1059,24 +1060,67 @@ export const StoreOwnerDashboard = () => {
               </Dialog>
             </div>
 
+            {/* Filtro de Status das Categorias */}
+            <div className="flex items-center gap-2 mb-4">
+              <Tag className="w-4 h-4 text-muted-foreground" />
+              <Select value={categoryStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setCategoryStatusFilter(value)}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Categorias Ativas</SelectItem>
+                  <SelectItem value="inactive">Categorias Inativas</SelectItem>
+                  <SelectItem value="all">Todas as Categorias</SelectItem>
+                </SelectContent>
+              </Select>
+              {categoryStatusFilter !== 'active' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCategoryStatusFilter('active')}
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Limpar
+                </Button>
+              )}
+            </div>
+
             {/* Categories Grid */}
-            {categories.length === 0 ? (
+            {categories.filter(cat => {
+              if (categoryStatusFilter === 'active') return cat.is_active;
+              if (categoryStatusFilter === 'inactive') return !cat.is_active;
+              return true;
+            }).length === 0 ? (
               <Card className="border-dashed">
                 <CardContent className="py-12 text-center">
                   <FolderTree className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-semibold mb-2">Nenhuma categoria cadastrada</h3>
+                  <h3 className="text-lg font-semibold mb-2">
+                    {categoryStatusFilter === 'active' && 'Nenhuma categoria ativa'}
+                    {categoryStatusFilter === 'inactive' && 'Nenhuma categoria inativa'}
+                    {categoryStatusFilter === 'all' && 'Nenhuma categoria cadastrada'}
+                  </h3>
                   <p className="text-muted-foreground mb-6">
-                    Comece criando categorias para organizar seus produtos
+                    {categoryStatusFilter === 'all' 
+                      ? 'Comece criando categorias para organizar seus produtos'
+                      : 'Não há categorias com este status'}
                   </p>
-                  <Button onClick={() => setIsCategoryDialogOpen(true)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Criar Primeira Categoria
-                  </Button>
+                  {categoryStatusFilter === 'all' && (
+                    <Button onClick={() => setIsCategoryDialogOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Criar Primeira Categoria
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {categories.map((category, index) => (
+                {categories
+                  .filter(cat => {
+                    if (categoryStatusFilter === 'active') return cat.is_active;
+                    if (categoryStatusFilter === 'inactive') return !cat.is_active;
+                    return true;
+                  })
+                  .map((category, index) => (
                   <motion.div
                     key={category.id}
                     initial={{ opacity: 0, y: 20 }}
