@@ -24,6 +24,11 @@ export const Navigation = () => {
     return null;
   }
 
+  // Hide navigation on cart page for desktop
+  if (location.pathname === '/cart') {
+    return null;
+  }
+
   useEffect(() => {
     const loadLastStore = () => {
       const stored = localStorage.getItem('lastVisitedStore');
