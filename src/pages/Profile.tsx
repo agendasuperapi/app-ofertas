@@ -12,7 +12,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { useProfile } from "@/hooks/useProfile";
 import { useAuth } from "@/hooks/useAuth";
 import { Skeleton } from "@/components/ui/skeleton";
-import { User, Phone, MapPin, Home, Mail, Lock, KeyRound } from "lucide-react";
+import { User, Phone, MapPin, Home, Mail, Lock, KeyRound, LogOut } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -88,7 +88,7 @@ type PasswordFormData = z.infer<typeof passwordSchema>;
 
 export default function Profile() {
   const { profile, isLoading, updateProfile, isUpdating } = useProfile();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
   const form = useForm<ProfileFormData>({
@@ -165,7 +165,18 @@ export default function Profile() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-2xl mx-auto"
         >
-          <h1 className="text-4xl font-bold gradient-text mb-2">Meu Perfil</h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-4xl font-bold gradient-text">Meu Perfil</h1>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={signOut}
+              className="md:hidden flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Sair
+            </Button>
+          </div>
           <p className="text-muted-foreground mb-8">
             Gerencie suas informações pessoais e endereço de entrega
           </p>
