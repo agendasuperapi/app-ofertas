@@ -1,6 +1,8 @@
-import { Home, BarChart3, MessageSquare, Mail, Bell, Settings, FolderOpen } from "lucide-react";
+import { Home, BarChart3, MessageSquare, Mail, Bell, Settings, FolderOpen, ChevronDown, Package, FolderTree, Users, UserCog, Truck, MapPin, Bike, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useState } from "react";
 
 interface DashboardSidebarProps {
   activeTab: string;
@@ -8,9 +10,22 @@ interface DashboardSidebarProps {
 }
 
 export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarProps) => {
+  const [cadastrosOpen, setCadastrosOpen] = useState(false);
+
+  const cadastrosSubItems = [
+    { id: 'produtos', label: 'produtos', icon: Package },
+    { id: 'categorias', label: 'categorias', icon: FolderTree },
+    { id: 'clientes', label: 'clientes', icon: Users },
+    { id: 'funcionarios', label: 'funcionários', icon: UserCog },
+    { id: 'fornecedores', label: 'fornecedores', icon: Truck },
+    { id: 'entregadores', label: 'entregadores', icon: Bike },
+    { id: 'bairros', label: 'bairros', icon: MapPin },
+    { id: 'cupons', label: 'cupons', icon: Tag },
+  ];
+
   const menuItems = [
     { id: 'home', label: 'home', icon: Home },
-    { id: 'cadastros', label: 'cadastros', icon: FolderOpen },
+    { id: 'cadastros', label: 'cadastros', icon: FolderOpen, hasSubmenu: true },
     { id: 'result', label: 'result', icon: BarChart3 },
     { id: 'chat', label: 'chat', icon: MessageSquare },
     { id: 'messages', label: 'messages', icon: Mail },
@@ -32,6 +47,98 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
+          
+          if (item.hasSubmenu) {
+            return (
+              <Collapsible 
+                key={item.id} 
+                open={cadastrosOpen} 
+                onOpenChange={setCadastrosOpen}
+              >
+                <CollapsibleTrigger asChild>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={cn(
+                      "w-full flex flex-col items-center gap-1.5 py-3 px-2 rounded-lg relative transition-all duration-200",
+                      cadastrosOpen
+                        ? "bg-primary/10 text-primary shadow-sm" 
+                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                    )}
+                  >
+                    {cadastrosOpen && (
+                      <motion.div
+                        layoutId="activeTab"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full"
+                        initial={false}
+                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                      />
+                    )}
+                    <Icon className={cn(
+                      "w-5 h-5 relative z-10 transition-colors",
+                      cadastrosOpen && "drop-shadow-sm"
+                    )} />
+                    <span className={cn(
+                      "text-[10px] relative z-10 transition-colors font-medium",
+                      cadastrosOpen && "font-semibold"
+                    )}>
+                      {item.label}
+                    </span>
+                    <ChevronDown className={cn(
+                      "w-3 h-3 transition-transform duration-200",
+                      cadastrosOpen && "rotate-180"
+                    )} />
+                  </motion.button>
+                </CollapsibleTrigger>
+                
+                <CollapsibleContent className="space-y-0.5 mt-1">
+                  <AnimatePresence>
+                    {cadastrosSubItems.map((subItem) => {
+                      const SubIcon = subItem.icon;
+                      const isSubActive = activeTab === subItem.id;
+                      
+                      return (
+                        <motion.button
+                          key={subItem.id}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -10 }}
+                          onClick={() => onTabChange(subItem.id)}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className={cn(
+                            "w-full flex flex-col items-center gap-1 py-2.5 px-2 rounded-lg relative transition-all duration-200",
+                            isSubActive 
+                              ? "bg-primary/15 text-primary shadow-sm" 
+                              : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                          )}
+                        >
+                          {isSubActive && (
+                            <motion.div
+                              layoutId="activeSubTab"
+                              className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-primary rounded-r-full"
+                              initial={false}
+                              transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                            />
+                          )}
+                          <SubIcon className={cn(
+                            "w-4 h-4 relative z-10 transition-colors",
+                            isSubActive && "drop-shadow-sm"
+                          )} />
+                          <span className={cn(
+                            "text-[9px] relative z-10 transition-colors font-medium text-center leading-tight",
+                            isSubActive && "font-semibold"
+                          )}>
+                            {subItem.label}
+                          </span>
+                        </motion.button>
+                      );
+                    })}
+                  </AnimatePresence>
+                </CollapsibleContent>
+              </Collapsible>
+            );
+          }
           
           return (
             <motion.button
