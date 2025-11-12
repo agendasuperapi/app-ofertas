@@ -8,7 +8,7 @@ export const signUpSchema = z.object({
   phone: z.string()
     .transform(val => val?.replace(/\D/g, '') || '')
     .refine(val => !val || val.length === 12 || val.length === 13, {
-      message: 'Telefone deve ter 12 ou 13 dígitos com código do país'
+      message: 'Telefone deve ter 10 ou 11 dígitos'
     }).optional(),
 });
 
