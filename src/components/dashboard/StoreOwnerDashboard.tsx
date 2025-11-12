@@ -43,6 +43,7 @@ import { MetricsComparison } from "./MetricsComparison";
 import { useQueryClient } from '@tanstack/react-query';
 import { PersonalDataSettings } from "@/components/settings/PersonalDataSettings";
 import { SecuritySettings } from "@/components/settings/SecuritySettings";
+import { ProfileSettings } from "@/components/settings/ProfileSettings";
 
 export const StoreOwnerDashboard = () => {
   const navigate = useNavigate();
@@ -1990,8 +1991,12 @@ export const StoreOwnerDashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <Tabs defaultValue="personal" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-6 bg-muted/50">
+              <Tabs defaultValue="profile" className="space-y-6">
+                <TabsList className="grid w-full grid-cols-7 bg-muted/50">
+                  <TabsTrigger value="profile" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
+                    <User className="w-4 h-4 mr-2" />
+                    Perfil
+                  </TabsTrigger>
                   <TabsTrigger value="personal" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
                     <User className="w-4 h-4 mr-2" />
                     Dados Pessoais
@@ -2017,6 +2022,17 @@ export const StoreOwnerDashboard = () => {
                     Loja
                   </TabsTrigger>
                 </TabsList>
+
+        {/* Profile Tab */}
+        <TabsContent value="profile">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <ProfileSettings />
+          </motion.div>
+        </TabsContent>
 
         {/* Personal Data Tab */}
         <TabsContent value="personal">

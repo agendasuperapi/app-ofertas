@@ -93,12 +93,6 @@ export const Navigation = () => {
                     Pedidos
                   </Button>
                 </Link>
-                <Link to="/profile">
-                  <Button variant="ghost" size="sm">
-                    <User className="w-4 h-4 mr-2" />
-                    Perfil
-                  </Button>
-                </Link>
                 {hasRole('admin') && (
                   <Link to="/admin">
                     <Button variant="ghost" size="sm">
@@ -203,12 +197,6 @@ export const Navigation = () => {
                         <Button variant="outline" className="w-full">
                           <Package className="w-4 h-4 mr-2" />
                           Pedidos
-                        </Button>
-                      </Link>
-                      <Link to="/profile" className="block">
-                        <Button variant="outline" className="w-full">
-                          <User className="w-4 h-4 mr-2" />
-                          Perfil
                         </Button>
                       </Link>
                       {hasRole('admin') && (
