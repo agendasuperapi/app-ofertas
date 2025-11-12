@@ -1025,7 +1025,7 @@ export const StoreOwnerDashboard = () => {
               </div>
 
               {/* Botões de Status */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mb-4">
                 <Button
                   variant={orderStatusFilter === 'all' ? 'default' : 'outline'}
                   onClick={() => setOrderStatusFilter('all')}
@@ -1131,13 +1131,126 @@ export const StoreOwnerDashboard = () => {
                   </>
                 )}
               </div>
+
+              {/* Filtros de Data */}
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant={dateFilter === 'daily' ? 'default' : 'outline'}
+                    onClick={() => setDateFilter('daily')}
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <CalendarIcon className="w-4 h-4" />
+                    Diário
+                  </Button>
+                  <Button
+                    variant={dateFilter === 'weekly' ? 'default' : 'outline'}
+                    onClick={() => setDateFilter('weekly')}
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <CalendarIcon className="w-4 h-4" />
+                    Semanal
+                  </Button>
+                  <Button
+                    variant={dateFilter === 'monthly' ? 'default' : 'outline'}
+                    onClick={() => setDateFilter('monthly')}
+                    size="sm"
+                    className="flex items-center gap-2"
+                  >
+                    <CalendarIcon className="w-4 h-4" />
+                    Mensal
+                  </Button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={dateFilter === 'custom' ? 'default' : 'outline'}
+                        onClick={() => setDateFilter('custom')}
+                        size="sm"
+                        className="flex items-center gap-2"
+                      >
+                        <CalendarIcon className="w-4 h-4" />
+                        Personalizado
+                      </Button>
+                    </PopoverTrigger>
+                    {dateFilter === 'custom' && (
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <div className="p-4 space-y-2">
+                          <Label>Selecione o período</Label>
+                          <Calendar
+                            mode="range"
+                            selected={{
+                              from: customDateRange.from,
+                              to: customDateRange.to,
+                            }}
+                            onSelect={(range) => {
+                              setCustomDateRange({
+                                from: range?.from,
+                                to: range?.to,
+                              });
+                            }}
+                            numberOfMonths={2}
+                            locale={ptBR}
+                            className="pointer-events-auto"
+                          />
+                        </div>
+                      </PopoverContent>
+                    )}
+                  </Popover>
+                  
+                  {dateFilter !== 'daily' && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setDateFilter('daily');
+                        setCustomDateRange({ from: undefined, to: undefined });
+                      }}
+                      size="sm"
+                      className="flex items-center gap-2"
+                    >
+                      <X className="w-4 h-4" />
+                      Limpar
+                    </Button>
+                  )}
+                </div>
+                
+                {dateFilter === 'custom' && customDateRange.from && customDateRange.to && (
+                  <div className="text-sm text-muted-foreground">
+                    Período: {format(customDateRange.from, "dd/MM/yyyy", { locale: ptBR })} até {format(customDateRange.to, "dd/MM/yyyy", { locale: ptBR })}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Lista de Pedidos */}
             {orders && orders.length > 0 ? (
               <div className="space-y-4">
                 {orders
-                  .filter(order => orderStatusFilter === 'all' || order.status === orderStatusFilter)
+                  .filter(order => {
+                    // Filtro de status
+                    if (orderStatusFilter !== 'all' && order.status !== orderStatusFilter) {
+                      return false;
+                    }
+                    
+                    // Filtro de data
+                    const orderDate = new Date(order.created_at);
+                    
+                    if (dateFilter === 'daily') {
+                      return isToday(orderDate);
+                    } else if (dateFilter === 'weekly') {
+                      return isThisWeek(orderDate, { locale: ptBR });
+                    } else if (dateFilter === 'monthly') {
+                      return isThisMonth(orderDate);
+                    } else if (dateFilter === 'custom' && customDateRange.from && customDateRange.to) {
+                      return isWithinInterval(orderDate, {
+                        start: startOfDay(customDateRange.from),
+                        end: endOfDay(customDateRange.to),
+                      });
+                    }
+                    
+                    return true;
+                  })
                   .map((order) => (
                     <Card key={order.id} className="hover:shadow-lg transition-shadow">
                       <CardContent className="p-6">
