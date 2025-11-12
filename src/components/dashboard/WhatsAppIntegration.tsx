@@ -17,11 +17,20 @@ const CLOUD_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/evolution-whatsapp`;
 // Unified invoker to Evolution function (keeps same return shape as supabase.functions.invoke)
 const invokeEvolution = async (payload: any) => {
   console.log('[WhatsApp] Enviando para edge function:', payload);
+  
+  // Get the authenticated session token
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (!session) {
+    console.error('[WhatsApp] Sem sessão autenticada');
+    return { data: null, error: new Error('Authentication required') };
+  }
+  
   const res = await fetch(CLOUD_FUNCTION_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      'Authorization': `Bearer ${session.access_token}`,
       'apikey': SUPABASE_ANON_KEY,
     },
     body: JSON.stringify(payload),
@@ -98,6 +107,7 @@ setConnectionStatus('checking...');
         try {
 const { data: statusData } = await invokeEvolution({
   action: 'check_status',
+  storeId: storeId,
   instanceName: candidate
 });
           const connected = isConnectedState(statusData?.status);
@@ -126,6 +136,7 @@ const { data: statusData } = await invokeEvolution({
       
 const { data, error } = await invokeEvolution({ 
         action: 'check_status',
+        storeId: storeId,
         instanceName: instance
       });
 
@@ -169,6 +180,7 @@ const { data, error } = await invokeEvolution({
       
 const { data, error } = await invokeEvolution({ 
         action: 'create_instance',
+        storeId: storeId,
         instanceName: generatedInstanceName,
         phoneNumber: phoneNumber
       });
@@ -212,6 +224,7 @@ const { data, error } = await invokeEvolution({
     const interval = setInterval(async () => {
 const { data } = await invokeEvolution({ 
         action: 'check_status',
+        storeId: storeId,
         instanceName: instance
       });
 
@@ -239,6 +252,7 @@ const { data } = await invokeEvolution({
     try {
 await invokeEvolution({ 
         action: 'disconnect',
+        storeId: storeId,
         instanceName: instanceName
       });
 

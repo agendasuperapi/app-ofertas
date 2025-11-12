@@ -4,7 +4,7 @@ project_id = "mgpzowiahnwcmcaelogf"
 verify_jwt = true
 
 [functions.evolution-whatsapp]
-verify_jwt = false
+verify_jwt = true
 
 [functions.meta-tags-proxy]
 verify_jwt = false

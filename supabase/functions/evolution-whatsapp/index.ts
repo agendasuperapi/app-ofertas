@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const EVOLUTION_API_URL = "https://evolu-evolution-buttons.12l3kp.easypanel.host";
 const EVOLUTION_API_KEY = Deno.env.get('EVOLUTION_API_KEY');
@@ -17,17 +18,20 @@ const corsHeaders = {
 // Validation schemas for different actions
 const createInstanceSchema = z.object({
   action: z.literal('create_instance'),
+  storeId: z.string().uuid('Invalid store ID'),
   instanceName: z.string().trim().min(1).max(100).regex(/^[a-zA-Z0-9_-]+$/, 'Instance name must contain only letters, numbers, hyphens, and underscores'),
   phoneNumber: z.string().optional(),
 });
 
 const checkStatusSchema = z.object({
   action: z.literal('check_status'),
+  storeId: z.string().uuid('Invalid store ID'),
   instanceName: z.string().trim().min(1).max(100),
 });
 
 const disconnectSchema = z.object({
   action: z.literal('disconnect'),
+  storeId: z.string().uuid('Invalid store ID'),
   instanceName: z.string().trim().min(1).max(100),
 });
 
@@ -52,6 +56,30 @@ serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
+
+  // Initialize Supabase client
+  const supabaseClient = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    {
+      global: {
+        headers: { Authorization: req.headers.get('Authorization')! },
+      },
+    }
+  );
+
+  // Authenticate user
+  const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+  
+  if (authError || !user) {
+    console.error('Authentication failed:', authError);
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized - Authentication required' }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+
+  console.log('Authenticated user:', user.id);
 
   try {
     let rawData;
@@ -78,9 +106,53 @@ serve(async (req) => {
     
     // Validate request data
     const validatedData = requestSchema.parse(rawData);
-    const { action, instanceName } = validatedData;
+    const { action, instanceName, storeId } = validatedData as any;
 
-    console.log('Evolution API Request:', { action, instanceName });
+    console.log('Evolution API Request:', { action, instanceName, storeId, userId: user.id });
+
+    // Check if user has admin role
+    const { data: isAdmin } = await supabaseClient.rpc('has_role', { 
+      _user_id: user.id, 
+      _role: 'admin' 
+    });
+
+    // Check if user has store_owner role
+    const { data: isStoreOwner } = await supabaseClient.rpc('has_role', { 
+      _user_id: user.id, 
+      _role: 'store_owner' 
+    });
+
+    if (!isAdmin && !isStoreOwner) {
+      console.error('Authorization failed: User lacks required role', { userId: user.id });
+      return new Response(
+        JSON.stringify({ error: 'Forbidden - Requires store_owner or admin role' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // For store owners, verify they own the store
+    if (!isAdmin) {
+      const { data: store, error: storeError } = await supabaseClient
+        .from('stores')
+        .select('id')
+        .eq('id', storeId)
+        .eq('owner_id', user.id)
+        .single();
+
+      if (storeError || !store) {
+        console.error('Authorization failed: User does not own store', { 
+          userId: user.id, 
+          storeId,
+          error: storeError 
+        });
+        return new Response(
+          JSON.stringify({ error: 'Forbidden - You can only manage WhatsApp instances for your own stores' }),
+          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    console.log('Authorization successful', { userId: user.id, isAdmin, isStoreOwner });
 
     if (action === 'create_instance') {
       // Create instance
