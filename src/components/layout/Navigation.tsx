@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { LayoutDashboard, Menu, LogOut, Package, ShoppingCart, ShieldCheck, User, Store } from "lucide-react";
 import { AnimatedButton } from "@/components/ui/animated-button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -16,7 +16,13 @@ export const Navigation = () => {
   const { hasRole } = useUserRole();
   const itemCount = getItemCount();
   const navigate = useNavigate();
+  const location = useLocation();
   const [lastStore, setLastStore] = useState<{ slug: string; name: string } | null>(null);
+
+  // Hide navigation on dashboard page
+  if (location.pathname === '/dashboard') {
+    return null;
+  }
 
   useEffect(() => {
     const loadLastStore = () => {
