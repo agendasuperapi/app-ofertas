@@ -44,6 +44,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { PersonalDataSettings } from "@/components/settings/PersonalDataSettings";
 import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
+import { OwnerDataSettings } from "@/components/settings/OwnerDataSettings";
 
 export const StoreOwnerDashboard = () => {
   const navigate = useNavigate();
@@ -1991,8 +1992,12 @@ export const StoreOwnerDashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <Tabs defaultValue="profile" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-7 bg-muted/50">
+              <Tabs defaultValue="owner" className="space-y-6">
+                <TabsList className="grid w-full grid-cols-8 bg-muted/50">
+                  <TabsTrigger value="owner" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
+                    <User className="w-4 h-4 mr-2" />
+                    Proprietário
+                  </TabsTrigger>
                   <TabsTrigger value="profile" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
                     <User className="w-4 h-4 mr-2" />
                     Perfil
@@ -2022,6 +2027,17 @@ export const StoreOwnerDashboard = () => {
                     Loja
                   </TabsTrigger>
                 </TabsList>
+
+        {/* Owner Data Tab */}
+        <TabsContent value="owner">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <OwnerDataSettings />
+          </motion.div>
+        </TabsContent>
 
         {/* Profile Tab */}
         <TabsContent value="profile">
