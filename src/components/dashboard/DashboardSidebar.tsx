@@ -14,6 +14,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
   const [homeOpen, setHomeOpen] = useState(false);
 
   const homeSubItems = [
+    { id: 'home', label: 'dashboard', icon: Home },
     { id: 'metricas', label: 'métricas', icon: TrendingUp },
   ];
 
