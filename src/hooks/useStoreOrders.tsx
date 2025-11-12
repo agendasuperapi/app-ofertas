@@ -29,11 +29,11 @@ export const useStoreOrders = (storeId?: string) => {
   const updateOrderStatusMutation = useMutation({
     mutationFn: async ({ orderId, status }: { 
       orderId: string; 
-      status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'in_delivery' | 'delivered' | 'cancelled'
+      status: string
     }) => {
       const { data, error } = await supabase
         .from('orders')
-        .update({ status })
+        .update({ status: status as any })
         .eq('id', orderId)
         .select()
         .single();

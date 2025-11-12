@@ -36,6 +36,8 @@ import { DataCard } from "./DataCard";
 import { BarChartCard } from "./BarChartCard";
 import { MiniChart } from "./MiniChart";
 import { OrderStatusManager } from "./OrderStatusManager";
+import { useOrderStatusNotification } from "@/hooks/useOrderStatusNotification";
+import { useOrderStatuses } from "@/hooks/useOrderStatuses";
 
 export const StoreOwnerDashboard = () => {
   const navigate = useNavigate();
@@ -43,6 +45,12 @@ export const StoreOwnerDashboard = () => {
   const { products, createProduct, updateProduct, deleteProduct } = useProductManagement(myStore?.id);
   const { orders, updateOrderStatus } = useStoreOrders(myStore?.id);
   const { categories, addCategory, deleteCategory } = useCategories(myStore?.id);
+  
+  // Enable automatic WhatsApp notifications
+  useOrderStatusNotification(myStore?.id);
+  
+  // Load custom order statuses
+  const { statuses: customStatuses } = useOrderStatuses(myStore?.id);
 
   const [productForm, setProductForm] = useState({
     name: '',
@@ -885,13 +893,11 @@ export const StoreOwnerDashboard = () => {
           <Tabs defaultValue="all" className="w-full" onValueChange={setOrderStatusFilter}>
             <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 bg-muted/50">
               <TabsTrigger value="all">Todos</TabsTrigger>
-              <TabsTrigger value="pending">Pendentes</TabsTrigger>
-              <TabsTrigger value="confirmed">Confirmados</TabsTrigger>
-              <TabsTrigger value="preparing">Preparando</TabsTrigger>
-              <TabsTrigger value="ready">Prontos</TabsTrigger>
-              <TabsTrigger value="in_delivery">Em Entrega</TabsTrigger>
-              <TabsTrigger value="delivered">Entregues</TabsTrigger>
-              <TabsTrigger value="cancelled">Cancelados</TabsTrigger>
+              {customStatuses.map((status) => (
+                <TabsTrigger key={status.status_key} value={status.status_key}>
+                  {status.status_label}
+                </TabsTrigger>
+              ))}
             </TabsList>
 
             <TabsContent value={orderStatusFilter} className="mt-4">
@@ -934,7 +940,7 @@ export const StoreOwnerDashboard = () => {
                       </div>
                       <Select
                         value={order.status}
-                        onValueChange={(value: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'in_delivery' | 'delivered' | 'cancelled') => 
+                        onValueChange={(value: string) => 
                           updateOrderStatus({ orderId: order.id, status: value })
                         }
                       >
@@ -942,13 +948,13 @@ export const StoreOwnerDashboard = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="pending">Pendente</SelectItem>
-                          <SelectItem value="confirmed">Confirmado</SelectItem>
-                          <SelectItem value="preparing">Preparando</SelectItem>
-                          <SelectItem value="ready">Pronto</SelectItem>
-                          <SelectItem value="in_delivery">Em entrega</SelectItem>
-                          <SelectItem value="delivered">Entregue</SelectItem>
-                          <SelectItem value="cancelled">Cancelado</SelectItem>
+                          {customStatuses.map((status) => (
+                            <SelectItem key={status.status_key} value={status.status_key}>
+                              <span style={{ color: status.status_color }}>
+                                {status.status_label}
+                              </span>
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
