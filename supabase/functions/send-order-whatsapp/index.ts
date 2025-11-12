@@ -49,12 +49,27 @@ serve(async (req) => {
     // Get store details
     const { data: store, error: storeError } = await supabaseClient
       .from('stores')
-      .select('name, whatsapp_instance')
+      .select('name')
       .eq('id', order.store_id)
       .single();
 
-    if (storeError || !store || !store.whatsapp_instance) {
-      console.error('Store or WhatsApp instance not found:', storeError);
+    if (storeError || !store) {
+      console.error('Store not found:', storeError);
+      return new Response(
+        JSON.stringify({ success: false, message: 'Store not found' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Get WhatsApp instance from store_instances table
+    const { data: storeInstance, error: instanceError } = await supabaseClient
+      .from('store_instances')
+      .select('evolution_instance_id')
+      .eq('store_id', order.store_id)
+      .single();
+
+    if (instanceError || !storeInstance?.evolution_instance_id) {
+      console.error('WhatsApp instance not found:', instanceError);
       return new Response(
         JSON.stringify({ success: false, message: 'WhatsApp not configured' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -105,10 +120,10 @@ serve(async (req) => {
       phone = '55' + phone;
     }
 
-    console.log('Sending message to:', phone, 'via instance:', store.whatsapp_instance);
+    console.log('Sending message to:', phone, 'via instance:', storeInstance.evolution_instance_id);
 
     // Send message via Evolution API
-    const evolutionResponse = await fetch(`${EVOLUTION_API_URL}/message/sendText/${store.whatsapp_instance}`, {
+    const evolutionResponse = await fetch(`${EVOLUTION_API_URL}/message/sendText/${storeInstance.evolution_instance_id}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
