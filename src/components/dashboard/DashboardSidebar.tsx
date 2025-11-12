@@ -26,6 +26,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
   const menuItems = [
     { id: 'home', label: 'home', icon: Home },
     { id: 'metricas', label: 'métricas', icon: TrendingUp },
+    { id: 'pedidos', label: 'pedidos', icon: ShoppingCart },
     { id: 'cadastros', label: 'cadastros', icon: FolderOpen, hasSubmenu: true },
     { id: 'result', label: 'result', icon: BarChart3 },
     { id: 'chat', label: 'chat', icon: MessageSquare },

@@ -1011,6 +1011,176 @@ export const StoreOwnerDashboard = () => {
           </motion.div>
         )}
 
+        {activeTab === 'pedidos' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="p-8 space-y-6"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-2xl font-bold gradient-text">Pedidos</h2>
+                <p className="text-muted-foreground">Gerencie os pedidos da sua loja</p>
+              </div>
+            </div>
+
+            {/* Filtro de Status */}
+            <div className="flex items-center gap-2 mb-4">
+              <ShoppingBag className="w-4 h-4 text-muted-foreground" />
+              <Select value={orderStatusFilter} onValueChange={setOrderStatusFilter}>
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Filtrar por status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Pedidos</SelectItem>
+                  {customStatuses.length > 0 ? (
+                    customStatuses.map((status) => (
+                      <SelectItem key={status.status_key} value={status.status_key}>
+                        {status.status_label}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <>
+                      <SelectItem value="pending">Pendente</SelectItem>
+                      <SelectItem value="confirmed">Confirmado</SelectItem>
+                      <SelectItem value="preparing">Preparando</SelectItem>
+                      <SelectItem value="ready">Pronto</SelectItem>
+                      <SelectItem value="delivered">Entregue</SelectItem>
+                      <SelectItem value="cancelled">Cancelado</SelectItem>
+                    </>
+                  )}
+                </SelectContent>
+              </Select>
+              {orderStatusFilter !== 'all' && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setOrderStatusFilter('all')}
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Limpar
+                </Button>
+              )}
+            </div>
+
+            {/* Lista de Pedidos */}
+            {orders && orders.length > 0 ? (
+              <div className="space-y-4">
+                {orders
+                  .filter(order => orderStatusFilter === 'all' || order.status === orderStatusFilter)
+                  .map((order) => (
+                    <Card key={order.id} className="hover:shadow-lg transition-shadow">
+                      <CardContent className="p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="font-semibold text-lg">Pedido #{order.order_number}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              {format(new Date(order.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="capitalize">
+                            {customStatuses.find(s => s.status_key === order.status)?.status_label || order.status}
+                          </Badge>
+                        </div>
+
+                        <Separator className="my-4" />
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Cliente:</span>
+                            <span className="font-medium">{order.customer_name}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Telefone:</span>
+                            <span className="font-medium">{order.customer_phone}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Tipo:</span>
+                            <span className="font-medium capitalize">{order.delivery_type}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Pagamento:</span>
+                            <span className="font-medium capitalize">{order.payment_method}</span>
+                          </div>
+                          <div className="flex justify-between text-lg font-bold">
+                            <span>Total:</span>
+                            <span className="text-primary">R$ {order.total.toFixed(2)}</span>
+                          </div>
+                        </div>
+
+                        {order.delivery_type === 'delivery' && (
+                          <>
+                            <Separator className="my-4" />
+                            <div className="space-y-1 text-sm">
+                              <p className="font-medium">Endereço de Entrega:</p>
+                              <p className="text-muted-foreground">
+                                {order.delivery_street}, {order.delivery_number}
+                                {order.delivery_complement && ` - ${order.delivery_complement}`}
+                              </p>
+                              <p className="text-muted-foreground">{order.delivery_neighborhood}</p>
+                            </div>
+                          </>
+                        )}
+
+                        {order.notes && (
+                          <>
+                            <Separator className="my-4" />
+                            <div className="text-sm">
+                              <p className="font-medium mb-1">Observações:</p>
+                              <p className="text-muted-foreground">{order.notes}</p>
+                            </div>
+                          </>
+                        )}
+
+                        <Separator className="my-4" />
+
+                        <div className="flex gap-2">
+                          <Select
+                            value={order.status}
+                            onValueChange={(newStatus) => updateOrderStatus({ orderId: order.id, status: newStatus })}
+                          >
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder="Alterar status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {customStatuses.length > 0 ? (
+                                customStatuses.map((status) => (
+                                  <SelectItem key={status.status_key} value={status.status_key}>
+                                    {status.status_label}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <>
+                                  <SelectItem value="pending">Pendente</SelectItem>
+                                  <SelectItem value="confirmed">Confirmado</SelectItem>
+                                  <SelectItem value="preparing">Preparando</SelectItem>
+                                  <SelectItem value="ready">Pronto</SelectItem>
+                                  <SelectItem value="delivered">Entregue</SelectItem>
+                                  <SelectItem value="cancelled">Cancelado</SelectItem>
+                                </>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+              </div>
+            ) : (
+              <Card className="border-dashed">
+                <CardContent className="py-12 text-center">
+                  <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-lg font-semibold mb-2">Nenhum pedido encontrado</h3>
+                  <p className="text-muted-foreground">
+                    Quando você receber pedidos, eles aparecerão aqui
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </motion.div>
+        )}
+
         {activeTab === 'categorias' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
