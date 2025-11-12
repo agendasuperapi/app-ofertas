@@ -30,6 +30,29 @@ export const CustomerDashboard = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [periodFilter, setPeriodFilter] = useState<string>("all");
 
+  // Helper functions
+  const getStatusLabel = (status: string) => {
+    const statusMap: Record<string, string> = {
+      pending: 'Pendente',
+      confirmed: 'Confirmado',
+      preparing: 'Preparando',
+      ready: 'Pronto',
+      in_delivery: 'Em entrega',
+      delivered: 'Entregue',
+      cancelled: 'Cancelado',
+    };
+    return statusMap[status] || status;
+  };
+
+  const getPaymentMethodLabel = (method: string) => {
+    const methodMap: Record<string, string> = {
+      pix: 'PIX',
+      dinheiro: 'Dinheiro',
+      cartao: 'Cartão',
+    };
+    return methodMap[method] || method;
+  };
+
   // Filter orders based on period
   const filteredOrders = useMemo(() => {
     if (!orders) return [];
@@ -106,28 +129,6 @@ export const CustomerDashboard = () => {
   }, [filteredOrders]);
 
   const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
-
-  const getStatusLabel = (status: string) => {
-    const statusMap: Record<string, string> = {
-      pending: 'Pendente',
-      confirmed: 'Confirmado',
-      preparing: 'Preparando',
-      ready: 'Pronto',
-      in_delivery: 'Em entrega',
-      delivered: 'Entregue',
-      cancelled: 'Cancelado',
-    };
-    return statusMap[status] || status;
-  };
-
-  const getPaymentMethodLabel = (method: string) => {
-    const methodMap: Record<string, string> = {
-      pix: 'PIX',
-      dinheiro: 'Dinheiro',
-      cartao: 'Cartão',
-    };
-    return methodMap[method] || method;
-  };
 
   if (ordersLoading) {
     return (
