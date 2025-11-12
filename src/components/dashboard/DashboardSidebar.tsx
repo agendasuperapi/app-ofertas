@@ -21,17 +21,13 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
     <motion.div
       initial={{ x: -100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      className="w-28 bg-gradient-to-b from-primary via-primary-hover to-accent h-screen fixed left-0 top-0 flex flex-col items-center py-8 shadow-xl z-50"
+      className="w-20 bg-background/95 backdrop-blur-xl border-r border-border/50 h-screen fixed left-0 top-0 flex flex-col items-center py-8 shadow-lg z-50"
     >
-      <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mb-12 shadow-lg">
-        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center overflow-hidden">
-          <div className="w-full h-full bg-gradient-primary flex items-center justify-center">
-            <span className="text-white font-bold text-xl">U</span>
-          </div>
-        </div>
+      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-12 border border-primary/20">
+        <span className="text-primary font-bold text-xl">U</span>
       </div>
 
-      <nav className="flex-1 w-full space-y-2">
+      <nav className="flex-1 w-full space-y-1 px-2">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
@@ -40,28 +36,30 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
             <motion.button
               key={item.id}
               onClick={() => onTabChange(item.id)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               className={cn(
-                "w-full flex flex-col items-center gap-2 py-4 px-2 relative transition-all",
-                isActive && "bg-white/20 shadow-lg"
+                "w-full flex flex-col items-center gap-1.5 py-3 px-2 rounded-lg relative transition-all duration-200",
+                isActive 
+                  ? "bg-primary/10 text-primary shadow-sm" 
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               )}
             >
               {isActive && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute inset-0 bg-white/20 rounded-r-xl"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full"
                   initial={false}
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
               )}
               <Icon className={cn(
-                "w-6 h-6 relative z-10 transition-colors",
-                isActive ? "text-white" : "text-white/70"
+                "w-5 h-5 relative z-10 transition-colors",
+                isActive && "drop-shadow-sm"
               )} />
               <span className={cn(
-                "text-xs relative z-10 transition-colors",
-                isActive ? "text-white font-medium" : "text-white/70"
+                "text-[10px] relative z-10 transition-colors font-medium",
+                isActive && "font-semibold"
               )}>
                 {item.label}
               </span>
