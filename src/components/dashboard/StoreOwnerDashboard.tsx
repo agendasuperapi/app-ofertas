@@ -1992,16 +1992,8 @@ export const StoreOwnerDashboard = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <Tabs defaultValue="owner" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-8 bg-muted/50">
-                  <TabsTrigger value="owner" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
-                    <User className="w-4 h-4 mr-2" />
-                    Proprietário
-                  </TabsTrigger>
-                  <TabsTrigger value="profile" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
-                    <User className="w-4 h-4 mr-2" />
-                    Perfil
-                  </TabsTrigger>
+              <Tabs defaultValue="personal" className="space-y-6">
+                <TabsList className="grid w-full grid-cols-6 bg-muted/50">
                   <TabsTrigger value="personal" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
                     <User className="w-4 h-4 mr-2" />
                     Dados Pessoais
@@ -2027,28 +2019,6 @@ export const StoreOwnerDashboard = () => {
                     Loja
                   </TabsTrigger>
                 </TabsList>
-
-        {/* Owner Data Tab */}
-        <TabsContent value="owner">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <OwnerDataSettings />
-          </motion.div>
-        </TabsContent>
-
-        {/* Profile Tab */}
-        <TabsContent value="profile">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <ProfileSettings />
-          </motion.div>
-        </TabsContent>
 
         {/* Personal Data Tab */}
         <TabsContent value="personal">
