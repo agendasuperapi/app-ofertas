@@ -512,9 +512,6 @@ export const StoreOwnerDashboard = () => {
           animate={{ y: 0, opacity: 1 }}
           className="bg-card border-b border-border px-8 py-4 flex items-center justify-between shadow-sm"
         >
-          <div>
-            <h1 className="text-2xl font-bold text-orange-500">Dashboard Lojista</h1>
-          </div>
           <div className="flex items-center gap-4">
             <span className="text-foreground font-medium">{myStore?.name || 'Lojista'}</span>
             <button className="p-2 hover:bg-muted rounded-lg transition-colors">
