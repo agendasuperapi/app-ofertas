@@ -1,4 +1,4 @@
-import { Home, BarChart3, MessageSquare, Mail, Bell, Settings, FolderOpen, ChevronDown, Package, FolderTree, Users, UserCog, Truck, MapPin, Bike, Tag } from "lucide-react";
+import { Home, BarChart3, MessageSquare, Mail, Bell, Settings, FolderOpen, ChevronDown, Package, FolderTree, Users, UserCog, Truck, MapPin, Bike, Tag, TrendingUp, DollarSign, ShoppingCart, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -11,6 +11,11 @@ interface DashboardSidebarProps {
 
 export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarProps) => {
   const [cadastrosOpen, setCadastrosOpen] = useState(false);
+  const [homeOpen, setHomeOpen] = useState(false);
+
+  const homeSubItems = [
+    { id: 'metricas', label: 'métricas', icon: TrendingUp },
+  ];
 
   const cadastrosSubItems = [
     { id: 'produtos', label: 'produtos', icon: Package },
@@ -24,7 +29,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
   ];
 
   const menuItems = [
-    { id: 'home', label: 'home', icon: Home },
+    { id: 'home', label: 'home', icon: Home, hasSubmenu: true },
     { id: 'cadastros', label: 'cadastros', icon: FolderOpen, hasSubmenu: true },
     { id: 'result', label: 'result', icon: BarChart3 },
     { id: 'chat', label: 'chat', icon: MessageSquare },
@@ -49,12 +54,18 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
           const isActive = activeTab === item.id;
           
           if (item.hasSubmenu) {
+            const isHomeMenu = item.id === 'home';
+            const isCadastrosMenu = item.id === 'cadastros';
+            const isOpen = isHomeMenu ? homeOpen : cadastrosOpen;
+            const setOpen = isHomeMenu ? setHomeOpen : setCadastrosOpen;
+            const subItems = isHomeMenu ? homeSubItems : cadastrosSubItems;
+            
             return (
               <div key={item.id}>
                 {index > 0 && <div className="h-px bg-primary/20 my-2 mx-2" />}
                 <Collapsible 
-                  open={cadastrosOpen} 
-                  onOpenChange={setCadastrosOpen}
+                  open={isOpen} 
+                  onOpenChange={setOpen}
                 >
                 <CollapsibleTrigger asChild>
                   <motion.button
@@ -62,12 +73,12 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
                     whileTap={{ scale: 0.98 }}
                     className={cn(
                       "w-full flex flex-col items-center gap-1.5 py-3 px-2 rounded-lg relative transition-all duration-200",
-                      cadastrosOpen
+                      isOpen
                         ? "bg-primary/10 text-primary shadow-sm" 
                         : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                     )}
                   >
-                    {cadastrosOpen && (
+                    {isOpen && (
                       <motion.div
                         layoutId="activeTab"
                         className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-r-full"
@@ -77,24 +88,24 @@ export const DashboardSidebar = ({ activeTab, onTabChange }: DashboardSidebarPro
                     )}
                     <Icon className={cn(
                       "w-5 h-5 relative z-10 transition-colors",
-                      cadastrosOpen && "drop-shadow-sm"
+                      isOpen && "drop-shadow-sm"
                     )} />
                     <span className={cn(
                       "text-xs relative z-10 transition-colors font-medium uppercase",
-                      cadastrosOpen && "font-semibold"
+                      isOpen && "font-semibold"
                     )}>
                       {item.label}
                     </span>
                     <ChevronDown className={cn(
                       "w-3 h-3 transition-transform duration-200",
-                      cadastrosOpen && "rotate-180"
+                      isOpen && "rotate-180"
                     )} />
                   </motion.button>
                 </CollapsibleTrigger>
                 
                 <CollapsibleContent className="space-y-0.5 mt-1">
                   <AnimatePresence>
-                    {cadastrosSubItems.map((subItem) => {
+                    {subItems.map((subItem) => {
                       const SubIcon = subItem.icon;
                       const isSubActive = activeTab === subItem.id;
                       
