@@ -24,6 +24,7 @@ interface OrderItem {
   unit_price: number;
   subtotal: number;
   observation?: string;
+  pendingRemoval?: boolean;
 }
 
 interface EditOrderDialogProps {
@@ -120,7 +121,23 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
   };
 
   const removeLocalOrderItem = (itemId: string) => {
-    setOrderItems(items => items.filter(item => item.id !== itemId));
+    setOrderItems(items => 
+      items.map(item => 
+        item.id === itemId 
+          ? { ...item, pendingRemoval: true }
+          : item
+      )
+    );
+  };
+
+  const restoreOrderItem = (itemId: string) => {
+    setOrderItems(items => 
+      items.map(item => 
+        item.id === itemId 
+          ? { ...item, pendingRemoval: false }
+          : item
+      )
+    );
   };
 
   const addNewProduct = (product: any) => {
@@ -148,10 +165,10 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
 
       const existingItemIds = new Set(existingItems?.map(item => item.id) || []);
 
-      // Deletar itens que foram removidos
-      const itemsToDelete = Array.from(existingItemIds).filter(
-        id => !orderItems.find(item => item.id === id)
-      );
+      // Deletar itens marcados para remoção
+      const itemsToDelete = orderItems
+        .filter(item => item.pendingRemoval && !item.id.startsWith('temp_'))
+        .map(item => item.id);
 
       for (const itemId of itemsToDelete) {
         await supabase
@@ -160,8 +177,8 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
           .eq('id', itemId);
       }
 
-      // Salvar itens existentes modificados e inserir novos
-      for (const item of orderItems) {
+      // Salvar itens existentes modificados e inserir novos (excluir os marcados para remoção)
+      for (const item of orderItems.filter(i => !i.pendingRemoval)) {
         if (item.id.startsWith('temp_')) {
           // Novo item
           const { error: insertError } = await supabase
@@ -192,17 +209,17 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
         }
       }
 
-      // Calculate new total
-      const subtotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
+      // Calculate new total (excluir itens pendentes de remoção)
+      const subtotal = orderItems
+        .filter(item => !item.pendingRemoval)
+        .reduce((sum, item) => sum + item.subtotal, 0);
       const total = subtotal + (formData.delivery_fee || 0);
 
       // Detectar mudanças
       const changes: Record<string, any> = {};
       
-      // Detectar itens removidos
-      const removedItems = originalOrderItems.filter(
-        originalItem => !orderItems.find(item => item.id === originalItem.id)
-      );
+      // Detectar itens removidos (com pendingRemoval = true)
+      const removedItems = orderItems.filter(item => item.pendingRemoval);
       if (removedItems.length > 0) {
         changes.items_removed = removedItems.map(item => ({
           name: item.product_name,
@@ -382,20 +399,46 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
               )}
 
               {orderItems.map((item) => (
-                <div key={item.id} className="border rounded-lg p-4 space-y-3">
+                <div 
+                  key={item.id} 
+                  className={`border rounded-lg p-4 space-y-3 ${
+                    item.pendingRemoval ? 'opacity-50 bg-destructive/5 border-destructive' : ''
+                  }`}
+                >
                   <div className="flex items-center justify-between">
-                    <div className="font-medium">{item.product_name}</div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeLocalOrderItem(item.id)}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="font-medium">
+                      {item.product_name}
+                      {item.pendingRemoval && (
+                        <span className="ml-2 text-xs text-destructive">(Será removido)</span>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      {item.pendingRemoval ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => restoreOrderItem(item.id)}
+                          className="text-green-600 hover:text-green-600"
+                        >
+                          Restaurar
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeLocalOrderItem(item.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
+                  {!item.pendingRemoval && (
+                    <>
+                      <div className="grid grid-cols-3 gap-3">
                     <div>
                       <Label>Quantidade</Label>
                       <Input
@@ -446,6 +489,8 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
                       rows={2}
                     />
                   </div>
+                    </>
+                  )}
                 </div>
               ))}
             </TabsContent>
