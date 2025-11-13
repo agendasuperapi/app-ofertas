@@ -49,6 +49,7 @@ import { SecuritySettings } from "@/components/settings/SecuritySettings";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { OwnerDataSettings } from "@/components/settings/OwnerDataSettings";
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { CouponsManager } from "./CouponsManager";
 
 export const StoreOwnerDashboard = () => {
   const navigate = useNavigate();
@@ -1826,6 +1827,17 @@ export const StoreOwnerDashboard = () => {
                 </div>
               </DialogContent>
             </Dialog>
+          </motion.div>
+        )}
+
+        {activeTab === 'cupons' && myStore?.id && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="p-8"
+          >
+            <CouponsManager storeId={myStore.id} />
           </motion.div>
         )}
 
