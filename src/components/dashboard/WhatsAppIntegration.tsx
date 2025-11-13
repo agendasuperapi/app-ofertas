@@ -23,7 +23,8 @@ const invokeEvolution = async (payload: any) => {
     };
   }
   
-  console.log('[WhatsApp] Sessão ativa, chamando edge function...');
+  console.log('[WhatsApp] Sessão ativa. Access token:', session.access_token.substring(0, 20) + '...');
+  console.log('[WhatsApp] Chamando edge function...');
   
   // Use supabase.functions.invoke which handles authentication automatically
   const { data, error } = await supabase.functions.invoke('evolution-whatsapp', {
@@ -32,6 +33,7 @@ const invokeEvolution = async (payload: any) => {
   
   if (error) {
     console.error('[WhatsApp] Erro na resposta:', error);
+    console.error('[WhatsApp] Detalhes do erro:', JSON.stringify(error, null, 2));
     return { data: null, error };
   }
   
