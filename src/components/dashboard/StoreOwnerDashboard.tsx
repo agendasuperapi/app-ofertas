@@ -1202,9 +1202,14 @@ export const StoreOwnerDashboard = () => {
             className="p-8 space-y-6"
           >
             <div className="mb-6">
-              <div className="mb-4">
-                <h2 className="text-2xl font-bold gradient-text">Pedidos</h2>
-                <p className="text-muted-foreground">Gerencie os pedidos da sua loja</p>
+              <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-bold gradient-text">Pedidos</h2>
+                  <p className="text-muted-foreground">Gerencie os pedidos da sua loja</p>
+                </div>
+                {myStore?.id && (
+                  <WhatsAppStatusIndicator storeId={myStore.id} />
+                )}
               </div>
 
               {/* Filtros de Data */}
