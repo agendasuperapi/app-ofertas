@@ -32,7 +32,11 @@ export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProp
 
       const instanceId = (instanceData as any)?.evolution_instance_id;
 
+      console.log('[WhatsApp Status] Store ID:', storeId);
+      console.log('[WhatsApp Status] Instance ID:', instanceId);
+
       if (!instanceId) {
+        console.log('[WhatsApp Status] Sem instância - definindo como desconectado');
         setStatus('disconnected');
         return;
       }
@@ -46,8 +50,10 @@ export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProp
         }
       });
 
+      console.log('[WhatsApp Status] Resposta completa da edge function:', { data, error });
+
       if (error) {
-        console.error('Erro ao verificar status do WhatsApp (edge):', error);
+        console.error('[WhatsApp Status] Erro ao verificar status:', error);
         setStatus('disconnected');
         return;
       }
@@ -62,13 +68,16 @@ export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProp
         (data as any)?.data?.state
       );
 
+      console.log('[WhatsApp Status] Status extraído:', rawStatus);
+
       if (!rawStatus) {
-        console.warn('Resposta de status do WhatsApp sem campo de status reconhecido:', data);
+        console.warn('[WhatsApp Status] Sem campo de status reconhecido na resposta:', data);
         setStatus('disconnected');
         return;
       }
 
       const statusLower = String(rawStatus).toLowerCase();
+      console.log('[WhatsApp Status] Status normalizado:', statusLower);
 
       // Estados considerados conectados
       const connectedStates = ['open', 'connected', 'authenticated', 'online', 'ready'];
@@ -76,14 +85,17 @@ export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProp
       const connectingStates = ['connecting', 'qr', 'pairing', 'loading', 'starting'];
 
       if (connectedStates.some(s => statusLower.includes(s))) {
+        console.log('[WhatsApp Status] ✅ Status CONECTADO detectado');
         setStatus('connected');
       } else if (connectingStates.some(s => statusLower.includes(s))) {
+        console.log('[WhatsApp Status] ⏳ Status CONECTANDO detectado');
         setStatus('connecting');
       } else {
+        console.log('[WhatsApp Status] ❌ Status DESCONECTADO - status não reconhecido:', statusLower);
         setStatus('disconnected');
       }
     } catch (error) {
-      console.error('Error checking WhatsApp status:', error);
+      console.error('[WhatsApp Status] Erro na verificação:', error);
       setStatus('disconnected');
     }
   };
