@@ -70,6 +70,6 @@ export const useOrderHistory = (orderId?: string) => {
   return {
     history: historyQuery.data || [],
     isLoading: historyQuery.isLoading,
-    addHistory: addHistoryMutation.mutate,
+    addHistory: addHistoryMutation.mutateAsync,
   };
 };

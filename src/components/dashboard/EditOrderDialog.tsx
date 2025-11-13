@@ -176,7 +176,7 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
 
       // Salvar no histórico apenas se houve mudanças
       if (Object.keys(changes).length > 0) {
-        addHistory({
+        await addHistory({
           orderId: order.id,
           editorName,
           changes,
