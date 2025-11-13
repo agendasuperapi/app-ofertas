@@ -62,6 +62,10 @@ serve(async (req) => {
     const { record } = await req.json();
     console.log('Processing order:', record);
 
+    // ⏳ Aguardar 3s antes de enviar para evitar duplicidade e garantir itens na view
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
+
     // 🔒 IDEMPOTÊNCIA: Verificar se já enviamos mensagem para este pedido+status
     const orderStatus = record.status || 'pending';
     const { data: existingLog } = await supabaseClient

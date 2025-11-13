@@ -31,27 +31,9 @@ export const useOrderStatusNotification = (storeId: string | undefined) => {
 
           console.log('Order status changed:', payload.old.status, '->', payload.new.status);
           
-          // Send WhatsApp notification
-          try {
-            const { data, error } = await supabase.functions.invoke('send-order-whatsapp', {
-              body: { record: payload.new }
-            });
+          // WhatsApp: envio pelo cliente desativado. Banco de dados (trigger) fará o envio.
+          console.log('🔕 WhatsApp via cliente desativado. Envio será feito pelo banco de dados.');
 
-            if (error) {
-              console.error('Error sending WhatsApp notification:', error);
-              return;
-            }
-
-            if (data?.success) {
-              console.log('WhatsApp notification sent successfully');
-              toast({
-                title: "Mensagem enviada",
-                description: `WhatsApp enviado para o cliente sobre o pedido ${payload.new.order_number}`,
-              });
-            }
-          } catch (error) {
-            console.error('Failed to send WhatsApp:', error);
-          }
         }
       )
       .subscribe();
