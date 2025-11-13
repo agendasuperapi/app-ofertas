@@ -629,8 +629,8 @@ export default function Cart() {
                         {showEmailExistsAlert && (
                           <Alert variant="destructive">
                             <AlertDescription className="text-center">
-                              <p className="font-semibold">Email já cadastrado</p>
-                              <p className="text-sm mt-1">Por favor, faça login</p>
+                              <p className="font-bold">E-mail já cadastrado,</p>
+                              <p className="font-bold mt-1">Digite sua senha e faça Login.</p>
                             </AlertDescription>
                           </Alert>
                         )}
