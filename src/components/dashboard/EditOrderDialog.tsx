@@ -89,32 +89,35 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
     setOrderItems(data || []);
   };
 
-  const updateOrderItem = async (itemId: string, updates: Partial<OrderItem>) => {
-    const { error } = await supabase
-      .from('order_items')
-      .update(updates)
-      .eq('id', itemId);
-
-    if (error) {
-      toast({
-        title: 'Erro ao atualizar item',
-        description: error.message,
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    await loadOrderItems();
-    toast({
-      title: 'Item atualizado!',
-      description: 'O item do pedido foi atualizado com sucesso.',
-    });
+  const updateLocalOrderItem = (itemId: string, updates: Partial<OrderItem>) => {
+    setOrderItems(items => 
+      items.map(item => 
+        item.id === itemId 
+          ? { ...item, ...updates }
+          : item
+      )
+    );
   };
 
   const handleSubmit = async () => {
     setLoading(true);
     
     try {
+      // Salvar todos os itens modificados
+      for (const item of orderItems) {
+        const { error: itemError } = await supabase
+          .from('order_items')
+          .update({
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            subtotal: item.subtotal,
+            observation: item.observation,
+          })
+          .eq('id', item.id);
+
+        if (itemError) throw itemError;
+      }
+
       // Calculate new total
       const subtotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
       const total = subtotal + (formData.delivery_fee || 0);
@@ -249,7 +252,7 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
                         onChange={(e) => {
                           const newQuantity = parseInt(e.target.value) || 1;
                           const newSubtotal = item.unit_price * newQuantity;
-                          updateOrderItem(item.id, { 
+                          updateLocalOrderItem(item.id, { 
                             quantity: newQuantity,
                             subtotal: newSubtotal 
                           });
@@ -265,7 +268,7 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
                         onChange={(e) => {
                           const newPrice = parseFloat(e.target.value) || 0;
                           const newSubtotal = newPrice * item.quantity;
-                          updateOrderItem(item.id, { 
+                          updateLocalOrderItem(item.id, { 
                             unit_price: newPrice,
                             subtotal: newSubtotal 
                           });
@@ -285,7 +288,7 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
                     <Label>Observação</Label>
                     <Textarea
                       value={item.observation || ''}
-                      onChange={(e) => updateOrderItem(item.id, { observation: e.target.value })}
+                      onChange={(e) => updateLocalOrderItem(item.id, { observation: e.target.value })}
                       placeholder="Ex: Sem cebola..."
                       rows={2}
                     />
