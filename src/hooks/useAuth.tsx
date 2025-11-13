@@ -105,11 +105,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    // Check if user is store_owner before signing out
+    let isStoreOwner = false;
+    if (user) {
+      const { data: rolesData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+      
+      const roles = rolesData?.map(r => r.role) || [];
+      isStoreOwner = roles.includes('store_owner');
+    }
+
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
     toast.success('Logout realizado com sucesso!');
-    navigate('/');
+    
+    // Redirect based on user role
+    navigate(isStoreOwner ? '/login-lojista' : '/');
   };
 
   return (
