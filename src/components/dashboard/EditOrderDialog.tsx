@@ -431,7 +431,7 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
                     <div className="font-medium">
                       {item.product_name}
                       {item.pendingRemoval && (
-                        <span className="ml-2 text-xs text-destructive">(Será removido)</span>
+                        <span className="ml-2 text-xs text-destructive">(removido)</span>
                       )}
                     </div>
                     <div className="flex gap-2">
