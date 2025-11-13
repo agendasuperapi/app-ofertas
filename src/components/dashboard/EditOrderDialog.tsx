@@ -11,7 +11,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ImageUpload } from "./ImageUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, MapPin, CreditCard, StickyNote, Image as ImageIcon } from "lucide-react";
+import { Package, MapPin, CreditCard, StickyNote, Image as ImageIcon, History } from "lucide-react";
+import { useOrderHistory } from "@/hooks/useOrderHistory";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Badge } from "@/components/ui/badge";
 
 interface OrderItem {
   id: string;
@@ -32,6 +36,7 @@ interface EditOrderDialogProps {
 export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrderDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const { history, addHistory } = useOrderHistory(order?.id);
   
   const [formData, setFormData] = useState({
     payment_method: order?.payment_method || 'pix',
@@ -114,6 +119,28 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
       const subtotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
       const total = subtotal + (formData.delivery_fee || 0);
 
+      // Detectar mudanças
+      const changes: Record<string, any> = {};
+      
+      if (order.payment_method !== formData.payment_method) {
+        changes.payment_method = { before: order.payment_method, after: formData.payment_method };
+      }
+      if (order.delivery_type !== formData.delivery_type) {
+        changes.delivery_type = { before: order.delivery_type, after: formData.delivery_type };
+      }
+      if (order.delivery_fee !== formData.delivery_fee) {
+        changes.delivery_fee = { before: order.delivery_fee, after: formData.delivery_fee };
+      }
+      if (order.delivery_street !== formData.delivery_street) {
+        changes.delivery_street = { before: order.delivery_street, after: formData.delivery_street };
+      }
+      if (order.subtotal !== subtotal) {
+        changes.subtotal = { before: order.subtotal, after: subtotal };
+      }
+      if (order.total !== total) {
+        changes.total = { before: order.total, after: total };
+      }
+
       // Monta payload apenas com colunas garantidas
       const baseUpdate: any = {
         payment_method: formData.payment_method,
@@ -143,6 +170,25 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
 
       if (error) throw error;
 
+      // Buscar nome do usuário atual
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user?.id)
+        .single();
+
+      const editorName = profile?.full_name || user?.email || 'Usuário desconhecido';
+
+      // Salvar no histórico apenas se houve mudanças
+      if (Object.keys(changes).length > 0) {
+        addHistory({
+          orderId: order.id,
+          editorName,
+          changes,
+        });
+      }
+
       toast({
         title: 'Pedido atualizado!',
         description: 'As alterações foram salvas com sucesso.',
@@ -171,7 +217,7 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
         </DialogHeader>
 
         <Tabs defaultValue="items" className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="grid w-full grid-cols-4 flex-shrink-0">
+          <TabsList className="grid w-full grid-cols-5 flex-shrink-0">
             <TabsTrigger value="items">
               <Package className="w-4 h-4 mr-2" />
               Itens
@@ -187,6 +233,10 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
             <TabsTrigger value="notes">
               <StickyNote className="w-4 h-4 mr-2" />
               Notas
+            </TabsTrigger>
+            <TabsTrigger value="history">
+              <History className="w-4 h-4 mr-2" />
+              Histórico
             </TabsTrigger>
           </TabsList>
 
@@ -376,6 +426,57 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
                   Anexe comprovantes, fotos ou documentos relacionados ao pedido
                 </p>
               </div>
+            </TabsContent>
+
+            <TabsContent value="history" className="space-y-4 pr-4">
+              {history.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Nenhuma edição registrada ainda
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {history.map((entry) => (
+                    <div key={entry.id} className="border rounded-lg p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="font-medium text-sm">{entry.editor_name}</div>
+                        <Badge variant="outline" className="text-xs">
+                          {format(new Date(entry.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        </Badge>
+                      </div>
+                      <Separator />
+                      <div className="space-y-1 text-sm">
+                        {Object.entries(entry.changes).map(([field, change]: [string, any]) => {
+                          const fieldLabels: Record<string, string> = {
+                            payment_method: 'Forma de Pagamento',
+                            delivery_type: 'Tipo de Entrega',
+                            delivery_fee: 'Taxa de Entrega',
+                            delivery_street: 'Rua',
+                            subtotal: 'Subtotal',
+                            total: 'Total',
+                          };
+                          
+                          return (
+                            <div key={field} className="flex items-center gap-2 text-xs">
+                              <span className="font-medium">{fieldLabels[field] || field}:</span>
+                              <span className="text-muted-foreground line-through">
+                                {typeof change.before === 'number' 
+                                  ? `R$ ${change.before.toFixed(2)}` 
+                                  : change.before || '-'}
+                              </span>
+                              <span>→</span>
+                              <span className="text-primary font-medium">
+                                {typeof change.after === 'number' 
+                                  ? `R$ ${change.after.toFixed(2)}` 
+                                  : change.after || '-'}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
           </ScrollArea>
         </Tabs>
