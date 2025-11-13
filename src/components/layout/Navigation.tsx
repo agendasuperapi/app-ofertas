@@ -19,16 +19,7 @@ export const Navigation = () => {
   const location = useLocation();
   const [lastStore, setLastStore] = useState<{ slug: string; name: string } | null>(null);
 
-  // Hide navigation on dashboard page only for store owners
-  if (!loading && location.pathname === '/dashboard' && hasRole('store_owner')) {
-    return null;
-  }
-
-  // Hide navigation on cart page for desktop
-  if (location.pathname === '/cart') {
-    return null;
-  }
-
+  // All hooks must be called before any conditional returns
   useEffect(() => {
     const loadLastStore = () => {
       const stored = localStorage.getItem('lastVisitedStore');
@@ -51,6 +42,16 @@ export const Navigation = () => {
       clearInterval(interval);
     };
   }, []);
+
+  // Hide navigation on dashboard page only for store owners
+  if (!loading && location.pathname === '/dashboard' && hasRole('store_owner')) {
+    return null;
+  }
+
+  // Hide navigation on cart page for desktop
+  if (location.pathname === '/cart') {
+    return null;
+  }
 
   return (
     <motion.nav
