@@ -62,6 +62,13 @@ export const StoreOwnerDashboard = () => {
   const { myStore, isLoading, updateStore } = useStoreManagement();
   const { products, createProduct, updateProduct, deleteProduct } = useProductManagement(myStore?.id);
   const { orders, updateOrderStatus, updateOrder } = useStoreOrders(myStore?.id);
+  
+  // Debug de produtos
+  console.log('[Produtos Debug]', {
+    products,
+    productsLength: products?.length,
+    storeId: myStore?.id
+  });
 
   // Função helper para verificar permissões
   const hasPermission = (module: string, action: string): boolean => {
