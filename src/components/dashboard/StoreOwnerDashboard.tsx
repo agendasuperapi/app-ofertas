@@ -62,6 +62,17 @@ export const StoreOwnerDashboard = () => {
   const { myStore, isLoading, updateStore } = useStoreManagement();
   const { products, createProduct, updateProduct, deleteProduct } = useProductManagement(myStore?.id);
   const { orders, updateOrderStatus, updateOrder } = useStoreOrders(myStore?.id);
+
+  // Função helper para verificar permissões
+  const hasPermission = (module: string, action: string): boolean => {
+    // Se não é funcionário (é dono), tem todas as permissões
+    if (!employeeAccess.isEmployee || !employeeAccess.permissions) return true;
+    
+    const modulePermissions = (employeeAccess.permissions as any)[module];
+    if (!modulePermissions) return false;
+    
+    return modulePermissions[action] === true;
+  };
   const { categories, addCategory, updateCategory, toggleCategoryStatus, deleteCategory } = useCategories(myStore?.id);
   
   // Enable automatic WhatsApp notifications
@@ -1620,41 +1631,43 @@ export const StoreOwnerDashboard = () => {
                 <h2 className="text-2xl font-bold gradient-text">Categorias</h2>
                 <p className="text-muted-foreground">Organize os produtos da sua loja</p>
               </div>
-              <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button size="lg">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nova Categoria
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Nova Categoria</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div>
-                      <Label>Nome da Categoria</Label>
-                      <Input
-                        value={newCategoryName}
-                        onChange={(e) => setNewCategoryName(e.target.value)}
-                        placeholder="Ex: Hambúrgueres, Bebidas, Sobremesas..."
-                      />
-                    </div>
-                    <Button
-                      onClick={async () => {
-                        if (newCategoryName.trim()) {
-                          await addCategory(newCategoryName.trim());
-                          setNewCategoryName('');
-                          setIsCategoryDialogOpen(false);
-                        }
-                      }}
-                      className="w-full"
-                    >
-                      Adicionar Categoria
+              {hasPermission('categories', 'create') && (
+                <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="lg">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Nova Categoria
                     </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Nova Categoria</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Nome da Categoria</Label>
+                        <Input
+                          value={newCategoryName}
+                          onChange={(e) => setNewCategoryName(e.target.value)}
+                          placeholder="Ex: Hambúrgueres, Bebidas, Sobremesas..."
+                        />
+                      </div>
+                      <Button
+                        onClick={async () => {
+                          if (newCategoryName.trim()) {
+                            await addCategory(newCategoryName.trim());
+                            setNewCategoryName('');
+                            setIsCategoryDialogOpen(false);
+                          }
+                        }}
+                        className="w-full"
+                      >
+                        Adicionar Categoria
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
             </div>
 
             {/* Filtro de Status das Categorias */}
@@ -1749,44 +1762,50 @@ export const StoreOwnerDashboard = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => {
-                                setEditingCategory(category);
-                                setEditCategoryName(category.name);
-                                setIsEditCategoryDialogOpen(true);
-                              }}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="hover:text-destructive hover:bg-destructive/10"
-                              onClick={() => deleteCategory(category.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            {hasPermission('categories', 'update') && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  setEditingCategory(category);
+                                  setEditCategoryName(category.name);
+                                  setIsEditCategoryDialogOpen(true);
+                                }}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {hasPermission('categories', 'delete') && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="hover:text-destructive hover:bg-destructive/10"
+                                onClick={() => deleteCategory(category.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
                           </div>
                         </div>
 
-                        <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-muted/30 mb-4">
-                          <div>
-                            <p className="text-sm font-medium">
-                              {category.is_active ? 'Categoria ativa' : 'Categoria desativada'}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {category.is_active 
-                                ? 'Visível no cardápio' 
-                                : 'Produtos ocultos do cardápio'}
-                            </p>
+                        {hasPermission('categories', 'toggle_status') && (
+                          <div className="flex items-center justify-between py-3 px-4 rounded-lg bg-muted/30 mb-4">
+                            <div>
+                              <p className="text-sm font-medium">
+                                {category.is_active ? 'Categoria ativa' : 'Categoria desativada'}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {category.is_active 
+                                  ? 'Visível no cardápio' 
+                                  : 'Produtos ocultos do cardápio'}
+                              </p>
+                            </div>
+                            <Switch
+                              checked={category.is_active}
+                              onCheckedChange={(checked) => toggleCategoryStatus(category.id, checked)}
+                            />
                           </div>
-                          <Switch
-                            checked={category.is_active}
-                            onCheckedChange={(checked) => toggleCategoryStatus(category.id, checked)}
-                          />
-                        </div>
+                        )}
                         
                         {products && products.filter(p => p.category === category.name).length > 0 && (
                           <div className="pt-4 border-t">
@@ -1886,13 +1905,14 @@ export const StoreOwnerDashboard = () => {
                 <h2 className="text-2xl font-bold gradient-text">Meus Produtos</h2>
                 <p className="text-muted-foreground">Gerencie o cardápio da sua loja</p>
               </div>
-              <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button onClick={() => setEditingProduct(null)} size="lg">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Novo Produto
-                  </Button>
-                </DialogTrigger>
+              {hasPermission('products', 'create') && (
+                <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => setEditingProduct(null)} size="lg">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Novo Produto
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                   <DialogHeader className="flex-shrink-0">
                     <DialogTitle>
@@ -2109,6 +2129,7 @@ export const StoreOwnerDashboard = () => {
                   </div>
                 </DialogContent>
               </Dialog>
+              )}
             </div>
 
             {/* Category Filter */}
@@ -2180,22 +2201,26 @@ export const StoreOwnerDashboard = () => {
                           R$ {Number(product.price).toFixed(2)}
                         </span>
                         <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditProduct(product)}
-                            className="hover-scale"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => deleteProduct(product.id)}
-                            className="hover-scale hover:border-destructive hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {hasPermission('products', 'update') && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleEditProduct(product)}
+                              className="hover-scale"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          )}
+                          {hasPermission('products', 'delete') && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => deleteProduct(product.id)}
+                              className="hover-scale hover:border-destructive hover:text-destructive"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </CardContent>
