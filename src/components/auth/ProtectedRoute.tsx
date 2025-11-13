@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -22,12 +23,24 @@ export const ProtectedRoute = ({
   useEffect(() => {
     if (authLoading || roleLoading) return;
 
+    // Debug logs
+    console.log('ProtectedRoute check:', { 
+      user: user?.id, 
+      requireRole, 
+      authLoading, 
+      roleLoading 
+    });
+
     if (requireAuth && !user) {
+      console.log('User not authenticated, redirecting to /auth');
+      toast.error('Você precisa estar logado para acessar essa página');
       navigate('/auth');
       return;
     }
 
     if (requireRole && !hasRole(requireRole)) {
+      console.log(`User does not have required role: ${requireRole}`);
+      toast.error(`Você não tem permissão para acessar essa página. Role requerida: ${requireRole}`);
       navigate('/');
       return;
     }
