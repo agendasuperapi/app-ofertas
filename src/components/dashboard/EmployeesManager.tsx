@@ -169,7 +169,9 @@ export const EmployeesManager = ({ storeId }: EmployeesManagerProps) => {
     
     try {
       if (editingEmployee) {
-        await updateEmployee(editingEmployee.id, formData);
+        // Remove password do formData ao atualizar (password não existe na tabela store_employees)
+        const { password, ...updateData } = formData;
+        await updateEmployee(editingEmployee.id, updateData);
       } else {
         if (!formData.password) {
           throw new Error('Senha é obrigatória para novos funcionários');
