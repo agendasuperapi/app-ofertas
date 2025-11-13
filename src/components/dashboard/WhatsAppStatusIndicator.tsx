@@ -1,15 +1,16 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, XCircle, Loader2, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface WhatsAppStatusIndicatorProps {
   storeId: string;
 }
 
+type ConnectionStatus = 'connected' | 'disconnected' | 'connecting' | 'loading';
+
 export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProps) => {
-  const [isConnected, setIsConnected] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [status, setStatus] = useState<ConnectionStatus>('loading');
 
   useEffect(() => {
     checkConnectionStatus();
@@ -32,8 +33,7 @@ export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProp
       const instanceId = (instanceData as any)?.evolution_instance_id;
 
       if (!instanceId) {
-        setIsConnected(false);
-        setIsLoading(false);
+        setStatus('disconnected');
         return;
       }
 
@@ -47,20 +47,26 @@ export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProp
       });
 
       if (!error && data?.status) {
-        const connectedStates = ['open', 'connected', 'authenticated', 'ready'];
-        setIsConnected(connectedStates.includes(data.status.toLowerCase()));
+        const statusLower = data.status.toLowerCase();
+        
+        // Apenas 'open' e 'connected' são considerados conectados
+        if (['open', 'connected'].includes(statusLower)) {
+          setStatus('connected');
+        } else if (['connecting', 'qr'].includes(statusLower)) {
+          setStatus('connecting');
+        } else {
+          setStatus('disconnected');
+        }
       } else {
-        setIsConnected(false);
+        setStatus('disconnected');
       }
     } catch (error) {
       console.error('Error checking WhatsApp status:', error);
-      setIsConnected(false);
-    } finally {
-      setIsLoading(false);
+      setStatus('disconnected');
     }
   };
 
-  if (isLoading) {
+  if (status === 'loading') {
     return (
       <Badge variant="outline" className="gap-2">
         <Loader2 className="w-3 h-3 animate-spin" />
@@ -69,12 +75,21 @@ export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProp
     );
   }
 
+  if (status === 'connecting') {
+    return (
+      <Badge variant="secondary" className="gap-2 bg-yellow-500 hover:bg-yellow-600 text-white">
+        <Clock className="w-3 h-3" />
+        <span className="text-xs">Conectando...</span>
+      </Badge>
+    );
+  }
+
   return (
     <Badge 
-      variant={isConnected ? "default" : "destructive"} 
-      className={`gap-2 ${isConnected ? 'bg-green-600 hover:bg-green-700' : ''}`}
+      variant={status === 'connected' ? "default" : "destructive"} 
+      className={`gap-2 ${status === 'connected' ? 'bg-green-600 hover:bg-green-700' : ''}`}
     >
-      {isConnected ? (
+      {status === 'connected' ? (
         <>
           <CheckCircle2 className="w-3 h-3" />
           <span className="text-xs">WhatsApp Conectado</span>

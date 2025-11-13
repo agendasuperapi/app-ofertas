@@ -29,8 +29,8 @@ const isConnectedState = (status?: string) => {
   if (!status) return false;
   const s = String(status).toLowerCase().trim();
   console.log('[WhatsApp] Verificando estado de conexão:', { original: status, normalized: s });
-  // Expandir lista de estados considerados conectados
-  const connectedStates = ['open', 'connected', 'authenticated', 'ready', 'connecting', 'qr', 'online'];
+  // Apenas estados que indicam conexão ativa
+  const connectedStates = ['open', 'connected'];
   const isConnected = connectedStates.includes(s);
   console.log('[WhatsApp] Estado é conectado?', isConnected);
   return isConnected;
