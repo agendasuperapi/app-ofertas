@@ -294,7 +294,13 @@ export default function Cart() {
   };
 
   const handleCheckout = async () => {
-    if (isSubmitting) return;
+    // 🔒 PROTEÇÃO DUPLA contra múltiplos cliques
+    if (isSubmitting || isCreating) {
+      console.warn("⚠️ Checkout já em andamento, ignorando clique");
+      return;
+    }
+    
+    console.log("🚀 Iniciando checkout...");
     setIsSubmitting(true);
 
     try {
@@ -351,6 +357,7 @@ export default function Cart() {
   
       // Create order
       try {
+        console.log("📦 Criando pedido...");
         await createOrder({
           storeId: cart.storeId!,
           items: cart.items.map(item => ({
@@ -379,23 +386,24 @@ export default function Cart() {
           changeAmount: paymentMethod === 'dinheiro' && changeAmount ? Number(parseFloat(changeAmount)) : undefined,
         });
   
-        console.log('Order created successfully, clearing cart...');
+        console.log('✅ Order created successfully, clearing cart...');
         
         // Clear cart and navigate after successful order
         clearCart();
-        console.log('Cart cleared successfully');
+        console.log('🗑️ Cart cleared successfully');
         
         // Small delay to ensure state updates
         setTimeout(() => {
-          console.log('Navigating to orders page...');
+          console.log('➡️ Navigating to orders page...');
           navigate('/orders');
         }, 100);
         
       } catch (error) {
-        console.error('Order creation failed:', error);
+        console.error('❌ Order creation failed:', error);
         // Error toast is already shown by the mutation
       }
     } finally {
+      console.log("🔓 Liberando checkout...");
       setIsSubmitting(false);
     }
   };
