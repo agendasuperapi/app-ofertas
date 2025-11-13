@@ -49,7 +49,7 @@ export const FloatingCartButton = () => {
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className="fixed bottom-2 md:bottom-3 inset-x-0 z-50 flex justify-center px-4"
       >
-        <motion.div animate={controls} className={`w-full max-w-md ${isMobile ? 'animate-pulse' : ''}`}>
+        <motion.div animate={controls} className="w-full max-w-md">
           <Button
             onClick={() => navigate('/cart')}
             className="w-full bg-gradient-primary hover:opacity-90 shadow-lg h-12 sm:h-14 text-sm sm:text-base font-semibold rounded-full border-2 border-orange-500 hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] transition-all duration-500"
@@ -58,7 +58,7 @@ export const FloatingCartButton = () => {
             <div className="flex items-center justify-between w-full px-2 sm:px-4">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <div className="relative">
-                  <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <ShoppingCart className={`w-4 h-4 sm:w-5 sm:h-5 ${isMobile ? 'animate-pulse' : ''}`} />
                   <motion.span
                     key={itemCount}
                     initial={{ scale: 0 }}
