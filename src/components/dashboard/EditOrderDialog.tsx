@@ -417,7 +417,9 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
                 </div>
               )}
 
-              {orderItems.map((item, index) => (
+              <ScrollArea className="max-h-[60vh] md:max-h-[50vh] pr-4">
+                <div className="space-y-4">
+                  {orderItems.map((item, index) => (
                 <>
                   <div 
                     key={item.id} 
@@ -517,6 +519,8 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
                   )}
                 </>
               ))}
+                </div>
+              </ScrollArea>
             </TabsContent>
 
             <TabsContent value="payment" className="space-y-4 pr-4">
