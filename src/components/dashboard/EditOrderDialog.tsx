@@ -36,6 +36,7 @@ interface EditOrderDialogProps {
 export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrderDialogProps) => {
   const [loading, setLoading] = useState(false);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [originalOrderItems, setOriginalOrderItems] = useState<OrderItem[]>([]);
   const [availableProducts, setAvailableProducts] = useState<any[]>([]);
   const [showAddProduct, setShowAddProduct] = useState(false);
   const { history, addHistory } = useOrderHistory(order?.id);
@@ -105,6 +106,7 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
     }
 
     setOrderItems(data || []);
+    setOriginalOrderItems(data || []);
   };
 
   const updateLocalOrderItem = (itemId: string, updates: Partial<OrderItem>) => {
@@ -196,6 +198,28 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
 
       // Detectar mudanças
       const changes: Record<string, any> = {};
+      
+      // Detectar itens removidos
+      const removedItems = originalOrderItems.filter(
+        originalItem => !orderItems.find(item => item.id === originalItem.id)
+      );
+      if (removedItems.length > 0) {
+        changes.items_removed = removedItems.map(item => ({
+          name: item.product_name,
+          quantity: item.quantity,
+          price: item.unit_price
+        }));
+      }
+
+      // Detectar itens adicionados
+      const addedItems = orderItems.filter(item => item.id.startsWith('temp_'));
+      if (addedItems.length > 0) {
+        changes.items_added = addedItems.map(item => ({
+          name: item.product_name,
+          quantity: item.quantity,
+          price: item.unit_price
+        }));
+      }
       
       if (order.payment_method !== formData.payment_method) {
         changes.payment_method = { before: order.payment_method, after: formData.payment_method };
@@ -578,6 +602,35 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
                             total: 'Total',
                           };
                           
+                          // Renderizar itens removidos
+                          if (field === 'items_removed' && Array.isArray(change)) {
+                            return (
+                              <div key={field} className="space-y-1">
+                                <span className="font-medium text-destructive">Itens Removidos:</span>
+                                {change.map((item: any, idx: number) => (
+                                  <div key={idx} className="ml-4 text-destructive text-xs">
+                                    - {item.name} (Qtd: {item.quantity}, R$ {item.price.toFixed(2)})
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          }
+
+                          // Renderizar itens adicionados
+                          if (field === 'items_added' && Array.isArray(change)) {
+                            return (
+                              <div key={field} className="space-y-1">
+                                <span className="font-medium text-green-600">Itens Adicionados:</span>
+                                {change.map((item: any, idx: number) => (
+                                  <div key={idx} className="ml-4 text-green-600 text-xs">
+                                    + {item.name} (Qtd: {item.quantity}, R$ {item.price.toFixed(2)})
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          }
+
+                          // Renderizar mudanças normais
                           return (
                             <div key={field} className="flex items-center gap-2 text-xs">
                               <span className="font-medium">{fieldLabels[field] || field}:</span>
