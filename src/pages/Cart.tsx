@@ -198,6 +198,8 @@ export default function Cart() {
 
         if (error) {
           if (error.message.includes('already') || error.message.includes('exists') || error.message.includes('registered')) {
+            setAuthMode('login');
+            setAuthPassword("");
             setShowEmailExistsAlert(true);
             setIsAuthLoading(false);
             return;
