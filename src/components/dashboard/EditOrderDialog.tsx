@@ -287,6 +287,9 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
         description: 'As alterações foram salvas com sucesso.',
       });
 
+      // Recarregar itens do pedido antes de fechar
+      await loadOrderItems();
+      
       onUpdate();
       onOpenChange(false);
     } catch (error: any) {
