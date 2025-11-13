@@ -61,14 +61,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } else {
       toast.success('Conta criada com sucesso!');
       if (!skipNavigation && data.user) {
-        // Check user role to determine navigation
-        const { data: roleData } = await supabase
+        // Check user roles to determine navigation - prioritize store_owner
+        const { data: rolesData } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', data.user.id)
-          .single();
+          .eq('user_id', data.user.id);
         
-        const dashboardPath = roleData?.role === 'store_owner' ? '/dashboard-lojista' : '/dashboard';
+        const roles = rolesData?.map(r => r.role) || [];
+        const dashboardPath = roles.includes('store_owner') ? '/dashboard-lojista' : '/dashboard';
         navigate(dashboardPath);
       }
     }
@@ -87,14 +87,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } else {
       toast.success('Login realizado com sucesso!');
       if (!skipNavigation && data.user) {
-        // Check user role to determine navigation
-        const { data: roleData } = await supabase
+        // Check user roles to determine navigation - prioritize store_owner
+        const { data: rolesData } = await supabase
           .from('user_roles')
           .select('role')
-          .eq('user_id', data.user.id)
-          .single();
+          .eq('user_id', data.user.id);
         
-        const dashboardPath = roleData?.role === 'store_owner' ? '/dashboard-lojista' : '/dashboard';
+        const roles = rolesData?.map(r => r.role) || [];
+        const dashboardPath = roles.includes('store_owner') ? '/dashboard-lojista' : '/dashboard';
         navigate(dashboardPath);
       }
     }

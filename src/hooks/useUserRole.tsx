@@ -18,7 +18,6 @@ export const useUserRole = () => {
 
     const fetchRoles = async () => {
       try {
-        console.log('Fetching roles for user:', user.id);
         const { data, error } = await supabase
           .from('user_roles')
           .select('role')
@@ -27,7 +26,6 @@ export const useUserRole = () => {
         if (error) throw error;
 
         const userRoles = data?.map(r => r.role as AppRole) || [];
-        console.log('User roles fetched:', userRoles);
         setRoles(userRoles);
       } catch (error) {
         console.error('Error fetching user roles:', error);
