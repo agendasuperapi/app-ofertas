@@ -45,7 +45,7 @@ const App = () => (
               <Route 
                 path="/dashboard-lojista" 
                 element={
-                  <ProtectedRoute requireAuth={true} requireRole="store_owner">
+                  <ProtectedRoute requireAuth={true} requireRole="store_owner" redirectPath="/login-lojista">
                     <DashboardLojista />
                   </ProtectedRoute>
                 } 
