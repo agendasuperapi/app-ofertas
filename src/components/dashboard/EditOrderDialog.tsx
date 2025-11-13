@@ -417,13 +417,14 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
                 </div>
               )}
 
-              {orderItems.map((item) => (
-                <div 
-                  key={item.id} 
-                  className={`border rounded-lg p-4 space-y-3 ${
-                    item.pendingRemoval ? 'opacity-50 bg-destructive/5 border-destructive' : ''
-                  }`}
-                >
+              {orderItems.map((item, index) => (
+                <>
+                  <div 
+                    key={item.id} 
+                    className={`border rounded-lg p-4 space-y-3 ${
+                      item.pendingRemoval ? 'opacity-50 bg-destructive/5 border-destructive' : ''
+                    }`}
+                  >
                   <div className="flex items-center justify-between">
                     <div className="font-medium">
                       {item.product_name}
@@ -510,7 +511,11 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
                   </div>
                     </>
                   )}
-                </div>
+                  </div>
+                  {index < orderItems.length - 1 && (
+                    <Separator className="bg-orange-500 h-[3px] my-4" />
+                  )}
+                </>
               ))}
             </TabsContent>
 
