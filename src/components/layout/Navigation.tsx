@@ -80,19 +80,21 @@ export const Navigation = () => {
                   <Store className="w-4 h-4 mr-2" />
                   Home
                 </Button>
-                <Link to="/cart">
-                  <Button variant="ghost" size="sm" className="relative">
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Carrinho
-                    {itemCount > 0 && (
-                      <Badge 
-                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                      >
-                        {itemCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </Link>
+                {location.pathname !== '/login-lojista' && (
+                  <Link to="/cart">
+                    <Button variant="ghost" size="sm" className="relative">
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Carrinho
+                      {itemCount > 0 && (
+                        <Badge 
+                          className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                        >
+                          {itemCount}
+                        </Badge>
+                      )}
+                    </Button>
+                  </Link>
+                )}
                 <Link to={hasRole('store_owner') ? '/dashboard-lojista' : '/dashboard'}>
                   <Button variant="ghost" size="sm">
                     <LayoutDashboard className="w-4 h-4 mr-2" />
@@ -138,19 +140,21 @@ export const Navigation = () => {
                   <Store className="w-4 h-4 mr-2" />
                   Home
                 </Button>
-                <Link to="/cart">
-                  <Button variant="ghost" size="sm" className="relative">
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Carrinho
-                    {itemCount > 0 && (
-                      <Badge 
-                        className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                      >
-                        {itemCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </Link>
+                {location.pathname !== '/login-lojista' && (
+                  <Link to="/cart">
+                    <Button variant="ghost" size="sm" className="relative">
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      Carrinho
+                      {itemCount > 0 && (
+                        <Badge 
+                          className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                        >
+                          {itemCount}
+                        </Badge>
+                      )}
+                    </Button>
+                  </Link>
+                )}
                 <Link to="/auth">
                   <AnimatedButton size="sm" className="bg-gradient-primary">
                     Entrar / Cadastrar
@@ -184,19 +188,21 @@ export const Navigation = () => {
                     <Store className="w-4 h-4 mr-2" />
                     Home
                   </Button>
-                  <Link to="/cart" className="block">
-                    <Button variant="outline" className="w-full relative">
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      Carrinho
-                      {itemCount > 0 && (
-                        <Badge 
-                          className="absolute -top-1 right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                        >
-                          {itemCount}
-                        </Badge>
-                      )}
-                    </Button>
-                  </Link>
+                  {location.pathname !== '/login-lojista' && (
+                    <Link to="/cart" className="block">
+                      <Button variant="outline" className="w-full relative">
+                        <ShoppingCart className="w-4 h-4 mr-2" />
+                        Carrinho
+                        {itemCount > 0 && (
+                          <Badge 
+                            className="absolute -top-1 right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                          >
+                            {itemCount}
+                          </Badge>
+                        )}
+                      </Button>
+                    </Link>
+                  )}
                   {user ? (
                     <>
                       <Link to={hasRole('store_owner') ? '/dashboard-lojista' : '/dashboard'} className="block">
