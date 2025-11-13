@@ -76,13 +76,62 @@ interface EmployeesManagerProps {
 }
 
 const DEFAULT_PERMISSIONS: EmployeePermissions = {
-  orders: { view: true, create: true, update: true, delete: false },
-  products: { view: true, create: false, update: false, delete: false },
-  categories: { view: true, create: false, update: false, delete: false },
-  coupons: { view: true, create: false, update: false, delete: false },
-  reports: { view: false },
-  settings: { view: false, update: false },
-  employees: { view: false, create: false, update: false, delete: false },
+  orders: {
+    view: true,
+    create: true,
+    edit_order_details: false,
+    change_status_confirmed: true,
+    change_status_preparing: true,
+    change_status_out_for_delivery: false,
+    change_status_delivered: false,
+    change_status_cancelled: false,
+    change_any_status: false,
+    add_order_notes: true,
+    view_order_history: true,
+    delete_order_items: false,
+    add_order_items: false,
+    export_orders: false,
+  },
+  products: {
+    view: true,
+    create: false,
+    update: false,
+    delete: false,
+    manage_stock: false,
+    manage_images: false,
+  },
+  categories: {
+    view: true,
+    create: false,
+    update: false,
+    delete: false,
+    toggle_status: false,
+  },
+  coupons: {
+    view: true,
+    create: false,
+    update: false,
+    delete: false,
+    toggle_status: false,
+  },
+  employees: {
+    view: false,
+    create: false,
+    update: false,
+    delete: false,
+    manage_permissions: false,
+  },
+  reports: {
+    view: false,
+    export: false,
+  },
+  settings: {
+    view: false,
+    update_store_info: false,
+    update_delivery_settings: false,
+    update_operating_hours: false,
+    manage_whatsapp: false,
+  },
 };
 
 export const EmployeesManager = ({ storeId }: EmployeesManagerProps) => {
@@ -297,36 +346,173 @@ export const EmployeesManager = ({ storeId }: EmployeesManagerProps) => {
 
                 <div className="space-y-4 border rounded-lg p-4">
                   {/* Pedidos */}
-                  <div className="space-y-3">
-                    <h4 className="font-medium">Pedidos</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-lg">Pedidos</h4>
+                      <Badge variant="outline">Ações Básicas</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3 p-4 bg-muted/30 rounded-lg">
                       <div className="flex items-center space-x-2">
                         <Switch
                           checked={formData.permissions.orders.view}
                           onCheckedChange={(checked) => updatePermission('orders', 'view', checked)}
                         />
-                        <Label>Visualizar</Label>
+                        <Label className="text-sm">Visualizar pedidos</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch
                           checked={formData.permissions.orders.create}
                           onCheckedChange={(checked) => updatePermission('orders', 'create', checked)}
                         />
-                        <Label>Criar</Label>
+                        <Label className="text-sm">Criar pedidos</Label>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-4">
+                      <h4 className="font-medium">Botões da Tela de Pedidos</h4>
+                      <Badge variant="secondary">Ações Específicas</Badge>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 border rounded-lg">
+                      <div className="space-y-3">
+                        <p className="text-xs font-medium text-muted-foreground uppercase">Edição</p>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.orders.edit_order_details}
+                            onCheckedChange={(checked) => updatePermission('orders', 'edit_order_details', checked)}
+                          />
+                          <div className="flex-1">
+                            <Label className="text-sm font-medium">Editar Pedido</Label>
+                            <p className="text-xs text-muted-foreground">Botão "Editar Pedido"</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.orders.add_order_items}
+                            onCheckedChange={(checked) => updatePermission('orders', 'add_order_items', checked)}
+                          />
+                          <div className="flex-1">
+                            <Label className="text-sm font-medium">Adicionar Itens</Label>
+                            <p className="text-xs text-muted-foreground">Adicionar produtos ao pedido</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.orders.delete_order_items}
+                            onCheckedChange={(checked) => updatePermission('orders', 'delete_order_items', checked)}
+                          />
+                          <div className="flex-1">
+                            <Label className="text-sm font-medium">Remover Itens</Label>
+                            <p className="text-xs text-muted-foreground">Excluir produtos do pedido</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.orders.add_order_notes}
+                            onCheckedChange={(checked) => updatePermission('orders', 'add_order_notes', checked)}
+                          />
+                          <div className="flex-1">
+                            <Label className="text-sm font-medium">Adicionar Observações</Label>
+                            <p className="text-xs text-muted-foreground">Adicionar notas ao pedido</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <p className="text-xs font-medium text-muted-foreground uppercase">Alteração de Status</p>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.orders.change_any_status}
+                            onCheckedChange={(checked) => {
+                              updatePermission('orders', 'change_any_status', checked);
+                              // Se marcar "qualquer status", marcar todos
+                              if (checked) {
+                                updatePermission('orders', 'change_status_confirmed', true);
+                                updatePermission('orders', 'change_status_preparing', true);
+                                updatePermission('orders', 'change_status_out_for_delivery', true);
+                                updatePermission('orders', 'change_status_delivered', true);
+                                updatePermission('orders', 'change_status_cancelled', true);
+                              }
+                            }}
+                          />
+                          <div className="flex-1">
+                            <Label className="text-sm font-medium">Qualquer Status</Label>
+                            <p className="text-xs text-muted-foreground">Pode alterar para qualquer status</p>
+                          </div>
+                        </div>
+                        <Separator />
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.orders.change_status_confirmed}
+                            onCheckedChange={(checked) => updatePermission('orders', 'change_status_confirmed', checked)}
+                            disabled={formData.permissions.orders.change_any_status}
+                          />
+                          <div className="flex-1">
+                            <Label className="text-sm">Status: Confirmado</Label>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.orders.change_status_preparing}
+                            onCheckedChange={(checked) => updatePermission('orders', 'change_status_preparing', checked)}
+                            disabled={formData.permissions.orders.change_any_status}
+                          />
+                          <div className="flex-1">
+                            <Label className="text-sm">Status: Preparando</Label>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.orders.change_status_out_for_delivery}
+                            onCheckedChange={(checked) => updatePermission('orders', 'change_status_out_for_delivery', checked)}
+                            disabled={formData.permissions.orders.change_any_status}
+                          />
+                          <div className="flex-1">
+                            <Label className="text-sm">Status: Saiu para Entrega</Label>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.orders.change_status_delivered}
+                            onCheckedChange={(checked) => updatePermission('orders', 'change_status_delivered', checked)}
+                            disabled={formData.permissions.orders.change_any_status}
+                          />
+                          <div className="flex-1">
+                            <Label className="text-sm">Status: Entregue</Label>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.orders.change_status_cancelled}
+                            onCheckedChange={(checked) => updatePermission('orders', 'change_status_cancelled', checked)}
+                            disabled={formData.permissions.orders.change_any_status}
+                          />
+                          <div className="flex-1">
+                            <Label className="text-sm">Status: Cancelado</Label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 bg-muted/30 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.orders.view_order_history}
+                          onCheckedChange={(checked) => updatePermission('orders', 'view_order_history', checked)}
+                        />
+                        <div className="flex-1">
+                          <Label className="text-sm font-medium">Ver Histórico</Label>
+                          <p className="text-xs text-muted-foreground">Ver histórico de alterações</p>
+                        </div>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch
-                          checked={formData.permissions.orders.update}
-                          onCheckedChange={(checked) => updatePermission('orders', 'update', checked)}
+                          checked={formData.permissions.orders.export_orders}
+                          onCheckedChange={(checked) => updatePermission('orders', 'export_orders', checked)}
                         />
-                        <Label>Editar</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          checked={formData.permissions.orders.delete}
-                          onCheckedChange={(checked) => updatePermission('orders', 'delete', checked)}
-                        />
-                        <Label>Deletar</Label>
+                        <div className="flex-1">
+                          <Label className="text-sm font-medium">Exportar Pedidos</Label>
+                          <p className="text-xs text-muted-foreground">Exportar lista de pedidos</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -335,58 +521,249 @@ export const EmployeesManager = ({ storeId }: EmployeesManagerProps) => {
 
                   {/* Produtos */}
                   <div className="space-y-3">
-                    <h4 className="font-medium">Produtos</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">Produtos</h4>
+                      <Badge variant="outline">Gerenciamento</Badge>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-muted/30 rounded-lg">
                       <div className="flex items-center space-x-2">
                         <Switch
                           checked={formData.permissions.products.view}
                           onCheckedChange={(checked) => updatePermission('products', 'view', checked)}
                         />
-                        <Label>Visualizar</Label>
+                        <Label className="text-sm">Visualizar</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch
                           checked={formData.permissions.products.create}
                           onCheckedChange={(checked) => updatePermission('products', 'create', checked)}
                         />
-                        <Label>Criar</Label>
+                        <Label className="text-sm">Criar</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch
                           checked={formData.permissions.products.update}
                           onCheckedChange={(checked) => updatePermission('products', 'update', checked)}
                         />
-                        <Label>Editar</Label>
+                        <Label className="text-sm">Editar</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch
                           checked={formData.permissions.products.delete}
                           onCheckedChange={(checked) => updatePermission('products', 'delete', checked)}
                         />
-                        <Label>Deletar</Label>
+                        <Label className="text-sm">Deletar</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.products.manage_stock}
+                          onCheckedChange={(checked) => updatePermission('products', 'manage_stock', checked)}
+                        />
+                        <Label className="text-sm">Gerenciar Estoque</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.products.manage_images}
+                          onCheckedChange={(checked) => updatePermission('products', 'manage_images', checked)}
+                        />
+                        <Label className="text-sm">Gerenciar Imagens</Label>
                       </div>
                     </div>
                   </div>
 
                   <Separator />
 
-                  {/* Outros Módulos */}
+                  {/* Categorias */}
                   <div className="space-y-3">
-                    <h4 className="font-medium">Outros Módulos</h4>
-                    <div className="grid grid-cols-2 gap-3">
+                    <h4 className="font-medium">Categorias</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-muted/30 rounded-lg">
                       <div className="flex items-center space-x-2">
                         <Switch
-                          checked={formData.permissions.reports.view}
-                          onCheckedChange={(checked) => updatePermission('reports', 'view', checked)}
+                          checked={formData.permissions.categories.view}
+                          onCheckedChange={(checked) => updatePermission('categories', 'view', checked)}
                         />
-                        <Label>Relatórios</Label>
+                        <Label className="text-sm">Visualizar</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Switch
-                          checked={formData.permissions.settings.view}
-                          onCheckedChange={(checked) => updatePermission('settings', 'view', checked)}
+                          checked={formData.permissions.categories.create}
+                          onCheckedChange={(checked) => updatePermission('categories', 'create', checked)}
                         />
-                        <Label>Configurações</Label>
+                        <Label className="text-sm">Criar</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.categories.update}
+                          onCheckedChange={(checked) => updatePermission('categories', 'update', checked)}
+                        />
+                        <Label className="text-sm">Editar</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.categories.delete}
+                          onCheckedChange={(checked) => updatePermission('categories', 'delete', checked)}
+                        />
+                        <Label className="text-sm">Deletar</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.categories.toggle_status}
+                          onCheckedChange={(checked) => updatePermission('categories', 'toggle_status', checked)}
+                        />
+                        <Label className="text-sm">Ativar/Desativar</Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Cupons */}
+                  <div className="space-y-3">
+                    <h4 className="font-medium">Cupons de Desconto</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-muted/30 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.coupons.view}
+                          onCheckedChange={(checked) => updatePermission('coupons', 'view', checked)}
+                        />
+                        <Label className="text-sm">Visualizar</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.coupons.create}
+                          onCheckedChange={(checked) => updatePermission('coupons', 'create', checked)}
+                        />
+                        <Label className="text-sm">Criar</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.coupons.update}
+                          onCheckedChange={(checked) => updatePermission('coupons', 'update', checked)}
+                        />
+                        <Label className="text-sm">Editar</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.coupons.delete}
+                          onCheckedChange={(checked) => updatePermission('coupons', 'delete', checked)}
+                        />
+                        <Label className="text-sm">Deletar</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.coupons.toggle_status}
+                          onCheckedChange={(checked) => updatePermission('coupons', 'toggle_status', checked)}
+                        />
+                        <Label className="text-sm">Ativar/Desativar</Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Funcionários */}
+                  <div className="space-y-3">
+                    <h4 className="font-medium">Gerenciar Funcionários</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-muted/30 rounded-lg">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.employees.view}
+                          onCheckedChange={(checked) => updatePermission('employees', 'view', checked)}
+                        />
+                        <Label className="text-sm">Visualizar</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.employees.create}
+                          onCheckedChange={(checked) => updatePermission('employees', 'create', checked)}
+                        />
+                        <Label className="text-sm">Criar</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.employees.update}
+                          onCheckedChange={(checked) => updatePermission('employees', 'update', checked)}
+                        />
+                        <Label className="text-sm">Editar</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.employees.delete}
+                          onCheckedChange={(checked) => updatePermission('employees', 'delete', checked)}
+                        />
+                        <Label className="text-sm">Deletar</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          checked={formData.permissions.employees.manage_permissions}
+                          onCheckedChange={(checked) => updatePermission('employees', 'manage_permissions', checked)}
+                        />
+                        <Label className="text-sm">Gerenciar Permissões</Label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Relatórios e Configurações */}
+                  <div className="space-y-3">
+                    <h4 className="font-medium">Outros Módulos</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3 p-4 border rounded-lg">
+                        <h5 className="text-sm font-medium text-muted-foreground">Relatórios</h5>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.reports.view}
+                            onCheckedChange={(checked) => updatePermission('reports', 'view', checked)}
+                          />
+                          <Label className="text-sm">Visualizar</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.reports.export}
+                            onCheckedChange={(checked) => updatePermission('reports', 'export', checked)}
+                          />
+                          <Label className="text-sm">Exportar</Label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 p-4 border rounded-lg">
+                        <h5 className="text-sm font-medium text-muted-foreground">Configurações</h5>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.settings.view}
+                            onCheckedChange={(checked) => updatePermission('settings', 'view', checked)}
+                          />
+                          <Label className="text-sm">Visualizar</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.settings.update_store_info}
+                            onCheckedChange={(checked) => updatePermission('settings', 'update_store_info', checked)}
+                          />
+                          <Label className="text-sm">Editar Informações</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.settings.update_delivery_settings}
+                            onCheckedChange={(checked) => updatePermission('settings', 'update_delivery_settings', checked)}
+                          />
+                          <Label className="text-sm">Config. de Entrega</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.settings.update_operating_hours}
+                            onCheckedChange={(checked) => updatePermission('settings', 'update_operating_hours', checked)}
+                          />
+                          <Label className="text-sm">Horário de Funcionamento</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.settings.manage_whatsapp}
+                            onCheckedChange={(checked) => updatePermission('settings', 'manage_whatsapp', checked)}
+                          />
+                          <Label className="text-sm">Integração WhatsApp</Label>
+                        </div>
                       </div>
                     </div>
                   </div>

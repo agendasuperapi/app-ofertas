@@ -3,13 +3,63 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export interface EmployeePermissions {
-  orders: { view: boolean; create: boolean; update: boolean; delete: boolean };
-  products: { view: boolean; create: boolean; update: boolean; delete: boolean };
-  categories: { view: boolean; create: boolean; update: boolean; delete: boolean };
-  coupons: { view: boolean; create: boolean; update: boolean; delete: boolean };
-  reports: { view: boolean };
-  settings: { view: boolean; update: boolean };
-  employees: { view: boolean; create: boolean; update: boolean; delete: boolean };
+  orders: {
+    view: boolean;
+    create: boolean;
+    // Botões específicos da tela de pedidos
+    edit_order_details: boolean;           // Botão "Editar Pedido"
+    change_status_confirmed: boolean;       // Alterar status para "Confirmado"
+    change_status_preparing: boolean;       // Alterar status para "Preparando"
+    change_status_out_for_delivery: boolean; // Alterar status para "Saiu para entrega"
+    change_status_delivered: boolean;       // Alterar status para "Entregue"
+    change_status_cancelled: boolean;       // Alterar status para "Cancelado"
+    change_any_status: boolean;            // Pode alterar para qualquer status
+    add_order_notes: boolean;              // Adicionar observações ao pedido
+    view_order_history: boolean;           // Ver histórico de alterações
+    delete_order_items: boolean;           // Remover itens do pedido
+    add_order_items: boolean;              // Adicionar itens ao pedido
+    export_orders: boolean;                // Exportar lista de pedidos
+  };
+  products: {
+    view: boolean;
+    create: boolean;
+    update: boolean;
+    delete: boolean;
+    manage_stock: boolean;                 // Gerenciar estoque
+    manage_images: boolean;                // Gerenciar imagens
+  };
+  categories: {
+    view: boolean;
+    create: boolean;
+    update: boolean;
+    delete: boolean;
+    toggle_status: boolean;                // Ativar/desativar categorias
+  };
+  coupons: {
+    view: boolean;
+    create: boolean;
+    update: boolean;
+    delete: boolean;
+    toggle_status: boolean;                // Ativar/desativar cupons
+  };
+  employees: {
+    view: boolean;
+    create: boolean;
+    update: boolean;
+    delete: boolean;
+    manage_permissions: boolean;           // Gerenciar permissões de outros funcionários
+  };
+  reports: {
+    view: boolean;
+    export: boolean;                       // Exportar relatórios
+  };
+  settings: {
+    view: boolean;
+    update_store_info: boolean;            // Atualizar informações da loja
+    update_delivery_settings: boolean;     // Configurações de entrega
+    update_operating_hours: boolean;       // Horário de funcionamento
+    manage_whatsapp: boolean;              // Gerenciar integração WhatsApp
+  };
 }
 
 export interface StoreEmployee {
