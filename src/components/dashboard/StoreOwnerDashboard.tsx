@@ -54,7 +54,7 @@ export const StoreOwnerDashboard = () => {
   const queryClient = useQueryClient();
   const { myStore, isLoading, updateStore } = useStoreManagement();
   const { products, createProduct, updateProduct, deleteProduct } = useProductManagement(myStore?.id);
-  const { orders, updateOrderStatus } = useStoreOrders(myStore?.id);
+  const { orders, updateOrderStatus, updateOrder } = useStoreOrders(myStore?.id);
   const { categories, addCategory, updateCategory, toggleCategoryStatus, deleteCategory } = useCategories(myStore?.id);
   
   // Enable automatic WhatsApp notifications

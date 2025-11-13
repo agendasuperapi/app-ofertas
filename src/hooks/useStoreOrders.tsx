@@ -33,7 +33,7 @@ export const useStoreOrders = (storeId?: string) => {
     }) => {
       const { data, error } = await supabase
         .from('orders')
-        .update({ status: status as any }) // Cast needed until Supabase types are regenerated
+        .update({ status: status as any })
         .eq('id', orderId)
         .select()
         .single();
@@ -57,10 +57,39 @@ export const useStoreOrders = (storeId?: string) => {
     },
   });
 
+  const updateOrderMutation = useMutation({
+    mutationFn: async (orderData: any) => {
+      const { data, error } = await supabase
+        .from('orders')
+        .update(orderData)
+        .eq('id', orderData.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['store-orders'] });
+      toast({
+        title: 'Pedido atualizado!',
+        description: 'As alterações do pedido foram salvas.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao atualizar pedido',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   return {
     orders: ordersQuery.data,
     isLoading: ordersQuery.isLoading,
     updateOrderStatus: updateOrderStatusMutation.mutate,
-    isUpdating: updateOrderStatusMutation.isPending,
+    updateOrder: updateOrderMutation.mutate,
+    isUpdating: updateOrderStatusMutation.isPending || updateOrderMutation.isPending,
   };
 };
