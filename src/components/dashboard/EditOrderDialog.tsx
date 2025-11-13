@@ -141,7 +141,7 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
         changes.total = { before: order.total, after: total };
       }
 
-      // Monta payload apenas com colunas garantidas
+      // Monta payload base
       const baseUpdate: any = {
         payment_method: formData.payment_method,
         change_amount: formData.change_amount,
@@ -153,15 +153,9 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
         delivery_fee: formData.delivery_fee,
         subtotal,
         total,
+        store_notes: formData.store_notes,
+        store_image_url: formData.store_image_url,
       };
-
-      // Inclui campos internos somente se existirem no objeto retornado (evita erro de coluna inexistente)
-      if (order && 'store_notes' in order) {
-        baseUpdate.store_notes = formData.store_notes;
-      }
-      if (order && 'store_image_url' in order) {
-        baseUpdate.store_image_url = formData.store_image_url;
-      }
 
       const { error } = await supabase
         .from('orders')
