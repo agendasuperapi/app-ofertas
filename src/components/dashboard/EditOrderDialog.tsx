@@ -114,22 +114,31 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
       const subtotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
       const total = subtotal + (formData.delivery_fee || 0);
 
+      // Monta payload apenas com colunas garantidas
+      const baseUpdate: any = {
+        payment_method: formData.payment_method,
+        change_amount: formData.change_amount,
+        delivery_type: formData.delivery_type,
+        delivery_street: formData.delivery_street,
+        delivery_number: formData.delivery_number,
+        delivery_neighborhood: formData.delivery_neighborhood,
+        delivery_complement: formData.delivery_complement,
+        delivery_fee: formData.delivery_fee,
+        subtotal,
+        total,
+      };
+
+      // Inclui campos internos somente se existirem no objeto retornado (evita erro de coluna inexistente)
+      if (order && 'store_notes' in order) {
+        baseUpdate.store_notes = formData.store_notes;
+      }
+      if (order && 'store_image_url' in order) {
+        baseUpdate.store_image_url = formData.store_image_url;
+      }
+
       const { error } = await supabase
         .from('orders')
-        .update({
-          payment_method: formData.payment_method,
-          change_amount: formData.change_amount,
-          delivery_type: formData.delivery_type,
-          delivery_street: formData.delivery_street,
-          delivery_number: formData.delivery_number,
-          delivery_neighborhood: formData.delivery_neighborhood,
-          delivery_complement: formData.delivery_complement,
-          delivery_fee: formData.delivery_fee,
-          store_notes: formData.store_notes,
-          store_image_url: formData.store_image_url,
-          subtotal: subtotal,
-          total: total,
-        })
+        .update(baseUpdate)
         .eq('id', order.id);
 
       if (error) throw error;
