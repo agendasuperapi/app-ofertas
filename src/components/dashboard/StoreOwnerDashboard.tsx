@@ -16,10 +16,11 @@ import { useStoreManagement } from "@/hooks/useStoreManagement";
 import { useProductManagement } from "@/hooks/useProductManagement";
 import { useStoreOrders } from "@/hooks/useStoreOrders";
 import { useCategories } from "@/hooks/useCategories";
-import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, ArrowUp, ArrowDown, FolderTree, User, Lock } from "lucide-react";
+import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, ArrowUp, ArrowDown, FolderTree, User, Lock, Edit2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProductAddonsManager } from "./ProductAddonsManager";
 import { ProductFlavorsManager } from "./ProductFlavorsManager";
+import { EditOrderDialog } from "./EditOrderDialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { format, isToday, isThisWeek, isThisMonth, startOfDay, endOfDay, isWithinInterval, subDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth } from "date-fns";
@@ -111,6 +112,8 @@ export const StoreOwnerDashboard = () => {
     to: undefined,
   });
   const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<any>(null);
+  const [isEditOrderDialogOpen, setIsEditOrderDialogOpen] = useState(false);
 
   useEffect(() => {
     if (myStore) {
@@ -1551,6 +1554,18 @@ export const StoreOwnerDashboard = () => {
                         <Separator className="my-4" />
 
                         <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditingOrder(order);
+                              setIsEditOrderDialogOpen(true);
+                            }}
+                            className="flex items-center gap-2"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                            Editar Pedido
+                          </Button>
                           <Select
                             value={order.status}
                             onValueChange={(newStatus) => updateOrderStatus({ orderId: order.id, status: newStatus })}
@@ -2513,6 +2528,16 @@ export const StoreOwnerDashboard = () => {
     </motion.div>
   )}
       </div>
+
+      {/* Edit Order Dialog */}
+      <EditOrderDialog
+        open={isEditOrderDialogOpen}
+        onOpenChange={setIsEditOrderDialogOpen}
+        order={editingOrder}
+        onUpdate={() => {
+          queryClient.invalidateQueries({ queryKey: ['store-orders'] });
+        }}
+      />
     </div>
   );
 };
