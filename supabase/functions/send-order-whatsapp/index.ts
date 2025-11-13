@@ -253,6 +253,37 @@ serve(async (req) => {
 
     console.log('Sending message to:', phone, 'via instance:', storeInstance.evolution_instance_id);
 
+    // Check instance connection status first
+    const statusResponse = await fetch(`${EVOLUTION_API_URL}/instance/connectionState/${storeInstance.evolution_instance_id}`, {
+      method: 'GET',
+      headers: {
+        'apikey': EVOLUTION_API_KEY || '',
+      },
+    });
+
+    if (statusResponse.ok) {
+      const statusData = await statusResponse.json();
+      console.log('Instance connection status:', statusData);
+      
+      // Check if instance is connected
+      if (statusData.state !== 'open' && statusData.state !== 'connected') {
+        console.error('WhatsApp instance not connected. State:', statusData.state);
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            message: 'WhatsApp não está conectado. Por favor, conecte o WhatsApp no painel da loja.',
+            state: statusData.state
+          }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+    } else {
+      console.warn('Could not check instance status, proceeding with message send');
+    }
+
     // Send message via Evolution API
     const evolutionResponse = await fetch(`${EVOLUTION_API_URL}/message/sendText/${storeInstance.evolution_instance_id}`, {
       method: 'POST',
@@ -270,6 +301,22 @@ serve(async (req) => {
     if (!evolutionResponse.ok) {
       const errorText = await evolutionResponse.text();
       console.error('Evolution API Error:', errorText);
+      
+      // Check if it's a connection closed error
+      if (errorText.includes('Connection Closed')) {
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            message: 'WhatsApp não está conectado. Por favor, conecte o WhatsApp no painel da loja.',
+            error: 'Connection closed'
+          }),
+          { 
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        );
+      }
+      
       throw new Error(`Failed to send WhatsApp message: ${errorText}`);
     }
 
