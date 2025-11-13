@@ -58,8 +58,9 @@ export default function ProductPage() {
         return;
       }
 
-      setProduct(data as any);
-      setLoading(false);
+      // Redirecionar para a loja com o produto em popup
+      const storeSlug = (data as any).stores.slug;
+      navigate(`/${storeSlug}?product=${shortId}`, { replace: true });
     };
 
     fetchProduct();

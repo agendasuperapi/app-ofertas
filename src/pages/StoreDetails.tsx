@@ -38,28 +38,22 @@ export default function StoreDetails() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
   
-  // Detect shared product from URL (for meta tags)
-  const sharedProductId = searchParams.get('product');
-  const sharedProduct = products?.find(p => p.id === sharedProductId);
+  // Detect shared product from URL and open in popup
+  const sharedProductShortId = searchParams.get('product');
 
-  // Redirecionar URLs antigas ?product=id para /p/{short_id}
+  // Open product in popup when URL has ?product=short_id
   useEffect(() => {
-    const productId = searchParams.get('product');
-    if (productId && slug) {
-      const redirectToNewUrl = async () => {
-        const { data } = await supabase
-          .from('products')
-          .select('short_id')
-          .eq('id', productId)
-          .single();
-        
-        if (data?.short_id) {
-          navigate(`/p/${data.short_id}`, { replace: true });
-        }
-      };
-      redirectToNewUrl();
+    const productShortId = searchParams.get('product');
+    if (productShortId && products && products.length > 0) {
+      const product = products.find(p => p.short_id === productShortId);
+      if (product) {
+        setDetailsProduct(product);
+      }
     }
-  }, [searchParams, slug, navigate]);
+  }, [searchParams, products]);
+
+  // Update sharedProduct for meta tags
+  const sharedProduct = products?.find(p => p.short_id === sharedProductShortId);
 
   const handleAddToCart = (quantity: number, observation: string, selectedAddons: Array<{ id: string; name: string; price: number }>) => {
     if (!store || !selectedProduct) return;
@@ -174,12 +168,12 @@ export default function StoreDetails() {
 
   // Open product from URL parameter and show dialog
   useEffect(() => {
-    if (!products || products.length === 0 || !sharedProductId) return;
+    if (!products || products.length === 0 || !sharedProductShortId) return;
     
     if (sharedProduct) {
       // Aguarda um pequeno delay para garantir que a página carregou
       setTimeout(() => {
-        setSelectedProduct(sharedProduct);
+        setDetailsProduct(sharedProduct);
         
         // Scroll suave até a categoria do produto
         const category = sharedProduct.category;
@@ -203,7 +197,7 @@ export default function StoreDetails() {
         variant: "destructive",
       });
     }
-  }, [products, sharedProduct, sharedProductId, toast]);
+  }, [products, sharedProduct, sharedProductShortId, toast]);
 
   if (storeLoading) {
     return (
