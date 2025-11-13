@@ -68,21 +68,155 @@ export const WhatsAppIntegration = ({ storeId }: WhatsAppIntegrationProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<string>("disconnected");
   const [connectionLogs, setConnectionLogs] = useState<Array<{ time: string; message: string; type: 'info' | 'success' | 'error' }>>([]);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [reconnectAttempts, setReconnectAttempts] = useState(0);
+  const [autoReconnectEnabled, setAutoReconnectEnabled] = useState(true);
 
   useEffect(() => {
     checkExistingInstance();
   }, [storeId]);
 
-  // Verificar status periodicamente se houver instância conectada
+  // Sistema profissional de monitoramento e reconexão automática
   useEffect(() => {
-    if (!instanceName) return;
+    if (!instanceName || !autoReconnectEnabled) return;
 
-    const statusInterval = setInterval(() => {
-      checkConnectionStatus(instanceName);
-    }, 30000); // Verificar a cada 30 segundos
+    let healthCheckInterval: NodeJS.Timeout;
+    let reconnectTimeout: NodeJS.Timeout;
+    let isCheckingHealth = false;
 
-    return () => clearInterval(statusInterval);
-  }, [instanceName]);
+    const addLog = (message: string, type: 'info' | 'success' | 'error' = 'info') => {
+      const time = new Date().toLocaleTimeString('pt-BR');
+      setConnectionLogs(prev => [...prev, { time, message, type }]);
+    };
+
+    const performHealthCheck = async () => {
+      if (isCheckingHealth) return;
+      isCheckingHealth = true;
+
+      try {
+        addLog('🔍 Executando health check...', 'info');
+        
+        const { data, error } = await invokeEvolution({
+          action: 'check_status',
+          storeId: storeId,
+          instanceName: instanceName
+        });
+
+        if (error) {
+          throw new Error(error.message || 'Erro ao verificar status');
+        }
+
+        const connected = isConnectedState(data?.status);
+        
+        if (connected) {
+          setIsConnected(true);
+          setConnectionStatus(data.status);
+          setReconnectAttempts(0);
+          setIsReconnecting(false);
+          addLog('✅ Health check: Conexão ativa', 'success');
+        } else {
+          addLog(`⚠️ Health check: Desconectado (${data?.status})`, 'error');
+          
+          if (autoReconnectEnabled && !isReconnecting) {
+            triggerReconnect();
+          }
+        }
+      } catch (error: any) {
+        addLog(`❌ Health check falhou: ${error.message}`, 'error');
+        
+        if (autoReconnectEnabled && !isReconnecting) {
+          triggerReconnect();
+        }
+      } finally {
+        isCheckingHealth = false;
+      }
+    };
+
+    const triggerReconnect = async () => {
+      setIsReconnecting(true);
+      const attempt = reconnectAttempts + 1;
+      setReconnectAttempts(attempt);
+
+      // Backoff exponencial: 5s, 10s, 20s, 40s, 60s (máximo)
+      const delay = Math.min(5000 * Math.pow(2, attempt - 1), 60000);
+      
+      addLog(`🔄 Tentativa de reconexão ${attempt} em ${delay / 1000}s...`, 'info');
+
+      reconnectTimeout = setTimeout(async () => {
+        try {
+          addLog(`🔌 Iniciando reconexão (tentativa ${attempt})...`, 'info');
+
+          // Tentar recuperar a conexão
+          const { data, error } = await invokeEvolution({
+            action: 'check_status',
+            storeId: storeId,
+            instanceName: instanceName
+          });
+
+          if (!error && isConnectedState(data?.status)) {
+            addLog('✅ Reconexão bem-sucedida!', 'success');
+            setIsConnected(true);
+            setConnectionStatus(data.status);
+            setReconnectAttempts(0);
+            setIsReconnecting(false);
+            
+            toast({
+              title: "WhatsApp Reconectado",
+              description: "A conexão foi restaurada automaticamente",
+            });
+          } else {
+            throw new Error('Ainda desconectado');
+          }
+        } catch (error: any) {
+          addLog(`❌ Reconexão falhou: ${error.message}`, 'error');
+          
+          // Tentar novamente se não excedeu 10 tentativas
+          if (attempt < 10) {
+            triggerReconnect();
+          } else {
+            addLog('⛔ Máximo de tentativas atingido. Gerando novo QR Code...', 'error');
+            setIsReconnecting(false);
+            setIsConnected(false);
+            
+            toast({
+              title: "Reconexão Falhou",
+              description: "Por favor, escaneie o QR Code novamente",
+              variant: "destructive"
+            });
+            
+            // Gerar novo QR Code automaticamente
+            try {
+              const { data } = await invokeEvolution({
+                action: 'create_instance',
+                storeId: storeId,
+                instanceName: instanceName,
+                phoneNumber: phoneNumber
+              });
+              
+              if (data?.qrcode) {
+                setQrCode(data.qrcode.base64);
+                setReconnectAttempts(0);
+                addLog('📱 Novo QR Code gerado. Por favor, escaneie novamente.', 'info');
+              }
+            } catch (qrError) {
+              addLog('❌ Erro ao gerar QR Code', 'error');
+            }
+          }
+        }
+      }, delay);
+    };
+
+    // Health check a cada 15 segundos (mais frequente para detecção rápida)
+    healthCheckInterval = setInterval(performHealthCheck, 15000);
+    
+    // Executar primeiro check imediatamente
+    performHealthCheck();
+
+    return () => {
+      clearInterval(healthCheckInterval);
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
+    };
+  }, [instanceName, autoReconnectEnabled, reconnectAttempts, isReconnecting, phoneNumber, storeId]);
 
   // Atualizar QR code automaticamente a cada 10 segundos enquanto não conectar
   useEffect(() => {
@@ -460,6 +594,47 @@ await invokeEvolution({
                   </div>
                 </div>
               </div>
+
+              {/* Sistema de Reconexão Automática */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse" />
+                    <div>
+                      <p className="font-semibold text-sm text-blue-900 dark:text-blue-100">
+                        Sistema de Proteção Ativo
+                      </p>
+                      <p className="text-xs text-blue-700 dark:text-blue-300">
+                        Monitoramento contínuo e reconexão automática
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setAutoReconnectEnabled(!autoReconnectEnabled)}
+                    className={autoReconnectEnabled ? "text-blue-600" : "text-muted-foreground"}
+                  >
+                    {autoReconnectEnabled ? "Ativo" : "Inativo"}
+                  </Button>
+                </div>
+              </div>
+
+              {isReconnecting && (
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-4 h-4 text-yellow-600 animate-spin" />
+                    <div>
+                      <p className="font-semibold text-sm text-yellow-900 dark:text-yellow-100">
+                        Reconectando...
+                      </p>
+                      <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                        Tentativa {reconnectAttempts} de 10
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="p-4 bg-muted rounded-lg space-y-2">
                 <h4 className="font-semibold text-sm">Informações da Instância</h4>
