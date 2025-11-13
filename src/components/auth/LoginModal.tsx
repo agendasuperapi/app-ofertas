@@ -80,12 +80,18 @@ export function LoginModal({
     if (isLogin) {
       await onSignIn(email, password);
     } else {
-      // Check if email exists before signing up
-      const exists = await checkEmailExists(email);
-      if (exists) {
-        return; // Don't proceed with signup
+      try {
+        await onSignUp(email, password, fullName, phone);
+      } catch (error: any) {
+        // Check if error is due to user already existing
+        if (error?.message?.includes('already registered') || 
+            error?.message?.includes('User already exists') ||
+            error?.code === 'user_already_exists') {
+          setEmailExistsError(true);
+          return;
+        }
+        throw error; // Re-throw other errors
       }
-      await onSignUp(email, password, fullName, phone);
     }
   };
 
