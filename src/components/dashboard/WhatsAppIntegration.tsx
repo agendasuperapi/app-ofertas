@@ -396,7 +396,7 @@ await invokeEvolution({
                   />
                 </div>
                 <p className="text-xs text-muted-foreground mt-4">
-                  O QR Code é válido por 5 minutos
+                  O QR Code será atualizado automaticamente, até que você faça a conexão.
                 </p>
               </div>
             </div>
