@@ -1273,29 +1273,6 @@ export const StoreOwnerDashboard = () => {
                 <p className="text-muted-foreground">Gerencie os pedidos da sua loja</p>
               </div>
 
-              {/* Campo de Pesquisa */}
-              <div className="mb-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Pesquisar por nome do cliente ou número do pedido..."
-                    value={orderSearchTerm}
-                    onChange={(e) => setOrderSearchTerm(e.target.value)}
-                    className="pl-10 pr-10"
-                  />
-                  {orderSearchTerm && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setOrderSearchTerm('')}
-                      className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              </div>
-
               {/* Filtros de Data */}
               <div className="space-y-3 mb-4">
                 <div className="flex flex-wrap items-center gap-3">
@@ -1477,6 +1454,29 @@ export const StoreOwnerDashboard = () => {
                     </Button>
                   </>
                 )}
+              </div>
+
+              {/* Campo de Pesquisa */}
+              <div className="mt-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Pesquisar por nome do cliente ou número do pedido..."
+                    value={orderSearchTerm}
+                    onChange={(e) => setOrderSearchTerm(e.target.value)}
+                    className="pl-10 pr-10"
+                  />
+                  {orderSearchTerm && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setOrderSearchTerm('')}
+                      className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
 
