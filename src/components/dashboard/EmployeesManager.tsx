@@ -79,6 +79,8 @@ const DEFAULT_PERMISSIONS: EmployeePermissions = {
   orders: {
     view: true,
     create: true,
+    view_all_orders: true,
+    view_pending_orders: true,
     edit_order_details: false,
     change_status_confirmed: true,
     change_status_preparing: true,
@@ -427,7 +429,29 @@ export const EmployeesManager = ({ storeId }: EmployeesManagerProps) => {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 border rounded-lg">
                       <div className="space-y-3">
-                        <p className="text-xs font-medium text-muted-foreground uppercase">Edição</p>
+                        <p className="text-xs font-medium text-muted-foreground uppercase">Filtros</p>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.orders.view_all_orders}
+                            onCheckedChange={(checked) => updatePermission('orders', 'view_all_orders', checked)}
+                          />
+                          <div className="flex-1">
+                            <Label className="text-sm font-medium">Todos</Label>
+                            <p className="text-xs text-muted-foreground">Ver todos os pedidos</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            checked={formData.permissions.orders.view_pending_orders}
+                            onCheckedChange={(checked) => updatePermission('orders', 'view_pending_orders', checked)}
+                          />
+                          <div className="flex-1">
+                            <Label className="text-sm font-medium">Pendentes</Label>
+                            <p className="text-xs text-muted-foreground">Ver pedidos pendentes</p>
+                          </div>
+                        </div>
+                        
+                        <p className="text-xs font-medium text-muted-foreground uppercase mt-4">Edição</p>
                         <div className="flex items-center space-x-2">
                           <Switch
                             checked={formData.permissions.orders.edit_order_details}

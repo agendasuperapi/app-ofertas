@@ -6,6 +6,9 @@ export interface EmployeePermissions {
   orders: {
     view: boolean;
     create: boolean;
+    // Filtros de visualização
+    view_all_orders: boolean;              // Botão "Todos" - ver todos os pedidos
+    view_pending_orders: boolean;          // Botão "Pendentes" - ver pedidos pendentes
     // Botões específicos da tela de pedidos
     edit_order_details: boolean;           // Botão "Editar Pedido"
     change_status_confirmed: boolean;       // Alterar status para "Confirmado"
