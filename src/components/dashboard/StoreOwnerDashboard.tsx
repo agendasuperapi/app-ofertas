@@ -1893,6 +1893,17 @@ export const StoreOwnerDashboard = () => {
           </motion.div>
         )}
 
+        {activeTab === 'whatsapp' && myStore?.id && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="p-8"
+          >
+            <WhatsAppIntegration storeId={myStore.id} />
+          </motion.div>
+        )}
+
         {activeTab === 'produtos' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -2245,7 +2256,7 @@ export const StoreOwnerDashboard = () => {
               transition={{ delay: 0.3 }}
             >
               <Tabs defaultValue="personal" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-5 bg-muted/50">
+                <TabsList className="grid w-full grid-cols-4 bg-muted/50">
                   <TabsTrigger value="personal" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
                     <User className="w-4 h-4 mr-2" />
                     Dados Pessoais
@@ -2253,10 +2264,6 @@ export const StoreOwnerDashboard = () => {
                   <TabsTrigger value="security" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
                     <Lock className="w-4 h-4 mr-2" />
                     Segurança
-                  </TabsTrigger>
-                  <TabsTrigger value="whatsapp" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    WhatsApp
                   </TabsTrigger>
                   <TabsTrigger value="status" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white">
                     <Menu className="w-4 h-4 mr-2" />
@@ -2290,16 +2297,6 @@ export const StoreOwnerDashboard = () => {
           </motion.div>
         </TabsContent>
 
-        {/* WhatsApp Tab */}
-        <TabsContent value="whatsapp">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <WhatsAppIntegration storeId={myStore.id} />
-          </motion.div>
-        </TabsContent>
 
         {/* Status Tab */}
         <TabsContent value="status" className="space-y-4">
