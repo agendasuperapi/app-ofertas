@@ -7,10 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Package, Download } from "lucide-react";
+import { Search, Package, Download, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { generateProductsReport } from "@/lib/pdfReports";
 
 interface RegisteredProduct {
   id: string;
@@ -25,9 +26,10 @@ interface RegisteredProduct {
 
 interface RegisteredProductsReportProps {
   storeId: string;
+  storeName?: string;
 }
 
-export const RegisteredProductsReport = ({ storeId }: RegisteredProductsReportProps) => {
+export const RegisteredProductsReport = ({ storeId, storeName = "Minha Loja" }: RegisteredProductsReportProps) => {
   const [products, setProducts] = useState<RegisteredProduct[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -99,6 +101,22 @@ export const RegisteredProductsReport = ({ storeId }: RegisteredProductsReportPr
     link.click();
   };
 
+  const exportToPDF = () => {
+    const productsForReport = filteredProducts.map(p => ({
+      name: p.name,
+      price: p.promotional_price || p.price,
+      category: p.category,
+      available: p.is_available
+    }));
+
+    generateProductsReport(productsForReport, storeName);
+    
+    toast({
+      title: "PDF gerado!",
+      description: "O relatório foi exportado com sucesso.",
+    });
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -127,15 +145,26 @@ export const RegisteredProductsReport = ({ storeId }: RegisteredProductsReportPr
               </Select>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={exportToCSV}
-            disabled={filteredProducts.length === 0}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToCSV}
+              disabled={filteredProducts.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToPDF}
+              disabled={filteredProducts.length === 0}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              PDF
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[600px]">

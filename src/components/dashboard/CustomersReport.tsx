@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Users, Download } from "lucide-react";
+import { Search, Users, Download, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { generateCustomersReport } from "@/lib/pdfReports";
 
 interface Customer {
   customer_name: string;
@@ -26,10 +27,11 @@ interface Customer {
 
 interface CustomersReportProps {
   storeId: string;
+  storeName?: string;
   dateRange: { from: Date | undefined; to: Date | undefined };
 }
 
-export const CustomersReport = ({ storeId, dateRange }: CustomersReportProps) => {
+export const CustomersReport = ({ storeId, storeName = "Minha Loja", dateRange }: CustomersReportProps) => {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -125,6 +127,26 @@ export const CustomersReport = ({ storeId, dateRange }: CustomersReportProps) =>
     link.click();
   };
 
+  const exportToPDF = () => {
+    const periodLabel = dateRange.from && dateRange.to
+      ? `${format(dateRange.from, 'dd/MM/yyyy')} - ${format(dateRange.to, 'dd/MM/yyyy')}`
+      : "Todos os períodos";
+    
+    const customersForReport = filteredCustomers.map(c => ({
+      name: c.customer_name,
+      phone: c.customer_phone,
+      total_orders: c.total_orders,
+      total_spent: c.total_spent
+    }));
+
+    generateCustomersReport(customersForReport, storeName, periodLabel);
+    
+    toast({
+      title: "PDF gerado!",
+      description: "O relatório foi exportado com sucesso.",
+    });
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -143,15 +165,26 @@ export const CustomersReport = ({ storeId, dateRange }: CustomersReportProps) =>
             />
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={exportToCSV}
-          disabled={filteredCustomers.length === 0}
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Exportar
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportToCSV}
+            disabled={filteredCustomers.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportToPDF}
+            disabled={filteredCustomers.length === 0}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            PDF
+          </Button>
+        </div>
       </CardHeader>
         <CardContent>
           <ScrollArea className="h-[600px]">

@@ -5,11 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Package, Download } from "lucide-react";
+import { Package, Download, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { generateBestSellersReport } from "@/lib/pdfReports";
 
 interface ProductReport {
   product_name: string;
@@ -20,10 +21,11 @@ interface ProductReport {
 
 interface BestSellingProductsReportProps {
   storeId: string;
+  storeName?: string;
   dateRange: { from: Date | undefined; to: Date | undefined };
 }
 
-export const BestSellingProductsReport = ({ storeId, dateRange }: BestSellingProductsReportProps) => {
+export const BestSellingProductsReport = ({ storeId, storeName = "Minha Loja", dateRange }: BestSellingProductsReportProps) => {
   const [products, setProducts] = useState<ProductReport[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -107,6 +109,25 @@ export const BestSellingProductsReport = ({ storeId, dateRange }: BestSellingPro
     link.click();
   };
 
+  const exportToPDF = () => {
+    const periodLabel = dateRange.from && dateRange.to
+      ? `${format(dateRange.from, 'dd/MM/yyyy')} - ${format(dateRange.to, 'dd/MM/yyyy')}`
+      : "Todos os períodos";
+    
+    const productsForReport = products.map(p => ({
+      name: p.product_name,
+      quantity: p.quantity_sold,
+      revenue: p.revenue
+    }));
+
+    generateBestSellersReport(productsForReport, storeName, periodLabel);
+    
+    toast({
+      title: "PDF gerado!",
+      description: "O relatório foi exportado com sucesso.",
+    });
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -114,15 +135,26 @@ export const BestSellingProductsReport = ({ storeId, dateRange }: BestSellingPro
           <Package className="h-5 w-5" />
           Produtos Mais Vendidos
         </CardTitle>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={exportToCSV}
-          disabled={products.length === 0}
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Exportar
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportToCSV}
+            disabled={products.length === 0}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportToPDF}
+            disabled={products.length === 0}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            PDF
+          </Button>
+        </div>
       </CardHeader>
         <CardContent>
           <ScrollArea className="h-[600px]">
