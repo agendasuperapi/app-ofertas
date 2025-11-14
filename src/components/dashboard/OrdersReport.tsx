@@ -8,12 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Search, ShoppingCart, Download, Tag } from "lucide-react";
+import { Search, ShoppingCart, Download, Tag, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { generateOrdersReport } from "@/lib/pdfReports";
 
 interface OrderReport {
   id: string;
@@ -39,10 +40,11 @@ interface OrderReport {
 
 interface OrdersReportProps {
   storeId: string;
+  storeName?: string;
   dateRange: { from: Date | undefined; to: Date | undefined };
 }
 
-export const OrdersReport = ({ storeId, dateRange }: OrdersReportProps) => {
+export const OrdersReport = ({ storeId, storeName = "Minha Loja", dateRange }: OrdersReportProps) => {
   const [orders, setOrders] = useState<OrderReport[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -143,6 +145,28 @@ export const OrdersReport = ({ storeId, dateRange }: OrdersReportProps) => {
     link.click();
   };
 
+  const exportToPDF = () => {
+    const periodLabel = dateRange.from && dateRange.to
+      ? `${format(dateRange.from, 'dd/MM/yyyy')} - ${format(dateRange.to, 'dd/MM/yyyy')}`
+      : "Todos os períodos";
+    
+    const ordersForReport = filteredOrders.map(order => ({
+      id: order.id,
+      created_at: order.created_at,
+      customer_name: order.customer_name,
+      total: order.total,
+      status: order.status,
+      payment_method: order.payment_method
+    }));
+
+    generateOrdersReport(ordersForReport, storeName, periodLabel);
+    
+    toast({
+      title: "PDF gerado!",
+      description: "O relatório foi exportado com sucesso.",
+    });
+  };
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
@@ -176,15 +200,26 @@ export const OrdersReport = ({ storeId, dateRange }: OrdersReportProps) => {
               </Select>
             </div>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={exportToCSV}
-            disabled={filteredOrders.length === 0}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Exportar
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToCSV}
+              disabled={filteredOrders.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToPDF}
+              disabled={filteredOrders.length === 0}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              PDF
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[500px]">

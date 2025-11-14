@@ -12,11 +12,15 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Tag, TrendingUp, DollarSign, Ticket } from 'lucide-react';
+import { Tag, TrendingUp, DollarSign, Ticket, Download, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
+import { generateCouponsReport } from '@/lib/pdfReports';
 
 interface CouponsReportProps {
   storeId: string;
+  storeName?: string;
 }
 
 interface CouponUsage {
@@ -25,7 +29,7 @@ interface CouponUsage {
   totalDiscount: number;
 }
 
-export function CouponsReport({ storeId }: CouponsReportProps) {
+export function CouponsReport({ storeId, storeName = "Minha Loja" }: CouponsReportProps) {
   const { data: orders, isLoading } = useQuery({
     queryKey: ['coupon-report', storeId],
     queryFn: async () => {
@@ -73,6 +77,41 @@ export function CouponsReport({ storeId }: CouponsReportProps) {
 
     return { coupons, totalUses, totalDiscount };
   }, [orders]);
+
+  const exportToPDF = async () => {
+    try {
+      // Buscar cupons completos do banco de dados para gerar relatório mais completo
+      const { data: coupons, error } = await supabase
+        .from('coupons' as any)
+        .select('code, discount, discount_type, usage_count, valid_until')
+        .eq('store_id', storeId);
+
+      if (error) throw error;
+
+      const couponsData = (coupons || []).map((c: any) => ({
+        code: c.code,
+        discount: c.discount,
+        discount_type: c.discount_type,
+        usage_count: c.usage_count || 0,
+        valid_until: c.valid_until
+      }));
+      
+      generateCouponsReport(couponsData, storeName);
+      
+      toast({
+        title: "PDF gerado!",
+        description: "O relatório foi exportado com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao buscar cupons:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível gerar o PDF.",
+        variant: "destructive",
+      });
+    }
+  };
+
 
   if (isLoading) {
     return (
@@ -172,14 +211,25 @@ export function CouponsReport({ storeId }: CouponsReportProps) {
         transition={{ delay: 0.4 }}
       >
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Tag className="h-5 w-5" />
-              Relatório Detalhado de Cupons
-            </CardTitle>
-            <CardDescription>
-              Visualize o desempenho de cada cupom utilizado
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Tag className="h-5 w-5" />
+                Relatório Detalhado de Cupons
+              </CardTitle>
+              <CardDescription>
+                Visualize o desempenho de cada cupom utilizado
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToPDF}
+              disabled={couponStats.coupons.length === 0}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              PDF
+            </Button>
           </CardHeader>
           <CardContent>
             {couponStats.coupons.length === 0 ? (

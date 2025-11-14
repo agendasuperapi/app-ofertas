@@ -2660,19 +2660,19 @@ export const StoreOwnerDashboard = () => {
             />
             
             {activeTab === 'relatorio-clientes' && (
-              <CustomersReport storeId={myStore.id} dateRange={reportsDateRange} />
+              <CustomersReport storeId={myStore.id} storeName={myStore.name} dateRange={reportsDateRange} />
             )}
 
             {activeTab === 'relatorio-produtos-vendidos' && (
-              <BestSellingProductsReport storeId={myStore.id} dateRange={reportsDateRange} />
+              <BestSellingProductsReport storeId={myStore.id} storeName={myStore.name} dateRange={reportsDateRange} />
             )}
 
             {activeTab === 'relatorio-produtos-cadastrados' && (
-              <RegisteredProductsReport storeId={myStore.id} />
+              <RegisteredProductsReport storeId={myStore.id} storeName={myStore.name} />
             )}
 
             {activeTab === 'relatorio-pedidos' && (
-              <OrdersReport storeId={myStore.id} dateRange={reportsDateRange} />
+              <OrdersReport storeId={myStore.id} storeName={myStore.name} dateRange={reportsDateRange} />
             )}
           </div>
         )}
