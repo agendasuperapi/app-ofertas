@@ -299,7 +299,7 @@ export default function StoreDetails() {
       </div>
       <Navigation />
       
-      <main className="container mx-auto px-4 pt-0 md:pt-20 pb-32">
+      <main className="container mx-auto px-4 pt-0 md:pt-20 pb-20">
         {/* Back Button */}
 
         {/* Store Header */}
@@ -307,7 +307,7 @@ export default function StoreDetails() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: "easeOut" }}
-          className="relative rounded-3xl overflow-hidden mb-6 md:mb-12 shadow-2xl hover:shadow-3xl transition-shadow duration-500 w-full max-w-full"
+          className="relative rounded-3xl overflow-hidden mb-4 md:mb-6 shadow-2xl hover:shadow-3xl transition-shadow duration-500 w-full max-w-full"
         >
           {/* Banner */}
           <div className="relative h-32 md:h-64 lg:h-80 bg-muted overflow-hidden group border-2 border-orange-300 hover:shadow-[0_0_20px_rgba(251,146,60,0.6)] transition-shadow duration-500 w-full max-w-full">
@@ -369,10 +369,10 @@ export default function StoreDetails() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
-            className="bg-gradient-to-br from-gray-200 via-white to-gray-100 p-6 md:p-8 border-2 border-orange-300 hover:shadow-[0_0_20px_rgba(251,146,60,0.6)] transition-shadow duration-500"
+            className="bg-gradient-to-br from-gray-200 via-white to-gray-100 p-4 md:p-6 border-2 border-orange-300 hover:shadow-[0_0_20px_rgba(251,146,60,0.6)] transition-shadow duration-500"
           >
-            <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
-              <div className="flex items-start gap-4 md:gap-6 flex-1">
+            <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+              <div className="flex items-start gap-3 md:gap-4 flex-1">
                 {store.logo_url && (
                   <motion.img 
                     whileHover={{ scale: 1.05, rotate: 2 }}
@@ -383,7 +383,7 @@ export default function StoreDetails() {
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-3 mb-3">
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
                     <h1 className="text-2xl md:text-4xl font-bold gradient-text">{store.name}</h1>
                     <motion.div
                       initial={{ scale: 0 }}
@@ -403,9 +403,9 @@ export default function StoreDetails() {
                     </motion.div>
                   </div>
                   
-                  <p className="text-muted-foreground mb-4 text-sm md:text-base leading-relaxed">{store.description}</p>
+                  <p className="text-muted-foreground mb-2 text-sm md:text-base leading-relaxed">{store.description}</p>
                   
-                  <div className="flex flex-wrap items-center gap-4 md:gap-6 text-sm md:text-base">
+                  <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm md:text-base">
                     <motion.div 
                       whileHover={{ scale: 1.05 }}
                       className="flex items-center gap-2 bg-amber-500/10 px-3 py-1.5 rounded-full"
@@ -471,19 +471,19 @@ export default function StoreDetails() {
         </motion.div>
 
         {/* Products and Cart Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Products Section */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            className="lg:col-span-2 space-y-6"
+            className="lg:col-span-2 space-y-4"
           >
           <motion.h2 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
-            className="text-3xl md:text-4xl font-bold gradient-text"
+            className="text-2xl md:text-3xl font-bold gradient-text"
           >
             {menuLabel}
           </motion.h2>
@@ -531,7 +531,7 @@ export default function StoreDetails() {
           )}
 
           {productsLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => (
                 <Skeleton key={i} className="h-80 rounded-2xl" />
               ))}
@@ -577,15 +577,15 @@ export default function StoreDetails() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.6 + categoryIndex * 0.1, duration: 0.5 }}
-                className="space-y-6 scroll-mt-32"
+                className="space-y-4 scroll-mt-32"
               >
                 <div className="flex items-center gap-3">
                   <div className="h-1 w-12 bg-orange-500 rounded-full" />
-                  <h3 className="text-2xl md:text-3xl font-bold">{category}</h3>
+                  <h3 className="text-xl md:text-2xl font-bold">{category}</h3>
                   <div className="h-1 flex-1 bg-gradient-to-r from-orange-500/50 to-transparent rounded-full" />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {categoryProducts.map((product, index) => (
                     <motion.div
                       key={product.id}
@@ -600,7 +600,7 @@ export default function StoreDetails() {
                         onClick={() => setDetailsProduct(product)}
                       >
                         {product.image_url && (
-                          <div className="relative h-52 overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20">
+                          <div className="relative h-44 overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20">
                             <motion.img
                               initial={{ scale: 0.95, opacity: 0 }}
                               animate={{ scale: 1, opacity: 1 }}
@@ -626,14 +626,14 @@ export default function StoreDetails() {
                             )}
                           </div>
                         )}
-                        <CardContent className="p-5">
-                          <h4 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">{product.name}</h4>
+                        <CardContent className="p-4">
+                          <h4 className="font-bold text-lg mb-1.5 group-hover:text-primary transition-colors">{product.name}</h4>
                           {product.description && (
-                            <p className="text-sm text-muted-foreground mb-4 line-clamp-2 leading-relaxed">
+                            <p className="text-sm text-muted-foreground mb-2 line-clamp-2 leading-relaxed">
                               {product.description}
                             </p>
                           )}
-                          <Separator className="my-4" />
+                          <Separator className="my-3" />
                           <div className="flex items-center justify-between">
                             <div>
                               {product.promotional_price ? (
