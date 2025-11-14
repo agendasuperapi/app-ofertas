@@ -110,11 +110,11 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
   const productContent = (
     <>
       {/* Imagem do Produto */}
-      <div className="relative w-full -mt-0">
+      <div className="relative w-full">
         <img
           src={product.image_url || '/placeholder.svg'}
           alt={product.name}
-          className="w-full h-56 md:h-64 object-cover rounded-t-3xl md:rounded-2xl"
+          className="w-full h-56 md:h-64 object-cover md:rounded-t-3xl md:rounded-2xl"
         />
         {hasDiscount && (
           <Badge className="absolute top-4 right-4 bg-destructive text-destructive-foreground text-base px-3 py-1">
@@ -124,7 +124,7 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
       </div>
 
       {/* Info da Loja */}
-      <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl">
+      <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-xl mx-4 md:mx-0">
         {store.logo_url ? (
           <img src={store.logo_url} alt={store.name} className="w-12 h-12 rounded-full object-cover" />
         ) : (
@@ -139,7 +139,7 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
       </div>
 
       {/* Nome e Descrição */}
-      <div>
+      <div className="px-4 md:px-0">
         <h2 className="text-xl font-bold text-foreground mb-1.5">{product.name}</h2>
         {product.description && (
           <p className="text-sm text-muted-foreground">{product.description}</p>
@@ -147,7 +147,7 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
       </div>
 
       {/* Preço */}
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 px-4 md:px-0">
         {hasDiscount && (
           <p className="text-xs text-muted-foreground line-through">
             De R$ {Number(product.price).toFixed(2)}
@@ -166,7 +166,7 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
       </div>
 
       {/* Quantidade */}
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 px-4 md:px-0">
         <Label htmlFor="quantity" className="text-sm font-semibold">Quantidade</Label>
         <div className="flex items-center gap-3">
           <Button
@@ -198,7 +198,7 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
 
       {/* Adicionais */}
       {addons && addons.length > 0 && (
-        <div className="space-y-2">
+        <div className="space-y-2 px-4 md:px-0">
           <Label className="text-sm font-semibold">Adicionais</Label>
           <div className="space-y-1.5">
             {addons.filter(addon => addon.is_available).map((addon) => (
@@ -226,7 +226,7 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
       )}
 
       {/* Observação */}
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 px-4 md:px-0">
         <Label htmlFor="observation" className="text-sm font-semibold">
           Observações (opcional)
         </Label>
@@ -241,7 +241,7 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
 
       {/* Informações Adicionais */}
       {product.additional_info && (
-        <div className="p-3 bg-muted/50 rounded-lg">
+        <div className="p-3 bg-muted/50 rounded-lg mx-4 md:mx-0">
           <p className="text-xs text-muted-foreground">{product.additional_info}</p>
         </div>
       )}
@@ -293,7 +293,7 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
             </Button>
 
             <div className="flex-1 overflow-y-auto">
-              <div className="space-y-4 pb-4 px-4">
+              <div className="space-y-4 pb-4 px-0 pt-0">
                 {productContent}
               </div>
             </div>
