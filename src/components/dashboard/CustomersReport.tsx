@@ -212,7 +212,13 @@ export const CustomersReport = ({ storeId, storeName = "Minha Loja", dateRange }
   };
 
   return (
-    <Card>
+    <div className="space-y-4">
+      <div>
+        <h2 className="text-2xl font-bold gradient-text">Relatório de Clientes</h2>
+        <p className="text-muted-foreground">Análise completa dos seus clientes e histórico de compras</p>
+      </div>
+      
+      <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="flex items-center gap-2">
           <Users className="h-5 w-5" />
@@ -349,5 +355,6 @@ export const CustomersReport = ({ storeId, storeName = "Minha Loja", dateRange }
     )}
   </CardContent>
 </Card>
-  );
+</div>
+);
 };
