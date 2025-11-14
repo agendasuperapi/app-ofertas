@@ -156,52 +156,57 @@ serve(async (req) => {
     const hasWhatsAppEdit = employeeData && 
       (employeeData as any).permissions?.whatsapp?.edit === true;
 
+    // Verify store ownership for store_owner role (not admin or employee)
+    let ownsStore = false;
+    if (isStoreOwner && !isAdmin) {
+      const { data: store } = await supabaseClient
+        .from('stores')
+        .select('id')
+        .eq('id', storeId)
+        .eq('owner_id', user.id)
+        .maybeSingle();
+      
+      ownsStore = !!store;
+    }
+
     // Authorization: 
     // - 'check_status' requires view permission
     // - 'create_instance' and 'disconnect' require edit permission
     const isAuthorizedForAction = Boolean(
       isAdmin ||
-      isStoreOwner ||
+      ownsStore ||
       (action === 'check_status' && hasWhatsAppView) ||
       ((action === 'create_instance' || action === 'disconnect') && hasWhatsAppEdit)
     );
 
     if (!isAuthorizedForAction) {
-      console.error('Authorization failed: insufficient role/permission', { userId: user.id, action });
+      console.error('Authorization failed: insufficient permission', { 
+        userId: user.id, 
+        storeId,
+        action,
+        isAdmin,
+        ownsStore,
+        hasWhatsAppView,
+        hasWhatsAppEdit
+      });
       return new Response(
         JSON.stringify({ 
-          error: 'Forbidden - Requires admin, store_owner role, or employee WhatsApp permission',
+          error: 'Forbidden - You do not have permission to access this store',
           details: action === 'check_status' 
-            ? 'Viewing WhatsApp status requires view permission' 
-            : 'Managing WhatsApp connection requires edit permission'
+            ? 'Viewing WhatsApp status requires store ownership or employee view permission' 
+            : 'Managing WhatsApp connection requires store ownership or employee edit permission'
         }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // For store owners, verify they own the store
-    if (isStoreOwner && !isAdmin && !hasWhatsAppEdit && !hasWhatsAppView) {
-      const { data: store, error: storeError } = await supabaseClient
-        .from('stores')
-        .select('id')
-        .eq('id', storeId)
-        .eq('owner_id', user.id)
-        .single();
-
-      if (storeError || !store) {
-        console.error('Authorization failed: User does not own store', { 
-          userId: user.id, 
-          storeId,
-          error: storeError 
-        });
-        return new Response(
-          JSON.stringify({ error: 'Forbidden - You can only manage WhatsApp instances for your own stores' }),
-          { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-    }
-
-    console.log('Authorization successful', { userId: user.id, isAdmin, isStoreOwner });
+    console.log('Authorization successful', { 
+      userId: user.id, 
+      isAdmin, 
+      ownsStore,
+      hasWhatsAppView,
+      hasWhatsAppEdit 
+    });
 
     if (action === 'create_instance') {
       // Create instance
