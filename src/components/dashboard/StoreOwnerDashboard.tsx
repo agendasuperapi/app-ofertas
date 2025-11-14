@@ -903,8 +903,21 @@ export const StoreOwnerDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="flex items-center gap-3 mb-2">
+                        {/* Logo em Mobile */}
+                        {myStore?.logo_url && (
+                          <motion.img
+                            src={myStore.logo_url}
+                            alt={myStore.name}
+                            className="h-10 w-10 object-contain rounded-lg md:hidden"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: 0.3 }}
+                          />
+                        )}
+                        
+                        {/* Nome em Desktop */}
                         <motion.h2 
-                          className="text-3xl font-bold gradient-text"
+                          className="text-3xl font-bold gradient-text hidden md:block"
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.3 }}
