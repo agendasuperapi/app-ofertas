@@ -196,6 +196,11 @@ export function CouponsReport({ storeId, storeName = "Minha Loja" }: CouponsRepo
 
   return (
     <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold gradient-text">Relatório de Cupons</h2>
+        <p className="text-muted-foreground">Análise de uso e desempenho dos cupons de desconto</p>
+      </div>
+      
       {/* Estatísticas gerais */}
       <div className="grid gap-4 md:grid-cols-3">
         <motion.div
