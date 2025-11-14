@@ -294,7 +294,7 @@ export default function BecomePartner() {
                     <Label htmlFor="slug">URL da Loja *</Label>
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-muted-foreground whitespace-nowrap">
-                        /store/
+                        /
                       </span>
                       <Input
                         id="slug"
