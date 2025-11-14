@@ -147,10 +147,26 @@ export const OrdersReport = ({ storeId, storeName = "Minha Loja", dateRange }: O
   }, [searchTerm, statusFilter, dateRange]);
 
   const exportToCSV = () => {
-    const headers = Object.keys(filteredOrders[0] || {});
+    const headers = ['Pedido', 'Data', 'Cliente', 'Telefone', 'Status', 'Subtotal', 'Taxa de Entrega', 'Desconto', 'Total', 'Pagamento', 'Entrega', 'Cupom'];
+    
+    const rows = filteredOrders.map(order => [
+      order.order_number,
+      format(new Date(order.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+      order.customer_name,
+      order.customer_phone,
+      order.status,
+      `R$ ${order.subtotal.toFixed(2)}`,
+      `R$ ${order.delivery_fee.toFixed(2)}`,
+      order.coupon_discount ? `R$ ${order.coupon_discount.toFixed(2)}` : '-',
+      `R$ ${order.total.toFixed(2)}`,
+      order.payment_method,
+      order.delivery_type === 'delivery' ? 'Entrega' : 'Retirada',
+      order.coupon_code || '-'
+    ]);
+
     const csvContent = [
       headers.join(','),
-      ...filteredOrders.map(row => headers.map(header => `"${(row as any)[header] || ''}"`).join(','))
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });

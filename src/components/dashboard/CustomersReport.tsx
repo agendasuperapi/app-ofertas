@@ -129,10 +129,22 @@ export const CustomersReport = ({ storeId, storeName = "Minha Loja", dateRange }
   }, [searchTerm, dateRange]);
 
   const exportToCSV = () => {
-    const headers = Object.keys(filteredCustomers[0] || {});
+    const headers = ['Nome', 'WhatsApp', 'Endereço', 'Total de Pedidos', 'Total Gasto', 'Último Pedido'];
+    
+    const rows = filteredCustomers.map(customer => [
+      customer.customer_name,
+      customer.customer_phone,
+      customer.delivery_street && customer.delivery_number 
+        ? `${customer.delivery_street}, ${customer.delivery_number}${customer.delivery_neighborhood ? ` - ${customer.delivery_neighborhood}` : ''}`
+        : '-',
+      customer.total_orders,
+      `R$ ${customer.total_spent.toFixed(2)}`,
+      format(new Date(customer.last_order), 'dd/MM/yyyy', { locale: ptBR })
+    ]);
+
     const csvContent = [
       headers.join(','),
-      ...filteredCustomers.map(row => headers.map(header => `"${(row as any)[header] || ''}"`).join(','))
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });

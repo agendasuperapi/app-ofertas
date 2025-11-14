@@ -103,10 +103,23 @@ export const RegisteredProductsReport = ({ storeId, storeName = "Minha Loja" }: 
   }, [searchTerm, statusFilter]);
 
   const exportToCSV = () => {
-    const headers = Object.keys(filteredProducts[0] || {});
+    const headers = ['Código', 'Nome', 'Descrição', 'Categoria', 'Preço', 'Preço Promocional', 'Status'];
+    
+    const rows = filteredProducts.map(product => [
+      product.short_id || product.id.substring(0, 8),
+      product.name,
+      product.description || '-',
+      product.category,
+      `R$ ${product.price.toFixed(2)}`,
+      product.promotional_price && product.promotional_price > 0 
+        ? `R$ ${product.promotional_price.toFixed(2)}` 
+        : '-',
+      product.is_available ? 'Ativo' : 'Inativo'
+    ]);
+
     const csvContent = [
       headers.join(','),
-      ...filteredProducts.map(row => headers.map(header => `"${(row as any)[header] || ''}"`).join(','))
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
