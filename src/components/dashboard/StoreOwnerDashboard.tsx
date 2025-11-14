@@ -961,18 +961,23 @@ export const StoreOwnerDashboard = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos os Status</SelectItem>
-                    <SelectItem value="pending">Pendente</SelectItem>
-                    <SelectItem value="confirmed">Confirmado</SelectItem>
-                    <SelectItem value="preparing">Preparando</SelectItem>
-                    <SelectItem value="ready">Pronto</SelectItem>
-                    <SelectItem value="out_for_delivery">Saiu para Entrega</SelectItem>
-                    <SelectItem value="delivered">Entregue</SelectItem>
-                    <SelectItem value="cancelled">Cancelado</SelectItem>
-                    {customStatuses.map((status) => (
-                      <SelectItem key={status.id} value={status.status_key}>
-                        {status.status_label}
-                      </SelectItem>
-                    ))}
+                    {customStatuses.length > 0 ? (
+                      customStatuses.map((status) => (
+                        <SelectItem key={status.id} value={status.status_key}>
+                          {status.status_label}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <>
+                        <SelectItem value="pending">Pendente</SelectItem>
+                        <SelectItem value="confirmed">Confirmado</SelectItem>
+                        <SelectItem value="preparing">Preparando</SelectItem>
+                        <SelectItem value="ready">Pronto</SelectItem>
+                        <SelectItem value="out_for_delivery">Saiu para Entrega</SelectItem>
+                        <SelectItem value="delivered">Entregue</SelectItem>
+                        <SelectItem value="cancelled">Cancelado</SelectItem>
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
 
