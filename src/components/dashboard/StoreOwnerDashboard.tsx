@@ -1411,6 +1411,12 @@ export const StoreOwnerDashboard = () => {
                               <div className="text-sm text-muted-foreground space-y-1">
                                 <p>{order.customer_name}</p>
                                 <p>{format(new Date(order.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
+                                {(order as any).coupon_code && (
+                                  <Badge variant="outline" className="gap-1 text-xs">
+                                    <Tag className="h-3 w-3" />
+                                    {(order as any).coupon_code}
+                                  </Badge>
+                                )}
                               </div>
                             </div>
                             <div className="text-right">
@@ -1721,6 +1727,20 @@ export const StoreOwnerDashboard = () => {
                             <span className="text-muted-foreground">Pagamento:</span>
                             <span className="font-medium capitalize">{order.payment_method}</span>
                           </div>
+                          {(order as any).coupon_code && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Cupom:</span>
+                              <Badge variant="outline" className="gap-1">
+                                <Tag className="h-3 w-3" />
+                                {(order as any).coupon_code}
+                                {(order as any).coupon_discount > 0 && (
+                                  <span className="text-green-600 ml-1">
+                                    (-R$ {(order as any).coupon_discount.toFixed(2)})
+                                  </span>
+                                )}
+                              </Badge>
+                            </div>
+                          )}
                           <div className="flex justify-between text-lg font-bold">
                             <span>Total:</span>
                             <span className="text-primary">R$ {order.total.toFixed(2)}</span>
