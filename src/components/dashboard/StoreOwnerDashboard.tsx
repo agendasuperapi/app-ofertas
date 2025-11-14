@@ -154,6 +154,8 @@ export const StoreOwnerDashboard = () => {
     delivery_fee: myStore?.delivery_fee || 0,
     min_order_value: myStore?.min_order_value || 0,
     avg_delivery_time: myStore?.avg_delivery_time || 30,
+    accepts_delivery: myStore?.accepts_delivery ?? true,
+    accepts_pickup: myStore?.accepts_pickup ?? true,
     address: myStore?.address || '',
     pickup_address: myStore?.pickup_address || '',
     phone: myStore?.phone || '',
@@ -241,6 +243,8 @@ export const StoreOwnerDashboard = () => {
         delivery_fee: myStore.delivery_fee || 0,
         min_order_value: myStore.min_order_value || 0,
         avg_delivery_time: myStore.avg_delivery_time || 30,
+        accepts_delivery: myStore.accepts_delivery ?? true,
+        accepts_pickup: myStore.accepts_pickup ?? true,
         address: myStore.address || '',
         pickup_address: myStore.pickup_address || '',
         phone: myStore.phone || '',
@@ -683,6 +687,8 @@ export const StoreOwnerDashboard = () => {
       delivery_fee: storeForm.delivery_fee,
       min_order_value: storeForm.min_order_value,
       avg_delivery_time: storeForm.avg_delivery_time,
+      accepts_delivery: storeForm.accepts_delivery,
+      accepts_pickup: storeForm.accepts_pickup,
       address: storeForm.address,
       pickup_address: storeForm.pickup_address,
       phone: storeForm.phone,
@@ -2867,6 +2873,46 @@ export const StoreOwnerDashboard = () => {
                       <SelectItem value="Outros">Outros</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              <Separator className="my-6" />
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Tipos de Entrega Aceitos</h3>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="accepts_delivery">Entrega</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Permite que os clientes recebam pedidos em casa
+                      </p>
+                    </div>
+                    <Switch
+                      id="accepts_delivery"
+                      checked={storeForm.accepts_delivery}
+                      onCheckedChange={(checked) => 
+                        setStoreForm({ ...storeForm, accepts_delivery: checked })
+                      }
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="accepts_pickup">Retirada</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Permite que os clientes retirem pedidos na loja
+                      </p>
+                    </div>
+                    <Switch
+                      id="accepts_pickup"
+                      checked={storeForm.accepts_pickup}
+                      onCheckedChange={(checked) => 
+                        setStoreForm({ ...storeForm, accepts_pickup: checked })
+                      }
+                    />
+                  </div>
                 </div>
               </div>
 

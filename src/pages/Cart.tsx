@@ -88,12 +88,24 @@ export default function Cart() {
       if (cart.storeId) {
         const { data } = await supabase
           .from('stores')
-          .select('operating_hours, name')
+          .select('operating_hours, name, accepts_delivery, accepts_pickup, delivery_fee')
           .eq('id', cart.storeId)
           .single();
         
         if (data) {
           setStoreData(data);
+          
+          // Set default delivery type based on what store accepts
+          const acceptsPickup = (data as any).accepts_pickup ?? true;
+          const acceptsDelivery = (data as any).accepts_delivery ?? true;
+          
+          if (acceptsPickup && !acceptsDelivery) {
+            setDeliveryType('pickup');
+          } else if (acceptsDelivery && !acceptsPickup) {
+            setDeliveryType('delivery');
+          } else if (acceptsPickup) {
+            setDeliveryType('pickup'); // Default to pickup if both are available
+          }
         }
       }
     };
@@ -174,7 +186,7 @@ export default function Cart() {
     });
   };
 
-  const deliveryFee = deliveryType === 'pickup' ? 0 : 5;
+  const deliveryFee = deliveryType === 'pickup' ? 0 : ((storeData as any)?.delivery_fee || 5);
   const subtotal = getTotal();
   const total = Math.max(0, subtotal + deliveryFee - (cart.couponDiscount || 0));
 
@@ -763,34 +775,48 @@ export default function Cart() {
                     <div>
                       <h3 className="text-xl font-bold mb-4">Tipo de Entrega</h3>
                       
+                      {(!storeData || (!(storeData as any).accepts_delivery && !(storeData as any).accepts_pickup)) && (
+                        <Alert>
+                          <AlertDescription>
+                            Esta loja não possui opções de entrega configuradas. Entre em contato com a loja.
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                      
                       <div className="grid grid-cols-2 gap-3 mb-6">
-                        <button
-                          type="button"
-                          onClick={() => setDeliveryType('pickup')}
-                          className={`p-4 rounded-lg border-2 transition-all ${
-                            deliveryType === 'pickup'
-                              ? 'border-primary bg-primary/10'
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <Store className="w-6 h-6 mx-auto mb-2" />
-                          <div className="font-semibold">Retirar na Loja</div>
-                          <div className="text-xs text-muted-foreground">Grátis</div>
-                        </button>
+                        {((storeData as any)?.accepts_pickup ?? true) && (
+                          <button
+                            type="button"
+                            onClick={() => setDeliveryType('pickup')}
+                            className={`p-4 rounded-lg border-2 transition-all ${
+                              deliveryType === 'pickup'
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                          >
+                            <Store className="w-6 h-6 mx-auto mb-2" />
+                            <div className="font-semibold">Retirar na Loja</div>
+                            <div className="text-xs text-muted-foreground">Grátis</div>
+                          </button>
+                        )}
                         
-                        <button
-                          type="button"
-                          onClick={() => setDeliveryType('delivery')}
-                          className={`p-4 rounded-lg border-2 transition-all ${
-                            deliveryType === 'delivery'
-                              ? 'border-primary bg-primary/10'
-                              : 'border-border hover:border-primary/50'
-                          }`}
-                        >
-                          <Package className="w-6 h-6 mx-auto mb-2" />
-                          <div className="font-semibold">Entrega</div>
-                          <div className="text-xs text-muted-foreground">R$ 5,00</div>
-                        </button>
+                        {((storeData as any)?.accepts_delivery ?? true) && (
+                          <button
+                            type="button"
+                            onClick={() => setDeliveryType('delivery')}
+                            className={`p-4 rounded-lg border-2 transition-all ${
+                              deliveryType === 'delivery'
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                          >
+                            <Package className="w-6 h-6 mx-auto mb-2" />
+                            <div className="font-semibold">Entrega</div>
+                            <div className="text-xs text-muted-foreground">
+                              R$ {deliveryFee.toFixed(2)}
+                            </div>
+                          </button>
+                        )}
                       </div>
 
                       {deliveryType === 'delivery' && (

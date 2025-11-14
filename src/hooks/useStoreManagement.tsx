@@ -17,6 +17,8 @@ export interface StoreFormData {
   delivery_fee?: number;
   min_order_value?: number;
   avg_delivery_time?: number;
+  accepts_delivery?: boolean;
+  accepts_pickup?: boolean;
   logo_url?: string;
   banner_url?: string;
   operating_hours?: any;
