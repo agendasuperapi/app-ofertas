@@ -111,10 +111,19 @@ export const BestSellingProductsReport = ({ storeId, storeName = "Minha Loja", d
   }, [dateRange]);
 
   const exportToCSV = () => {
-    const headers = Object.keys(products[0] || {});
+    const headers = ['Posição', 'Produto', 'Quantidade Vendida', 'Pedidos', 'Receita'];
+    
+    const rows = products.map((product, index) => [
+      `#${index + 1}`,
+      product.product_name,
+      `${product.quantity_sold} unidades`,
+      product.orders_count,
+      `R$ ${product.revenue.toFixed(2)}`
+    ]);
+
     const csvContent = [
       headers.join(','),
-      ...products.map(row => headers.map(header => `"${(row as any)[header] || ''}"`).join(','))
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
