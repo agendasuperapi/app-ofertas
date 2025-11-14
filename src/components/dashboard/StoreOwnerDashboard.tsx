@@ -922,6 +922,52 @@ export const StoreOwnerDashboard = () => {
               </Card>
             </motion.div>
 
+            {/* Store URL Card */}
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-medium flex items-center gap-2">
+                    <Store className="h-4 w-4" />
+                    URL da Loja
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={`https://appofertas.lovable.app/loja-${myStore?.slug || ''}`}
+                      readOnly
+                      className="flex-1 bg-muted/50"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(`https://appofertas.lovable.app/loja-${myStore?.slug || ''}`);
+                          toast({
+                            title: "URL copiada!",
+                            description: "A URL da sua loja foi copiada para a área de transferência.",
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "Erro ao copiar",
+                            description: "Não foi possível copiar a URL.",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
             {/* Period Filter */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
