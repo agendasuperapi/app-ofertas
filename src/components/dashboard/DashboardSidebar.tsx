@@ -41,7 +41,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
   const relatoriosSubItems = [
     ...(hasPermission('reports') ? [{ id: 'relatorio-clientes', label: 'clientes', icon: Users }] : []),
     ...(hasPermission('reports') ? [{ id: 'relatorio-produtos-vendidos', label: 'mais vendidos', icon: TrendingUp }] : []),
-    ...(hasPermission('reports') ? [{ id: 'relatorio-produtos-cadastrados', label: 'cadastrados', icon: Package }] : []),
+    ...(hasPermission('reports') ? [{ id: 'relatorio-produtos-cadastrados', label: 'produtos', icon: Package }] : []),
     ...(hasPermission('reports') ? [{ id: 'relatorio-pedidos', label: 'pedidos', icon: ShoppingCart }] : []),
   ];
   
