@@ -229,15 +229,15 @@ export default function StoreDetails() {
   }
 
   // Meta tags configuration
-  const menuLabel = store.slug === 'drogaclaramoc' ? 'Produtos' : 'Cardápio';
-  const menuLabelLower = store.slug === 'drogaclaramoc' ? 'produtos' : 'cardápio';
+  const menuLabel = (store as any).menu_label || 'Cardápio';
+  const menuLabelLower = menuLabel.toLowerCase();
   
   const pageTitle = sharedProduct 
     ? `${sharedProduct.name} - ${store.name}` 
     : `${store.name} - ${menuLabel}`;
   const pageDescription = sharedProduct
     ? `${sharedProduct.description || sharedProduct.name} - R$ ${Number(sharedProduct.promotional_price || sharedProduct.price).toFixed(2)} - Peça agora em ${store.name}`
-    : store.description || `Confira ${store.slug === 'drogaclaramoc' ? 'o catálogo de produtos' : 'o cardápio completo'} de ${store.name}`;
+    : store.description || `Confira ${menuLabel === 'Produtos' ? 'o catálogo de produtos' : 'o cardápio completo'} de ${store.name}`;
   const pageImage = sharedProduct?.image_url || store.logo_url || store.banner_url;
   const currentUrl = window.location.href;
 
