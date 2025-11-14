@@ -50,6 +50,12 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
   const [couponDiscount, setCouponDiscount] = useState(order?.coupon_discount || 0);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   
+  const [storePaymentMethods, setStorePaymentMethods] = useState({
+    accepts_pix: true,
+    accepts_card: true,
+    accepts_cash: true,
+  });
+  
   const [formData, setFormData] = useState({
     payment_method: order?.payment_method || 'pix',
     change_amount: order?.change_amount || 0,
@@ -87,8 +93,27 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
       }
       loadOrderItems();
       loadAvailableProducts();
+      loadStorePaymentMethods();
     }
   }, [order]);
+
+  const loadStorePaymentMethods = async () => {
+    if (!order?.store_id) return;
+    
+    const { data, error } = await supabase
+      .from('stores')
+      .select('accepts_pix, accepts_card, accepts_cash')
+      .eq('id', order.store_id)
+      .single();
+    
+    if (data && !error) {
+      setStorePaymentMethods({
+        accepts_pix: (data as any).accepts_pix ?? true,
+        accepts_card: (data as any).accepts_card ?? true,
+        accepts_cash: (data as any).accepts_cash ?? true,
+      });
+    }
+  };
 
   const loadAvailableProducts = async () => {
     if (!order?.store_id) return;
@@ -615,10 +640,18 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate }: EditOrd
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pix">PIX</SelectItem>
-                    <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
-                    <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
-                    <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                    {storePaymentMethods.accepts_pix && (
+                      <SelectItem value="pix">PIX</SelectItem>
+                    )}
+                    {storePaymentMethods.accepts_card && (
+                      <>
+                        <SelectItem value="cartao_credito">Cartão de Crédito</SelectItem>
+                        <SelectItem value="cartao_debito">Cartão de Débito</SelectItem>
+                      </>
+                    )}
+                    {storePaymentMethods.accepts_cash && (
+                      <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
