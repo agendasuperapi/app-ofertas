@@ -82,8 +82,8 @@ export const MobileBottomNav = () => {
     }
   };
 
-  // Hide on cart page
-  if (location.pathname === '/cart') {
+  // Hide on cart page and on store owner dashboard
+  if (location.pathname === '/cart' || location.pathname.startsWith('/dashboard-lojista')) {
     return null;
   }
 
