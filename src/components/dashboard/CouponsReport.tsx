@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tag, TrendingUp, DollarSign, Ticket } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useEffect } from 'react';
 
 interface CouponsReportProps {
   storeId: string;
@@ -26,6 +27,29 @@ interface CouponUsage {
 }
 
 export function CouponsReport({ storeId }: CouponsReportProps) {
+  // Carregar função de correção no console
+  useEffect(() => {
+    const fixOrderCoupon = async () => {
+      const { data, error } = await supabase
+        .from('orders')
+        .update({
+          coupon_code: 'promo10',
+          coupon_discount: 6.90,
+        } as any)
+        .eq('order_number', '#96187023')
+        .select();
+
+      if (error) {
+        console.error('❌ Erro ao corrigir pedido:', error);
+      } else {
+        console.log('✅ Pedido #96187023 corrigido:', data);
+      }
+    };
+
+    // Disponibilizar no console
+    (window as any).fixOrderCoupon96187023 = fixOrderCoupon;
+  }, []);
+
   const { data: orders, isLoading } = useQuery({
     queryKey: ['coupon-report', storeId],
     queryFn: async () => {
