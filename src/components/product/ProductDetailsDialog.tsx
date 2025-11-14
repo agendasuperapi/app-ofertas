@@ -282,10 +282,10 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
         </Button>
         <Button
           onClick={handleAddToCart}
-          className="flex-1 text-sm h-11"
+          className="flex-1 text-base h-14"
           size="lg"
         >
-          <ShoppingCart className="w-4 h-4 mr-2" />
+          <ShoppingCart className="w-5 h-5 mr-2" />
           Adicionar ao Carrinho
         </Button>
       </div>
@@ -315,7 +315,7 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
               </div>
             </div>
 
-            <div className="flex-shrink-0 border-t bg-background p-3">
+            <div className="flex-shrink-0 border-t bg-background p-4">
               {footerContent}
             </div>
           </div>
