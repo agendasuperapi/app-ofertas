@@ -55,8 +55,9 @@ export default function StoreDetails() {
 
   // Check if product is in cart and get its quantity
   const getProductCartQuantity = (productId: string) => {
-    const cartItem = cart.items.find(item => item.id === productId);
-    return cartItem?.quantity || 0;
+    return cart.items
+      .filter(item => item.productId === productId)
+      .reduce((total, item) => total + item.quantity, 0);
   };
 
   const handleAddToCart = (quantity: number, observation: string, selectedAddons: Array<{ id: string; name: string; price: number }>) => {
