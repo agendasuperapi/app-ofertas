@@ -575,7 +575,18 @@ export default function StoreDetails() {
                       whileHover={{ y: -8 }}
                       className="group"
                     >
-                      <Card 
+                      <motion.div
+                        animate={isInCart ? {
+                          scale: [1, 1.05, 1.02],
+                          boxShadow: [
+                            '0 0 0px rgba(var(--primary-rgb), 0)',
+                            '0 0 30px rgba(var(--primary-rgb), 0.6)',
+                            '0 0 20px rgba(var(--primary-rgb), 0.3)'
+                          ]
+                        } : {}}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                      >
+                        <Card
                         className={`overflow-hidden h-full border-3 transition-all duration-300 cursor-pointer ${
                           isInCart 
                             ? 'border-primary ring-4 ring-primary/30 shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)] hover:shadow-[0_0_30px_rgba(var(--primary-rgb),0.5)] scale-[1.02]' 
@@ -681,7 +692,8 @@ export default function StoreDetails() {
                             </div>
                           </div>
                         </CardContent>
-                      </Card>
+                        </Card>
+                      </motion.div>
                     </motion.div>
                   );
                   })}
