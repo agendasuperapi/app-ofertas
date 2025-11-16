@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useOrderStatusNotification = (storeId: string | undefined) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!storeId) return;
@@ -31,6 +33,11 @@ export const useOrderStatusNotification = (storeId: string | undefined) => {
 
           console.log('Order status changed:', payload.old.status, '->', payload.new.status);
           
+          // Invalidar queries para atualizar a lista automaticamente
+          queryClient.invalidateQueries({ queryKey: ['store-orders'] });
+          
+          console.log('✅ Lista de pedidos atualizada após mudança de status');
+          
           // WhatsApp: envio pelo cliente desativado. Banco de dados (trigger) fará o envio.
           console.log('🔕 WhatsApp via cliente desativado. Envio será feito pelo banco de dados.');
 
@@ -41,5 +48,5 @@ export const useOrderStatusNotification = (storeId: string | undefined) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [storeId, toast]);
+  }, [storeId, toast, queryClient]);
 };
