@@ -60,7 +60,7 @@ export const ProductFlavorsManager = ({ productId }: ProductFlavorsManagerProps)
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Sabores da Pizza</CardTitle>
+            <CardTitle>Sabores</CardTitle>
             <CardDescription>Gerencie os sabores disponíveis para este produto</CardDescription>
           </div>
           {!isAdding && (
