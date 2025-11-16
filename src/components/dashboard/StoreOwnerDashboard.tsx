@@ -871,6 +871,34 @@ export const StoreOwnerDashboard = () => {
     setIsHoursDialogOpen(false);
   };
 
+  const handleUpdateDeliveryOption = async (field: string, value: boolean) => {
+    if (!myStore?.id) return;
+    
+    try {
+      await updateStore({
+        id: myStore.id,
+        name: myStore.name,
+        slug: myStore.slug,
+        category: myStore.category,
+        [field]: value,
+      });
+      
+      setStoreForm({ ...storeForm, [field]: value });
+      
+      toast({
+        title: "Configuração atualizada",
+        description: "A alteração foi salva com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar configuração:', error);
+      toast({
+        title: "Erro ao atualizar",
+        description: "Não foi possível salvar a alteração.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return <div>Carregando...</div>;
   }
@@ -2924,7 +2952,7 @@ export const StoreOwnerDashboard = () => {
                     id="accepts_delivery"
                     checked={storeForm.accepts_delivery}
                     onCheckedChange={(checked) => 
-                      setStoreForm({ ...storeForm, accepts_delivery: checked })
+                      handleUpdateDeliveryOption('accepts_delivery', checked)
                     }
                   />
                 </div>
@@ -2940,7 +2968,7 @@ export const StoreOwnerDashboard = () => {
                     id="accepts_pickup"
                     checked={storeForm.accepts_pickup}
                     onCheckedChange={(checked) => 
-                      setStoreForm({ ...storeForm, accepts_pickup: checked })
+                      handleUpdateDeliveryOption('accepts_pickup', checked)
                     }
                   />
                 </div>
@@ -2963,7 +2991,7 @@ export const StoreOwnerDashboard = () => {
                     id="accepts_pix"
                     checked={storeForm.accepts_pix}
                     onCheckedChange={(checked) => 
-                      setStoreForm({ ...storeForm, accepts_pix: checked })
+                      handleUpdateDeliveryOption('accepts_pix', checked)
                     }
                   />
                 </div>
@@ -2979,7 +3007,7 @@ export const StoreOwnerDashboard = () => {
                     id="accepts_card"
                     checked={storeForm.accepts_card}
                     onCheckedChange={(checked) => 
-                      setStoreForm({ ...storeForm, accepts_card: checked })
+                      handleUpdateDeliveryOption('accepts_card', checked)
                     }
                   />
                 </div>
@@ -2995,7 +3023,7 @@ export const StoreOwnerDashboard = () => {
                     id="accepts_cash"
                     checked={storeForm.accepts_cash}
                     onCheckedChange={(checked) => 
-                      setStoreForm({ ...storeForm, accepts_cash: checked })
+                      handleUpdateDeliveryOption('accepts_cash', checked)
                     }
                   />
                 </div>
