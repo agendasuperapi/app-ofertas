@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -185,12 +186,13 @@ export function LoginModal({
                   Senha
                 </label>
                 {isLogin && (
-                  <button
-                    type="button"
+                  <Link
+                    to="/forgot-password"
                     className="text-xs text-primary hover:underline"
+                    onClick={onClose}
                   >
                     Esqueci minha senha
-                  </button>
+                  </Link>
                 )}
               </div>
               <div className="relative">
