@@ -2858,7 +2858,7 @@ export const StoreOwnerDashboard = () => {
                   </TabsTrigger>
                   <TabsTrigger value="notifications" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
                     <Bell className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">Notificações</span>
+                    <span className="truncate">Permissões</span>
                   </TabsTrigger>
                   <TabsTrigger value="status" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
                     <Menu className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
