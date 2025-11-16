@@ -804,6 +804,7 @@ export const StoreOwnerDashboard = () => {
         delivery_fee: storeForm.delivery_fee,
         min_order_value: storeForm.min_order_value,
         avg_delivery_time: storeForm.avg_delivery_time,
+        show_avg_delivery_time: storeForm.show_avg_delivery_time,
         accepts_delivery: storeForm.accepts_delivery,
         accepts_pickup: storeForm.accepts_pickup,
         accepts_pix: storeForm.accepts_pix,
