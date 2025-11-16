@@ -26,12 +26,22 @@ const playNotificationSound = () => {
   }
 };
 
+// Solicitar permissão para notificações do navegador
+const requestNotificationPermission = async () => {
+  if ('Notification' in window && Notification.permission === 'default') {
+    await Notification.requestPermission();
+  }
+};
+
 export const useNewOrderNotification = (storeId: string | undefined) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!storeId) return;
+
+    // Solicitar permissão para notificações
+    requestNotificationPermission();
 
     console.log('🔔 Iniciando escuta de novos pedidos para loja:', storeId);
 
@@ -60,6 +70,17 @@ export const useNewOrderNotification = (storeId: string | undefined) => {
             description: `Pedido #${order.order_number} - ${order.customer_name} - R$ ${order.total.toFixed(2)}`,
             duration: 10000,
           });
+
+          // Enviar notificação do navegador
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('🔔 Novo Pedido Recebido!', {
+              body: `Pedido #${order.order_number}\n${order.customer_name}\nR$ ${order.total.toFixed(2)}`,
+              icon: '/favicon.ico',
+              badge: '/favicon.ico',
+              tag: `order-${order.id}`,
+              requireInteraction: true,
+            });
+          }
           
           // Invalidar queries para atualizar a lista automaticamente
           queryClient.invalidateQueries({ queryKey: ['store-orders'] });
