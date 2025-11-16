@@ -2462,7 +2462,20 @@ export const StoreOwnerDashboard = () => {
               {hasPermission('products', 'create') && (
                 <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button onClick={() => setEditingProduct(null)} size="lg">
+                    <Button onClick={() => {
+                      setEditingProduct(null);
+                      setProductForm({
+                        name: '',
+                        description: '',
+                        category: '',
+                        price: 0,
+                        promotional_price: 0,
+                        is_available: true,
+                        image_url: '',
+                        is_pizza: false,
+                        max_flavors: 2,
+                      });
+                    }} size="lg">
                       <Plus className="w-4 h-4 mr-2" />
                       Novo Produto
                     </Button>
