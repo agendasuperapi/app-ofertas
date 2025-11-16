@@ -60,7 +60,12 @@ export default function StoreDetails() {
       .reduce((total, item) => total + item.quantity, 0);
   };
 
-  const handleAddToCart = (quantity: number, observation: string, selectedAddons: Array<{ id: string; name: string; price: number }>) => {
+  const handleAddToCart = (
+    quantity: number, 
+    observation: string, 
+    selectedAddons: Array<{ id: string; name: string; price: number }>,
+    selectedFlavors: Array<{ id: string; name: string; price: number }>
+  ) => {
     if (!store || !selectedProduct) return;
     
     addToCart(
@@ -74,7 +79,8 @@ export default function StoreDetails() {
       selectedProduct.image_url,
       observation,
       store.slug,
-      selectedAddons
+      selectedAddons,
+      selectedFlavors
     );
   };
 
