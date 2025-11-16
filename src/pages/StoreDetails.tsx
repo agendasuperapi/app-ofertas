@@ -400,6 +400,15 @@ export default function StoreDetails() {
                         <span className="text-muted-foreground">({store.total_reviews})</span>
                       )}
                     </motion.div>
+                    {store.slug !== 'drogaclaramoc' && (store as any).show_avg_delivery_time !== false && (
+                      <motion.div 
+                        whileHover={{ scale: 1.05 }}
+                        className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-full"
+                      >
+                        <Clock className="w-4 h-4 text-primary" />
+                        <span className="font-medium">{store.avg_delivery_time || 30} min</span>
+                      </motion.div>
+                    )}
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
@@ -419,19 +428,6 @@ export default function StoreDetails() {
                   </div>
                   
                   <p className="text-muted-foreground mb-2 text-sm md:text-base leading-relaxed">{store.description}</p>
-                  
-                  <div className="flex flex-wrap items-center gap-3 md:gap-4 text-sm md:text-base">
-                    
-                    {store.slug !== 'drogaclaramoc' && (store as any).show_avg_delivery_time !== false && (
-                      <motion.div 
-                        whileHover={{ scale: 1.05 }}
-                        className="flex items-center gap-2 bg-primary/10 px-3 py-1.5 rounded-full"
-                      >
-                        <Clock className="w-4 h-4 text-primary" />
-                        <span className="font-medium">{store.avg_delivery_time || 30} min</span>
-                      </motion.div>
-                    )}
-                  </div>
                   
                   {store.address && (
                     <motion.div 
