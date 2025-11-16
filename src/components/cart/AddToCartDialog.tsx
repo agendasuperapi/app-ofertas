@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Minus, Plus } from "lucide-react";
 import { useProductAddons } from "@/hooks/useProductAddons";
+import { useProductFlavors } from "@/hooks/useProductFlavors";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface AddToCartDialogProps {
@@ -17,21 +18,34 @@ interface AddToCartDialogProps {
     price: number;
     promotional_price?: number;
     image_url?: string;
+    is_pizza?: boolean;
+    max_flavors?: number;
   };
-  onAdd: (quantity: number, observation: string, selectedAddons: Array<{ id: string; name: string; price: number }>) => void;
+  onAdd: (
+    quantity: number, 
+    observation: string, 
+    selectedAddons: Array<{ id: string; name: string; price: number }>,
+    selectedFlavors: Array<{ id: string; name: string; price: number }>
+  ) => void;
 }
 
 export const AddToCartDialog = ({ open, onOpenChange, product, onAdd }: AddToCartDialogProps) => {
   const [quantity, setQuantity] = useState(1);
   const [observation, setObservation] = useState("");
   const [selectedAddons, setSelectedAddons] = useState<Set<string>>(new Set());
+  const [selectedFlavors, setSelectedFlavors] = useState<Set<string>>(new Set());
   const { addons } = useProductAddons(product.id);
+  const { flavors } = useProductFlavors(product.id);
+
+  const maxFlavors = product.max_flavors || 1;
+  const hasFlavors = product.is_pizza && flavors && flavors.length > 0;
 
   useEffect(() => {
     if (!open) {
       setQuantity(1);
       setObservation("");
       setSelectedAddons(new Set());
+      setSelectedFlavors(new Set());
     }
   }, [open]);
 
@@ -45,12 +59,32 @@ export const AddToCartDialog = ({ open, onOpenChange, product, onAdd }: AddToCar
     setSelectedAddons(newSelected);
   };
 
+  const handleFlavorToggle = (flavorId: string) => {
+    const newSelected = new Set(selectedFlavors);
+    if (newSelected.has(flavorId)) {
+      newSelected.delete(flavorId);
+    } else {
+      if (newSelected.size < maxFlavors) {
+        newSelected.add(flavorId);
+      }
+    }
+    setSelectedFlavors(newSelected);
+  };
+
   const handleAdd = () => {
+    if (hasFlavors && selectedFlavors.size === 0) {
+      return; // Não permite adicionar sem selecionar sabores
+    }
+
     const addonsToAdd = addons
       ?.filter(addon => selectedAddons.has(addon.id))
       .map(addon => ({ id: addon.id, name: addon.name, price: addon.price })) || [];
     
-    onAdd(quantity, observation, addonsToAdd);
+    const flavorsToAdd = flavors
+      ?.filter(flavor => selectedFlavors.has(flavor.id))
+      .map(flavor => ({ id: flavor.id, name: flavor.name, price: flavor.price })) || [];
+    
+    onAdd(quantity, observation, addonsToAdd, flavorsToAdd);
     onOpenChange(false);
   };
 
@@ -58,7 +92,12 @@ export const AddToCartDialog = ({ open, onOpenChange, product, onAdd }: AddToCar
   const addonsTotal = addons
     ?.filter(addon => selectedAddons.has(addon.id))
     .reduce((sum, addon) => sum + addon.price, 0) || 0;
-  const total = (price + addonsTotal) * quantity;
+  
+  const flavorsTotal = flavors
+    ?.filter(flavor => selectedFlavors.has(flavor.id))
+    .reduce((sum, flavor) => sum + flavor.price, 0) || 0;
+  
+  const total = (price + addonsTotal + flavorsTotal) * quantity;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -99,6 +138,53 @@ export const AddToCartDialog = ({ open, onOpenChange, product, onAdd }: AddToCar
             </div>
           </div>
 
+          {hasFlavors && (
+            <div className="space-y-2">
+              <Label>
+                Sabores {maxFlavors > 1 && `(máx. ${maxFlavors})`}
+                <span className="text-destructive ml-1">*</span>
+              </Label>
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {flavors?.filter(flavor => flavor.is_available).map((flavor) => (
+                  <div
+                    key={flavor.id}
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-accent/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={`flavor-${flavor.id}`}
+                        checked={selectedFlavors.has(flavor.id)}
+                        onCheckedChange={() => handleFlavorToggle(flavor.id)}
+                        disabled={!selectedFlavors.has(flavor.id) && selectedFlavors.size >= maxFlavors}
+                      />
+                      <Label
+                        htmlFor={`flavor-${flavor.id}`}
+                        className="cursor-pointer font-normal"
+                      >
+                        {flavor.name}
+                        {flavor.description && (
+                          <span className="text-xs text-muted-foreground block">
+                            {flavor.description}
+                          </span>
+                        )}
+                      </Label>
+                    </div>
+                    {flavor.price > 0 && (
+                      <span className="text-sm font-medium text-muted-foreground">
+                        + R$ {flavor.price.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {selectedFlavors.size === 0 && (
+                <p className="text-xs text-destructive">
+                  Selecione pelo menos 1 sabor
+                </p>
+              )}
+            </div>
+          )}
+
           {addons && addons.length > 0 && (
             <div className="space-y-2">
               <Label>Adicionais</Label>
@@ -106,7 +192,7 @@ export const AddToCartDialog = ({ open, onOpenChange, product, onAdd }: AddToCar
                 {addons.filter(addon => addon.is_available).map((addon) => (
                   <div
                     key={addon.id}
-                    className="flex items-center justify-between p-2 border rounded hover:bg-muted/50 transition-colors"
+                    className="flex items-center justify-between p-2 rounded-lg hover:bg-accent/50 transition-colors"
                   >
                     <div className="flex items-center gap-2">
                       <Checkbox
@@ -152,7 +238,10 @@ export const AddToCartDialog = ({ open, onOpenChange, product, onAdd }: AddToCar
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
-          <Button onClick={handleAdd}>
+          <Button 
+            onClick={handleAdd}
+            disabled={hasFlavors && selectedFlavors.size === 0}
+          >
             Adicionar ao Carrinho
           </Button>
         </DialogFooter>

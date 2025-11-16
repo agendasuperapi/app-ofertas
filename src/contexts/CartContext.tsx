@@ -6,6 +6,12 @@ export interface CartAddon {
   price: number;
 }
 
+export interface CartFlavor {
+  id: string;
+  name: string;
+  price: number;
+}
+
 export interface CartItem {
   id: string;
   productId: string;
@@ -18,6 +24,7 @@ export interface CartItem {
   storeName: string;
   observation?: string;
   addons?: CartAddon[];
+  flavors?: CartFlavor[];
 }
 
 export interface Cart {
@@ -42,11 +49,12 @@ interface CartContextType {
     imageUrl?: string,
     observation?: string,
     storeSlug?: string,
-    addons?: CartAddon[]
+    addons?: CartAddon[],
+    flavors?: CartFlavor[]
   ) => void;
   removeFromCart: (itemId: string) => void;
   updateQuantity: (itemId: string, quantity: number) => void;
-  updateCartItem: (itemId: string, observation: string, addons: CartAddon[]) => void;
+  updateCartItem: (itemId: string, observation: string, addons: CartAddon[], flavors?: CartFlavor[]) => void;
   clearCart: () => void;
   getTotal: () => number;
   getItemCount: () => number;
@@ -89,7 +97,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     imageUrl?: string,
     observation?: string,
     storeSlug?: string,
-    addons?: CartAddon[]
+    addons?: CartAddon[],
+    flavors?: CartFlavor[]
   ) => {
     console.log('🛒 CartProvider addToCart:', { productName, quantity });
     
@@ -108,6 +117,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             storeName,
             observation,
             addons,
+            flavors,
           }],
           storeId,
           storeName,
@@ -122,7 +132,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const existingIndex = prev.items.findIndex(
         item => item.productId === productId && 
                 item.observation === observation &&
-                JSON.stringify(item.addons) === JSON.stringify(addons)
+                JSON.stringify(item.addons) === JSON.stringify(addons) &&
+                JSON.stringify(item.flavors) === JSON.stringify(flavors)
       );
       
       if (existingIndex >= 0) {
@@ -146,6 +157,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           storeName,
           observation,
           addons,
+          flavors,
         }],
         storeId,
         storeName,
@@ -186,11 +198,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     }));
   };
 
-  const updateCartItem = (itemId: string, observation: string, addons: CartAddon[]) => {
+  const updateCartItem = (itemId: string, observation: string, addons: CartAddon[], flavors?: CartFlavor[]) => {
     setCart((prev) => ({
       ...prev,
       items: prev.items.map(item =>
-        item.id === itemId ? { ...item, observation, addons } : item
+        item.id === itemId ? { ...item, observation, addons, flavors } : item
       ),
     }));
   };
@@ -211,7 +223,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     const total = cart.items.reduce((sum, item) => {
       const itemPrice = item.promotionalPrice || item.price;
       const addonsPrice = item.addons?.reduce((addonSum, addon) => addonSum + addon.price, 0) || 0;
-      return sum + ((itemPrice + addonsPrice) * item.quantity);
+      const flavorsPrice = item.flavors?.reduce((flavorSum, flavor) => flavorSum + flavor.price, 0) || 0;
+      return sum + ((itemPrice + addonsPrice + flavorsPrice) * item.quantity);
     }, 0);
     return total;
   };
