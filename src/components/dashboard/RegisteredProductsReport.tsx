@@ -187,7 +187,7 @@ export const RegisteredProductsReport = ({ storeId, storeName = "Minha Loja" }: 
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-2xl font-bold gradient-text">Produtos Cadastrados</h2>
+        <h2 className="text-2xl font-bold gradient-text">Relatorio Produtos Cadastrados</h2>
         <p className="text-muted-foreground">Todos os produtos registrados no seu catálogo</p>
       </div>
       
