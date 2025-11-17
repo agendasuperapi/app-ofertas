@@ -56,7 +56,9 @@ export const useOrders = () => {
             pickup_address,
             address,
             pix_key,
-            show_pix_key_to_customer
+            show_pix_key_to_customer,
+            operating_hours,
+            allow_orders_when_closed
           )
         `)
         .eq('customer_id', user!.id)
