@@ -255,29 +255,36 @@ export const DeliveryZonesManager = ({ storeId }: DeliveryZonesManagerProps) => 
                           {isLoadingCities ? "Carregando cidades..." : "Nenhuma cidade encontrada."}
                         </CommandEmpty>
                         <CommandGroup>
-                          {cities.map((city) => (
-                            <CommandItem
-                              key={city.id}
-                              value={`${city.nome} - ${city.microrregiao.mesorregiao.UF.sigla}`}
-                              onSelect={() => {
-                                setFormData({ 
-                                  ...formData, 
-                                  city: `${city.nome} - ${city.microrregiao.mesorregiao.UF.sigla}` 
-                                });
-                                setOpenCityCombobox(false);
-                              }}
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  formData.city === `${city.nome} - ${city.microrregiao.mesorregiao.UF.sigla}` 
-                                    ? "opacity-100" 
-                                    : "opacity-0"
-                                )}
-                              />
-                              {city.nome} - {city.microrregiao.mesorregiao.UF.sigla}
-                            </CommandItem>
-                          ))}
+                          {cities
+                            .filter(city => city?.microrregiao?.mesorregiao?.UF?.sigla)
+                            .map((city) => {
+                              const uf = city.microrregiao?.mesorregiao?.UF?.sigla || '';
+                              const cityName = `${city.nome} - ${uf}`;
+                              
+                              return (
+                                <CommandItem
+                                  key={city.id}
+                                  value={cityName}
+                                  onSelect={() => {
+                                    setFormData({ 
+                                      ...formData, 
+                                      city: cityName
+                                    });
+                                    setOpenCityCombobox(false);
+                                  }}
+                                >
+                                  <Check
+                                    className={cn(
+                                      "mr-2 h-4 w-4",
+                                      formData.city === cityName
+                                        ? "opacity-100" 
+                                        : "opacity-0"
+                                    )}
+                                  />
+                                  {cityName}
+                                </CommandItem>
+                              );
+                            })}
                         </CommandGroup>
                       </CommandList>
                     </Command>
