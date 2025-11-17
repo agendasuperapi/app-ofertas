@@ -16,7 +16,8 @@ import { useStoreManagement } from "@/hooks/useStoreManagement";
 import { useProductManagement } from "@/hooks/useProductManagement";
 import { useStoreOrders } from "@/hooks/useStoreOrders";
 import { useCategories } from "@/hooks/useCategories";
-import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, ArrowUp, ArrowDown, FolderTree, User, Lock, Edit2, Eye, Printer, AlertCircle, CheckCircle, Loader2, Bell, Shield } from "lucide-react";
+import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, ArrowUp, ArrowDown, FolderTree, User, Lock, Edit2, Eye, Printer, AlertCircle, CheckCircle, Loader2, Bell, Shield, XCircle } from "lucide-react";
+import { validatePixKey } from "@/lib/pixValidation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProductAddonsManager } from "./ProductAddonsManager";
 import { ProductFlavorsManager } from "./ProductFlavorsManager";
@@ -175,6 +176,12 @@ export const StoreOwnerDashboard = () => {
     pix_key: (myStore as any)?.pix_key || '',
   });
 
+  const [pixValidation, setPixValidation] = useState<{ isValid: boolean; type: string; message: string }>({
+    isValid: true,
+    type: 'empty',
+    message: ''
+  });
+
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [isHoursDialogOpen, setIsHoursDialogOpen] = useState(false);
@@ -276,6 +283,12 @@ export const StoreOwnerDashboard = () => {
         menu_label: myStore.menu_label || 'Cardápio',
         pix_key: (myStore as any).pix_key || '',
       });
+      
+      // Validate initial PIX key
+      if ((myStore as any).pix_key) {
+        const validation = validatePixKey((myStore as any).pix_key);
+        setPixValidation(validation);
+      }
     }
   }, [myStore]);
 
@@ -775,6 +788,19 @@ export const StoreOwnerDashboard = () => {
         description: "Verificando disponibilidade da URL...",
       });
       return;
+    }
+
+    // Validação: verificar formato da chave PIX se preenchida
+    if (storeForm.pix_key && storeForm.pix_key.trim() !== '') {
+      const validation = validatePixKey(storeForm.pix_key);
+      if (!validation.isValid) {
+        toast({
+          title: "Chave PIX inválida",
+          description: "Por favor, verifique o formato da chave PIX. Use CPF, CNPJ, E-mail, Telefone ou Chave Aleatória.",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     const oldSlug = myStore.slug;
@@ -3210,17 +3236,50 @@ export const StoreOwnerDashboard = () => {
                 />
               </div>
 
-              <div>
-                <Label>Chave PIX</Label>
-                <Input
-                  type="text"
-                  placeholder="Digite a chave PIX (CPF, CNPJ, E-mail, Telefone ou Chave Aleatória)"
-                  value={storeForm.pix_key}
-                  onChange={(e) => setStoreForm({ ...storeForm, pix_key: e.target.value })}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Chave PIX para recebimento de pagamentos dos clientes
-                </p>
+              <div className="space-y-2">
+                <Label htmlFor="pix_key">Chave PIX</Label>
+                <div className="relative">
+                  <Input
+                    id="pix_key"
+                    type="text"
+                    placeholder="Digite a chave PIX (CPF, CNPJ, E-mail, Telefone ou Chave Aleatória)"
+                    value={storeForm.pix_key}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setStoreForm({ ...storeForm, pix_key: value });
+                      
+                      // Validate in real-time
+                      const validation = validatePixKey(value);
+                      setPixValidation(validation);
+                    }}
+                    className={cn(
+                      "pr-10",
+                      storeForm.pix_key && !pixValidation.isValid && "border-destructive focus-visible:ring-destructive"
+                    )}
+                  />
+                  {storeForm.pix_key && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      {pixValidation.isValid ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-destructive" />
+                      )}
+                    </div>
+                  )}
+                </div>
+                {storeForm.pix_key && pixValidation.message && (
+                  <p className={cn(
+                    "text-xs mt-1",
+                    pixValidation.isValid ? "text-green-600" : "text-destructive"
+                  )}>
+                    {pixValidation.message}
+                  </p>
+                )}
+                {!storeForm.pix_key && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Chave PIX para recebimento de pagamentos dos clientes
+                  </p>
+                )}
               </div>
 
               <Separator className="my-6" />
