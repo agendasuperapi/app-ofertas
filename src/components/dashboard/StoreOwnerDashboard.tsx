@@ -177,6 +177,7 @@ export const StoreOwnerDashboard = () => {
     menu_label: myStore?.menu_label || 'Cardápio',
     pix_key: (myStore as any)?.pix_key || '',
     show_pix_key_to_customer: (myStore as any)?.show_pix_key_to_customer ?? true,
+    allow_orders_when_closed: (myStore as any)?.allow_orders_when_closed ?? false,
   });
 
   const [pixValidation, setPixValidation] = useState<{ isValid: boolean; type: string; message: string }>({
@@ -292,6 +293,7 @@ export const StoreOwnerDashboard = () => {
         menu_label: myStore.menu_label || 'Cardápio',
         pix_key: (myStore as any).pix_key || '',
         show_pix_key_to_customer: (myStore as any).show_pix_key_to_customer ?? true,
+        allow_orders_when_closed: (myStore as any).allow_orders_when_closed ?? false,
       });
       
       // Validate initial PIX key
@@ -885,6 +887,7 @@ export const StoreOwnerDashboard = () => {
         menu_label: storeForm.menu_label,
         show_pix_key_to_customer: storeForm.show_pix_key_to_customer,
         pix_key: storeForm.pix_key,
+        allow_orders_when_closed: storeForm.allow_orders_when_closed,
       } as any);
 
       // Se o slug foi alterado, limpar caches e localStorage
@@ -3619,6 +3622,24 @@ export const StoreOwnerDashboard = () => {
                     />
                   </DialogContent>
                 </Dialog>
+              </div>
+
+              {/* Scheduled Orders Toggle */}
+              <div className="flex items-center justify-between py-4 px-4 rounded-lg bg-muted/30 border border-border mt-4">
+                <div className="flex-1 pr-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="h-4 w-4 text-primary" />
+                    <p className="text-sm font-medium">Aceitar Pedidos Agendados</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Permite que clientes façam pedidos mesmo quando a loja está fechada. 
+                    Os pedidos serão processados quando você abrir a loja.
+                  </p>
+                </div>
+                <Switch
+                  checked={storeForm.allow_orders_when_closed}
+                  onCheckedChange={(checked) => setStoreForm({ ...storeForm, allow_orders_when_closed: checked })}
+                />
               </div>
 
               <Separator className="my-6" />
