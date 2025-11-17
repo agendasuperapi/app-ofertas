@@ -388,9 +388,9 @@ export default function Orders() {
                               <div className="flex items-center gap-2">
                                 <code 
                                   className={cn(
-                                    "flex-1 text-sm px-3 py-2 rounded border cursor-pointer transition-colors",
+                                    "flex-1 text-sm px-3 py-2 rounded border cursor-pointer transition-all duration-200",
                                     copiedPixKey === order.id 
-                                      ? "bg-green-500/20 border-green-500 text-green-700 dark:text-green-400" 
+                                      ? "bg-green-500/20 border-green-500 text-green-700 dark:text-green-400 scale-105" 
                                       : "bg-background border-border hover:bg-accent"
                                   )}
                                   onClick={() => {
@@ -403,7 +403,14 @@ export default function Orders() {
                                     });
                                   }}
                                 >
-                                  {formatPixKey(order.stores.pix_key)}
+                                  {copiedPixKey === order.id ? (
+                                    <span className="font-semibold flex items-center gap-2">
+                                      <Check className="w-4 h-4" />
+                                      Copiado!
+                                    </span>
+                                  ) : (
+                                    formatPixKey(order.stores.pix_key)
+                                  )}
                                 </code>
                                 <Button
                                   size="sm"
