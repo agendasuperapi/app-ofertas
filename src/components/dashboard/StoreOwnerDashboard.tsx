@@ -202,6 +202,7 @@ export const StoreOwnerDashboard = () => {
     message: string;
   }>({ isChecking: false, isAvailable: null, message: '' });
   const [orderStatusFilter, setOrderStatusFilter] = useState('all');
+  const [paymentStatusFilter, setPaymentStatusFilter] = useState<'all' | 'received' | 'pending'>('all');
   const [orderSearchTerm, setOrderSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState<'all' | 'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
   const [customDate, setCustomDate] = useState<Date | undefined>(new Date());
@@ -601,6 +602,14 @@ export const StoreOwnerDashboard = () => {
       if (orderStatusFilter !== 'all' && order.status !== orderStatusFilter) {
         return false;
       }
+
+      // Filtro de status de pagamento
+      if (paymentStatusFilter === 'received' && !order.payment_received) {
+        return false;
+      }
+      if (paymentStatusFilter === 'pending' && order.payment_received) {
+        return false;
+      }
       
       // Filtro de data
       if (dateFilter === 'all') {
@@ -624,7 +633,7 @@ export const StoreOwnerDashboard = () => {
       
       return true;
     });
-  }, [orders, orderStatusFilter, dateFilter, customDateRange, orderSearchTerm]);
+  }, [orders, orderStatusFilter, paymentStatusFilter, dateFilter, customDateRange, orderSearchTerm]);
 
   // Paginação dos pedidos
   const paginatedOrdersData = useMemo(() => {
@@ -1794,6 +1803,20 @@ export const StoreOwnerDashboard = () => {
                       <SelectItem value="weekly">📆 Semanal</SelectItem>
                       <SelectItem value="monthly">🗓️ Mensal</SelectItem>
                       <SelectItem value="custom">⚙️ Personalizado</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  <Select
+                    value={paymentStatusFilter}
+                    onValueChange={(value: 'all' | 'received' | 'pending') => setPaymentStatusFilter(value)}
+                  >
+                    <SelectTrigger className="w-full sm:w-[200px] bg-background z-50">
+                      <SelectValue placeholder="Status Pgto" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      <SelectItem value="all">💳 Todos</SelectItem>
+                      <SelectItem value="received">✅ Recebido</SelectItem>
+                      <SelectItem value="pending">⏳ Pendente</SelectItem>
                     </SelectContent>
                   </Select>
                   

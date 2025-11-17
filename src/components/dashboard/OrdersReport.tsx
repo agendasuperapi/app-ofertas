@@ -52,6 +52,7 @@ export const OrdersReport = ({ storeId, storeName = "Minha Loja", dateRange }: O
   const [orders, setOrders] = useState<OrderReport[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [paymentFilter, setPaymentFilter] = useState<'all' | 'received' | 'pending'>('all');
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -124,6 +125,12 @@ export const OrdersReport = ({ storeId, storeName = "Minha Loja", dateRange }: O
       filtered = filtered.filter(o => o.status === statusFilter);
     }
 
+    if (paymentFilter === 'received') {
+      filtered = filtered.filter(o => o.payment_received === true);
+    } else if (paymentFilter === 'pending') {
+      filtered = filtered.filter(o => o.payment_received !== true);
+    }
+
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -136,7 +143,7 @@ export const OrdersReport = ({ storeId, storeName = "Minha Loja", dateRange }: O
     }
 
     return filtered;
-  }, [orders, searchTerm, statusFilter]);
+  }, [orders, searchTerm, statusFilter, paymentFilter]);
 
   // Paginação
   const totalPages = Math.ceil(filteredOrders.length / itemsPerPage);
@@ -282,6 +289,18 @@ export const OrdersReport = ({ storeId, storeName = "Minha Loja", dateRange }: O
                   <SelectItem value="out_for_delivery">Saiu para entrega</SelectItem>
                   <SelectItem value="delivered">Entregue</SelectItem>
                   <SelectItem value="cancelled">Cancelado</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-full sm:w-[150px]">
+              <Select value={paymentFilter} onValueChange={(value: 'all' | 'received' | 'pending') => setPaymentFilter(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Status Pgto" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="received">Recebido</SelectItem>
+                  <SelectItem value="pending">Pendente</SelectItem>
                 </SelectContent>
               </Select>
             </div>
