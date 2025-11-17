@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import { Navigation } from "@/components/layout/Navigation";
@@ -59,6 +59,7 @@ export default function Cart() {
   const [showEmailExistsAlert, setShowEmailExistsAlert] = useState(false);
   
   const [storeData, setStoreData] = useState<any>(null);
+  const deliveryTypeRef = useRef<HTMLDivElement>(null);
 
   // Reset email exists alert when email changes
   useEffect(() => {
@@ -73,6 +74,18 @@ export default function Cart() {
       setCurrentStep(2);
     }
   }, [user]);
+
+  // Scroll to delivery type section when reaching step 2
+  useEffect(() => {
+    if (currentStep === 2 && deliveryTypeRef.current) {
+      setTimeout(() => {
+        deliveryTypeRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start'
+        });
+      }, 300);
+    }
+  }, [currentStep]);
 
   // Load last visited store from localStorage
   useEffect(() => {
@@ -829,7 +842,7 @@ export default function Cart() {
                     <Separator />
 
                     {/* Delivery Type and Address Section */}
-                    <div>
+                    <div ref={deliveryTypeRef}>
                       <h3 className="text-xl font-bold mb-4">Tipo de Entrega</h3>
                       
                       {(!storeData || (!(storeData as any).accepts_delivery && !(storeData as any).accepts_pickup)) && (
