@@ -1009,12 +1009,7 @@ export default function Cart() {
                       {deliveryType === 'delivery' && (
                         <>
                           <div className="space-y-4">
-                            <div className="flex items-start justify-between gap-4">
-                              <h3 className="text-lg font-semibold">Endereço de Entrega</h3>
-                              <Badge variant="outline" className="text-xs">
-                                * Obrigatório
-                              </Badge>
-                            </div>
+                            <h3 className="text-lg font-semibold">Endereço de Entrega</h3>
                             
                             <Alert>
                               <MapPin className="h-4 w-4" />
