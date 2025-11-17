@@ -2884,10 +2884,6 @@ export const StoreOwnerDashboard = () => {
                     <Settings className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="truncate">Loja</span>
                   </TabsTrigger>
-                  <TabsTrigger value="security" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
-                    <Lock className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">Segurança</span>
-                  </TabsTrigger>
                   <TabsTrigger value="notifications" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
                     <Shield className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="truncate">Permissões</span>
@@ -2895,6 +2891,10 @@ export const StoreOwnerDashboard = () => {
                   <TabsTrigger value="status" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
                     <Menu className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="truncate">Etapas do Pedido</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="security" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
+                    <Lock className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                    <span className="truncate">Segurança</span>
                   </TabsTrigger>
                 </TabsList>
 
@@ -3058,17 +3058,6 @@ export const StoreOwnerDashboard = () => {
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
-        </TabsContent>
-
-        {/* Security Tab */}
-        <TabsContent value="security">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <SecuritySettings />
           </motion.div>
         </TabsContent>
 
@@ -3395,6 +3384,17 @@ export const StoreOwnerDashboard = () => {
               </Button>
             </CardContent>
           </Card>
+          </motion.div>
+        </TabsContent>
+
+        {/* Security Tab */}
+        <TabsContent value="security">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <SecuritySettings />
           </motion.div>
         </TabsContent>
       </Tabs>
