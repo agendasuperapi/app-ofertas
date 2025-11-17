@@ -1339,8 +1339,8 @@ export const StoreOwnerDashboard = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">💳 Todos</SelectItem>
-                    <SelectItem value="received">✅ Recebido</SelectItem>
-                    <SelectItem value="pending">⏳ Pendente</SelectItem>
+                    <SelectItem value="received">✅ Pgto Recebido</SelectItem>
+                    <SelectItem value="pending">⏳ Pgto Pendente</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -1839,8 +1839,8 @@ export const StoreOwnerDashboard = () => {
                     </SelectTrigger>
                     <SelectContent className="bg-background z-50">
                       <SelectItem value="all">💳 Todos</SelectItem>
-                      <SelectItem value="received">✅ Recebido</SelectItem>
-                      <SelectItem value="pending">⏳ Pendente</SelectItem>
+                      <SelectItem value="received">✅ Pgto Recebido</SelectItem>
+                      <SelectItem value="pending">⏳ Pgto Pendente</SelectItem>
                     </SelectContent>
                   </Select>
                   
