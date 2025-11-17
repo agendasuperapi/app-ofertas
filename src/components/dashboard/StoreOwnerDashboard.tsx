@@ -174,6 +174,7 @@ export const StoreOwnerDashboard = () => {
     phone: myStore?.phone || '',
     menu_label: myStore?.menu_label || 'Cardápio',
     pix_key: (myStore as any)?.pix_key || '',
+    show_pix_key_to_customer: (myStore as any)?.show_pix_key_to_customer ?? true,
   });
 
   const [pixValidation, setPixValidation] = useState<{ isValid: boolean; type: string; message: string }>({
@@ -282,6 +283,7 @@ export const StoreOwnerDashboard = () => {
         phone: myStore.phone || '',
         menu_label: myStore.menu_label || 'Cardápio',
         pix_key: (myStore as any).pix_key || '',
+        show_pix_key_to_customer: (myStore as any).show_pix_key_to_customer ?? true,
       });
       
       // Validate initial PIX key
@@ -847,6 +849,7 @@ export const StoreOwnerDashboard = () => {
         pickup_address: storeForm.pickup_address,
         phone: storeForm.phone,
         menu_label: storeForm.menu_label,
+        show_pix_key_to_customer: storeForm.show_pix_key_to_customer,
         pix_key: storeForm.pix_key,
       } as any);
 
@@ -3281,6 +3284,23 @@ export const StoreOwnerDashboard = () => {
                   </p>
                 )}
               </div>
+
+              {storeForm.pix_key && (
+                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
+                  <div className="space-y-0.5">
+                    <Label className="text-base font-medium">Mostrar chave PIX ao cliente</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Exibir a chave PIX para o cliente após finalizar o pedido
+                    </p>
+                  </div>
+                  <Switch
+                    checked={storeForm.show_pix_key_to_customer ?? true}
+                    onCheckedChange={(checked) =>
+                      setStoreForm({ ...storeForm, show_pix_key_to_customer: checked })
+                    }
+                  />
+                </div>
+              )}
 
               <Separator className="my-6" />
 
