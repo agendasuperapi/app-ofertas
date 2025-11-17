@@ -482,9 +482,14 @@ export const StoreOwnerDashboard = () => {
 
     return orders.filter(order => {
       const orderDate = new Date(order.created_at);
-      return isWithinInterval(orderDate, { start: previousStartDate, end: previousEndDate });
+      const matchesDate = isWithinInterval(orderDate, { start: previousStartDate, end: previousEndDate });
+      const matchesStatus = statsStatusFilter === "all" || order.status === statsStatusFilter;
+      const matchesPayment = statsPaymentFilter === 'all' || 
+        (statsPaymentFilter === 'received' && order.payment_received === true) ||
+        (statsPaymentFilter === 'pending' && order.payment_received !== true);
+      return matchesDate && matchesStatus && matchesPayment;
     });
-  }, [orders, periodFilter, customDateRange]);
+  }, [orders, periodFilter, customDateRange, statsStatusFilter, statsPaymentFilter]);
 
   // Calculate metrics
   const totalOrders = filteredOrders?.length || 0;
