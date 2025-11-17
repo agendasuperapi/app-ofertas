@@ -299,8 +299,8 @@ export const OrdersReport = ({ storeId, storeName = "Minha Loja", dateRange }: O
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="received">Recebido</SelectItem>
-                  <SelectItem value="pending">Pendente</SelectItem>
+                  <SelectItem value="received">Pgto Recebido</SelectItem>
+                  <SelectItem value="pending">Pgto Pendente</SelectItem>
                 </SelectContent>
               </Select>
             </div>
