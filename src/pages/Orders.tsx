@@ -10,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useOrders } from "@/hooks/useOrders";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, Clock, CheckCircle, XCircle, Calendar as CalendarIcon, Store, Copy, Check } from "lucide-react";
+import { Package, Clock, CheckCircle, XCircle, Calendar as CalendarIcon, Store, Copy, Check, CreditCard, Mail, Phone, Key } from "lucide-react";
 import { formatPixKey, validatePixKey } from "@/lib/pixValidation";
 import { toast } from "@/hooks/use-toast";
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
@@ -362,10 +362,29 @@ export default function Orders() {
                               </div>
                             );
                           }
+
+                          const typeConfig = {
+                            cpf: { icon: CreditCard, label: 'CPF', color: 'bg-blue-500' },
+                            cnpj: { icon: CreditCard, label: 'CNPJ', color: 'bg-purple-500' },
+                            email: { icon: Mail, label: 'E-mail', color: 'bg-green-500' },
+                            phone: { icon: Phone, label: 'Telefone', color: 'bg-orange-500' },
+                            random: { icon: Key, label: 'Aleatória', color: 'bg-gray-500' },
+                          };
+
+                          const config = typeConfig[pixValidation.type as keyof typeof typeConfig];
+                          const TypeIcon = config?.icon;
                           
                           return (
                             <div className="mt-4 p-4 bg-muted rounded-lg border border-border">
-                              <p className="text-sm font-medium mb-2">Chave PIX para pagamento:</p>
+                              <div className="flex items-center gap-2 mb-2">
+                                <p className="text-sm font-medium">Chave PIX para pagamento:</p>
+                                {config && (
+                                  <Badge className={`${config.color} text-white text-xs`}>
+                                    <TypeIcon className="w-3 h-3 mr-1" />
+                                    {config.label}
+                                  </Badge>
+                                )}
+                              </div>
                               <div className="flex items-center gap-2">
                                 <code className="flex-1 text-sm bg-background px-3 py-2 rounded border border-border">
                                   {formatPixKey(order.stores.pix_key)}
