@@ -10,7 +10,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useOrders } from "@/hooks/useOrders";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, Clock, CheckCircle, XCircle, Calendar as CalendarIcon, Store } from "lucide-react";
+import { Package, Clock, CheckCircle, XCircle, Calendar as CalendarIcon, Store, Copy, Check } from "lucide-react";
+import { formatPixKey } from "@/lib/pixValidation";
+import { toast } from "@/hooks/use-toast";
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -33,6 +35,7 @@ export default function Orders() {
   const [filterType, setFilterType] = useState<FilterType>('day');
   const [customDate, setCustomDate] = useState<Date>();
   const [lastStore, setLastStore] = useState<{ slug: string; name: string } | null>(null);
+  const [copiedPixKey, setCopiedPixKey] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('lastVisitedStore');
@@ -345,6 +348,36 @@ export default function Orders() {
                           <p className="text-sm text-muted-foreground">
                             Troco para: R$ {Number(order.change_amount).toFixed(2)}
                           </p>
+                        )}
+                        
+                        {order.payment_method === 'pix' && order.stores?.pix_key && (
+                          <div className="mt-4 p-4 bg-muted rounded-lg border border-border">
+                            <p className="text-sm font-medium mb-2">Chave PIX para pagamento:</p>
+                            <div className="flex items-center gap-2">
+                              <code className="flex-1 text-sm bg-background px-3 py-2 rounded border border-border">
+                                {formatPixKey(order.stores.pix_key)}
+                              </code>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(order.stores.pix_key);
+                                  setCopiedPixKey(order.id);
+                                  setTimeout(() => setCopiedPixKey(null), 2000);
+                                  toast({
+                                    title: "Chave PIX copiada!",
+                                    description: "Cole no seu app de pagamento",
+                                  });
+                                }}
+                              >
+                                {copiedPixKey === order.id ? (
+                                  <Check className="w-4 h-4" />
+                                ) : (
+                                  <Copy className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
                         )}
                       </div>
                     </CardContent>

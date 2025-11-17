@@ -26,7 +26,8 @@ export const useOrders = () => {
             name,
             slug,
             pickup_address,
-            address
+            address,
+            pix_key
           )
         `)
         .eq('customer_id', user!.id)
