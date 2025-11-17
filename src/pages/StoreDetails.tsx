@@ -166,6 +166,8 @@ export default function StoreDetails() {
 
   const storeIsOpen = store ? isStoreOpen(store.operating_hours) : false;
   const storeStatus = store ? getStoreStatusText(store.operating_hours) : '';
+  const allowOrdersWhenClosed = (store as any)?.allow_orders_when_closed ?? false;
+  const canAcceptOrders = storeIsOpen || allowOrdersWhenClosed;
 
   // Save last visited store to localStorage
   useEffect(() => {
@@ -422,13 +424,20 @@ export default function StoreDetails() {
                     >
                       <Badge 
                         className={`${
-                          storeIsOpen 
-                            ? 'bg-green-500/90 hover:bg-green-600' 
+                          canAcceptOrders
+                            ? storeIsOpen 
+                              ? 'bg-green-500/90 hover:bg-green-600' 
+                              : 'bg-amber-500/90 hover:bg-amber-600'
                             : 'bg-red-500/90 hover:bg-red-600'
                         } text-white px-4 py-1.5 shadow-lg text-sm font-medium`}
                       >
                         <Clock className="w-3.5 h-3.5 mr-1.5" />
-                        {storeStatus}
+                        {canAcceptOrders
+                          ? storeIsOpen 
+                            ? storeStatus
+                            : "📅 Aceitando pedidos agendados"
+                          : storeStatus
+                        }
                       </Badge>
                     </motion.div>
                   </div>

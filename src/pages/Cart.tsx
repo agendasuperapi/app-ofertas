@@ -68,6 +68,8 @@ export default function Cart() {
   }, [authEmail]);
   const storeIsOpen = storeData ? isStoreOpen(storeData.operating_hours) : true;
   const storeStatusText = storeData ? getStoreStatusText(storeData.operating_hours) : '';
+  const allowOrdersWhenClosed = (storeData as any)?.allow_orders_when_closed ?? false;
+  const canAcceptOrders = storeIsOpen || allowOrdersWhenClosed;
 
   // Auto-advance to step 2 if user is already logged in
   useEffect(() => {
@@ -332,9 +334,9 @@ export default function Cart() {
         return;
       }
   
-      if (!storeIsOpen) {
+      if (!canAcceptOrders) {
         toast({
-          title: "Loja fechada",
+          title: "Pedidos não disponíveis",
           description: `Não é possível finalizar pedidos. ${storeStatusText}`,
           variant: "destructive",
         });
@@ -1101,11 +1103,20 @@ export default function Cart() {
                       </div>
                     </div>
 
-                    {!storeIsOpen && storeData && (
+                    {!canAcceptOrders && storeData && (
                       <Alert variant="destructive">
                         <Clock className="h-4 w-4" />
                         <AlertDescription>
-                          <strong>{storeData.name} está fechada.</strong> {storeStatusText}. Você pode adicionar itens ao carrinho, mas não poderá finalizar o pedido até que a loja abra.
+                          <strong>{storeData.name} está fechada.</strong> {storeStatusText}. Você pode adicionar itens ao carrinho, mas não poderá finalizar o pedido até que a loja esteja disponível para receber pedidos.
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {!storeIsOpen && canAcceptOrders && storeData && (
+                      <Alert className="border-amber-500 bg-amber-500/10">
+                        <Clock className="h-4 w-4 text-amber-500" />
+                        <AlertDescription className="text-amber-700 dark:text-amber-400">
+                          <strong>📅 Pedido Agendado:</strong> A loja está fechada no momento, mas seu pedido será processado quando abrir. {storeStatusText}
                         </AlertDescription>
                       </Alert>
                     )}
@@ -1125,7 +1136,7 @@ export default function Cart() {
                         size="lg"
                         onClick={handleCheckout}
                         disabled={
-                          !storeIsOpen || 
+                          !canAcceptOrders || 
                           isCreating || 
                           isSubmitting ||
                           !customerName ||
@@ -1133,11 +1144,13 @@ export default function Cart() {
                           (deliveryType === 'delivery' && (!deliveryStreet || !deliveryNumber || !deliveryNeighborhood))
                         }
                       >
-                        {!storeIsOpen 
-                          ? 'Loja Fechada' 
-                          : isCreating 
-                            ? 'Finalizando...' 
-                            : 'Finalizar Pedido'}
+                        {!canAcceptOrders 
+                          ? 'Pedidos Indisponíveis' 
+                          : !storeIsOpen && canAcceptOrders
+                            ? '📅 Agendar Pedido'
+                            : isCreating 
+                              ? 'Finalizando...' 
+                              : 'Finalizar Pedido'}
                       </Button>
                     </div>
                   </motion.div>
