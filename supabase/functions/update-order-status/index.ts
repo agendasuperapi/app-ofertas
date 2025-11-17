@@ -17,8 +17,11 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log('[update-order-status] Requisição recebida');
+    
     const authHeader = req.headers.get('Authorization') ?? '';
     if (!authHeader) {
+      console.error('[update-order-status] Header de autorização ausente');
       return new Response(JSON.stringify({ error: 'Missing Authorization header' }), {
         status: 401,
         headers: corsHeaders,
@@ -26,8 +29,10 @@ Deno.serve(async (req) => {
     }
 
     const { orderId, status } = await req.json().catch(() => ({ orderId: null, status: null }));
+    console.log('[update-order-status] Parâmetros recebidos:', { orderId, status });
 
     if (!orderId || !status) {
+      console.error('[update-order-status] Parâmetros inválidos:', { orderId, status });
       return new Response(JSON.stringify({ error: 'Parâmetros inválidos: orderId e status são obrigatórios.' }), {
         status: 400,
         headers: corsHeaders,
@@ -60,11 +65,14 @@ Deno.serve(async (req) => {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
+      console.error('[update-order-status] Usuário não autenticado:', userError);
       return new Response(JSON.stringify({ error: 'Usuário não autenticado.' }), {
         status: 401,
         headers: corsHeaders,
       });
     }
+
+    console.log('[update-order-status] Usuário autenticado:', user.id);
 
     // Load order to get store_id
     const { data: order, error: orderErr } = await supabaseAdmin
@@ -74,11 +82,14 @@ Deno.serve(async (req) => {
       .single();
 
     if (orderErr || !order) {
+      console.error('[update-order-status] Pedido não encontrado:', orderErr);
       return new Response(JSON.stringify({ error: 'Pedido não encontrado.' }), {
         status: 404,
         headers: corsHeaders,
       });
     }
+
+    console.log('[update-order-status] Pedido encontrado:', { orderId: order.id, storeId: order.store_id });
 
     // Check if user is store owner
     const { data: store, error: storeErr } = await supabaseAdmin
@@ -92,6 +103,8 @@ Deno.serve(async (req) => {
 
     // If not store owner, check employee permissions
     if (!isStoreOwner) {
+      console.log('[update-order-status] Usuário não é proprietário, verificando permissões de funcionário');
+      
       const { data: employee, error: empErr } = await supabaseAdmin
         .from('store_employees' as any)
         .select('id, is_active, permissions')
@@ -100,11 +113,14 @@ Deno.serve(async (req) => {
         .single();
 
       if (empErr || !employee) {
+        console.error('[update-order-status] Funcionário não encontrado:', empErr);
         return new Response(JSON.stringify({ error: 'Você não tem permissão para gerenciar pedidos desta loja.' }), {
           status: 403,
           headers: corsHeaders,
         });
       }
+
+      console.log('[update-order-status] Funcionário encontrado:', { employeeId: employee.id, isActive: employee.is_active });
 
       const perms = ((employee.permissions as any)?.orders || {}) as Record<string, boolean>;
       const dynamicPermission = `change_status_${statusKey}`;
@@ -113,15 +129,27 @@ Deno.serve(async (req) => {
         employee.is_active && (perms.change_any_status === true || perms[dynamicPermission] === true)
       );
 
+      console.log('[update-order-status] Verificação de permissão:', { 
+        canChange, 
+        dynamicPermission, 
+        hasChangeAnyStatus: perms.change_any_status,
+        hasSpecificPermission: perms[dynamicPermission]
+      });
+
       if (!canChange) {
+        console.error('[update-order-status] Permissão negada para alterar status');
         return new Response(
           JSON.stringify({ error: 'Você não tem permissão para alterar para este status.' }),
           { status: 403, headers: corsHeaders }
         );
       }
+    } else {
+      console.log('[update-order-status] Usuário é proprietário da loja');
     }
 
     // Perform the update
+    console.log('[update-order-status] Atualizando pedido:', { orderId, newStatus: statusKey });
+    
     const { data: updated, error: updateErr } = await supabaseAdmin
       .from('orders' as any)
       .update({ status: statusKey })
@@ -130,17 +158,21 @@ Deno.serve(async (req) => {
       .single();
 
     if (updateErr) {
+      console.error('[update-order-status] Erro ao atualizar pedido:', updateErr);
       return new Response(JSON.stringify({ error: updateErr.message }), {
         status: 400,
         headers: corsHeaders,
       });
     }
 
+    console.log('[update-order-status] Pedido atualizado com sucesso:', updated);
+    
     return new Response(JSON.stringify({ success: true, data: updated }), {
       status: 200,
       headers: corsHeaders,
     });
   } catch (e) {
+    console.error('[update-order-status] Erro não tratado:', e);
     return new Response(
       JSON.stringify({ error: 'Erro interno ao atualizar status do pedido.', details: String(e) }),
       { status: 500, headers: corsHeaders }

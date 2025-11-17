@@ -33,14 +33,34 @@ export const useStoreOrders = (storeId?: string) => {
       orderId: string; 
       status: string
     }) => {
+      console.log('[updateOrderStatus] Iniciando atualização:', { orderId, status });
+      
       const { data, error } = await supabase.functions.invoke('update-order-status', {
         body: { orderId, status },
       });
 
+      console.log('[updateOrderStatus] Resposta recebida:', { data, error });
+
+      // Verifica erro de rede/conexão
       if (error) {
-        throw new Error(error.message || 'Falha ao atualizar status');
+        console.error('[updateOrderStatus] Erro de rede:', error);
+        throw new Error(error.message || 'Falha na comunicação com o servidor');
       }
-      return data;
+
+      // Verifica se a edge function retornou um erro
+      if (data && typeof data === 'object' && 'error' in data) {
+        console.error('[updateOrderStatus] Erro da edge function:', data.error);
+        throw new Error(data.error || 'Falha ao atualizar status');
+      }
+
+      // Verifica se a resposta tem o formato esperado
+      if (!data || typeof data !== 'object' || !('success' in data)) {
+        console.error('[updateOrderStatus] Formato de resposta inválido:', data);
+        throw new Error('Resposta inválida do servidor');
+      }
+
+      console.log('[updateOrderStatus] Status atualizado com sucesso:', data.data);
+      return data.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['store-orders'] });
@@ -50,6 +70,7 @@ export const useStoreOrders = (storeId?: string) => {
       });
     },
     onError: (error: Error) => {
+      console.error('[updateOrderStatus] Erro capturado:', error);
       toast({
         title: 'Erro ao atualizar status',
         description: error.message,
