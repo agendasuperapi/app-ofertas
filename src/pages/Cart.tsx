@@ -46,7 +46,7 @@ export default function Cart() {
   const [notes, setNotes] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'dinheiro' | 'cartao'>('pix');
   const [changeAmount, setChangeAmount] = useState("");
-  const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup'>('pickup');
+  const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup' | null>(null);
   
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('signup');
@@ -329,6 +329,15 @@ export default function Cart() {
         return;
       }
   
+      if (!deliveryType) {
+        toast({
+          title: "Tipo de entrega não selecionado",
+          description: "Por favor, selecione se deseja entrega ou retirada na loja.",
+          variant: "destructive",
+        });
+        return;
+      }
+  
       if (deliveryType === 'delivery' && (!deliveryStreet || !deliveryNumber || !deliveryNeighborhood)) {
         toast({
           title: "Campos obrigatórios",
@@ -407,7 +416,7 @@ export default function Cart() {
           })),
           customerName,
           customerPhone,
-          deliveryType,
+          deliveryType: deliveryType!,
           deliveryStreet: deliveryType === 'delivery' ? (deliveryStreet || undefined) : undefined,
           deliveryNumber: deliveryType === 'delivery' ? (deliveryNumber || undefined) : undefined,
           deliveryNeighborhood: deliveryType === 'delivery' ? (deliveryNeighborhood || undefined) : undefined,
