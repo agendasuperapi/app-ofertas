@@ -899,37 +899,6 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
                   rows={4}
                 />
               </div>
-
-              <Separator />
-
-              <div>
-                <Label>Imagem Anexa (apenas você vê)</Label>
-                <ImageUpload
-                  bucket="product-images"
-                  folder={`orders/${order.id}`}
-                  productId={order.id}
-                  currentImageUrl={formData.store_image_url}
-                  onUploadComplete={(url) => setFormData({ ...formData, store_image_url: url })}
-                  label=""
-                  aspectRatio="aspect-square"
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  Anexe comprovantes, fotos ou documentos relacionados ao pedido
-                </p>
-              </div>
-
-              <Separator />
-
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="payment-received"
-                  checked={formData.payment_received}
-                  onCheckedChange={(checked) => setFormData({ ...formData, payment_received: checked })}
-                />
-                <Label htmlFor="payment-received" className="cursor-pointer">
-                  Pagamento Recebido
-                </Label>
-              </div>
             </TabsContent>
 
             <TabsContent value="history" className="space-y-4 pr-4">
