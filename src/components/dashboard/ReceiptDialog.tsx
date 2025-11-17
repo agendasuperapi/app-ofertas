@@ -21,13 +21,13 @@ export const ReceiptDialog = ({ open, onOpenChange, order, onUpdate }: ReceiptDi
   const [loading, setLoading] = useState(false);
   const [storeImageUrl, setStoreImageUrl] = useState(order?.store_image_url || '');
   const [paymentReceived, setPaymentReceived] = useState(order?.payment_received || false);
-  const [storeNotes, setStoreNotes] = useState(order?.store_notes || '');
+  const [paymentNotes, setPaymentNotes] = useState(order?.payment_notes || '');
 
   useEffect(() => {
     if (order) {
       setStoreImageUrl(order.store_image_url || '');
       setPaymentReceived(order.payment_received || false);
-      setStoreNotes(order.store_notes || '');
+      setPaymentNotes(order.payment_notes || '');
     }
   }, [order]);
 
@@ -41,7 +41,7 @@ export const ReceiptDialog = ({ open, onOpenChange, order, onUpdate }: ReceiptDi
         .update({
           store_image_url: storeImageUrl,
           payment_received: paymentReceived,
-          store_notes: storeNotes,
+          payment_notes: paymentNotes,
         })
         .eq('id', order.id);
 
@@ -109,11 +109,11 @@ export const ReceiptDialog = ({ open, onOpenChange, order, onUpdate }: ReceiptDi
           <Separator />
 
           <div>
-            <Label htmlFor="store-notes">Observações</Label>
+            <Label htmlFor="payment-notes">Observações de Pagamento</Label>
             <Textarea
-              id="store-notes"
-              value={storeNotes}
-              onChange={(e) => setStoreNotes(e.target.value)}
+              id="payment-notes"
+              value={paymentNotes}
+              onChange={(e) => setPaymentNotes(e.target.value)}
               placeholder="Adicione observações sobre o pagamento..."
               className="mt-2"
               rows={4}
