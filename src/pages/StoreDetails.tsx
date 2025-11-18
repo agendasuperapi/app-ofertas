@@ -468,7 +468,7 @@ export default function StoreDetails() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            className="lg:col-span-2 space-y-4"
+            className="lg:col-span-2 space-y-4 pb-16 md:pb-24"
           >
           <motion.h2 
             initial={{ opacity: 0, x: -20 }}
