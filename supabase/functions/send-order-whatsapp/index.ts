@@ -142,7 +142,7 @@ serve(async (req) => {
     // Get store details
     const { data: store, error: storeError } = await supabaseClient
       .from('stores')
-      .select('name, phone, address')
+      .select('name, phone, address, pix_key, pix_message_enabled, pix_message_title, pix_message_description, pix_message_footer, pix_message_button_text')
       .eq('id', order.store_id)
       .single();
 
@@ -363,6 +363,75 @@ serve(async (req) => {
       console.log('✅ Mensagem registrada no log de idempotência');
     } catch (logError) {
       console.warn('⚠️ Erro ao registrar no log (não crítico):', logError);
+    }
+
+    // 💳 ENVIAR MENSAGEM COM BOTÃO PIX (se configurado e método for PIX)
+    if (
+      store.pix_message_enabled &&
+      store.pix_key &&
+      order.payment_method === 'pix'
+    ) {
+      console.log('💳 Enviando mensagem PIX com botão...');
+      
+      // Aguardar 2 segundos após a primeira mensagem
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      try {
+        const pixButtonMessage = {
+          number: phone,
+          title: store.pix_message_title || '💳 Pagamento via PIX',
+          description: store.pix_message_description || 'Clique no botão abaixo para copiar o código PIX, favor enviar o comprovante após o pagamento.',
+          footer: store.pix_message_footer || 'Obrigado pela preferência!',
+          buttons: [
+            {
+              type: 'copy',
+              id: 'pix_copia_cola',
+              displayText: store.pix_message_button_text || '📋 COPIAR CHAVE PIX',
+              copyCode: store.pix_key,
+            },
+          ],
+        };
+
+        console.log('Enviando botão PIX:', JSON.stringify(pixButtonMessage, null, 2));
+
+        const pixResponse = await fetch(
+          `${EVOLUTION_API_URL}/message/sendButtons/${storeInstance.evolution_instance_id}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': EVOLUTION_API_KEY || '',
+            },
+            body: JSON.stringify(pixButtonMessage),
+          }
+        );
+
+        if (pixResponse.ok) {
+          const pixData = await pixResponse.json();
+          console.log('✅ Mensagem PIX com botão enviada com sucesso:', pixData);
+          
+          // Registrar mensagem PIX no log
+          try {
+            await supabaseClient
+              .from('whatsapp_message_log')
+              .insert({
+                order_id: record.id || record.order_id,
+                order_status: 'pix_button_sent',
+                phone_number: phone,
+                message_content: JSON.stringify(pixButtonMessage),
+              });
+            console.log('✅ Mensagem PIX registrada no log');
+          } catch (logError) {
+            console.warn('⚠️ Erro ao registrar mensagem PIX no log:', logError);
+          }
+        } else {
+          const errorText = await pixResponse.text();
+          console.error('❌ Erro ao enviar mensagem PIX:', errorText);
+        }
+      } catch (pixError) {
+        console.error('❌ Erro ao enviar botão PIX:', pixError);
+        // Não interromper o fluxo principal se o botão PIX falhar
+      }
     }
 
     return new Response(

@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useEmployeeAccess } from "@/hooks/useEmployeeAccess";
 import { useUserRole } from "@/hooks/useUserRole";
 import { motion } from "framer-motion";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { WhatsAppMessageConfig } from "./WhatsAppMessageConfig";
 
 // Unified invoker to Evolution function using supabase.functions.invoke
 const invokeEvolution = async (payload: any) => {
@@ -60,9 +62,11 @@ const isConnectedState = (status?: string) => {
 
 interface WhatsAppIntegrationProps {
   storeId: string;
+  store?: any;
+  onStoreUpdate?: (data: any) => Promise<void>;
 }
 
-export const WhatsAppIntegration = ({ storeId }: WhatsAppIntegrationProps) => {
+export const WhatsAppIntegration = ({ storeId, store, onStoreUpdate }: WhatsAppIntegrationProps) => {
   const { toast } = useToast();
   const { isEmployee, permissions } = useEmployeeAccess();
   const { isAdmin, isStoreOwner } = useUserRole();
@@ -511,8 +515,20 @@ await invokeEvolution({
   };
 
   return (
-    <div className="space-y-6">
-      <Card>
+    <Tabs defaultValue="connection" className="space-y-6">
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="connection">
+          <MessageSquare className="w-4 h-4 mr-2" />
+          Conexão
+        </TabsTrigger>
+        <TabsTrigger value="message">
+          <FileText className="w-4 h-4 mr-2" />
+          Mensagem PIX
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="connection" className="space-y-6">
+        <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -839,6 +855,21 @@ await invokeEvolution({
           )}
         </CardContent>
       </Card>
-    </div>
+      </TabsContent>
+
+      <TabsContent value="message">
+        {store && onStoreUpdate ? (
+          <WhatsAppMessageConfig store={store} onUpdate={onStoreUpdate} />
+        ) : (
+          <Card>
+            <CardContent className="py-8">
+              <p className="text-center text-muted-foreground">
+                Carregando configurações da loja...
+              </p>
+            </CardContent>
+          </Card>
+        )}
+      </TabsContent>
+    </Tabs>
   );
 };
