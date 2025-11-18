@@ -47,10 +47,12 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [displayPassword, setDisplayPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [hideTimeout, setHideTimeout] = useState<NodeJS.Timeout | null>(null);
   const { signIn, signUp } = useAuth();
 
   // Formatar telefone com máscara
@@ -72,6 +74,62 @@ export default function Auth() {
     const formatted = formatPhoneNumber(e.target.value);
     setPhone(formatted);
   };
+
+  // Manipular senha com visibilidade do último caractere
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    
+    if (showPassword) {
+      // Se está mostrando toda a senha, apenas atualiza normalmente
+      setPassword(newValue);
+      setDisplayPassword(newValue);
+      return;
+    }
+
+    // Limpar timeout anterior
+    if (hideTimeout) {
+      clearTimeout(hideTimeout);
+    }
+
+    // Atualizar senha real
+    setPassword(newValue);
+
+    // Se está apagando
+    if (newValue.length < password.length) {
+      const bullets = '•'.repeat(newValue.length);
+      setDisplayPassword(bullets);
+    } 
+    // Se está digitando
+    else if (newValue.length > password.length) {
+      const bullets = '•'.repeat(newValue.length - 1);
+      const lastChar = newValue[newValue.length - 1];
+      setDisplayPassword(bullets + lastChar);
+
+      // Ocultar o último caractere após 500ms
+      const timeout = setTimeout(() => {
+        setDisplayPassword('•'.repeat(newValue.length));
+      }, 500);
+      setHideTimeout(timeout);
+    }
+  };
+
+  // Limpar timeout ao desmontar
+  useEffect(() => {
+    return () => {
+      if (hideTimeout) {
+        clearTimeout(hideTimeout);
+      }
+    };
+  }, [hideTimeout]);
+
+  // Atualizar displayPassword quando showPassword muda
+  useEffect(() => {
+    if (showPassword) {
+      setDisplayPassword(password);
+    } else {
+      setDisplayPassword('•'.repeat(password.length));
+    }
+  }, [showPassword, password]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -203,13 +261,14 @@ export default function Auth() {
                 <Lock className="h-5 w-5 text-muted-foreground" />
               </div>
               <Input
-                type={showPassword ? "text" : "password"}
+                type="text"
                 placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={displayPassword}
+                onChange={handlePasswordChange}
                 required
                 minLength={6}
                 className="h-12 pl-16 pr-12"
+                autoComplete="off"
               />
               <button
                 type="button"
