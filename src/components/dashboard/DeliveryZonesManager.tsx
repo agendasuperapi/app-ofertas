@@ -190,20 +190,20 @@ export const DeliveryZonesManager = ({ storeId }: DeliveryZonesManagerProps) => 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="p-8 space-y-6"
+      className="p-6 space-y-4"
     >
       {/* Card de Taxa de Entrega Padrão */}
       <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Taxa de Entrega Padrão</CardTitle>
-          <p className="text-sm text-muted-foreground">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Taxa de Entrega Padrão</CardTitle>
+          <p className="text-xs text-muted-foreground">
             Esta taxa será usada quando o cliente não estiver em uma zona específica
           </p>
         </CardHeader>
-        <CardContent>
-          <div className="flex gap-4 items-end">
+        <CardContent className="pt-3">
+          <div className="flex gap-3 items-end">
             <div className="flex-1 max-w-xs">
-              <Label htmlFor="default-fee">Taxa (R$)</Label>
+              <Label htmlFor="default-fee" className="text-xs">Taxa (R$)</Label>
               <Input
                 id="default-fee"
                 type="number"
@@ -212,19 +212,22 @@ export const DeliveryZonesManager = ({ storeId }: DeliveryZonesManagerProps) => 
                 value={defaultDeliveryFee}
                 onChange={(e) => setDefaultDeliveryFee(Number(e.target.value))}
                 placeholder="0.00"
+                className="h-8 text-sm"
               />
             </div>
             <Button 
               onClick={handleSaveDefaultFee}
               disabled={isSavingDefaultFee}
+              size="sm"
+              className="h-8"
             >
               {isSavingDefaultFee ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
                   Salvando...
                 </>
               ) : (
-                'Salvar Taxa'
+                'Salvar'
               )}
             </Button>
           </div>
@@ -233,14 +236,14 @@ export const DeliveryZonesManager = ({ storeId }: DeliveryZonesManagerProps) => 
 
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold gradient-text">Zonas de Entrega</h2>
-          <p className="text-muted-foreground">Configure cidades e bairros com taxas de entrega</p>
+          <h2 className="text-lg font-bold gradient-text">Zonas de Entrega</h2>
+          <p className="text-xs text-muted-foreground">Configure cidades e bairros com taxas de entrega</p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => handleOpenDialog()} size="lg">
-              <Plus className="w-4 h-4 mr-2" />
-              Adicionar Zona
+            <Button onClick={() => handleOpenDialog()} size="sm">
+              <Plus className="w-3 h-3 mr-1" />
+              Adicionar
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -348,62 +351,64 @@ export const DeliveryZonesManager = ({ storeId }: DeliveryZonesManagerProps) => 
 
       {zones && zones.length === 0 ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <MapPin className="w-16 h-16 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhuma zona de entrega cadastrada</h3>
-            <p className="text-muted-foreground text-center mb-4">
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <MapPin className="w-12 h-12 text-muted-foreground mb-3" />
+            <h3 className="text-base font-semibold mb-2">Nenhuma zona de entrega cadastrada</h3>
+            <p className="text-xs text-muted-foreground text-center mb-3">
               Comece adicionando cidades e bairros com suas respectivas taxas de entrega
             </p>
-            <Button onClick={() => handleOpenDialog()}>
-              <Plus className="w-4 h-4 mr-2" />
+            <Button onClick={() => handleOpenDialog()} size="sm">
+              <Plus className="w-3 h-3 mr-1" />
               Adicionar primeira zona
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {Object.entries(zonesByCity).map(([city, cityZones]) => {
             const defaultZone = cityZones.find(z => !z.neighborhood);
             const neighborhoodZones = cityZones.filter(z => z.neighborhood);
 
             return (
               <Card key={city}>
-                <CardHeader>
+                <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <MapPin className="w-5 h-5 text-primary" />
-                      <CardTitle>{city}</CardTitle>
+                      <MapPin className="w-4 h-4 text-primary" />
+                      <CardTitle className="text-base">{city}</CardTitle>
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3 pt-3">
                   {defaultZone && (
-                    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
-                      <div className="flex items-center gap-4">
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border">
+                      <div className="flex items-center gap-3">
                         <div>
-                          <p className="font-medium">Taxa padrão da cidade</p>
-                          <p className="text-2xl font-bold text-primary">
+                          <p className="text-sm font-medium">Taxa padrão da cidade</p>
+                          <p className="text-lg font-bold text-primary">
                             R$ {defaultZone.delivery_fee.toFixed(2)}
                           </p>
                         </div>
                         {!defaultZone.is_active && (
-                          <Badge variant="secondary">Inativa</Badge>
+                          <Badge variant="secondary" className="text-xs">Inativa</Badge>
                         )}
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1">
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="sm"
+                          className="h-8 w-8 p-0"
                           onClick={() => handleOpenDialog(defaultZone)}
                         >
-                          <Edit className="w-4 h-4" />
+                          <Edit className="w-3 h-3" />
                         </Button>
                         <Button
                           variant="ghost"
-                          size="icon"
+                          size="sm"
+                          className="h-8 w-8 p-0"
                           onClick={() => handleDelete(defaultZone.id)}
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>
@@ -411,38 +416,40 @@ export const DeliveryZonesManager = ({ storeId }: DeliveryZonesManagerProps) => 
 
                   {neighborhoodZones.length > 0 && (
                     <div>
-                      <h4 className="text-sm font-semibold text-muted-foreground mb-2">Bairros:</h4>
+                      <h4 className="text-xs font-semibold text-muted-foreground mb-2">Bairros:</h4>
                       <div className="space-y-2">
                         {neighborhoodZones.map((zone) => (
                           <div
                             key={zone.id}
-                            className="flex items-center justify-between p-3 bg-background rounded-lg border border-border"
+                            className="flex items-center justify-between p-2 bg-background rounded-lg border border-border"
                           >
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-3">
                               <div>
-                                <p className="font-medium">{zone.neighborhood}</p>
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm font-medium">{zone.neighborhood}</p>
+                                <p className="text-xs text-muted-foreground">
                                   Taxa: <span className="text-primary font-semibold">R$ {zone.delivery_fee.toFixed(2)}</span>
                                 </p>
                               </div>
                               {!zone.is_active && (
-                                <Badge variant="secondary">Inativa</Badge>
+                                <Badge variant="secondary" className="text-xs">Inativa</Badge>
                               )}
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-1">
                               <Button
                                 variant="ghost"
-                                size="icon"
+                                size="sm"
+                                className="h-8 w-8 p-0"
                                 onClick={() => handleOpenDialog(zone)}
                               >
-                                <Edit className="w-4 h-4" />
+                                <Edit className="w-3 h-3" />
                               </Button>
                               <Button
                                 variant="ghost"
-                                size="icon"
+                                size="sm"
+                                className="h-8 w-8 p-0"
                                 onClick={() => handleDelete(zone.id)}
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-3 h-3" />
                               </Button>
                             </div>
                           </div>
