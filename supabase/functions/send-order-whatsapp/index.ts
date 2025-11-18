@@ -142,7 +142,7 @@ serve(async (req) => {
     // Get store details
     const { data: store, error: storeError } = await supabaseClient
       .from('stores')
-      .select('name, phone, address, pix_key, pix_message_enabled, pix_message_title, pix_message_description, pix_message_footer, pix_message_button_text')
+      .select('name, phone, address, pickup_address, pix_key, pix_message_enabled, pix_message_title, pix_message_description, pix_message_footer, pix_message_button_text')
       .eq('id', order.store_id)
       .single();
 
@@ -251,9 +251,11 @@ serve(async (req) => {
     message = message.replace(/\{\{subtotal\}\}/g, order.subtotal?.toFixed(2) || '0.00');
     message = message.replace(/\{\{delivery_fee\}\}/g, order.delivery_fee?.toFixed(2) || '0.00');
     message = message.replace(/\{\{delivery_type\}\}/g, order.delivery_type === 'delivery' ? 'Entrega' : 'Retirada');
+    message = message.replace(/\{\{delivery_location_label\}\}/g, order.delivery_type === 'delivery' ? 'LOCAL DE ENTREGA' : 'LOCAL DE RETIRADA');
     message = message.replace(/\{\{store_name\}\}/g, store.name || '');
     message = message.replace(/\{\{store_phone\}\}/g, store.phone || '');
     message = message.replace(/\{\{store_address\}\}/g, store.address || '');
+    message = message.replace(/\{\{pickup_address\}\}/g, store.pickup_address || '');
     message = message.replace(/\{\{items\}\}/g, itemsList);
     message = message.replace(/\{\{delivery_address\}\}/g, deliveryAddress);
     message = message.replace(/\{\{payment_method\}\}/g, paymentMethod);
