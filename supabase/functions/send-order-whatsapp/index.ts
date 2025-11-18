@@ -238,8 +238,7 @@ serve(async (req) => {
     if (order.delivery_type === 'delivery') {
       unifiedAddress = deliveryAddress;
     } else {
-      // Use pickup_address if set, otherwise fallback to store address
-      unifiedAddress = store.pickup_address || store.address || '';
+      unifiedAddress = store.pickup_address || '';
     }
 
     // Format payment method
@@ -264,7 +263,7 @@ serve(async (req) => {
     message = message.replace(/\{\{store_name\}\}/g, store.name || '');
     message = message.replace(/\{\{store_phone\}\}/g, store.phone || '');
     message = message.replace(/\{\{store_address\}\}/g, store.address || '');
-    message = message.replace(/\{\{pickup_address\}\}/g, store.pickup_address || store.address || '');
+    message = message.replace(/\{\{pickup_address\}\}/g, store.pickup_address || '');
     message = message.replace(/\{\{address\}\}/g, unifiedAddress);
     message = message.replace(/\{\{items\}\}/g, itemsList);
     message = message.replace(/\{\{delivery_address\}\}/g, deliveryAddress);
