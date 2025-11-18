@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, User, Lock, Check, Mail } from "lucide-react";
+import { Loader2, User, Lock, Check, Mail, Eye, EyeOff } from "lucide-react";
 import { Navigation } from "@/components/layout/Navigation";
 import { signUpSchema, signInSchema } from "@/hooks/useAuthValidation";
 import { toast } from "@/hooks/use-toast";
@@ -50,6 +50,7 @@ export default function Auth() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { signIn, signUp } = useAuth();
 
   // Formatar telefone com máscara
@@ -202,14 +203,26 @@ export default function Auth() {
                 <Lock className="h-5 w-5 text-muted-foreground" />
               </div>
               <Input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
-                className="h-12 pl-16"
+                className="h-12 pl-16 pr-12"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
             </div>
           </div>
 
