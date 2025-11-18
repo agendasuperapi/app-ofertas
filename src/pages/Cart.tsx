@@ -1043,52 +1043,6 @@ export default function Cart() {
                         )}
                       </div>
 
-                      {deliveryType === 'pickup' && (
-                        <div className="mb-6">
-                          {pickupLocations.length === 0 ? (
-                            <Alert>
-                              <Store className="h-4 w-4" />
-                              <AlertDescription>
-                                <div className="font-semibold mb-1">Endereço para retirada:</div>
-                                <div className="text-sm">
-                                  {(storeData as any)?.pickup_address || (storeData as any)?.address || 'Endereço não disponível'}
-                                </div>
-                              </AlertDescription>
-                            </Alert>
-                          ) : pickupLocations.length === 1 ? (
-                            <Alert>
-                              <MapPin className="h-4 w-4" />
-                              <AlertDescription>
-                                <div className="font-semibold mb-1">Endereço para retirada:</div>
-                                <div className="text-sm font-medium">{pickupLocations[0].name}</div>
-                                <div className="text-sm">{pickupLocations[0].address}</div>
-                              </AlertDescription>
-                            </Alert>
-                          ) : (
-                            <div className="space-y-2">
-                              <Label htmlFor="pickup-location">Escolha o local de retirada *</Label>
-                              <Select
-                                value={selectedPickupLocation}
-                                onValueChange={setSelectedPickupLocation}
-                              >
-                                <SelectTrigger id="pickup-location">
-                                  <SelectValue placeholder="Selecione um local de retirada" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {pickupLocations.map((location) => (
-                                    <SelectItem key={location.id} value={location.id}>
-                                      <div>
-                                        <div className="font-medium">{location.name}</div>
-                                        <div className="text-xs text-muted-foreground">{location.address}</div>
-                                      </div>
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          )}
-                        </div>
-                      )}
 
                       {deliveryType === 'delivery' && (
                         <>
@@ -1219,6 +1173,54 @@ export default function Cart() {
                         </Alert>
                       )}
                     </div>
+
+                    {/* Pickup Location Selection - Moved above Payment Section */}
+                    {deliveryType === 'pickup' && (
+                      <div className="mb-6">
+                        {pickupLocations.length === 0 ? (
+                          <Alert>
+                            <Store className="h-4 w-4" />
+                            <AlertDescription>
+                              <div className="font-semibold mb-1">Endereço para retirada:</div>
+                              <div className="text-sm">
+                                {(storeData as any)?.pickup_address || (storeData as any)?.address || 'Endereço não disponível'}
+                              </div>
+                            </AlertDescription>
+                          </Alert>
+                        ) : pickupLocations.length === 1 ? (
+                          <Alert>
+                            <MapPin className="h-4 w-4" />
+                            <AlertDescription>
+                              <div className="font-semibold mb-1">Endereço para retirada:</div>
+                              <div className="text-sm font-medium">{pickupLocations[0].name}</div>
+                              <div className="text-sm">{pickupLocations[0].address}</div>
+                            </AlertDescription>
+                          </Alert>
+                        ) : (
+                          <div className="space-y-2">
+                            <Label htmlFor="pickup-location">Escolha o local de retirada *</Label>
+                            <Select
+                              value={selectedPickupLocation}
+                              onValueChange={setSelectedPickupLocation}
+                            >
+                              <SelectTrigger id="pickup-location">
+                                <SelectValue placeholder="Selecione um local de retirada" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {pickupLocations.map((location) => (
+                                  <SelectItem key={location.id} value={location.id}>
+                                    <div>
+                                      <div className="font-medium">{location.name}</div>
+                                      <div className="text-xs text-muted-foreground">{location.address}</div>
+                                    </div>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
                     <Separator />
 
