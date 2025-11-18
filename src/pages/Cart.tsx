@@ -497,44 +497,41 @@ export default function Cart() {
         return;
       }
   
-      // Update user profile with current data (sem apagar endereço salvo quando for retirada)
-      const cleanedCep = deliveryType === 'delivery' && deliveryCep 
-        ? deliveryCep.replace(/\D/g, '') 
-        : undefined;
-      
-      const profileData: any = {
-        full_name: customerName,
-        phone: normalizePhone(customerPhone),
-      };
-
+      // Atualizar perfil do usuário APENAS quando for entrega
       if (deliveryType === 'delivery') {
-        Object.assign(profileData, {
+        const cleanedCep = deliveryCep
+          ? deliveryCep.replace(/\D/g, '')
+          : undefined;
+
+        const profileData: any = {
+          full_name: customerName,
+          phone: normalizePhone(customerPhone),
           cep: cleanedCep,
           city: deliveryCity.trim(),
           street: deliveryStreet,
           street_number: deliveryNumber,
           neighborhood: deliveryNeighborhood,
           complement: deliveryComplement || null,
-        });
-      }
-      
-      console.log('💾 Salvando perfil do usuário:', profileData);
-      
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update(profileData)
-        .eq('id', user.id);
+        };
+
+        console.log('💾 Salvando perfil do usuário (entrega):', profileData);
+
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update(profileData)
+          .eq('id', user.id);
   
-      if (profileError) {
-        console.error('Profile update error:', profileError);
-        toast({
-          title: "Erro ao atualizar perfil",
-          description: profileError.message,
-          variant: "destructive",
-        });
-        return;
+        if (profileError) {
+          console.error('Profile update error:', profileError);
+          toast({
+            title: "Erro ao atualizar perfil",
+            description: profileError.message,
+            variant: "destructive",
+          });
+          return;
+        }
       }
-  
+
       // Create order
       try {
         // Auto-aplicar cupom no submit caso o usuário tenha digitado mas não clicado em "Aplicar"
