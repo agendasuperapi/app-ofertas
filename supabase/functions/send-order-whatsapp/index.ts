@@ -139,27 +139,26 @@ serve(async (req) => {
       order = { ...record, order_items: [] };
     }
 
-    // Get store details
     const { data: store, error: storeError } = await supabaseClient
       .from('stores')
       .select('name, phone, address, pickup_address, slug, pix_key, pix_message_enabled, pix_message_title, pix_message_description, pix_message_footer, pix_message_button_text')
       .eq('id', order.store_id)
       .single();
-
-    if (storeError || !store) {
-      console.error('Store not found:', storeError);
-      return new Response(
-        JSON.stringify({ success: false, message: 'Store not found' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Get WhatsApp instance from store_instances table
-    const { data: storeInstance, error: instanceError } = await supabaseClient
-      .from('store_instances')
-      .select('evolution_instance_id')
-      .eq('store_id', order.store_id)
-      .single();
+ 
+     if (storeError || !store) {
+       console.error('Store not found:', storeError);
+       return new Response(
+         JSON.stringify({ success: false, message: 'Store not found' }),
+         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+       );
+     }
+ 
+     // Get WhatsApp instance from store_instances table
+     const { data: storeInstance, error: instanceError } = await supabaseClient
+       .from('store_instances')
+       .select('evolution_instance_id')
+       .eq('store_id', order.store_id)
+       .single();
 
     if (instanceError || !storeInstance?.evolution_instance_id) {
       console.error('WhatsApp instance not found:', instanceError);
@@ -224,7 +223,7 @@ serve(async (req) => {
       }).join('\n\n');
     }
 
-    // Format delivery address
+    // Format delivery address (for delivery orders)
     let deliveryAddress = '';
     if (order.delivery_type === 'delivery' && order.delivery_street) {
       deliveryAddress = order.delivery_street;
@@ -232,13 +231,29 @@ serve(async (req) => {
       if (order.delivery_neighborhood) deliveryAddress += ` - ${order.delivery_neighborhood}`;
       if (order.delivery_complement) deliveryAddress += `\nComplemento: ${order.delivery_complement}`;
     }
-
+ 
+    // Determine pickup address (for retirada)
+    let pickupAddress = store.pickup_address || '';
+    if (order.delivery_type === 'pickup' && !pickupAddress) {
+      const { data: pickupLocation } = await supabaseClient
+        .from('store_pickup_locations')
+        .select('address')
+        .eq('store_id', order.store_id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: true })
+        .maybeSingle();
+ 
+      if (pickupLocation?.address) {
+        pickupAddress = pickupLocation.address;
+      }
+    }
+ 
     // Format unified address (delivery or pickup)
     let unifiedAddress = '';
     if (order.delivery_type === 'delivery') {
       unifiedAddress = deliveryAddress;
     } else {
-      unifiedAddress = store.pickup_address || '';
+      unifiedAddress = pickupAddress;
     }
 
     // Format payment method
@@ -264,7 +279,7 @@ serve(async (req) => {
     message = message.replace(/\{\{store_phone\}\}/g, store.phone || '');
     message = message.replace(/\{\{store_address\}\}/g, store.address || '');
     message = message.replace(/\{\{store_url\}\}/g, store.slug ? `https://nuvenshop.app/${store.slug}` : '');
-    message = message.replace(/\{\{pickup_address\}\}/g, store.pickup_address || '');
+    message = message.replace(/\{\{pickup_address\}\}/g, pickupAddress || '');
     message = message.replace(/\{\{address\}\}/g, unifiedAddress);
     message = message.replace(/\{\{items\}\}/g, itemsList);
     message = message.replace(/\{\{delivery_address\}\}/g, deliveryAddress);
