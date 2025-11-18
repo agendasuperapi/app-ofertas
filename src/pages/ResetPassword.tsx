@@ -14,15 +14,11 @@ import { resetPasswordSchema, type ResetPasswordData } from "@/hooks/useAuthVali
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
-  const [displayPassword, setDisplayPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [displayConfirmPassword, setDisplayConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isValidToken, setIsValidToken] = useState(false);
-  const [hidePasswordTimeout, setHidePasswordTimeout] = useState<NodeJS.Timeout | null>(null);
-  const [hideConfirmTimeout, setHideConfirmTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     // Verificar se há um token de recuperação na URL
@@ -39,90 +35,6 @@ export default function ResetPassword() {
 
     checkRecoveryToken();
   }, [navigate]);
-
-  // Manipular senha com visibilidade do último caractere
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    
-    if (showPassword) {
-      setPassword(newValue);
-      setDisplayPassword(newValue);
-      return;
-    }
-
-    if (hidePasswordTimeout) {
-      clearTimeout(hidePasswordTimeout);
-    }
-
-    setPassword(newValue);
-
-    if (newValue.length < password.length) {
-      setDisplayPassword('•'.repeat(newValue.length));
-    } else if (newValue.length > password.length) {
-      const bullets = '•'.repeat(newValue.length - 1);
-      const lastChar = newValue[newValue.length - 1];
-      setDisplayPassword(bullets + lastChar);
-
-      const timeout = setTimeout(() => {
-        setDisplayPassword('•'.repeat(newValue.length));
-      }, 500);
-      setHidePasswordTimeout(timeout);
-    }
-  };
-
-  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    
-    if (showConfirmPassword) {
-      setConfirmPassword(newValue);
-      setDisplayConfirmPassword(newValue);
-      return;
-    }
-
-    if (hideConfirmTimeout) {
-      clearTimeout(hideConfirmTimeout);
-    }
-
-    setConfirmPassword(newValue);
-
-    if (newValue.length < confirmPassword.length) {
-      setDisplayConfirmPassword('•'.repeat(newValue.length));
-    } else if (newValue.length > confirmPassword.length) {
-      const bullets = '•'.repeat(newValue.length - 1);
-      const lastChar = newValue[newValue.length - 1];
-      setDisplayConfirmPassword(bullets + lastChar);
-
-      const timeout = setTimeout(() => {
-        setDisplayConfirmPassword('•'.repeat(newValue.length));
-      }, 500);
-      setHideConfirmTimeout(timeout);
-    }
-  };
-
-  // Limpar timeouts ao desmontar
-  useEffect(() => {
-    return () => {
-      if (hidePasswordTimeout) clearTimeout(hidePasswordTimeout);
-      if (hideConfirmTimeout) clearTimeout(hideConfirmTimeout);
-    };
-  }, [hidePasswordTimeout, hideConfirmTimeout]);
-
-  // Atualizar display quando showPassword muda
-  useEffect(() => {
-    if (showPassword) {
-      setDisplayPassword(password);
-    } else {
-      setDisplayPassword('•'.repeat(password.length));
-    }
-  }, [showPassword, password]);
-
-  useEffect(() => {
-    if (showConfirmPassword) {
-      setDisplayConfirmPassword(confirmPassword);
-    } else {
-      setDisplayConfirmPassword('•'.repeat(confirmPassword.length));
-    }
-  }, [showConfirmPassword, confirmPassword]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,21 +114,19 @@ export default function ResetPassword() {
                   <div className="relative">
                     <Input
                       id="password"
-                      type="text"
+                      type={showPassword ? "text" : "password"}
                       placeholder="Mínimo 6 caracteres"
-                      value={displayPassword}
-                      onChange={handlePasswordChange}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       required
                       disabled={loading}
                       minLength={6}
-                      autoComplete="off"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       tabIndex={-1}
-                      aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                     >
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
@@ -228,21 +138,19 @@ export default function ResetPassword() {
                   <div className="relative">
                     <Input
                       id="confirmPassword"
-                      type="text"
+                      type={showConfirmPassword ? "text" : "password"}
                       placeholder="Digite a senha novamente"
-                      value={displayConfirmPassword}
-                      onChange={handleConfirmPasswordChange}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                       disabled={loading}
                       minLength={6}
-                      autoComplete="off"
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       tabIndex={-1}
-                      aria-label={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
                     >
                       {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
