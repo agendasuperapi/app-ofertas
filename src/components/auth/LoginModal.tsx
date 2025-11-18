@@ -208,7 +208,7 @@ export function LoginModal({
                 )}
               </div>
               <div className="relative">
-                <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-14 bg-muted border-r flex items-center justify-center rounded-l-md">
+                <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-14 bg-muted border-r flex items-center justify-center rounded-l-md z-10">
                   <Lock className="text-muted-foreground" size={16} />
                 </div>
                 <Input
@@ -217,17 +217,18 @@ export function LoginModal({
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
-                    setShowPassword(true); // Show password while typing
+                    setShowPassword(true);
                   }}
                   required
                   minLength={6}
-                  className="h-10 sm:h-12 pl-14 sm:pl-16 pr-12 text-sm sm:text-base"
+                  className="h-10 sm:h-12 pl-14 sm:pl-16 pr-12 sm:pr-14 text-sm sm:text-base"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors z-10 p-1"
                   aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  tabIndex={-1}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
