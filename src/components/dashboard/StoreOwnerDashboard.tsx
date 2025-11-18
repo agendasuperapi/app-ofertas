@@ -2734,7 +2734,19 @@ export const StoreOwnerDashboard = () => {
             transition={{ duration: 0.5 }}
             className="p-8"
           >
-            <WhatsAppIntegration storeId={myStore.id} />
+            <WhatsAppIntegration 
+              storeId={myStore.id} 
+              store={myStore}
+              onStoreUpdate={async (data) => {
+                await updateStore({
+                  id: myStore.id,
+                  name: myStore.name,
+                  slug: myStore.slug,
+                  category: myStore.category,
+                  ...data,
+                });
+              }}
+            />
           </motion.div>
         )}
 

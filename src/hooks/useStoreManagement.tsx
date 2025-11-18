@@ -27,6 +27,11 @@ export interface StoreFormData {
   operating_hours?: any;
   pix_key?: string;
   show_pix_key_to_customer?: boolean;
+  pix_message_title?: string;
+  pix_message_description?: string;
+  pix_message_footer?: string;
+  pix_message_button_text?: string;
+  pix_message_enabled?: boolean;
 }
 
 export const useStoreManagement = () => {
