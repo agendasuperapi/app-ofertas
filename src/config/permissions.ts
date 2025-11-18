@@ -71,6 +71,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
           { key: 'delete_order_items', label: 'Remover Itens', description: 'Remover itens do pedido', defaultValue: false },
           { key: 'add_order_items', label: 'Adicionar Itens', description: 'Adicionar itens ao pedido', defaultValue: false },
           { key: 'export_orders', label: 'Exportar Pedidos', description: 'Exportar lista de pedidos', defaultValue: false },
+          { key: 'mark_payment_received', label: 'Marcar Pagamento Recebido', description: 'Marcar pedido como pago', defaultValue: false },
         ],
       },
       {
