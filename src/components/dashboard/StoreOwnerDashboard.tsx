@@ -16,7 +16,7 @@ import { useStoreManagement } from "@/hooks/useStoreManagement";
 import { useProductManagement } from "@/hooks/useProductManagement";
 import { useStoreOrders } from "@/hooks/useStoreOrders";
 import { useCategories } from "@/hooks/useCategories";
-import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, ArrowUp, ArrowDown, FolderTree, User, Lock, Edit2, Eye, Printer, AlertCircle, CheckCircle, Loader2, Bell, Shield, XCircle, Receipt, Truck } from "lucide-react";
+import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, ArrowUp, ArrowDown, FolderTree, User, Lock, Edit2, Eye, Printer, AlertCircle, CheckCircle, Loader2, Bell, Shield, XCircle, Receipt, Truck, Save } from "lucide-react";
 import { validatePixKey } from "@/lib/pixValidation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProductAddonsManager } from "./ProductAddonsManager";
@@ -3370,6 +3370,47 @@ export const StoreOwnerDashboard = () => {
                     </p>
                   )}
                 </div>
+
+                <Button
+                  onClick={async () => {
+                    if (!myStore?.id) return;
+                    
+                    if (storeForm.pix_key && !pixValidation.isValid) {
+                      toast({
+                        title: "Chave PIX inválida",
+                        description: pixValidation.message,
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    try {
+                      await updateStore({
+                        id: myStore.id,
+                        name: myStore.name,
+                        slug: myStore.slug,
+                        category: myStore.category,
+                        pix_key: storeForm.pix_key || null,
+                      });
+                      
+                      toast({
+                        title: "Chave PIX salva!",
+                        description: "Sua chave PIX foi atualizada com sucesso.",
+                      });
+                    } catch (error) {
+                      toast({
+                        title: "Erro ao salvar",
+                        description: "Não foi possível salvar a chave PIX. Tente novamente.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                  disabled={storeForm.pix_key ? !pixValidation.isValid : false}
+                  className="w-full"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Salvar Chave PIX
+                </Button>
 
                 {storeForm.pix_key && (
                   <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
