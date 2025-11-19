@@ -472,6 +472,11 @@ export default function Orders() {
                         
                         {order.payment_method === 'pix' && order.stores?.pix_key && order.stores?.show_pix_key_to_customer !== false && (() => {
                           const pixValidation = validatePixKey(order.stores.pix_key);
+                          const store = order.stores as any;
+                          const customTitle = store.pix_message_title;
+                          const customDescription = store.pix_message_description;
+                          const customFooter = store.pix_message_footer;
+                          const customButtonText = store.pix_message_button_text;
                           
                           if (!pixValidation.isValid) {
                             return (
@@ -496,8 +501,20 @@ export default function Orders() {
                           
                           return (
                             <div className="mt-4 p-4 bg-muted rounded-lg border border-border">
+                              {customTitle && (
+                                <h3 className="text-sm font-semibold mb-2">{customTitle}</h3>
+                              )}
+                              
+                              {customDescription && (
+                                <p className="text-xs text-muted-foreground mb-3 whitespace-pre-wrap">
+                                  {customDescription}
+                                </p>
+                              )}
+                              
                               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                                <p className="text-xs sm:text-sm font-medium whitespace-nowrap">Chave PIX:</p>
+                                {!customTitle && (
+                                  <p className="text-xs sm:text-sm font-medium whitespace-nowrap">Chave PIX:</p>
+                                )}
                                 {config && (
                                   <Badge className={`${config.color} text-white text-xs whitespace-nowrap`}>
                                     <TypeIcon className="w-3 h-3 mr-1" />
@@ -518,7 +535,7 @@ export default function Orders() {
                                     setCopiedPixKey(order.id);
                                     setTimeout(() => setCopiedPixKey(null), 2000);
                                     toast({
-                                      title: "Chave PIX copiada!",
+                                      title: customButtonText || "Chave PIX copiada!",
                                       description: "Cole no seu app de pagamento",
                                     });
                                   }}
@@ -541,7 +558,7 @@ export default function Orders() {
                                     setCopiedPixKey(order.id);
                                     setTimeout(() => setCopiedPixKey(null), 2000);
                                     toast({
-                                      title: "Chave PIX copiada!",
+                                      title: customButtonText || "Chave PIX copiada!",
                                       description: "Cole no seu app de pagamento",
                                     });
                                   }}
@@ -553,73 +570,107 @@ export default function Orders() {
                                   )}
                                 </Button>
                               </div>
+                              
+                              {customFooter && (
+                                <p className="text-xs text-muted-foreground mt-3 whitespace-pre-wrap">
+                                  {customFooter}
+                                </p>
+                              )}
                             </div>
                           );
                         })()}
                         
                         {order.payment_method === 'pix' && order.stores?.pix_key && (order.stores as any)?.pix_copiacola_message_enabled && (() => {
+                          const store = order.stores as any;
+                          const customTitle = store.pix_copiacola_message_title;
+                          const customDescription = store.pix_copiacola_message_description;
+                          const customFooter = store.pix_copiacola_message_footer;
+                          const customButtonText = store.pix_copiacola_message_button_text || store.pix_copiacola_button_text;
+                          
                           return (
                             <div className="mt-4 p-4 bg-muted rounded-lg border border-border">
-                              {/* QR Code for PIX */}
-                              <div className="flex flex-col items-center gap-2">
-                                <p className="text-xs text-muted-foreground">Escaneie o QR Code PIX para pagar</p>
-                                <div className="bg-white p-4 rounded-lg border-2 border-border shadow-sm">
-                                  <QRCodeCanvas 
-                                    value={generatePixQrCode({
-                                      pixKey: order.stores.pix_key,
-                                      description: `Pedido ${order.order_number}`,
-                                      merchantName: order.stores.name,
-                                      amount: order.total,
-                                      txId: order.order_number
-                                    })}
-                                    size={200}
-                                    level="H"
-                                    includeMargin={true}
-                                  />
-                                </div>
-                                <p className="text-xs text-muted-foreground">
-                                  Valor: R$ {order.total.toFixed(2)}
-                                </p>
+                              <div className="flex flex-col items-center gap-3">
+                                {customTitle && (
+                                  <h3 className="text-sm font-semibold text-center">{customTitle}</h3>
+                                )}
                                 
-                                <div className="text-xs text-muted-foreground text-center px-2 space-y-1">
-                                  <p>1️⃣ Copie o código PIX abaixo.</p>
-                                  <p>2️⃣ Abra o app do seu banco e vá até a opção PIX, como se fosse fazer uma transferência.</p>
-                                  <p>3️⃣ Toque em "PIX Copia e Cola", cole o código e confirme o pagamento.</p>
-                                </div>
+                                {customDescription && (
+                                  <p className="text-xs text-muted-foreground text-center whitespace-pre-wrap">
+                                    {customDescription}
+                                  </p>
+                                )}
                                 
-                                {/* PIX Copia e Cola Button */}
-                                <Button
-                                  variant={copiedPixPayload === order.id ? "default" : "outline"}
-                                  className="w-full mt-3"
-                                  onClick={() => {
-                                    const pixPayload = generatePixQrCode({
-                                      pixKey: order.stores.pix_key,
-                                      description: `Pedido ${order.order_number}`,
-                                      merchantName: order.stores.name,
-                                      amount: order.total,
-                                      txId: order.order_number
-                                    });
-                                    navigator.clipboard.writeText(pixPayload);
-                                    setCopiedPixPayload(order.id);
-                                    setTimeout(() => setCopiedPixPayload(null), 3000);
-                                    toast({
-                                      title: "PIX Copia e Cola copiado!",
-                                      description: "Cole no seu app de pagamento para pagar",
-                                    });
-                                  }}
-                                >
-                                  {copiedPixPayload === order.id ? (
-                                    <>
-                                      <Check className="w-4 h-4 mr-2" />
-                                      Código PIX Copiado!
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Copy className="w-4 h-4 mr-2" />
-                                      {(order.stores as any).pix_copiacola_button_text || "PIX Copia e Cola"}
-                                    </>
+                                {/* QR Code for PIX */}
+                                <div className="flex flex-col items-center gap-2 w-full">
+                                  {!customTitle && (
+                                    <p className="text-xs text-muted-foreground">Escaneie o QR Code PIX para pagar</p>
                                   )}
-                                </Button>
+                                  <div className="bg-white p-4 rounded-lg border-2 border-border shadow-sm">
+                                    <QRCodeCanvas 
+                                      value={generatePixQrCode({
+                                        pixKey: order.stores.pix_key,
+                                        description: `Pedido ${order.order_number}`,
+                                        merchantName: order.stores.name,
+                                        amount: order.total,
+                                        txId: order.order_number
+                                      })}
+                                      size={200}
+                                      level="H"
+                                      includeMargin={true}
+                                    />
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    Valor: R$ {order.total.toFixed(2)}
+                                  </p>
+                                  
+                                  {!customDescription && (
+                                    <div className="text-xs text-muted-foreground text-center px-2 space-y-1">
+                                      <p>Copie o código PIX abaixo.</p>
+                                      <p>Abra o app do seu banco e vá até a opção PIX.</p>
+                                      <p>Toque em "PIX Copia e Cola", cole o código e confirme o pagamento.</p>
+                                    </div>
+                                  )}
+                                  
+                                  {/* PIX Copia e Cola Button */}
+                                  <Button
+                                    variant={copiedPixPayload === order.id ? "default" : "outline"}
+                                    className="w-full mt-3"
+                                    onClick={() => {
+                                      const pixPayload = generatePixQrCode({
+                                        pixKey: order.stores.pix_key,
+                                        description: `Pedido ${order.order_number}`,
+                                        merchantName: order.stores.name,
+                                        amount: order.total,
+                                        txId: order.order_number
+                                      });
+                                      navigator.clipboard.writeText(pixPayload);
+                                      setCopiedPixPayload(order.id);
+                                      setTimeout(() => setCopiedPixPayload(null), 3000);
+                                      toast({
+                                        title: "PIX Copia e Cola copiado!",
+                                        description: "Cole no seu app de pagamento para pagar",
+                                      });
+                                    }}
+                                  >
+                                    {copiedPixPayload === order.id ? (
+                                      <>
+                                        <Check className="w-4 h-4 mr-2" />
+                                        Código PIX Copiado!
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Copy className="w-4 h-4 mr-2" />
+                                        {customButtonText || "PIX Copia e Cola"}
+                                      </>
+                                    )}
+                                  </Button>
+                                  
+                                  {customFooter && (
+                                    <p className="text-xs text-muted-foreground text-center mt-2 whitespace-pre-wrap">
+                                      {customFooter}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           );
