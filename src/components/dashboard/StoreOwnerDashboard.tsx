@@ -2751,21 +2751,54 @@ export const StoreOwnerDashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="p-8"
+            className="p-8 space-y-6"
           >
-            <WhatsAppIntegration 
-              storeId={myStore.id} 
-              store={myStore}
-              onStoreUpdate={async (data) => {
-                await updateStore({
-                  id: myStore.id,
-                  name: myStore.name,
-                  slug: myStore.slug,
-                  category: myStore.category,
-                  ...data,
-                });
-              }}
-            />
+            <Tabs defaultValue="integracao" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-2 gap-2 bg-muted/50 h-auto p-2">
+                <TabsTrigger value="integracao" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
+                  <MessageSquare className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                  <span className="truncate">Integração</span>
+                </TabsTrigger>
+                <TabsTrigger value="etapas" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
+                  <Menu className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                  <span className="truncate">Etapas do Pedido</span>
+                </TabsTrigger>
+              </TabsList>
+
+              {/* Integração Tab */}
+              <TabsContent value="integracao">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <WhatsAppIntegration 
+                    storeId={myStore.id} 
+                    store={myStore}
+                    onStoreUpdate={async (data) => {
+                      await updateStore({
+                        id: myStore.id,
+                        name: myStore.name,
+                        slug: myStore.slug,
+                        category: myStore.category,
+                        ...data,
+                      });
+                    }}
+                  />
+                </motion.div>
+              </TabsContent>
+
+              {/* Etapas do Pedido Tab */}
+              <TabsContent value="etapas">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <OrderStatusManager storeId={myStore.id} />
+                </motion.div>
+              </TabsContent>
+            </Tabs>
           </motion.div>
         )}
 
@@ -3164,7 +3197,7 @@ export const StoreOwnerDashboard = () => {
               transition={{ delay: 0.3 }}
             >
               <Tabs defaultValue="personal" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7 gap-2 bg-muted/50 h-auto p-2">
+                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-6 gap-2 bg-muted/50 h-auto p-2">
                   <TabsTrigger value="personal" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
                     <User className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="truncate">Dados Pessoais</span>
@@ -3180,10 +3213,6 @@ export const StoreOwnerDashboard = () => {
                   <TabsTrigger value="pix" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
                     <DollarSign className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="truncate">PIX</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="status" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
-                    <Menu className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">Etapas do Pedido</span>
                   </TabsTrigger>
                   <TabsTrigger value="notifications" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
                     <Shield className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
@@ -3203,17 +3232,6 @@ export const StoreOwnerDashboard = () => {
             transition={{ duration: 0.5 }}
           >
             <PersonalDataSettings />
-          </motion.div>
-        </TabsContent>
-
-        {/* Status Tab */}
-        <TabsContent value="status" className="space-y-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {myStore && <OrderStatusManager storeId={myStore.id} />}
           </motion.div>
         </TabsContent>
 
