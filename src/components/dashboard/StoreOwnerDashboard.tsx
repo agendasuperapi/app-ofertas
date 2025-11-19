@@ -2115,9 +2115,9 @@ export const StoreOwnerDashboard = () => {
                     <Button
                       variant="link"
                       className="p-0 h-auto text-primary"
-                      onClick={() => setActiveTab('configuracoes')}
+                      onClick={() => setActiveTab('whatsapp')}
                     >
-                      Configurações → Etapas do Pedido
+                      WhatsApp → Status dos Pedidos
                     </Button>
                   </p>
                 </div>
@@ -2761,7 +2761,7 @@ export const StoreOwnerDashboard = () => {
                 </TabsTrigger>
                 <TabsTrigger value="etapas" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
                   <Menu className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  <span className="truncate">Etapas do Pedido</span>
+                  <span className="truncate">Status dos Pedidos</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -2788,7 +2788,7 @@ export const StoreOwnerDashboard = () => {
                 </motion.div>
               </TabsContent>
 
-              {/* Etapas do Pedido Tab */}
+              {/* Status dos Pedidos Tab */}
               <TabsContent value="etapas">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}

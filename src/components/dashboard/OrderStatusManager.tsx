@@ -175,7 +175,7 @@ export const OrderStatusManager = ({ storeId }: OrderStatusManagerProps) => {
       <CardHeader>
         <div className="flex justify-between items-start">
           <div>
-            <CardTitle>Etapas do Pedido</CardTitle>
+            <CardTitle>Status dos Pedidos</CardTitle>
             <CardDescription>
               Configure os status dos pedidos e as mensagens do WhatsApp
             </CardDescription>
