@@ -296,9 +296,14 @@ export default function AdminDashboard() {
                 <h1 className="text-3xl font-bold gradient-text">
                   Dashboard Administrativo
                 </h1>
-                <p className="text-muted-foreground">
-                  Visão geral da plataforma
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-muted-foreground">
+                    Visão geral da plataforma
+                  </p>
+                  <Badge variant="outline" className="text-xs">
+                    Versão 1.0.0
+                  </Badge>
+                </div>
               </div>
             </div>
           </div>
