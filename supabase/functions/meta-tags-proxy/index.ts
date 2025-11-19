@@ -132,13 +132,19 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Get product by short_id with store info
+    console.log('🔍 Querying product with short_id:', productShortId);
+    
     const { data: product, error: productError } = await supabase
       .from('products')
       .select('*, stores(name, slug)')
       .eq('short_id', productShortId)
       .single();
 
-    console.log('Product query result:', { product, error: productError });
+    console.log('📦 Product query result:', { 
+      found: !!product, 
+      product: product ? { id: product.id, name: product.name, image_url: product.image_url } : null,
+      error: productError ? { message: productError.message, details: productError.details, hint: productError.hint } : null
+    });
 
     // If not a crawler, redirect to the app immediately
     if (!isCrawler(userAgent)) {
