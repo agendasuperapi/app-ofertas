@@ -181,6 +181,7 @@ export const StoreOwnerDashboard = () => {
     pix_key: (myStore as any)?.pix_key || '',
     show_pix_key_to_customer: (myStore as any)?.show_pix_key_to_customer ?? true,
     allow_orders_when_closed: (myStore as any)?.allow_orders_when_closed ?? false,
+    require_delivery_zone: (myStore as any)?.require_delivery_zone ?? false,
   });
 
   const [pixValidation, setPixValidation] = useState<{ isValid: boolean; type: string; message: string }>({
@@ -299,6 +300,7 @@ export const StoreOwnerDashboard = () => {
         pix_key: (myStore as any).pix_key || '',
         show_pix_key_to_customer: (myStore as any).show_pix_key_to_customer ?? true,
         allow_orders_when_closed: (myStore as any).allow_orders_when_closed ?? false,
+        require_delivery_zone: (myStore as any).require_delivery_zone ?? false,
       });
       
       // Validate initial PIX key
@@ -3864,6 +3866,22 @@ export const StoreOwnerDashboard = () => {
                     checked={storeForm.accepts_pickup}
                     onCheckedChange={(checked) => 
                       handleUpdateDeliveryOption('accepts_pickup', checked)
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 border rounded-lg bg-background">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="require_delivery_zone" className="text-sm font-medium">Restringir Entrega por Zona</Label>
+                    <p className="text-xs text-muted-foreground">
+                      Bloqueia pedidos de clientes fora das zonas de entrega cadastradas
+                    </p>
+                  </div>
+                  <Switch
+                    id="require_delivery_zone"
+                    checked={storeForm.require_delivery_zone ?? false}
+                    onCheckedChange={(checked) => 
+                      handleUpdateDeliveryOption('require_delivery_zone', checked)
                     }
                   />
                 </div>
