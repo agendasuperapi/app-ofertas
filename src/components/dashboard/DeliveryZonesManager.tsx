@@ -195,7 +195,7 @@ export const DeliveryZonesManager = ({ storeId }: DeliveryZonesManagerProps) => 
       {/* Card de Taxa de Entrega Padrão */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
+          <CardTitle className="flex items-center gap-2 text-base text-primary">
             <MapPin className="h-4 w-4" />
             Taxa de Entrega Padrão
           </CardTitle>
@@ -242,7 +242,7 @@ export const DeliveryZonesManager = ({ storeId }: DeliveryZonesManagerProps) => 
         <CardHeader className="pb-3">
           <div className="flex justify-between items-start">
             <div>
-              <CardTitle className="flex items-center gap-2 text-base">
+              <CardTitle className="flex items-center gap-2 text-base text-primary">
                 <MapPin className="h-4 w-4" />
                 Zonas de Entrega
               </CardTitle>

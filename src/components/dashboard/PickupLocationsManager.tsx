@@ -113,7 +113,7 @@ export const PickupLocationsManager = ({ storeId }: PickupLocationsManagerProps)
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
+        <CardTitle className="flex items-center gap-2 text-base text-primary">
           <MapPin className="h-4 w-4" />
           Endereços de Retirada
         </CardTitle>

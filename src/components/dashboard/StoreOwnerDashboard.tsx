@@ -3827,7 +3827,7 @@ export const StoreOwnerDashboard = () => {
             
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-base">Tipos de Entrega Aceitos</CardTitle>
+                <CardTitle className="text-base text-primary">Tipos de Entrega Aceitos</CardTitle>
                 <CardDescription className="text-xs">
                   Configure quais tipos de entrega sua loja aceita
                 </CardDescription>
