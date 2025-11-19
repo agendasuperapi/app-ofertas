@@ -17,6 +17,7 @@ export interface StoreFormData {
   delivery_fee?: number;
   min_order_value?: number;
   avg_delivery_time?: number;
+  show_avg_delivery_time?: boolean;
   accepts_delivery?: boolean;
   accepts_pickup?: boolean;
   accepts_pix?: boolean;
@@ -25,6 +26,7 @@ export interface StoreFormData {
   logo_url?: string;
   banner_url?: string;
   operating_hours?: any;
+  menu_label?: string;
   pix_key?: string;
   show_pix_key_to_customer?: boolean;
   pix_message_title?: string;
@@ -38,6 +40,8 @@ export interface StoreFormData {
   pix_copiacola_message_button_text?: string;
   pix_copiacola_button_text?: string;
   pix_copiacola_message_enabled?: boolean;
+  allow_orders_when_closed?: boolean;
+  require_delivery_zone?: boolean;
 }
 
 export const useStoreManagement = () => {

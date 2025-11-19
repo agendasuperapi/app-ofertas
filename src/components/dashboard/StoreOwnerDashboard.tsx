@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { PhoneInput } from "@/components/ui/phone-input";
-import { useStoreManagement } from "@/hooks/useStoreManagement";
+import { useStoreManagement, type StoreFormData } from "@/hooks/useStoreManagement";
 import { useProductManagement } from "@/hooks/useProductManagement";
 import { useStoreOrders } from "@/hooks/useStoreOrders";
 import { useCategories } from "@/hooks/useCategories";
@@ -158,7 +158,7 @@ export const StoreOwnerDashboard = () => {
     max_flavors: 2,
   });
 
-  const [storeForm, setStoreForm] = useState({
+  const [storeForm, setStoreForm] = useState<StoreFormData>({
     name: myStore?.name || '',
     slug: myStore?.slug || '',
     logo_url: myStore?.logo_url || '',
@@ -181,7 +181,16 @@ export const StoreOwnerDashboard = () => {
     pix_key: (myStore as any)?.pix_key || '',
     show_pix_key_to_customer: (myStore as any)?.show_pix_key_to_customer ?? true,
     pix_message_enabled: (myStore as any)?.pix_message_enabled ?? false,
+    pix_message_title: (myStore as any)?.pix_message_title || '',
+    pix_message_description: (myStore as any)?.pix_message_description || '',
+    pix_message_footer: (myStore as any)?.pix_message_footer || '',
+    pix_message_button_text: (myStore as any)?.pix_message_button_text || '',
     pix_copiacola_message_enabled: (myStore as any)?.pix_copiacola_message_enabled ?? false,
+    pix_copiacola_message_title: (myStore as any)?.pix_copiacola_message_title || '',
+    pix_copiacola_message_description: (myStore as any)?.pix_copiacola_message_description || '',
+    pix_copiacola_message_footer: (myStore as any)?.pix_copiacola_message_footer || '',
+    pix_copiacola_message_button_text: (myStore as any)?.pix_copiacola_message_button_text || '',
+    pix_copiacola_button_text: (myStore as any)?.pix_copiacola_button_text || '',
     allow_orders_when_closed: (myStore as any)?.allow_orders_when_closed ?? false,
     require_delivery_zone: (myStore as any)?.require_delivery_zone ?? false,
   });
@@ -302,7 +311,16 @@ export const StoreOwnerDashboard = () => {
         pix_key: (myStore as any).pix_key || '',
         show_pix_key_to_customer: (myStore as any).show_pix_key_to_customer ?? true,
         pix_message_enabled: (myStore as any).pix_message_enabled ?? false,
+        pix_message_title: (myStore as any).pix_message_title || '',
+        pix_message_description: (myStore as any).pix_message_description || '',
+        pix_message_footer: (myStore as any).pix_message_footer || '',
+        pix_message_button_text: (myStore as any).pix_message_button_text || '',
         pix_copiacola_message_enabled: (myStore as any).pix_copiacola_message_enabled ?? false,
+        pix_copiacola_message_title: (myStore as any).pix_copiacola_message_title || '',
+        pix_copiacola_message_description: (myStore as any).pix_copiacola_message_description || '',
+        pix_copiacola_message_footer: (myStore as any).pix_copiacola_message_footer || '',
+        pix_copiacola_message_button_text: (myStore as any).pix_copiacola_message_button_text || '',
+        pix_copiacola_button_text: (myStore as any).pix_copiacola_button_text || '',
         allow_orders_when_closed: (myStore as any).allow_orders_when_closed ?? false,
         require_delivery_zone: (myStore as any).require_delivery_zone ?? false,
       });
@@ -3908,6 +3926,89 @@ export const StoreOwnerDashboard = () => {
                         }}
                       />
                     </div>
+                    
+                    {storeForm.pix_message_enabled && (
+                      <Card className="border-primary/20">
+                        <CardHeader>
+                          <CardTitle className="text-base">Personalizar mensagens - Chave PIX Fixa</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="pix_message_title">Título</Label>
+                            <Input
+                              id="pix_message_title"
+                              placeholder="Ex: Pague com PIX"
+                              value={storeForm.pix_message_title || ''}
+                              onChange={(e) => setStoreForm({ ...storeForm, pix_message_title: e.target.value })}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="pix_message_description">Descrição</Label>
+                            <Textarea
+                              id="pix_message_description"
+                              placeholder="Ex: Copie a chave PIX abaixo e realize o pagamento pelo seu aplicativo bancário"
+                              value={storeForm.pix_message_description || ''}
+                              onChange={(e) => setStoreForm({ ...storeForm, pix_message_description: e.target.value })}
+                              rows={3}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="pix_message_footer">Rodapé</Label>
+                            <Textarea
+                              id="pix_message_footer"
+                              placeholder="Ex: Após o pagamento, envie o comprovante para confirmação"
+                              value={storeForm.pix_message_footer || ''}
+                              onChange={(e) => setStoreForm({ ...storeForm, pix_message_footer: e.target.value })}
+                              rows={2}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="pix_message_button_text">Texto do botão de copiar</Label>
+                            <Input
+                              id="pix_message_button_text"
+                              placeholder="Ex: Copiar Chave PIX"
+                              value={storeForm.pix_message_button_text || ''}
+                              onChange={(e) => setStoreForm({ ...storeForm, pix_message_button_text: e.target.value })}
+                            />
+                          </div>
+                          
+                          <Button
+                            onClick={async () => {
+                              if (!myStore?.id) return;
+                              try {
+                                await updateStore({
+                                  id: myStore.id,
+                                  name: myStore.name,
+                                  slug: myStore.slug,
+                                  category: myStore.category,
+                                  pix_message_title: storeForm.pix_message_title || null,
+                                  pix_message_description: storeForm.pix_message_description || null,
+                                  pix_message_footer: storeForm.pix_message_footer || null,
+                                  pix_message_button_text: storeForm.pix_message_button_text || null,
+                                });
+                                toast({
+                                  title: "Mensagens salvas!",
+                                  description: "As mensagens personalizadas da Chave PIX Fixa foram atualizadas.",
+                                });
+                              } catch (error) {
+                                toast({
+                                  title: "Erro ao salvar",
+                                  description: "Não foi possível salvar as mensagens. Tente novamente.",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                            className="w-full"
+                          >
+                            <Save className="w-4 h-4 mr-2" />
+                            Salvar mensagens da Chave PIX Fixa
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    )}
 
                     <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
                       <div className="space-y-0.5">
@@ -3938,6 +4039,89 @@ export const StoreOwnerDashboard = () => {
                         }}
                       />
                     </div>
+                    
+                    {storeForm.pix_copiacola_message_enabled && (
+                      <Card className="border-primary/20">
+                        <CardHeader>
+                          <CardTitle className="text-base">Personalizar mensagens - PIX Copia e Cola</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="pix_copiacola_message_title">Título</Label>
+                            <Input
+                              id="pix_copiacola_message_title"
+                              placeholder="Ex: Pagamento PIX - Copia e Cola"
+                              value={storeForm.pix_copiacola_message_title || ''}
+                              onChange={(e) => setStoreForm({ ...storeForm, pix_copiacola_message_title: e.target.value })}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="pix_copiacola_message_description">Descrição</Label>
+                            <Textarea
+                              id="pix_copiacola_message_description"
+                              placeholder="Ex: Escaneie o QR Code ou copie o código PIX abaixo para pagar"
+                              value={storeForm.pix_copiacola_message_description || ''}
+                              onChange={(e) => setStoreForm({ ...storeForm, pix_copiacola_message_description: e.target.value })}
+                              rows={3}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="pix_copiacola_message_footer">Rodapé</Label>
+                            <Textarea
+                              id="pix_copiacola_message_footer"
+                              placeholder="Ex: O pagamento será confirmado automaticamente"
+                              value={storeForm.pix_copiacola_message_footer || ''}
+                              onChange={(e) => setStoreForm({ ...storeForm, pix_copiacola_message_footer: e.target.value })}
+                              rows={2}
+                            />
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="pix_copiacola_message_button_text">Texto do botão</Label>
+                            <Input
+                              id="pix_copiacola_message_button_text"
+                              placeholder="Ex: Copiar Código PIX"
+                              value={storeForm.pix_copiacola_message_button_text || ''}
+                              onChange={(e) => setStoreForm({ ...storeForm, pix_copiacola_message_button_text: e.target.value })}
+                            />
+                          </div>
+                          
+                          <Button
+                            onClick={async () => {
+                              if (!myStore?.id) return;
+                              try {
+                                await updateStore({
+                                  id: myStore.id,
+                                  name: myStore.name,
+                                  slug: myStore.slug,
+                                  category: myStore.category,
+                                  pix_copiacola_message_title: storeForm.pix_copiacola_message_title || null,
+                                  pix_copiacola_message_description: storeForm.pix_copiacola_message_description || null,
+                                  pix_copiacola_message_footer: storeForm.pix_copiacola_message_footer || null,
+                                  pix_copiacola_message_button_text: storeForm.pix_copiacola_message_button_text || null,
+                                });
+                                toast({
+                                  title: "Mensagens salvas!",
+                                  description: "As mensagens personalizadas do PIX Copia e Cola foram atualizadas.",
+                                });
+                              } catch (error) {
+                                toast({
+                                  title: "Erro ao salvar",
+                                  description: "Não foi possível salvar as mensagens. Tente novamente.",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                            className="w-full"
+                          >
+                            <Save className="w-4 h-4 mr-2" />
+                            Salvar mensagens do PIX Copia e Cola
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
                 )}
               </CardContent>
