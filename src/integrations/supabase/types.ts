@@ -1001,6 +1001,7 @@ export type Database = {
           pix_message_footer: string | null
           pix_message_title: string | null
           rating: number | null
+          require_delivery_zone: boolean | null
           show_avg_delivery_time: boolean | null
           show_pix_key_to_customer: boolean | null
           slug: string
@@ -1046,6 +1047,7 @@ export type Database = {
           pix_message_footer?: string | null
           pix_message_title?: string | null
           rating?: number | null
+          require_delivery_zone?: boolean | null
           show_avg_delivery_time?: boolean | null
           show_pix_key_to_customer?: boolean | null
           slug: string
@@ -1091,6 +1093,7 @@ export type Database = {
           pix_message_footer?: string | null
           pix_message_title?: string | null
           rating?: number | null
+          require_delivery_zone?: boolean | null
           show_avg_delivery_time?: boolean | null
           show_pix_key_to_customer?: boolean | null
           slug?: string

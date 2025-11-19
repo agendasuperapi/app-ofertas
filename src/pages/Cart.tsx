@@ -508,6 +508,23 @@ export default function Cart() {
         });
         return;
       }
+
+      // Validar zona de entrega se a loja exigir
+      if (deliveryType === 'delivery' && storeData?.require_delivery_zone) {
+        const activeZones = deliveryZones?.filter(zone => zone.is_active) || [];
+        const isInDeliveryZone = activeZones.some(zone => 
+          zone.city.toLowerCase().trim() === deliveryCity.toLowerCase().trim()
+        );
+
+        if (!isInDeliveryZone) {
+          toast({
+            title: "Fora da área de entrega",
+            description: "Desculpe, não entregamos na sua cidade. Verifique as zonas de entrega disponíveis.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
   
       // Atualizar perfil do usuário APENAS quando for entrega
       if (deliveryType === 'delivery') {
