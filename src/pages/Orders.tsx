@@ -575,9 +575,11 @@ export default function Orders() {
                                   Valor: R$ {order.total.toFixed(2)}
                                 </p>
                                 
-                                <p className="text-xs text-muted-foreground text-center px-2">
-                                  1️⃣ Copie o código PIX abaixo. 2️⃣ Abra o app do seu banco e vá até a opção PIX, como se fosse fazer uma transferência. 3️⃣ Toque em "PIX Copia e Cola", cole o código e confirme o pagamento. 💳✨
-                                </p>
+                                <div className="text-xs text-muted-foreground text-center px-2 space-y-1">
+                                  <p>1️⃣ Copie o código PIX abaixo.</p>
+                                  <p>2️⃣ Abra o app do seu banco e vá até a opção PIX, como se fosse fazer uma transferência.</p>
+                                  <p>3️⃣ Toque em "PIX Copia e Cola", cole o código e confirme o pagamento. 💳✨</p>
+                                </div>
                                 
                                 {/* PIX Copia e Cola Button */}
                                 <Button
