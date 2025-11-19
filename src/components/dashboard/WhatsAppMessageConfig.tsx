@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, Save, Eye, Copy, Check } from "lucide-react";
+import { AlertCircle, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
@@ -38,7 +38,6 @@ interface WhatsAppMessageConfigProps {
 export const WhatsAppMessageConfig = ({ store, onUpdate }: WhatsAppMessageConfigProps) => {
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
   const [copied, setCopied] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -417,100 +416,9 @@ export const WhatsAppMessageConfig = ({ store, onUpdate }: WhatsAppMessageConfig
                 </>
               )}
             </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowPreview(!showPreview)}
-            >
-              <Eye className="w-4 h-4 mr-2" />
-              {showPreview ? "Ocultar" : "Preview"}
-            </Button>
           </div>
         </CardContent>
       </Card>
-
-      {showPreview && (
-        <>
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Preview: PIX Chave Fixa</CardTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyPreview('key')}
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-4 h-4 mr-2" />
-                      Copiado!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4 mr-2" />
-                      Copiar
-                    </>
-                  )}
-                </Button>
-              </div>
-              <CardDescription>
-                JSON enviado para WhatsApp (Chave Fixa)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-muted p-4 rounded-lg">
-                <pre className="text-xs overflow-x-auto">
-                  {JSON.stringify(previewPixKeyJson, null, 2)}
-                </pre>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Preview: PIX Copia e Cola Gerado</CardTitle>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => copyPreview('copiacola')}
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-4 h-4 mr-2" />
-                      Copiado!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-4 h-4 mr-2" />
-                      Copiar
-                    </>
-                  )}
-                </Button>
-              </div>
-              <CardDescription>
-                JSON enviado para WhatsApp (Código Gerado)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-muted p-4 rounded-lg">
-                <pre className="text-xs overflow-x-auto">
-                  {JSON.stringify(previewPixCopiaCola, null, 2)}
-                </pre>
-              </div>
-              {store.pix_key && (
-                <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
-                  <p className="text-sm">
-                    <strong>Chave PIX configurada:</strong>{" "}
-                    <code className="text-xs bg-background px-2 py-1 rounded">
-                      {store.pix_key}
-                    </code>
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </>
-      )}
     </div>
   );
 };
