@@ -2860,8 +2860,8 @@ export const StoreOwnerDashboard = () => {
                                   </div>
                                 )}
                               </div>
-                              
-                              <ProductFlavorsManager productId={editingProduct.id} />
+                               
+                              <ProductFlavorsManager productId={editingProduct.id} storeId={editingProduct.store_id} />
                             </>
                           )}
                         </TabsContent>
