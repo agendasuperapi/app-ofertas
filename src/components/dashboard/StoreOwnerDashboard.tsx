@@ -158,6 +158,8 @@ export const StoreOwnerDashboard = () => {
     max_flavors: 2,
   });
 
+  const [activeProductTab, setActiveProductTab] = useState("info");
+
   const [storeForm, setStoreForm] = useState<StoreFormData>({
     name: myStore?.name || '',
     slug: myStore?.slug || '',
@@ -792,6 +794,7 @@ export const StoreOwnerDashboard = () => {
     }, {
       onSuccess: () => {
         setIsProductDialogOpen(false);
+        setActiveProductTab("info");
         setProductForm({
           name: '',
           description: '',
@@ -809,6 +812,7 @@ export const StoreOwnerDashboard = () => {
 
   const handleEditProduct = (product: any) => {
     setEditingProduct(product);
+    setActiveProductTab("info");
     setProductForm({
       name: product.name,
       description: product.description || '',
@@ -853,6 +857,7 @@ export const StoreOwnerDashboard = () => {
       onSuccess: () => {
         setIsProductDialogOpen(false);
         setEditingProduct(null);
+        setActiveProductTab("info");
         setProductForm({
           name: '',
           description: '',
@@ -2843,6 +2848,7 @@ export const StoreOwnerDashboard = () => {
                   <DialogTrigger asChild>
                     <Button onClick={() => {
                       setEditingProduct(null);
+                      setActiveProductTab("info");
                       setProductForm({
                         name: '',
                         description: '',
@@ -2868,7 +2874,7 @@ export const StoreOwnerDashboard = () => {
                   
                   <div className="flex-1 overflow-y-auto -mx-6 px-6">
                     <div className="pr-4 space-y-4 pb-4">
-                      <Tabs defaultValue="info" className="w-full">
+                      <Tabs value={activeProductTab} onValueChange={setActiveProductTab} className="w-full">
                         <TabsList className="grid w-full grid-cols-3">
                           <TabsTrigger value="info">Informações</TabsTrigger>
                           <TabsTrigger value="addons" disabled={!editingProduct}>
@@ -3065,14 +3071,16 @@ export const StoreOwnerDashboard = () => {
                     </div>
                   </div>
                   
-                  <div className="flex-shrink-0 pt-4 border-t mt-4">
-                    <Button
-                      onClick={editingProduct ? handleUpdateProduct : handleCreateProduct}
-                      className="w-full"
-                    >
-                      {editingProduct ? 'Salvar Alterações' : 'Criar Produto'}
-                    </Button>
-                  </div>
+                  {activeProductTab !== "addons" && (
+                    <div className="flex-shrink-0 pt-4 border-t mt-4">
+                      <Button
+                        onClick={editingProduct ? handleUpdateProduct : handleCreateProduct}
+                        className="w-full"
+                      >
+                        {editingProduct ? 'Salvar Alterações' : 'Criar Produto'}
+                      </Button>
+                    </div>
+                  )}
                 </DialogContent>
               </Dialog>
               )}
