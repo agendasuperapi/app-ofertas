@@ -16,6 +16,9 @@ export const useUserRole = () => {
       return;
     }
 
+    // Sempre que houver usuário, marcamos como carregando antes de buscar as roles
+    setLoading(true);
+
     const fetchRoles = async () => {
       try {
         const { data, error } = await supabase
