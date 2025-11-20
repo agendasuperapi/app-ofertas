@@ -34,6 +34,12 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
     ...(hasPermission('products', 'view') 
       ? [{ id: 'produtos', label: 'produtos', icon: Package }] 
       : []),
+    ...(hasPermission('products', 'view') 
+      ? [{ id: 'categorias-produtos', label: 'categorias de produtos', icon: FolderTree }] 
+      : []),
+    ...(hasPermission('products', 'view') 
+      ? [{ id: 'templates', label: 'templates', icon: FileText }] 
+      : []),
     ...(hasPermission('coupons', 'view') 
       ? [{ id: 'cupons', label: 'cupons', icon: Tag }] 
       : []),
