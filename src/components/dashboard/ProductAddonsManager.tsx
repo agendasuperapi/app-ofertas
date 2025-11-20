@@ -843,9 +843,9 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
                   onClick={() => setIsStoreAddonsOpen(true)}
                   className="w-full sm:w-auto shrink-0 justify-start sm:justify-center"
                 >
-                  <Store className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Adicionais da Loja</span>
-                  <span className="sm:hidden">Da Loja</span>
+                  <Search className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Buscar adicionais</span>
+                  <span className="sm:hidden">Buscar</span>
                 </Button>
                 <Button 
                   size="sm" 
