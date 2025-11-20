@@ -538,9 +538,30 @@ export const ProductFlavorsManager = ({ productId, storeId }: ProductFlavorsMana
                 <div className="space-y-2">
                   <div className="flex items-center justify-between mb-2">
                     <Label className="text-sm font-medium">Sabores disponíveis:</Label>
-                    <span className="text-xs text-muted-foreground">
-                      {selectedFlavors.length} de {selectedTemplate.flavors?.length || 0} selecionados
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {selectedFlavors.length} de {selectedTemplate.flavors?.length || 0} selecionados
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const allFlavors = (selectedTemplate.flavors || []).map((_: any, idx: number) => `${idx}`);
+                          setSelectedFlavors(allFlavors);
+                        }}
+                        className="h-7 text-xs"
+                      >
+                        Selecionar Todos
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedFlavors([])}
+                        className="h-7 text-xs"
+                      >
+                        Desmarcar Todos
+                      </Button>
+                    </div>
                   </div>
                   
                   {(selectedTemplate.flavors || []).map((flavor: any, index: number) => (
