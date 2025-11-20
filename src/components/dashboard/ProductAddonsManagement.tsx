@@ -774,7 +774,7 @@ export const TemplatesTab = ({ storeId }: { storeId: string }) => {
                           size="sm"
                         >
                           <Sparkles className="w-3 h-3 mr-1" />
-                          Aplicar
+                          Visualizar
                         </Button>
                         <Button
                           onClick={() => handleDuplicateTemplate(template)}
@@ -837,7 +837,7 @@ export const TemplatesTab = ({ storeId }: { storeId: string }) => {
                             size="sm"
                           >
                             <Sparkles className="w-3 h-3 mr-1" />
-                            Aplicar
+                            Visualizar
                           </Button>
                           <Button
                             onClick={() => handleEditTemplate(template)}
