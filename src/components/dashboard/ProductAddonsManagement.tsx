@@ -27,20 +27,20 @@ export const ProductAddonsManagement = ({ storeId }: ProductAddonsManagementProp
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="categories">Categorias</TabsTrigger>
-          <TabsTrigger value="addons">Adicionais Globais</TabsTrigger>
           <TabsTrigger value="templates">Templates</TabsTrigger>
+          <TabsTrigger value="addons">Adicionais Globais</TabsTrigger>
         </TabsList>
 
         <TabsContent value="categories" className="space-y-4">
           <CategoriesTab storeId={storeId} />
         </TabsContent>
 
-        <TabsContent value="addons" className="space-y-4">
-          <AddonsTab storeId={storeId} />
-        </TabsContent>
-
         <TabsContent value="templates" className="space-y-4">
           <TemplatesTab storeId={storeId} />
+        </TabsContent>
+
+        <TabsContent value="addons" className="space-y-4">
+          <AddonsTab storeId={storeId} />
         </TabsContent>
       </Tabs>
     </div>
