@@ -169,6 +169,9 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
   const [isImporting, setIsImporting] = useState(false);
   const [customTemplates, setCustomTemplates] = useState<any[]>([]);
   const [loadingCustomTemplates, setLoadingCustomTemplates] = useState(false);
+  const [importFromProductOpen, setImportFromProductOpen] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
@@ -616,6 +619,70 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
     }
   };
 
+  const loadProducts = async () => {
+    setLoadingProducts(true);
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('store_id', storeId)
+        .neq('id', productId);
+      
+      if (error) throw error;
+      setProducts(data || []);
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao carregar produtos',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  const handleImportFromProduct = async (selectedProductId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('product_addons')
+        .select('*')
+        .eq('product_id', selectedProductId);
+      
+      if (error) throw error;
+      
+      if (data && data.length > 0) {
+        for (const addon of data) {
+          await createAddon({
+            product_id: productId,
+            name: addon.name,
+            price: addon.price,
+            is_available: addon.is_available,
+            category_id: addon.category_id,
+          });
+        }
+        
+        toast({
+          title: 'Adicionais importados!',
+          description: `${data.length} adicional(is) foram importados com sucesso.`,
+        });
+      } else {
+        toast({
+          title: 'Nenhum adicional encontrado',
+          description: 'O produto selecionado não possui adicionais cadastrados.',
+          variant: 'destructive',
+        });
+      }
+      
+      setImportFromProductOpen(false);
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao importar adicionais',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
   const totalAddons = addons?.length || 0;
   const availableAddons = addons?.filter(a => a.is_available).length || 0;
   const allFilteredSelected = filteredAddons.length > 0 && filteredAddons.every(a => selectedAddons.has(a.id));
@@ -742,6 +809,19 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
                   <Download className="w-4 h-4 mr-2" />
                   <span className="hidden sm:inline">Importar Templates</span>
                   <span className="sm:hidden">Templates</span>
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => {
+                    loadProducts();
+                    setImportFromProductOpen(true);
+                  }}
+                  className="w-full sm:w-auto shrink-0 justify-start sm:justify-center"
+                >
+                  <Package className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Importar de Produtos</span>
+                  <span className="sm:hidden">Produtos</span>
                 </Button>
                 <Button 
                   size="sm" 
@@ -1381,6 +1461,52 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
               </>
             )}
           </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* Dialog: Importar de Produto */}
+    <Dialog open={importFromProductOpen} onOpenChange={setImportFromProductOpen}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Importar Adicionais de Produto</DialogTitle>
+          <DialogDescription>
+            Selecione um produto para importar seus adicionais
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          {loadingProducts ? (
+            <p className="text-center py-4 text-muted-foreground">Carregando produtos...</p>
+          ) : products.length > 0 ? (
+            products.map((product) => (
+              <div
+                key={product.id}
+                className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                onClick={() => handleImportFromProduct(product.id)}
+              >
+                {product.image_url && (
+                  <img
+                    src={product.image_url}
+                    alt={product.name}
+                    className="w-16 h-16 object-cover rounded"
+                  />
+                )}
+                <div className="flex-1">
+                  <p className="font-medium">{product.name}</p>
+                  {product.description && (
+                    <p className="text-sm text-muted-foreground line-clamp-1">{product.description}</p>
+                  )}
+                  <p className="text-sm font-medium text-primary mt-1">
+                    R$ {product.price.toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-center py-4 text-muted-foreground">
+              Nenhum outro produto encontrado
+            </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>
