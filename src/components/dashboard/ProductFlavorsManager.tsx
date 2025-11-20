@@ -96,12 +96,13 @@ export const ProductFlavorsManager = ({ productId, storeId }: ProductFlavorsMana
     setLoadingTemplates(true);
     try {
       const { data, error } = await supabase
-        .from('store_addon_templates')
+        .from('store_addon_templates' as any)
         .select('*')
-        .eq('store_id', storeId);
+        .eq('store_id', storeId)
+        .eq('is_custom', true)
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
-      console.log('Templates carregados:', data);
       setTemplates(data || []);
     } catch (error: any) {
       toast({
