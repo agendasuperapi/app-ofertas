@@ -101,6 +101,7 @@ export const ProductFlavorsManager = ({ productId, storeId }: ProductFlavorsMana
         .eq('store_id', storeId);
       
       if (error) throw error;
+      console.log('Templates carregados:', data);
       setTemplates(data || []);
     } catch (error: any) {
       toast({
@@ -443,7 +444,8 @@ export const ProductFlavorsManager = ({ productId, storeId }: ProductFlavorsMana
                 <p className="text-center py-4 text-muted-foreground">Carregando templates...</p>
               ) : templates.length > 0 ? (
                 templates.map((template) => {
-                  const flavorCount = template.flavors?.length || 0;
+                  console.log('Template:', template.name, 'Flavors:', template.flavors);
+                  const flavorCount = Array.isArray(template.flavors) ? template.flavors.length : 0;
                   const hasNoFlavors = flavorCount === 0;
                   
                   return (
