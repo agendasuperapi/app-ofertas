@@ -613,6 +613,7 @@ export type Database = {
         Row: {
           category_id: string | null
           created_at: string
+          display_order: number | null
           id: string
           is_available: boolean | null
           name: string
@@ -623,6 +624,7 @@ export type Database = {
         Insert: {
           category_id?: string | null
           created_at?: string
+          display_order?: number | null
           id?: string
           is_available?: boolean | null
           name: string
@@ -633,6 +635,7 @@ export type Database = {
         Update: {
           category_id?: string | null
           created_at?: string
+          display_order?: number | null
           id?: string
           is_available?: boolean | null
           name?: string
