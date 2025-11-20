@@ -42,6 +42,12 @@ export const DashboardMobileSidebar = ({
     ...(hasPermission('products', 'view')
       ? [{ id: 'produtos', label: 'produtos', icon: Package }]
       : []),
+    ...(hasPermission('products', 'view')
+      ? [{ id: 'categorias-produtos', label: 'categorias de produtos', icon: FolderTree }]
+      : []),
+    ...(hasPermission('products', 'view')
+      ? [{ id: 'templates', label: 'templates', icon: FileBarChart }]
+      : []),
     ...(hasPermission('coupons', 'view')
       ? [{ id: 'cupons', label: 'cupons', icon: Tag }]
       : []),

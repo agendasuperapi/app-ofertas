@@ -22,6 +22,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import ProductAddonsManager from "./ProductAddonsManager";
 import { ProductFlavorsManager } from "./ProductFlavorsManager";
 import { ProductAddonsManagement } from "./ProductAddonsManagement";
+import { AddonTemplatesManager } from "./AddonTemplatesManager";
 import { EditOrderDialog } from "./EditOrderDialog";
 import { ReceiptDialog } from "./ReceiptDialog";
 import { NotesDialog } from "./NotesDialog";
@@ -2535,6 +2536,152 @@ export const StoreOwnerDashboard = () => {
             className="p-8"
           >
             <CouponsManager storeId={myStore.id} />
+          </motion.div>
+        )}
+
+        {activeTab === 'categorias-produtos' && myStore?.id && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="p-8 space-y-6"
+          >
+            <div>
+              <h2 className="text-2xl font-bold gradient-text mb-2">Categorias de Produtos</h2>
+              <p className="text-muted-foreground">Organize seus produtos em categorias</p>
+            </div>
+            
+            <Card className="border-border/50 shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent border-b border-border/50">
+                <CardTitle>Gerenciar Categorias</CardTitle>
+                <CardDescription>Adicione, edite ou remova categorias de produtos</CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex gap-3 flex-col sm:flex-row">
+                    <Input
+                      placeholder="Nova categoria"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={() => {
+                        if (newCategoryName.trim()) {
+                          addCategory(newCategoryName.trim());
+                          setNewCategoryName('');
+                        }
+                      }}
+                      disabled={!newCategoryName.trim()}
+                      className="gap-2 w-full sm:w-auto"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Adicionar
+                    </Button>
+                  </div>
+
+                  {loadingCategories ? (
+                    <div className="flex justify-center p-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {categories.map((category) => (
+                        <div
+                          key={category.id}
+                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex items-center gap-3 flex-1">
+                            {editingCategory?.id === category.id ? (
+                              <Input
+                                value={editingCategory.name}
+                                onChange={(e) => setEditingCategory({
+                                  ...editingCategory,
+                                  name: e.target.value,
+                                })}
+                                className="max-w-xs"
+                              />
+                            ) : (
+                              <>
+                                <FolderTree className="w-4 h-4 text-muted-foreground" />
+                                <span className="font-medium">{category.name}</span>
+                                <Badge variant={category.is_active ? "default" : "secondary"}>
+                                  {category.is_active ? "Ativa" : "Inativa"}
+                                </Badge>
+                              </>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {editingCategory?.id === category.id ? (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (editingCategory.name.trim()) {
+                                      updateCategory(category.id, editingCategory.name.trim());
+                                      setEditingCategory(null);
+                                    }
+                                  }}
+                                >
+                                  <Check className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setEditingCategory(null)}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setEditingCategory(category)}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => toggleCategoryStatus(category.id, !category.is_active)}
+                                >
+                                  {category.is_active ? (
+                                    <Eye className="w-4 h-4" />
+                                  ) : (
+                                    <X className="w-4 h-4" />
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => deleteCategory(category.id)}
+                                >
+                                  <Trash2 className="w-4 h-4 text-destructive" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {activeTab === 'templates' && myStore?.id && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="p-8"
+          >
+            <AddonTemplatesManager storeId={myStore.id} />
           </motion.div>
         )}
 
