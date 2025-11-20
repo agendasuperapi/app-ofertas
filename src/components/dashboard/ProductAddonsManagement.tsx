@@ -1,16 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAddonCategories } from "@/hooks/useAddonCategories";
 import { useStoreAddons } from "@/hooks/useStoreAddons";
-import { Plus, Pencil, Trash2, Check, X, Sparkles, Package } from "lucide-react";
+import { Plus, Pencil, Trash2, Check, X, Sparkles, Package, Copy } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { addonTemplates, BusinessTemplate } from "@/lib/addonTemplates";
 import { supabase } from "@/integrations/supabase/client";
@@ -303,15 +304,52 @@ export const AddonsTab = ({ storeId }: { storeId: string }) => {
 
 // Aba de Templates
 export const TemplatesTab = ({ storeId }: { storeId: string }) => {
-  const [selectedTemplate, setSelectedTemplate] = useState<BusinessTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<BusinessTemplate | any>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormOpen, setEditFormOpen] = useState(false);
+  const [customTemplates, setCustomTemplates] = useState<any[]>([]);
+  const [loadingCustom, setLoadingCustom] = useState(true);
+  const [editingTemplate, setEditingTemplate] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    description: '',
+    icon: '📦',
+    categories: [{ name: '', addons: [{ name: '', price: 0 }] }]
+  });
   const { refetch: refetchCategories } = useAddonCategories(storeId);
 
-  const handleApplyTemplate = async (template: BusinessTemplate) => {
+  // Carregar templates customizados
+  useEffect(() => {
+    loadCustomTemplates();
+  }, [storeId]);
+
+  const loadCustomTemplates = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('store_addon_templates' as any)
+        .select('*')
+        .eq('store_id', storeId)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading custom templates:', error);
+        setCustomTemplates([]);
+      } else {
+        setCustomTemplates(data || []);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setCustomTemplates([]);
+    } finally {
+      setLoadingCustom(false);
+    }
+  };
+
+  const handleApplyTemplate = async (template: BusinessTemplate | any) => {
     setIsApplying(true);
     try {
-      // Criar categorias
       for (const category of template.categories) {
         const { data: categoryData, error: categoryError } = await supabase
           .from('addon_categories')
@@ -324,13 +362,6 @@ export const TemplatesTab = ({ storeId }: { storeId: string }) => {
           .single();
 
         if (categoryError) throw categoryError;
-
-        // Criar adicionais da categoria (vinculados a um produto dummy temporário)
-        // Nota: Na prática, o usuário precisará vincular a produtos reais depois
-        for (const addon of category.addons) {
-          // Apenas criar a estrutura, não vincular a produtos ainda
-          console.log(`Template: ${addon.name} - R$ ${addon.price} em ${category.name}`);
-        }
       }
 
       await refetchCategories();
@@ -353,79 +384,349 @@ export const TemplatesTab = ({ storeId }: { storeId: string }) => {
     }
   };
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Templates Pré-configurados</CardTitle>
-        <CardDescription>
-          Escolha um template baseado no seu tipo de negócio para começar rapidamente
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {addonTemplates.map((template) => (
-            <Card key={template.id} className="cursor-pointer hover:border-primary transition-colors">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="text-4xl">{template.icon}</div>
-                  <div>
-                    <CardTitle className="text-lg">{template.name}</CardTitle>
-                    <CardDescription className="text-sm">
-                      {template.description}
-                    </CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  <div className="text-sm font-medium">Inclui:</div>
-                  <ul className="text-sm text-muted-foreground space-y-1">
-                    {template.categories.map((cat, idx) => (
-                      <li key={idx}>
-                        • {cat.name} ({cat.addons.length} adicionais)
-                      </li>
-                    ))}
-                  </ul>
-                  <Button
-                    onClick={() => {
-                      setSelectedTemplate(template);
-                      setPreviewOpen(true);
-                    }}
-                    className="w-full mt-4"
-                  >
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Visualizar e Aplicar
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </CardContent>
+  const handleSaveCustomTemplate = async () => {
+    if (!formData.name.trim()) {
+      toast({
+        title: "Nome obrigatório",
+        description: "Por favor, informe o nome do template.",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    try {
+      if (editingTemplate) {
+        const { error } = await supabase
+          .from('store_addon_templates' as any)
+          .update({
+            name: formData.name,
+            description: formData.description,
+            icon: formData.icon,
+            categories: formData.categories,
+          })
+          .eq('id', editingTemplate.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Template atualizado!",
+          description: "Suas alterações foram salvas.",
+        });
+      } else {
+        const { error } = await supabase
+          .from('store_addon_templates' as any)
+          .insert({
+            store_id: storeId,
+            name: formData.name,
+            description: formData.description,
+            icon: formData.icon,
+            categories: formData.categories,
+            is_custom: true,
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "Template criado!",
+          description: "Seu template personalizado foi criado com sucesso.",
+        });
+      }
+
+      setEditFormOpen(false);
+      setEditingTemplate(null);
+      setFormData({
+        name: '',
+        description: '',
+        icon: '📦',
+        categories: [{ name: '', addons: [{ name: '', price: 0 }] }]
+      });
+      await loadCustomTemplates();
+    } catch (error: any) {
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteCustomTemplate = async (templateId: string) => {
+    try {
+      const { error } = await supabase
+        .from('store_addon_templates' as any)
+        .delete()
+        .eq('id', templateId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Template excluído!",
+        description: "O template foi removido com sucesso.",
+      });
+
+      await loadCustomTemplates();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao excluir",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDuplicateTemplate = (template: any) => {
+    setEditingTemplate(null);
+    setFormData({
+      name: `${template.name} (Cópia)`,
+      description: template.description,
+      icon: template.icon,
+      categories: JSON.parse(JSON.stringify(template.categories)),
+    });
+    setEditFormOpen(true);
+  };
+
+  const handleEditTemplate = (template: any) => {
+    setEditingTemplate(template);
+    setFormData({
+      name: template.name,
+      description: template.description || '',
+      icon: template.icon || '📦',
+      categories: template.categories || [{ name: '', addons: [{ name: '', price: 0 }] }],
+    });
+    setEditFormOpen(true);
+  };
+
+  const addCategory = () => {
+    setFormData({
+      ...formData,
+      categories: [...formData.categories, { name: '', addons: [{ name: '', price: 0 }] }]
+    });
+  };
+
+  const removeCategory = (index: number) => {
+    const newCategories = formData.categories.filter((_, i) => i !== index);
+    setFormData({ ...formData, categories: newCategories });
+  };
+
+  const updateCategory = (index: number, name: string) => {
+    const newCategories = [...formData.categories];
+    newCategories[index].name = name;
+    setFormData({ ...formData, categories: newCategories });
+  };
+
+  const addAddon = (categoryIndex: number) => {
+    const newCategories = [...formData.categories];
+    newCategories[categoryIndex].addons.push({ name: '', price: 0 });
+    setFormData({ ...formData, categories: newCategories });
+  };
+
+  const removeAddon = (categoryIndex: number, addonIndex: number) => {
+    const newCategories = [...formData.categories];
+    newCategories[categoryIndex].addons = newCategories[categoryIndex].addons.filter((_, i) => i !== addonIndex);
+    setFormData({ ...formData, categories: newCategories });
+  };
+
+  const updateAddon = (categoryIndex: number, addonIndex: number, field: 'name' | 'price', value: any) => {
+    const newCategories = [...formData.categories];
+    if (field === 'price') {
+      newCategories[categoryIndex].addons[addonIndex][field] = value;
+    } else {
+      newCategories[categoryIndex].addons[addonIndex][field] = value;
+    }
+    setFormData({ ...formData, categories: newCategories });
+  };
+
+  const allTemplates = [...addonTemplates, ...customTemplates];
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Templates de Adicionais</CardTitle>
+              <CardDescription>
+                Use templates pré-configurados ou crie seus próprios templates personalizados
+              </CardDescription>
+            </div>
+            <Button onClick={() => {
+              setEditingTemplate(null);
+              setFormData({
+                name: '',
+                description: '',
+                icon: '📦',
+                categories: [{ name: '', addons: [{ name: '', price: 0 }] }]
+              });
+              setEditFormOpen(true);
+            }}>
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Template
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Templates Pré-configurados */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Templates Pré-configurados</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {addonTemplates.map((template) => (
+                <Card key={template.id} className="hover:border-primary transition-colors">
+                  <CardHeader>
+                    <div className="flex items-center gap-3">
+                      <div className="text-3xl">{template.icon}</div>
+                      <div className="flex-1">
+                        <CardTitle className="text-base">{template.name}</CardTitle>
+                        <CardDescription className="text-xs">
+                          {template.description}
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="text-xs">
+                        <span className="font-medium">Inclui:</span>
+                        <ul className="text-muted-foreground space-y-1 mt-1">
+                          {template.categories.map((cat, idx) => (
+                            <li key={idx}>• {cat.name} ({cat.addons.length})</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => {
+                            setSelectedTemplate(template);
+                            setPreviewOpen(true);
+                          }}
+                          className="flex-1"
+                          size="sm"
+                        >
+                          <Sparkles className="w-3 h-3 mr-1" />
+                          Aplicar
+                        </Button>
+                        <Button
+                          onClick={() => handleDuplicateTemplate(template)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Copy className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Templates Personalizados */}
+          {!loadingCustom && customTemplates.length > 0 && (
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Meus Templates</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {customTemplates.map((template) => (
+                  <Card key={template.id} className="hover:border-primary transition-colors">
+                    <CardHeader>
+                      <div className="flex items-center gap-3">
+                        <div className="text-3xl">{template.icon}</div>
+                        <div className="flex-1">
+                          <CardTitle className="text-base">{template.name}</CardTitle>
+                          <CardDescription className="text-xs">
+                            {template.description}
+                          </CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="text-xs">
+                          <span className="font-medium">Inclui:</span>
+                          <ul className="text-muted-foreground space-y-1 mt-1">
+                            {template.categories.map((cat: any, idx: number) => (
+                              <li key={idx}>• {cat.name} ({cat.addons.length})</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => {
+                              setSelectedTemplate(template);
+                              setPreviewOpen(true);
+                            }}
+                            className="flex-1"
+                            size="sm"
+                          >
+                            <Sparkles className="w-3 h-3 mr-1" />
+                            Aplicar
+                          </Button>
+                          <Button
+                            onClick={() => handleEditTemplate(template)}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Pencil className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            onClick={() => handleDuplicateTemplate(template)}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm">
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir Template</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir este template? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteCustomTemplate(template.id)}>
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Dialog de Visualização e Aplicação */}
       <AlertDialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <AlertDialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <span className="text-2xl">{selectedTemplate?.icon}</span>
-              Preview: {selectedTemplate?.name}
+            <AlertDialogTitle className="flex items-center gap-3">
+              <span className="text-4xl">{selectedTemplate?.icon}</span>
+              {selectedTemplate?.name}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Este template criará as seguintes categorias e adicionais:
+              {selectedTemplate?.description}
             </AlertDialogDescription>
           </AlertDialogHeader>
-
+          
           <div className="space-y-4 py-4">
-            {selectedTemplate?.categories.map((category, idx) => (
-              <div key={idx} className="space-y-2">
-                <h4 className="font-semibold">{category.name}</h4>
-                <div className="pl-4 space-y-1">
-                  {category.addons.map((addon, addonIdx) => (
-                    <div key={addonIdx} className="flex justify-between text-sm">
+            {selectedTemplate?.categories.map((category: any, catIdx: number) => (
+              <div key={catIdx} className="border rounded-lg p-4">
+                <h4 className="font-semibold mb-3">{category.name}</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {category.addons.map((addon: any, addonIdx: number) => (
+                    <div key={addonIdx} className="flex justify-between items-center text-sm p-2 bg-muted rounded">
                       <span>{addon.name}</span>
-                      <span className="text-muted-foreground">
-                        R$ {addon.price.toFixed(2)}
-                      </span>
+                      <Badge variant="secondary">R$ {addon.price.toFixed(2)}</Badge>
                     </div>
                   ))}
                 </div>
@@ -439,11 +740,132 @@ export const TemplatesTab = ({ storeId }: { storeId: string }) => {
               onClick={() => selectedTemplate && handleApplyTemplate(selectedTemplate)}
               disabled={isApplying}
             >
-              {isApplying ? "Aplicando..." : "Aplicar Template"}
+              {isApplying ? 'Aplicando...' : 'Aplicar Template'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Card>
+
+      {/* Dialog de Edição/Criação */}
+      <Dialog open={editFormOpen} onOpenChange={setEditFormOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingTemplate ? 'Editar Template' : 'Novo Template Personalizado'}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Nome do Template</Label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Ex: Pizzaria Premium"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Ícone (Emoji)</Label>
+                <Input
+                  value={formData.icon}
+                  onChange={(e) => setFormData({ ...formData, icon: e.target.value })}
+                  placeholder="🍕"
+                  maxLength={2}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Input
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Descreva seu template..."
+              />
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label className="text-base">Categorias e Adicionais</Label>
+                <Button onClick={addCategory} size="sm" variant="outline">
+                  <Plus className="w-4 h-4 mr-1" />
+                  Adicionar Categoria
+                </Button>
+              </div>
+
+              {formData.categories.map((category, catIdx) => (
+                <Card key={catIdx}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        value={category.name}
+                        onChange={(e) => updateCategory(catIdx, e.target.value)}
+                        placeholder="Nome da categoria"
+                        className="flex-1"
+                      />
+                      <Button
+                        onClick={() => removeCategory(catIdx)}
+                        size="sm"
+                        variant="ghost"
+                        disabled={formData.categories.length === 1}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {category.addons.map((addon, addonIdx) => (
+                      <div key={addonIdx} className="flex items-center gap-2">
+                        <Input
+                          value={addon.name}
+                          onChange={(e) => updateAddon(catIdx, addonIdx, 'name', e.target.value)}
+                          placeholder="Nome do adicional"
+                          className="flex-1"
+                        />
+                        <Input
+                          type="number"
+                          value={addon.price}
+                          onChange={(e) => updateAddon(catIdx, addonIdx, 'price', parseFloat(e.target.value) || 0)}
+                          placeholder="Preço"
+                          className="w-28"
+                          step="0.01"
+                        />
+                        <Button
+                          onClick={() => removeAddon(catIdx, addonIdx)}
+                          size="sm"
+                          variant="ghost"
+                          disabled={category.addons.length === 1}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      onClick={() => addAddon(catIdx)}
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Adicionar Adicional
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setEditFormOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveCustomTemplate}>
+              {editingTemplate ? 'Salvar Alterações' : 'Criar Template'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
