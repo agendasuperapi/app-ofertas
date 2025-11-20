@@ -539,4 +539,4 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
     </AlertDialog>
   </>
   );
-};
+}
