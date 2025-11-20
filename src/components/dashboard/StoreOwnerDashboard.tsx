@@ -3047,8 +3047,11 @@ export const StoreOwnerDashboard = () => {
                         </TabsContent>
 
                         <TabsContent value="addons" className="mt-4 max-h-[50vh] overflow-y-auto pr-2">
-                          {editingProduct && (
-                            <ProductAddonsManager productId={editingProduct.id} />
+                          {editingProduct && myStore && (
+                            <ProductAddonsManager 
+                              productId={editingProduct.id}
+                              storeId={myStore.id}
+                            />
                           )}
                         </TabsContent>
 

@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      addon_categories: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          store_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          store_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          store_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addon_categories_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_settings: {
         Row: {
           key: string
@@ -573,6 +611,7 @@ export type Database = {
       }
       product_addons: {
         Row: {
+          category_id: string | null
           created_at: string
           id: string
           is_available: boolean | null
@@ -582,6 +621,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category_id?: string | null
           created_at?: string
           id?: string
           is_available?: boolean | null
@@ -591,6 +631,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category_id?: string | null
           created_at?: string
           id?: string
           is_available?: boolean | null
@@ -600,6 +641,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "product_addons_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "addon_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "product_addons_product_id_fkey"
             columns: ["product_id"]
