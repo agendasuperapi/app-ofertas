@@ -9,6 +9,7 @@ export interface ProductAddon {
   price: number;
   is_available: boolean;
   category_id: string | null;
+  display_order: number;
   created_at: string;
   updated_at: string;
 }
@@ -30,7 +31,7 @@ export const useProductAddons = (productId?: string) => {
         .from('product_addons')
         .select('*')
         .eq('product_id', productId!)
-        .order('created_at', { ascending: true });
+        .order('display_order', { ascending: true });
 
       if (error) throw error;
       return data as ProductAddon[];
@@ -118,14 +119,41 @@ export const useProductAddons = (productId?: string) => {
     },
   });
 
+  const reorderAddonsMutation = useMutation({
+    mutationFn: async (reorderedAddons: { id: string; display_order: number }[]) => {
+      const updates = reorderedAddons.map(({ id, display_order }) =>
+        supabase
+          .from('product_addons')
+          .update({ display_order } as any)
+          .eq('id', id)
+      );
+
+      const results = await Promise.all(updates);
+      const error = results.find(r => r.error)?.error;
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product-addons'] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao reordenar adicionais',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   return {
     addons: addonsQuery.data,
     isLoading: addonsQuery.isLoading,
     createAddon: createAddonMutation.mutate,
     updateAddon: updateAddonMutation.mutate,
     deleteAddon: deleteAddonMutation.mutate,
+    reorderAddons: reorderAddonsMutation.mutate,
     isCreating: createAddonMutation.isPending,
     isUpdating: updateAddonMutation.isPending,
     isDeleting: deleteAddonMutation.isPending,
+    isReordering: reorderAddonsMutation.isPending,
   };
 };

@@ -4,20 +4,107 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Edit, DollarSign, FolderTree, X } from "lucide-react";
+import { Plus, Trash2, Edit, DollarSign, FolderTree, X, GripVertical } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProductAddons } from "@/hooks/useProductAddons";
 import { useAddonCategories } from "@/hooks/useAddonCategories";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface ProductAddonsManagerProps {
   productId: string;
   storeId: string;
 }
 
+interface SortableAddonProps {
+  addon: any;
+  onEdit: (addon: any) => void;
+  onDelete: (id: string) => void;
+  isDeleting: boolean;
+}
+
+const SortableAddon = ({ addon, onEdit, onDelete, isDeleting }: SortableAddonProps) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: addon.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+    >
+      <div className="flex items-center gap-3 flex-1">
+        <button
+          className="cursor-grab active:cursor-grabbing touch-none"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="w-4 h-4 text-muted-foreground" />
+        </button>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-medium">{addon.name}</span>
+            <Badge variant={addon.is_available ? "default" : "secondary"} className="text-xs">
+              {addon.is_available ? 'Disponível' : 'Indisponível'}
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            + R$ {addon.price.toFixed(2)}
+          </p>
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => onEdit(addon)}
+        >
+          <Edit className="w-4 h-4" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={() => onDelete(addon.id)}
+          disabled={isDeleting}
+        >
+          <Trash2 className="w-4 h-4 text-destructive" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 export const ProductAddonsManager = ({ productId, storeId }: ProductAddonsManagerProps) => {
-  const { addons, createAddon, updateAddon, deleteAddon, isCreating, isDeleting } = useProductAddons(productId);
+  const { addons, createAddon, updateAddon, deleteAddon, reorderAddons, isCreating, isDeleting } = useProductAddons(productId);
   const { categories } = useAddonCategories(storeId);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -29,6 +116,13 @@ export const ProductAddonsManager = ({ productId, storeId }: ProductAddonsManage
     category_id: null as string | null,
   });
   const formRef = useRef<HTMLDivElement>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const activeCategories = categories.filter(cat => cat.is_active);
 
@@ -87,6 +181,23 @@ export const ProductAddonsManager = ({ productId, storeId }: ProductAddonsManage
     setIsAdding(false);
     setEditingId(null);
     setFormData({ name: '', price: 0, is_available: true, category_id: null });
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id || !addons) return;
+
+    const oldIndex = addons.findIndex((addon) => addon.id === active.id);
+    const newIndex = addons.findIndex((addon) => addon.id === over.id);
+
+    const reordered = arrayMove(addons, oldIndex, newIndex);
+    const updates = reordered.map((addon, index) => ({
+      id: addon.id,
+      display_order: index,
+    }));
+
+    reorderAddons(updates);
   };
 
   return (
@@ -218,143 +329,86 @@ export const ProductAddonsManager = ({ productId, storeId }: ProductAddonsManage
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {categoryFilter === 'all' ? (
-              // Group by category view
-              <>
-                {addonsByCategory.uncategorized.length > 0 && (
-                  <div key="uncategorized" className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-2">
-                      <FolderTree className="w-4 h-4" />
-                      Sem categoria
-                    </div>
-                    {addonsByCategory.uncategorized.map((addon) => (
-                      <div
-                        key={addon.id}
-                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{addon.name}</span>
-                            <Badge variant={addon.is_available ? "default" : "secondary"} className="text-xs">
-                              {addon.is_available ? 'Disponível' : 'Indisponível'}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            + R$ {addon.price.toFixed(2)}
-                          </p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleEdit(addon)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => deleteAddon(addon.id)}
-                            disabled={isDeleting}
-                          >
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {activeCategories.map((category) => {
-                  const categoryAddons = addonsByCategory[category.id];
-                  if (!categoryAddons || categoryAddons.length === 0) return null;
-
-                  return (
-                    <div key={category.id} className="space-y-2">
-                      <Separator className="my-4" />
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="space-y-2">
+              {categoryFilter === 'all' ? (
+                // Group by category view
+                <>
+                  {addonsByCategory.uncategorized.length > 0 && (
+                    <div key="uncategorized" className="space-y-2">
                       <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-2">
                         <FolderTree className="w-4 h-4" />
-                        {category.name}
+                        Sem categoria
                       </div>
-                      {categoryAddons.map((addon) => (
-                        <div
-                          key={addon.id}
-                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                        >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{addon.name}</span>
-                              <Badge variant={addon.is_available ? "default" : "secondary"} className="text-xs">
-                                {addon.is_available ? 'Disponível' : 'Indisponível'}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-muted-foreground">
-                              + R$ {addon.price.toFixed(2)}
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEdit(addon)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => deleteAddon(addon.id)}
-                              disabled={isDeleting}
-                            >
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </div>
+                      <SortableContext
+                        items={addonsByCategory.uncategorized.map((a) => a.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {addonsByCategory.uncategorized.map((addon) => (
+                          <SortableAddon
+                            key={addon.id}
+                            addon={addon}
+                            onEdit={handleEdit}
+                            onDelete={deleteAddon}
+                            isDeleting={isDeleting}
+                          />
+                        ))}
+                      </SortableContext>
+                    </div>
+                  )}
+
+                  {activeCategories.map((category) => {
+                    const categoryAddons = addonsByCategory[category.id];
+                    if (!categoryAddons || categoryAddons.length === 0) return null;
+
+                    return (
+                      <div key={category.id} className="space-y-2">
+                        <Separator className="my-4" />
+                        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-2">
+                          <FolderTree className="w-4 h-4" />
+                          {category.name}
                         </div>
-                      ))}
-                    </div>
-                  );
-                })}
-              </>
-            ) : (
-              // Filtered view
-              filteredAddons.map((addon) => (
-                <div
-                  key={addon.id}
-                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                        <SortableContext
+                          items={categoryAddons.map((a) => a.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          {categoryAddons.map((addon) => (
+                            <SortableAddon
+                              key={addon.id}
+                              addon={addon}
+                              onEdit={handleEdit}
+                              onDelete={deleteAddon}
+                              isDeleting={isDeleting}
+                            />
+                          ))}
+                        </SortableContext>
+                      </div>
+                    );
+                  })}
+                </>
+              ) : (
+                // Filtered view
+                <SortableContext
+                  items={filteredAddons.map((a) => a.id)}
+                  strategy={verticalListSortingStrategy}
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">{addon.name}</span>
-                      <Badge variant={addon.is_available ? "default" : "secondary"} className="text-xs">
-                        {addon.is_available ? 'Disponível' : 'Indisponível'}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      + R$ {addon.price.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleEdit(addon)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => deleteAddon(addon.id)}
-                      disabled={isDeleting}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+                  {filteredAddons.map((addon) => (
+                    <SortableAddon
+                      key={addon.id}
+                      addon={addon}
+                      onEdit={handleEdit}
+                      onDelete={deleteAddon}
+                      isDeleting={isDeleting}
+                    />
+                  ))}
+                </SortableContext>
+              )}
+            </div>
+          </DndContext>
         )}
       </CardContent>
     </Card>
