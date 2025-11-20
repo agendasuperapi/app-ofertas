@@ -223,4 +223,72 @@ export const addonTemplates: BusinessTemplate[] = [
       },
     ],
   },
+  {
+    id: 'restaurante',
+    name: 'Restaurante',
+    businessType: 'Restaurante',
+    icon: '🍽️',
+    description: 'Template completo para restaurantes com acompanhamentos, molhos, bebidas e sobremesas',
+    categories: [
+      {
+        name: 'Acompanhamentos',
+        addons: [
+          { name: 'Arroz Branco', price: 5.00 },
+          { name: 'Feijão', price: 5.00 },
+          { name: 'Batata Frita', price: 8.00 },
+          { name: 'Purê de Batata', price: 7.00 },
+          { name: 'Farofa', price: 6.00 },
+          { name: 'Legumes no Vapor', price: 8.00 },
+        ],
+      },
+      {
+        name: 'Saladas e Verduras',
+        addons: [
+          { name: 'Salada Verde', price: 8.00 },
+          { name: 'Salada Caesar', price: 12.00 },
+          { name: 'Vinagrete', price: 5.00 },
+          { name: 'Couve Refogada', price: 6.00 },
+        ],
+      },
+      {
+        name: 'Molhos',
+        addons: [
+          { name: 'Molho de Tomate Caseiro', price: 3.00 },
+          { name: 'Molho Branco', price: 4.00 },
+          { name: 'Molho Madeira', price: 5.00 },
+          { name: 'Vinagrete', price: 2.00 },
+          { name: 'Molho de Pimenta', price: 2.00 },
+        ],
+      },
+      {
+        name: 'Bebidas',
+        addons: [
+          { name: 'Refrigerante Lata', price: 5.00 },
+          { name: 'Refrigerante 2L', price: 12.00 },
+          { name: 'Suco Natural 300ml', price: 8.00 },
+          { name: 'Suco Natural 500ml', price: 12.00 },
+          { name: 'Água Mineral', price: 3.00 },
+          { name: 'Água com Gás', price: 4.00 },
+        ],
+      },
+      {
+        name: 'Sobremesas',
+        addons: [
+          { name: 'Pudim', price: 8.00 },
+          { name: 'Brigadeiro', price: 2.00 },
+          { name: 'Sorvete', price: 10.00 },
+          { name: 'Mousse de Chocolate', price: 9.00 },
+          { name: 'Petit Gateau', price: 15.00 },
+        ],
+      },
+      {
+        name: 'Ponto da Carne',
+        addons: [
+          { name: 'Mal Passado', price: 0 },
+          { name: 'Ao Ponto', price: 0 },
+          { name: 'Bem Passado', price: 0 },
+        ],
+      },
+    ],
+  },
 ];
