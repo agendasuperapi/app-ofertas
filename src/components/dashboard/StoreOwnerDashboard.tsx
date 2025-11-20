@@ -21,6 +21,7 @@ import { validatePixKey } from "@/lib/pixValidation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ProductAddonsManager } from "./ProductAddonsManager";
 import { ProductFlavorsManager } from "./ProductFlavorsManager";
+import { AddonCategoriesManager } from "./AddonCategoriesManager";
 import { EditOrderDialog } from "./EditOrderDialog";
 import { ReceiptDialog } from "./ReceiptDialog";
 import { NotesDialog } from "./NotesDialog";
@@ -2764,6 +2765,17 @@ export const StoreOwnerDashboard = () => {
                 </div>
               </DialogContent>
             </Dialog>
+          </motion.div>
+        )}
+
+        {activeTab === 'categorias-adicionais' && myStore?.id && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="p-8"
+          >
+            <AddonCategoriesManager storeId={myStore.id} />
           </motion.div>
         )}
 
