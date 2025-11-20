@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Edit, DollarSign, FolderTree, X, GripVertical, Copy, Search, Store, Lightbulb } from "lucide-react";
+import { Plus, Trash2, Edit, DollarSign, FolderTree, X, GripVertical, Copy, Search, Store, Lightbulb, Download, Package } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProductAddons } from "@/hooks/useProductAddons";
 import { useAddonCategories } from "@/hooks/useAddonCategories";
@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   DndContext,
@@ -42,6 +42,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Checkbox } from "@/components/ui/checkbox";
 import { addonTemplates, type BusinessTemplate } from "@/lib/addonTemplates";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 interface ProductAddonsManagerProps {
   productId: string;
@@ -158,6 +160,10 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
   const [isStoreAddonsOpen, setIsStoreAddonsOpen] = useState(false);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [storeAddonsSearch, setStoreAddonsSearch] = useState('');
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [selectedTemplateCategories, setSelectedTemplateCategories] = useState<Record<string, boolean>>({});
+  const [isImporting, setIsImporting] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
@@ -369,6 +375,103 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
     });
   };
 
+  const handleToggleTemplateCategory = (categoryName: string, checked: boolean) => {
+    setSelectedTemplateCategories(prev => ({
+      ...prev,
+      [categoryName]: checked
+    }));
+  };
+
+  const handleImportTemplates = async () => {
+    if (!selectedTemplate) return;
+
+    const template = addonTemplates.find(t => t.id === selectedTemplate);
+    if (!template) return;
+
+    setIsImporting(true);
+
+    try {
+      // Get selected categories
+      const selectedCategories = template.categories.filter(
+        cat => selectedTemplateCategories[cat.name]
+      );
+
+      if (selectedCategories.length === 0) {
+        toast({
+          title: 'Nenhuma categoria selecionada',
+          description: 'Selecione pelo menos uma categoria para importar.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const category of selectedCategories) {
+        // Check if category already exists
+        let categoryId = categories.find(c => c.name === category.name)?.id;
+
+        // Create category if it doesn't exist
+        if (!categoryId) {
+          const { data: newCategory, error: categoryError } = await supabase
+            .from('addon_categories')
+            .insert({
+              store_id: storeId,
+              name: category.name,
+              is_active: true,
+            })
+            .select()
+            .single();
+
+          if (categoryError) {
+            console.error('Error creating category:', categoryError);
+            errorCount++;
+            continue;
+          }
+
+          categoryId = newCategory.id;
+        }
+
+        // Create all addons in this category
+        for (const addon of category.addons) {
+          try {
+            await createAddon({
+              name: addon.name,
+              price: addon.price,
+              is_available: true,
+              category_id: categoryId,
+              product_id: productId,
+            });
+            successCount++;
+          } catch (error) {
+            console.error('Error creating addon:', error);
+            errorCount++;
+          }
+        }
+      }
+
+      toast({
+        title: 'Importação concluída!',
+        description: `${successCount} adicionais importados com sucesso${errorCount > 0 ? `. ${errorCount} falharam.` : '.'}`,
+      });
+
+      // Reset state
+      setIsImportDialogOpen(false);
+      setSelectedTemplate(null);
+      setSelectedTemplateCategories({});
+    } catch (error) {
+      console.error('Error importing templates:', error);
+      toast({
+        title: 'Erro ao importar',
+        description: 'Ocorreu um erro ao importar os templates.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   const totalAddons = addons?.length || 0;
   const availableAddons = addons?.filter(a => a.is_available).length || 0;
 
@@ -393,6 +496,10 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
             </div>
             {!isAdding && (
               <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setIsImportDialogOpen(true)}>
+                  <Download className="w-4 h-4 mr-2" />
+                  Importar Templates
+                </Button>
                 <Button size="sm" variant="outline" onClick={() => setIsStoreAddonsOpen(true)}>
                   <Store className="w-4 h-4 mr-2" />
                   Adicionais da Loja
@@ -828,6 +935,160 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
               </>
             )}
           </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+
+    {/* Import Templates Dialog */}
+    <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+      <DialogContent className="max-w-4xl max-h-[85vh]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Download className="w-5 h-5" />
+            Importar Templates de Adicionais
+          </DialogTitle>
+          <DialogDescription>
+            Selecione um template e as categorias que deseja importar. As categorias serão criadas automaticamente se não existirem.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6 overflow-y-auto max-h-[calc(85vh-180px)]">
+          {/* Template Selection */}
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Escolha um Template</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {addonTemplates.map((template) => (
+                <button
+                  key={template.id}
+                  onClick={() => {
+                    setSelectedTemplate(template.id);
+                    setSelectedTemplateCategories({});
+                  }}
+                  className={`p-4 border-2 rounded-lg text-left transition-all hover:shadow-md ${
+                    selectedTemplate === template.id
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/50'
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span className="text-3xl">{template.icon}</span>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg">{template.name}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{template.description}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="secondary" className="text-xs">
+                          {template.categories.length} categorias
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {template.categories.reduce((sum, cat) => sum + cat.addons.length, 0)} adicionais
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Category Selection */}
+          {selectedTemplate && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold">Selecione as Categorias</Label>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      const template = addonTemplates.find(t => t.id === selectedTemplate);
+                      if (template) {
+                        const allSelected = template.categories.every(
+                          cat => selectedTemplateCategories[cat.name]
+                        );
+                        const newSelection: Record<string, boolean> = {};
+                        template.categories.forEach(cat => {
+                          newSelection[cat.name] = !allSelected;
+                        });
+                        setSelectedTemplateCategories(newSelection);
+                      }
+                    }}
+                  >
+                    {addonTemplates
+                      .find(t => t.id === selectedTemplate)
+                      ?.categories.every(cat => selectedTemplateCategories[cat.name])
+                      ? 'Desmarcar Todas'
+                      : 'Selecionar Todas'}
+                  </Button>
+                </div>
+
+                <div className="grid gap-3">
+                  {addonTemplates
+                    .find(t => t.id === selectedTemplate)
+                    ?.categories.map((category) => (
+                      <div
+                        key={category.name}
+                        className="border rounded-lg p-4 hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            checked={selectedTemplateCategories[category.name] || false}
+                            onCheckedChange={(checked) =>
+                              handleToggleTemplateCategory(category.name, Boolean(checked))
+                            }
+                            className="mt-1"
+                          />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <FolderTree className="w-4 h-4 text-muted-foreground" />
+                              <span className="font-semibold">{category.name}</span>
+                              <Badge variant="secondary" className="text-xs">
+                                {category.addons.length} adicionais
+                              </Badge>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                              {category.addons.map((addon, idx) => (
+                                <div
+                                  key={idx}
+                                  className="text-xs p-2 bg-muted/50 rounded flex items-center justify-between"
+                                >
+                                  <span className="truncate">{addon.name}</span>
+                                  <span className="text-muted-foreground ml-2 whitespace-nowrap">
+                                    R$ {addon.price.toFixed(2)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button variant="outline" onClick={() => setIsImportDialogOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleImportTemplates}
+            disabled={!selectedTemplate || Object.values(selectedTemplateCategories).every(v => !v) || isImporting}
+          >
+            {isImporting ? (
+              <>
+                <Package className="w-4 h-4 mr-2 animate-spin" />
+                Importando...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4 mr-2" />
+                Importar Selecionados
+              </>
+            )}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
