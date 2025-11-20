@@ -1,26 +1,56 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Trash2, Edit, DollarSign } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Trash2, Edit, DollarSign, FolderTree, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProductAddons } from "@/hooks/useProductAddons";
+import { useAddonCategories } from "@/hooks/useAddonCategories";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 
 interface ProductAddonsManagerProps {
   productId: string;
+  storeId: string;
 }
 
-export const ProductAddonsManager = ({ productId }: ProductAddonsManagerProps) => {
+export const ProductAddonsManager = ({ productId, storeId }: ProductAddonsManagerProps) => {
   const { addons, createAddon, updateAddon, deleteAddon, isCreating, isDeleting } = useProductAddons(productId);
+  const { categories } = useAddonCategories(storeId);
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [formData, setFormData] = useState({
     name: '',
     price: 0,
     is_available: true,
+    category_id: null as string | null,
   });
+
+  const activeCategories = categories.filter(cat => cat.is_active);
+
+  const filteredAddons = useMemo(() => {
+    if (!addons) return [];
+    if (categoryFilter === 'all') return addons;
+    if (categoryFilter === 'uncategorized') return addons.filter(a => !a.category_id);
+    return addons.filter(a => a.category_id === categoryFilter);
+  }, [addons, categoryFilter]);
+
+  const addonsByCategory = useMemo(() => {
+    if (!addons) return {};
+    
+    const grouped: Record<string, typeof addons> = {
+      uncategorized: addons.filter(a => !a.category_id)
+    };
+
+    activeCategories.forEach(cat => {
+      grouped[cat.id] = addons.filter(a => a.category_id === cat.id);
+    });
+
+    return grouped;
+  }, [addons, activeCategories]);
 
   const handleSubmit = () => {
     if (!formData.name.trim()) return;
@@ -32,7 +62,7 @@ export const ProductAddonsManager = ({ productId }: ProductAddonsManagerProps) =
       createAddon({ ...formData, product_id: productId });
     }
     
-    setFormData({ name: '', price: 0, is_available: true });
+    setFormData({ name: '', price: 0, is_available: true, category_id: null });
     setIsAdding(false);
   };
 
@@ -42,6 +72,7 @@ export const ProductAddonsManager = ({ productId }: ProductAddonsManagerProps) =
       name: addon.name,
       price: addon.price,
       is_available: addon.is_available,
+      category_id: addon.category_id || null,
     });
     setIsAdding(true);
   };
@@ -49,7 +80,7 @@ export const ProductAddonsManager = ({ productId }: ProductAddonsManagerProps) =
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ name: '', price: 0, is_available: true });
+    setFormData({ name: '', price: 0, is_available: true, category_id: null });
   };
 
   return (
@@ -79,6 +110,28 @@ export const ProductAddonsManager = ({ productId }: ProductAddonsManagerProps) =
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
+
+            {activeCategories.length > 0 && (
+              <div className="space-y-2">
+                <Label>Categoria (opcional)</Label>
+                <Select
+                  value={formData.category_id || 'none'}
+                  onValueChange={(value) => setFormData({ ...formData, category_id: value === 'none' ? null : value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem categoria</SelectItem>
+                    {activeCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             
             <div className="space-y-2">
               <Label>Preço Adicional</Label>
@@ -110,56 +163,193 @@ export const ProductAddonsManager = ({ productId }: ProductAddonsManagerProps) =
               <Button onClick={handleSubmit} disabled={isCreating} className="flex-1">
                 {editingId ? 'Atualizar' : 'Adicionar'}
               </Button>
-              <Button variant="outline" onClick={handleCancel}>
-                Cancelar
+              <Button onClick={handleCancel} variant="outline">
+                <X className="w-4 h-4" />
               </Button>
             </div>
           </div>
         )}
 
-        <div className="space-y-2">
-          {addons && addons.length > 0 ? (
-            addons.map((addon) => (
-              <div
-                key={addon.id}
-                className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+        {/* Filter by category */}
+        {activeCategories.length > 0 && !isAdding && addons && addons.length > 0 && (
+          <div className="flex items-center gap-2">
+            <FolderTree className="w-4 h-4 text-muted-foreground" />
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filtrar por categoria" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as categorias</SelectItem>
+                <SelectItem value="uncategorized">Sem categoria</SelectItem>
+                {activeCategories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {categoryFilter !== 'all' && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setCategoryFilter('all')}
               >
-                <div className="flex items-center gap-3 flex-1">
-                  <div>
-                    <p className="font-medium">{addon.name}</p>
+                <X className="w-4 h-4 mr-1" />
+                Limpar
+              </Button>
+            )}
+          </div>
+        )}
+
+        {!addons || filteredAddons.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>{categoryFilter !== 'all' ? 'Nenhum adicional nesta categoria' : 'Nenhum adicional cadastrado'}</p>
+            <p className="text-sm">
+              {categoryFilter !== 'all' 
+                ? 'Tente selecionar outra categoria' 
+                : 'Adicione adicionais ao produto para oferecer opções personalizadas aos clientes'
+              }
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {categoryFilter === 'all' ? (
+              // Group by category view
+              <>
+                {addonsByCategory.uncategorized.length > 0 && (
+                  <div key="uncategorized" className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-2">
+                      <FolderTree className="w-4 h-4" />
+                      Sem categoria
+                    </div>
+                    {addonsByCategory.uncategorized.map((addon) => (
+                      <div
+                        key={addon.id}
+                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{addon.name}</span>
+                            <Badge variant={addon.is_available ? "default" : "secondary"} className="text-xs">
+                              {addon.is_available ? 'Disponível' : 'Indisponível'}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            + R$ {addon.price.toFixed(2)}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(addon)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => deleteAddon(addon.id)}
+                            disabled={isDeleting}
+                          >
+                            <Trash2 className="w-4 h-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {activeCategories.map((category) => {
+                  const categoryAddons = addonsByCategory[category.id];
+                  if (!categoryAddons || categoryAddons.length === 0) return null;
+
+                  return (
+                    <div key={category.id} className="space-y-2">
+                      <Separator className="my-4" />
+                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-2">
+                        <FolderTree className="w-4 h-4" />
+                        {category.name}
+                      </div>
+                      {categoryAddons.map((addon) => (
+                        <div
+                          key={addon.id}
+                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{addon.name}</span>
+                              <Badge variant={addon.is_available ? "default" : "secondary"} className="text-xs">
+                                {addon.is_available ? 'Disponível' : 'Indisponível'}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              + R$ {addon.price.toFixed(2)}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEdit(addon)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => deleteAddon(addon.id)}
+                              disabled={isDeleting}
+                            >
+                              <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })}
+              </>
+            ) : (
+              // Filtered view
+              filteredAddons.map((addon) => (
+                <div
+                  key={addon.id}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{addon.name}</span>
+                      <Badge variant={addon.is_available ? "default" : "secondary"} className="text-xs">
+                        {addon.is_available ? 'Disponível' : 'Indisponível'}
+                      </Badge>
+                    </div>
                     <p className="text-sm text-muted-foreground">
                       + R$ {addon.price.toFixed(2)}
                     </p>
                   </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => handleEdit(addon)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => deleteAddon(addon.id)}
+                      disabled={isDeleting}
+                    >
+                      <Trash2 className="w-4 h-4 text-destructive" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={addon.is_available ? "default" : "secondary"}>
-                    {addon.is_available ? 'Disponível' : 'Indisponível'}
-                  </Badge>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleEdit(addon)}
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => deleteAddon(addon.id)}
-                    disabled={isDeleting}
-                  >
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
-                </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Nenhum adicional cadastrado
-            </p>
-          )}
-        </div>
+              ))
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

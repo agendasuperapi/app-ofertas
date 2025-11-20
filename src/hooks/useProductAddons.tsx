@@ -8,6 +8,7 @@ export interface ProductAddon {
   name: string;
   price: number;
   is_available: boolean;
+  category_id: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -16,6 +17,7 @@ export interface AddonFormData {
   name: string;
   price: number;
   is_available: boolean;
+  category_id?: string | null;
 }
 
 export const useProductAddons = (productId?: string) => {
