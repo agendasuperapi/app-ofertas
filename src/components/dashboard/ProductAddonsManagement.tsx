@@ -255,22 +255,24 @@ export const CategoriesTab = ({ storeId }: { storeId: string }) => {
                     )}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <Switch
                     checked={category.is_active}
                     onCheckedChange={(checked) => toggleCategoryStatus(category.id, checked)}
                   />
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="sm"
                     onClick={() => handleEdit(category)}
+                    title="Editar"
                   >
                     <Pencil className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
-                    size="icon"
+                    size="sm"
                     onClick={() => handleDeleteClick(category.id)}
+                    title="Excluir"
                   >
                     <Trash2 className="w-4 h-4 text-destructive" />
                   </Button>
