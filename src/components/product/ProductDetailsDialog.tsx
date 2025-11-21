@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useProductAddons } from "@/hooks/useProductAddons";
 import { useProductFlavors } from "@/hooks/useProductFlavors";
 import { useAddonCategories } from "@/hooks/useAddonCategories";
@@ -57,32 +58,47 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
     const newSelected = new Set(selectedAddons);
     const newByCategory = { ...selectedAddonsByCategory };
     
-    if (newSelected.has(addonId)) {
-      newSelected.delete(addonId);
-      if (categoryId) {
-        const categorySet = new Set(newByCategory[categoryId] || []);
-        categorySet.delete(addonId);
-        newByCategory[categoryId] = categorySet;
-      }
-    } else {
-      // Check category limit
-      if (categoryId) {
-        const category = categories?.find(c => c.id === categoryId);
-        const categorySet = new Set(newByCategory[categoryId] || []);
-        
-        if (category?.max_items && categorySet.size >= category.max_items) {
-          toast({
-            title: "Limite atingido",
-            description: `Você pode selecionar no máximo ${category.max_items} ${category.max_items === 1 ? 'item' : 'itens'} de ${category.name}`,
-            variant: "destructive",
-          });
-          return;
-        }
-        
-        categorySet.add(addonId);
-        newByCategory[categoryId] = categorySet;
-      }
+    // Check if category is exclusive
+    const category = categoryId ? categories?.find(c => c.id === categoryId) : null;
+    
+    if (category?.is_exclusive) {
+      // For exclusive categories, only one can be selected
+      const categorySet = new Set(newByCategory[categoryId] || []);
+      
+      // Remove all items from this category first
+      categorySet.forEach(id => newSelected.delete(id));
+      
+      // Add the new selection
       newSelected.add(addonId);
+      newByCategory[categoryId] = new Set([addonId]);
+    } else {
+      // Normal behavior for non-exclusive categories
+      if (newSelected.has(addonId)) {
+        newSelected.delete(addonId);
+        if (categoryId) {
+          const categorySet = new Set(newByCategory[categoryId] || []);
+          categorySet.delete(addonId);
+          newByCategory[categoryId] = categorySet;
+        }
+      } else {
+        // Check category limit
+        if (categoryId) {
+          const categorySet = new Set(newByCategory[categoryId] || []);
+          
+          if (category?.max_items && categorySet.size >= category.max_items) {
+            toast({
+              title: "Limite atingido",
+              description: `Você pode selecionar no máximo ${category.max_items} ${category.max_items === 1 ? 'item' : 'itens'} de ${category.name}`,
+              variant: "destructive",
+            });
+            return;
+          }
+          
+          categorySet.add(addonId);
+          newByCategory[categoryId] = categorySet;
+        }
+        newSelected.add(addonId);
+      }
     }
     
     setSelectedAddons(newSelected);
@@ -372,46 +388,99 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
                           {category.min_items > 0 && (
                             <span className="text-destructive ml-1">*</span>
                           )}
+                          {category.is_exclusive && (
+                            <Badge variant="outline" className="ml-2 text-xs">
+                              Escolha 1
+                            </Badge>
+                          )}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {category.min_items > 0 ? `Mín: ${category.min_items}` : 'Opcional'}
-                          {category.max_items !== null && ` • Máx: ${category.max_items}`}
+                          {category.is_exclusive ? (
+                            'Apenas 1 opção'
+                          ) : (
+                            <>
+                              {category.min_items > 0 ? `Mín: ${category.min_items}` : 'Opcional'}
+                              {category.max_items !== null && ` • Máx: ${category.max_items}`}
+                            </>
+                          )}
                         </p>
                       </div>
-                      <div className="space-y-1.5">
-                        {addons
-                          .filter(
-                            (addon) =>
-                              addon.category_id === category.id && addon.is_available
-                          )
-                          .sort(
-                            (a, b) =>
-                              (a.display_order || 0) - (b.display_order || 0)
-                          )
-                          .map((addon) => (
-                            <div
-                              key={addon.id}
-                              className="flex items-center justify-between p-2.5 bg-muted/50 rounded-lg"
-                            >
-                              <div className="flex items-center gap-2.5 flex-1">
-                                <Checkbox
-                                  id={addon.id}
-                                  checked={selectedAddons.has(addon.id)}
-                                  onCheckedChange={() => handleAddonToggle(addon.id, category.id)}
-                                />
-                                <Label
-                                  htmlFor={addon.id}
-                                  className="flex-1 cursor-pointer text-sm"
+                      
+                      {category.is_exclusive ? (
+                        <RadioGroup
+                          value={Array.from(selectedAddonsByCategory[category.id] || [])[0] || ''}
+                          onValueChange={(value) => handleAddonToggle(value, category.id)}
+                        >
+                          <div className="space-y-1.5">
+                            {addons
+                              .filter(
+                                (addon) =>
+                                  addon.category_id === category.id && addon.is_available
+                              )
+                              .sort(
+                                (a, b) =>
+                                  (a.display_order || 0) - (b.display_order || 0)
+                              )
+                              .map((addon) => (
+                                <div
+                                  key={addon.id}
+                                  className="flex items-center justify-between p-2.5 bg-muted/50 rounded-lg"
                                 >
-                                  {addon.name}
-                                </Label>
+                                  <div className="flex items-center gap-2.5 flex-1">
+                                    <RadioGroupItem
+                                      value={addon.id}
+                                      id={addon.id}
+                                    />
+                                    <Label
+                                      htmlFor={addon.id}
+                                      className="flex-1 cursor-pointer text-sm"
+                                    >
+                                      {addon.name}
+                                    </Label>
+                                  </div>
+                                  <span className="text-sm font-semibold text-primary">
+                                    + R$ {addon.price.toFixed(2)}
+                                  </span>
+                                </div>
+                              ))}
+                          </div>
+                        </RadioGroup>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {addons
+                            .filter(
+                              (addon) =>
+                                addon.category_id === category.id && addon.is_available
+                            )
+                            .sort(
+                              (a, b) =>
+                                (a.display_order || 0) - (b.display_order || 0)
+                            )
+                            .map((addon) => (
+                              <div
+                                key={addon.id}
+                                className="flex items-center justify-between p-2.5 bg-muted/50 rounded-lg"
+                              >
+                                <div className="flex items-center gap-2.5 flex-1">
+                                  <Checkbox
+                                    id={addon.id}
+                                    checked={selectedAddons.has(addon.id)}
+                                    onCheckedChange={() => handleAddonToggle(addon.id, category.id)}
+                                  />
+                                  <Label
+                                    htmlFor={addon.id}
+                                    className="flex-1 cursor-pointer text-sm"
+                                  >
+                                    {addon.name}
+                                  </Label>
+                                </div>
+                                <span className="text-sm font-semibold text-primary">
+                                  + R$ {addon.price.toFixed(2)}
+                                </span>
                               </div>
-                              <span className="text-sm font-semibold text-primary">
-                                + R$ {addon.price.toFixed(2)}
-                              </span>
-                            </div>
-                          ))}
-                      </div>
+                            ))}
+                        </div>
+                      )}
                     </div>
                   ))}
 

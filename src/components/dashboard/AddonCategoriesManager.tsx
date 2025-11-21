@@ -22,6 +22,7 @@ export const AddonCategoriesManager = ({ storeId }: AddonCategoriesManagerProps)
     name: '',
     min_items: 0,
     max_items: null as number | null,
+    is_exclusive: false,
   });
 
   const hasPermission = (action: 'create' | 'update' | 'delete') => {
@@ -40,7 +41,7 @@ export const AddonCategoriesManager = ({ storeId }: AddonCategoriesManagerProps)
       return;
     }
     
-    if (formData.max_items !== null && formData.max_items < formData.min_items) {
+    if (!formData.is_exclusive && formData.max_items !== null && formData.max_items < formData.min_items) {
       alert('O máximo de itens deve ser maior ou igual ao mínimo');
       return;
     }
@@ -50,14 +51,15 @@ export const AddonCategoriesManager = ({ storeId }: AddonCategoriesManagerProps)
         await updateCategory(editingId, { 
           name: formData.name,
           min_items: formData.min_items,
-          max_items: formData.max_items
+          max_items: formData.is_exclusive ? 1 : formData.max_items,
+          is_exclusive: formData.is_exclusive
         });
         setEditingId(null);
       } else {
-        await addCategory(formData.name, formData.min_items, formData.max_items);
+        await addCategory(formData.name, formData.min_items, formData.max_items, formData.is_exclusive);
       }
       
-      setFormData({ name: '', min_items: 0, max_items: null });
+      setFormData({ name: '', min_items: 0, max_items: null, is_exclusive: false });
       setIsAdding(false);
     } catch (error) {
       console.error('Error saving category:', error);
@@ -72,6 +74,7 @@ export const AddonCategoriesManager = ({ storeId }: AddonCategoriesManagerProps)
       name: category.name,
       min_items: category.min_items || 0,
       max_items: category.max_items,
+      is_exclusive: category.is_exclusive || false,
     });
     setIsAdding(true);
   };
@@ -79,7 +82,7 @@ export const AddonCategoriesManager = ({ storeId }: AddonCategoriesManagerProps)
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ name: '', min_items: 0, max_items: null });
+    setFormData({ name: '', min_items: 0, max_items: null, is_exclusive: false });
   };
 
   const handleDelete = async (categoryId: string) => {
@@ -138,28 +141,43 @@ export const AddonCategoriesManager = ({ storeId }: AddonCategoriesManagerProps)
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>Mínimo de Itens</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  placeholder="0 = opcional"
-                  value={formData.min_items}
-                  onChange={(e) => setFormData({ ...formData, min_items: parseInt(e.target.value) || 0 })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Máximo de Itens</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  placeholder="Deixe vazio = ilimitado"
-                  value={formData.max_items || ''}
-                  onChange={(e) => setFormData({ ...formData, max_items: e.target.value ? parseInt(e.target.value) : null })}
-                />
+            <div className="flex items-center gap-2 p-3 border rounded-lg bg-background">
+              <Switch
+                checked={formData.is_exclusive}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_exclusive: checked, max_items: checked ? 1 : formData.max_items })}
+              />
+              <div className="flex-1">
+                <Label className="text-sm font-medium">Seleção Exclusiva</Label>
+                <p className="text-xs text-muted-foreground">
+                  Permitir apenas 1 item selecionado (como tipo de carne, tamanho, etc.)
+                </p>
               </div>
             </div>
+
+            {!formData.is_exclusive && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label>Mínimo de Itens</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="0 = opcional"
+                    value={formData.min_items}
+                    onChange={(e) => setFormData({ ...formData, min_items: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Máximo de Itens</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="Deixe vazio = ilimitado"
+                    value={formData.max_items || ''}
+                    onChange={(e) => setFormData({ ...formData, max_items: e.target.value ? parseInt(e.target.value) : null })}
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="flex gap-2 pt-2">
               <Button onClick={handleSubmit} className="flex-1">
@@ -188,11 +206,24 @@ export const AddonCategoriesManager = ({ storeId }: AddonCategoriesManagerProps)
                 <div className="flex items-center gap-3">
                   <FolderTree className="w-4 h-4 text-muted-foreground" />
                   <div>
-                    <div className="font-medium">{category.name}</div>
+                    <div className="font-medium flex items-center gap-2">
+                      {category.name}
+                      {category.is_exclusive && (
+                        <Badge variant="outline" className="text-xs">
+                          Exclusivo
+                        </Badge>
+                      )}
+                    </div>
                     <div className="text-xs text-muted-foreground">
-                      {category.min_items > 0 ? `Mín: ${category.min_items}` : 'Opcional'}
-                      {category.max_items !== null && ` • Máx: ${category.max_items}`}
-                      {category.max_items === null && category.min_items === 0 && ' • Ilimitado'}
+                      {category.is_exclusive ? (
+                        'Apenas 1 item pode ser selecionado'
+                      ) : (
+                        <>
+                          {category.min_items > 0 ? `Mín: ${category.min_items}` : 'Opcional'}
+                          {category.max_items !== null && ` • Máx: ${category.max_items}`}
+                          {category.max_items === null && category.min_items === 0 && ' • Ilimitado'}
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
