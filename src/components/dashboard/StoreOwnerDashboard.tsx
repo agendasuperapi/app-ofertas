@@ -229,6 +229,7 @@ export const StoreOwnerDashboard = () => {
   const [scheduledFilter, setScheduledFilter] = useState<'all' | 'scheduled' | 'normal'>('all');
   const [orderSortBy, setOrderSortBy] = useState<'newest' | 'oldest'>('newest');
   const [orderSearchTerm, setOrderSearchTerm] = useState('');
+  const [productStatusFilter, setProductStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [dateFilter, setDateFilter] = useState<'all' | 'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
   const [customDate, setCustomDate] = useState<Date | undefined>(new Date());
   const [currentOrderPage, setCurrentOrderPage] = useState(1);
@@ -2642,7 +2643,22 @@ export const StoreOwnerDashboard = () => {
               <TabsContent value="lista" className="space-y-6">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h2 className="text-2xl font-bold gradient-text">Meus Produtos</h2>
+                    <h2 className="text-2xl font-bold gradient-text flex items-center gap-2">
+                      Meus Produtos
+                      {products && (
+                        <Badge variant="secondary" className="text-sm">
+                          {products.filter(p => {
+                            const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
+                            const matchesStatus = productStatusFilter === 'all' 
+                              ? true 
+                              : productStatusFilter === 'active' 
+                                ? p.is_available 
+                                : !p.is_available;
+                            return matchesCategory && matchesStatus;
+                          }).length}
+                        </Badge>
+                      )}
+                    </h2>
                     <p className="text-muted-foreground">Gerencie o cardápio da sua loja</p>
                   </div>
                   {hasPermission('products', 'create') && (
@@ -2919,11 +2935,70 @@ export const StoreOwnerDashboard = () => {
                   )}
                 </div>
 
+                {/* Status Filter */}
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-4 h-4 text-muted-foreground" />
+                  <Select value={productStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setProductStatusFilter(value)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filtrar por status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os Produtos</SelectItem>
+                      <SelectItem value="active">Apenas Ativos</SelectItem>
+                      <SelectItem value="inactive">Apenas Inativos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {productStatusFilter !== 'all' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setProductStatusFilter('all')}
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Limpar
+                    </Button>
+                  )}
+                </div>
+
                 {/* Products Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                  {products
-                    ?.filter(product => categoryFilter === 'all' || product.category === categoryFilter)
-                    .map((product, index) => (
+                  {(() => {
+                    const filteredProducts = products
+                      ?.filter(product => categoryFilter === 'all' || product.category === categoryFilter)
+                      .filter(product => {
+                        if (productStatusFilter === 'active') return product.is_available;
+                        if (productStatusFilter === 'inactive') return !product.is_available;
+                        return true;
+                      });
+
+                    if (!filteredProducts || filteredProducts.length === 0) {
+                      return (
+                        <div className="col-span-full flex flex-col items-center justify-center py-12 text-center">
+                          <Package className="w-16 h-16 text-muted-foreground/50 mb-4" />
+                          <h3 className="text-lg font-semibold mb-2">Nenhum produto encontrado</h3>
+                          <p className="text-muted-foreground mb-4">
+                            {productStatusFilter !== 'all' 
+                              ? `Não há produtos ${productStatusFilter === 'active' ? 'ativos' : 'inativos'} ${categoryFilter !== 'all' ? `na categoria "${categoryFilter}"` : ''}`
+                              : categoryFilter !== 'all' 
+                                ? `Não há produtos na categoria "${categoryFilter}"`
+                                : 'Adicione seu primeiro produto ao cardápio'}
+                          </p>
+                          {(productStatusFilter !== 'all' || categoryFilter !== 'all') && (
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setProductStatusFilter('all');
+                                setCategoryFilter('all');
+                              }}
+                            >
+                              Limpar Filtros
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    }
+
+                    return filteredProducts.map((product, index) => (
                     <motion.div
                       key={product.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -2988,7 +3063,8 @@ export const StoreOwnerDashboard = () => {
                     </CardContent>
                   </Card>
                 </motion.div>
-              ))}
+              ));
+            })()}
             </div>
               </TabsContent>
 
