@@ -169,6 +169,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available' | 'unavailable'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
   const [formData, setFormData] = useState({
@@ -224,6 +225,13 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
       filtered = filtered.filter(a => a.category_id === categoryFilter);
     }
     
+    // Filter by availability
+    if (availabilityFilter === 'available') {
+      filtered = filtered.filter(a => a.is_available);
+    } else if (availabilityFilter === 'unavailable') {
+      filtered = filtered.filter(a => !a.is_available);
+    }
+    
     // Filter by search term
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
@@ -231,7 +239,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
     }
     
     return filtered;
-  }, [addons, categoryFilter, searchTerm]);
+  }, [addons, categoryFilter, availabilityFilter, searchTerm]);
 
   const addonsByCategory = useMemo(() => {
     if (!addons) return {};
@@ -1088,6 +1096,34 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
                 )}
               </div>
             )}
+
+            {/* Availability filter */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+              <Badge variant="outline" className="flex-shrink-0">
+                Status
+              </Badge>
+              <Select value={availabilityFilter} onValueChange={(value: any) => setAvailabilityFilter(value)}>
+                <SelectTrigger className="w-full sm:w-[200px]">
+                  <SelectValue placeholder="Filtrar por disponibilidade" />
+                </SelectTrigger>
+                <SelectContent className="z-50 bg-popover">
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="available">Disponíveis</SelectItem>
+                  <SelectItem value="unavailable">Indisponíveis</SelectItem>
+                </SelectContent>
+              </Select>
+              {availabilityFilter !== 'all' && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setAvailabilityFilter('all')}
+                  className="w-full sm:w-auto"
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Limpar
+                </Button>
+              )}
+            </div>
 
             {/* Results count */}
             {(searchTerm || categoryFilter !== 'all') && (
