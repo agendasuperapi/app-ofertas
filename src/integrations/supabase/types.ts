@@ -20,6 +20,9 @@ export type Database = {
           display_order: number
           id: string
           is_active: boolean
+          is_exclusive: boolean | null
+          max_items: number | null
+          min_items: number | null
           name: string
           store_id: string
           updated_at: string
@@ -29,6 +32,9 @@ export type Database = {
           display_order?: number
           id?: string
           is_active?: boolean
+          is_exclusive?: boolean | null
+          max_items?: number | null
+          min_items?: number | null
           name: string
           store_id: string
           updated_at?: string
@@ -38,6 +44,9 @@ export type Database = {
           display_order?: number
           id?: string
           is_active?: boolean
+          is_exclusive?: boolean | null
+          max_items?: number | null
+          min_items?: number | null
           name?: string
           store_id?: string
           updated_at?: string
@@ -611,6 +620,7 @@ export type Database = {
       }
       product_addons: {
         Row: {
+          allow_quantity: boolean | null
           category_id: string | null
           created_at: string
           display_order: number | null
@@ -622,6 +632,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          allow_quantity?: boolean | null
           category_id?: string | null
           created_at?: string
           display_order?: number | null
@@ -633,6 +644,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          allow_quantity?: boolean | null
           category_id?: string | null
           created_at?: string
           display_order?: number | null
