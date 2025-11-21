@@ -998,8 +998,8 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
               <Button onClick={handleSubmit} disabled={isCreating} className="flex-1">
                 {editingId ? 'Atualizar' : 'Adicionar'}
               </Button>
-              <Button onClick={handleCancel} variant="outline">
-                <X className="w-4 h-4" />
+              <Button variant="outline" onClick={handleCancel}>
+                Cancelar
               </Button>
             </div>
           </div>
