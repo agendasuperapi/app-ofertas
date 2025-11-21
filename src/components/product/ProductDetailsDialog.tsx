@@ -29,6 +29,7 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
   const [quantity, setQuantity] = useState(1);
   const [observation, setObservation] = useState("");
   const [selectedAddons, setSelectedAddons] = useState<Set<string>>(new Set());
+  const [selectedAddonsByCategory, setSelectedAddonsByCategory] = useState<Record<string, Set<string>>>({});
   const [selectedFlavors, setSelectedFlavors] = useState<Set<string>>(new Set());
   const { addons } = useProductAddons(product?.id);
   const { flavors } = useProductFlavors(product?.id);
@@ -43,6 +44,7 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
       setObservation("");
       setSelectedAddons(new Set());
       setSelectedFlavors(new Set());
+      setSelectedAddonsByCategory({});
     }
   }, [open]);
 
@@ -51,14 +53,40 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
   const currentPrice = product.promotional_price || product.price || 0;
   const hasDiscount = product.promotional_price && product.promotional_price < product.price;
 
-  const handleAddonToggle = (addonId: string) => {
+  const handleAddonToggle = (addonId: string, categoryId?: string) => {
     const newSelected = new Set(selectedAddons);
+    const newByCategory = { ...selectedAddonsByCategory };
+    
     if (newSelected.has(addonId)) {
       newSelected.delete(addonId);
+      if (categoryId) {
+        const categorySet = new Set(newByCategory[categoryId] || []);
+        categorySet.delete(addonId);
+        newByCategory[categoryId] = categorySet;
+      }
     } else {
+      // Check category limit
+      if (categoryId) {
+        const category = categories?.find(c => c.id === categoryId);
+        const categorySet = new Set(newByCategory[categoryId] || []);
+        
+        if (category?.max_items && categorySet.size >= category.max_items) {
+          toast({
+            title: "Limite atingido",
+            description: `Você pode selecionar no máximo ${category.max_items} ${category.max_items === 1 ? 'item' : 'itens'} de ${category.name}`,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        categorySet.add(addonId);
+        newByCategory[categoryId] = categorySet;
+      }
       newSelected.add(addonId);
     }
+    
     setSelectedAddons(newSelected);
+    setSelectedAddonsByCategory(newByCategory);
   };
 
   const handleFlavorToggle = (flavorId: string) => {
@@ -91,6 +119,27 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
         variant: "destructive",
       });
       return;
+    }
+
+    // Validate category limits
+    if (categories && categories.length > 0) {
+      for (const category of categories) {
+        if (!category.is_active) continue;
+        
+        const categoryAddons = addons?.filter(a => a.category_id === category.id && a.is_available) || [];
+        if (categoryAddons.length === 0) continue;
+        
+        const selectedCount = selectedAddonsByCategory[category.id]?.size || 0;
+        
+        if (category.min_items > 0 && selectedCount < category.min_items) {
+          toast({
+            title: "Seleção obrigatória",
+            description: `Você precisa selecionar pelo menos ${category.min_items} ${category.min_items === 1 ? 'item' : 'itens'} de ${category.name}`,
+            variant: "destructive",
+          });
+          return;
+        }
+      }
     }
 
     const addonsToAdd = addons
@@ -302,7 +351,7 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
       {/* Adicionais */}
       {addons && addons.length > 0 && (
         <div className="space-y-2 px-4 md:px-0">
-          <Label className="text-sm font-semibold">Adicionais</Label>
+          <Label className="text-sm font-semibold">Adicionais (opcional)</Label>
           <div className="space-y-1.5">
             {categories && categories.length > 0 ? (
               <>
@@ -317,9 +366,18 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
                   .sort((a, b) => a.display_order - b.display_order)
                   .map((category) => (
                     <div key={category.id} className="space-y-1.5">
-                      <p className="text-xs font-semibold text-muted-foreground">
-                        {category.name}
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-semibold text-muted-foreground">
+                          {category.name}
+                          {category.min_items > 0 && (
+                            <span className="text-destructive ml-1">*</span>
+                          )}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {category.min_items > 0 ? `Mín: ${category.min_items}` : 'Opcional'}
+                          {category.max_items !== null && ` • Máx: ${category.max_items}`}
+                        </p>
+                      </div>
                       <div className="space-y-1.5">
                         {addons
                           .filter(
@@ -339,7 +397,7 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
                                 <Checkbox
                                   id={addon.id}
                                   checked={selectedAddons.has(addon.id)}
-                                  onCheckedChange={() => handleAddonToggle(addon.id)}
+                                  onCheckedChange={() => handleAddonToggle(addon.id, category.id)}
                                 />
                                 <Label
                                   htmlFor={addon.id}
