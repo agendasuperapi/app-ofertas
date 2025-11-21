@@ -595,8 +595,83 @@ export const AddonsTab = ({ storeId }: { storeId: string }) => {
 
 // Nova Aba: Biblioteca de Adicionais e Sabores
 export const LibraryTab = ({ storeId }: { storeId: string }) => {
-  const { addons, flavors, isLoading } = useStoreAddonsAndFlavors(storeId);
+  const { addons, flavors, isLoading, refetch } = useStoreAddonsAndFlavors(storeId);
+  const { categories } = useAddonCategories(storeId);
   const [filter, setFilter] = useState<'all' | 'addons' | 'flavors'>('all');
+  const [isAdding, setIsAdding] = useState(false);
+  const [formData, setFormData] = useState({ name: "", price: "0", category_id: "", is_available: true });
+
+  const handleSubmit = async () => {
+    if (!formData.name.trim()) {
+      toast({
+        title: "Nome obrigatório",
+        description: "Por favor, informe o nome do adicional.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const price = parseFloat(formData.price);
+    if (isNaN(price) || price < 0) {
+      toast({
+        title: "Preço inválido",
+        description: "Por favor, informe um preço válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Buscar um produto existente da loja
+      const { data: existingProduct } = await supabase
+        .from('products')
+        .select('id')
+        .eq('store_id', storeId)
+        .limit(1)
+        .single();
+
+      if (!existingProduct) {
+        toast({
+          title: "Produto necessário",
+          description: "Crie ao menos um produto antes de adicionar adicionais.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('product_addons')
+        .insert({
+          product_id: existingProduct.id,
+          name: formData.name,
+          price,
+          category_id: formData.category_id || null,
+          is_available: formData.is_available,
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Adicional criado!',
+        description: 'O adicional foi adicionado com sucesso.',
+      });
+
+      setFormData({ name: "", price: "0", category_id: "", is_available: true });
+      setIsAdding(false);
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: 'Erro ao criar adicional',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleCancel = () => {
+    setIsAdding(false);
+    setFormData({ name: "", price: "0", category_id: "", is_available: true });
+  };
 
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Carregando biblioteca...</div>;
@@ -615,19 +690,81 @@ export const LibraryTab = ({ storeId }: { storeId: string }) => {
               Todos os adicionais e sabores cadastrados em produtos da sua loja
             </CardDescription>
           </div>
-          <Select value={filter} onValueChange={(v: any) => setFilter(v)}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="addons">Apenas Adicionais</SelectItem>
-              <SelectItem value="flavors">Apenas Sabores</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Select value={filter} onValueChange={(v: any) => setFilter(v)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="addons">Apenas Adicionais</SelectItem>
+                <SelectItem value="flavors">Apenas Sabores</SelectItem>
+              </SelectContent>
+            </Select>
+            {!isAdding && (
+              <Button onClick={() => setIsAdding(true)} size="sm">
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Adicional
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Formulário de Cadastro */}
+        {isAdding && (
+          <div className="p-4 border rounded-lg space-y-4 bg-muted/50">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="library-addon-name">Nome do Adicional</Label>
+                <Input
+                  id="library-addon-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Ex: Borda de Catupiry"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="library-addon-price">Preço (R$)</Label>
+                <Input
+                  id="library-addon-price"
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.price}
+                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="library-addon-category">Categoria</Label>
+              <Select value={formData.category_id || "uncategorized"} onValueChange={(value) => setFormData({ ...formData, category_id: value === "uncategorized" ? "" : value })}>
+                <SelectTrigger id="library-addon-category">
+                  <SelectValue placeholder="Selecione uma categoria (opcional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="uncategorized">Sem categoria</SelectItem>
+                  {categories?.filter(c => c.is_active).map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleSubmit} className="flex-1">
+                <Check className="w-4 h-4 mr-2" />
+                Salvar
+              </Button>
+              <Button onClick={handleCancel} variant="outline" className="flex-1">
+                <X className="w-4 h-4 mr-2" />
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        )}
         {/* Adicionais */}
         {filteredAddons.length > 0 && (
           <div className="space-y-3">
