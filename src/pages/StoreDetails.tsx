@@ -566,7 +566,9 @@ export default function StoreDetails() {
               </Card>
             </motion.div>
           ) : (
-            Object.entries(filteredGroupedProducts || {}).map(([category, categoryProducts], categoryIndex) => (
+            categories.filter(category => filteredGroupedProducts?.[category]?.length > 0).map((category, categoryIndex) => {
+              const categoryProducts = filteredGroupedProducts?.[category] || [];
+              return (
               <motion.div 
                 key={category}
                 ref={(el) => (categoryRefs.current[category] = el)}
@@ -719,7 +721,8 @@ export default function StoreDetails() {
                   })}
                 </div>
               </motion.div>
-              ))
+              );
+            })
             )}
           </motion.div>
 
