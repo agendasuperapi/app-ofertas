@@ -2871,6 +2871,10 @@ export const StoreOwnerDashboard = () => {
                   <FolderTree className="w-4 h-4" />
                   Categorias de Produtos
                 </TabsTrigger>
+                <TabsTrigger value="combos" className="flex items-center gap-2">
+                  <ShoppingBag className="w-4 h-4" />
+                  Combos
+                </TabsTrigger>
                 <TabsTrigger value="templates" className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
                   Templates
@@ -2882,10 +2886,6 @@ export const StoreOwnerDashboard = () => {
                 <TabsTrigger value="sabores" className="flex items-center gap-2">
                   <Pizza className="w-4 h-4" />
                   Sabores
-                </TabsTrigger>
-                <TabsTrigger value="combos" className="flex items-center gap-2">
-                  <ShoppingBag className="w-4 h-4" />
-                  Combos
                 </TabsTrigger>
               </TabsList>
 
