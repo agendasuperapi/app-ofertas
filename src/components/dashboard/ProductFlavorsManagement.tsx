@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useStoreAddonsAndFlavors } from "@/hooks/useStoreAddonsAndFlavors";
-import { Package, Sparkles } from "lucide-react";
+import { useProductFlavors } from "@/hooks/useProductFlavors";
+import { Package, Sparkles, Edit, Save, X } from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ProductFlavorsManagementProps {
   storeId: string;
@@ -33,6 +36,13 @@ export const ProductFlavorsManagement = ({ storeId }: ProductFlavorsManagementPr
 // Aba de Sabores Globais
 export const FlavorsTab = ({ storeId }: { storeId: string }) => {
   const { flavors, isLoading } = useStoreAddonsAndFlavors(storeId);
+  const { updateFlavor, isUpdating } = useProductFlavors();
+  const [editingFlavorId, setEditingFlavorId] = useState<string | null>(null);
+  const [editedValues, setEditedValues] = useState<{
+    name: string;
+    description: string;
+    price: string;
+  }>({ name: '', description: '', price: '' });
 
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Carregando sabores...</div>;
@@ -44,6 +54,39 @@ export const FlavorsTab = ({ storeId }: { storeId: string }) => {
     acc[productName].push(flavor);
     return acc;
   }, {} as Record<string, typeof flavors>);
+
+  const handleEdit = (flavor: any) => {
+    setEditingFlavorId(flavor.id);
+    setEditedValues({
+      name: flavor.name,
+      description: flavor.description || '',
+      price: flavor.price.toString(),
+    });
+  };
+
+  const handleCancel = () => {
+    setEditingFlavorId(null);
+    setEditedValues({ name: '', description: '', price: '' });
+  };
+
+  const handleSave = (flavorId: string) => {
+    const price = parseFloat(editedValues.price);
+    if (isNaN(price) || price < 0) {
+      return;
+    }
+
+    updateFlavor({
+      id: flavorId,
+      name: editedValues.name,
+      description: editedValues.description || undefined,
+      price,
+    }, {
+      onSuccess: () => {
+        setEditingFlavorId(null);
+        setEditedValues({ name: '', description: '', price: '' });
+      },
+    });
+  };
 
   return (
     <Card>
@@ -71,15 +114,79 @@ export const FlavorsTab = ({ storeId }: { storeId: string }) => {
                       key={flavor.id}
                       className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
                     >
-                      <div className="flex-1">
-                        <div className="font-medium">{flavor.name}</div>
-                        {flavor.description && (
-                          <div className="text-sm text-muted-foreground">{flavor.description}</div>
-                        )}
-                        <div className="text-sm text-muted-foreground">
-                          R$ {flavor.price.toFixed(2)}
+                      {editingFlavorId === flavor.id ? (
+                        <div className="flex-1 space-y-3">
+                          <div className="grid gap-2">
+                            <Label htmlFor={`name-${flavor.id}`}>Nome</Label>
+                            <Input
+                              id={`name-${flavor.id}`}
+                              value={editedValues.name}
+                              onChange={(e) => setEditedValues({ ...editedValues, name: e.target.value })}
+                              placeholder="Nome do sabor"
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor={`desc-${flavor.id}`}>Descrição</Label>
+                            <Textarea
+                              id={`desc-${flavor.id}`}
+                              value={editedValues.description}
+                              onChange={(e) => setEditedValues({ ...editedValues, description: e.target.value })}
+                              placeholder="Descrição (opcional)"
+                              rows={2}
+                            />
+                          </div>
+                          <div className="grid gap-2">
+                            <Label htmlFor={`price-${flavor.id}`}>Preço (R$)</Label>
+                            <Input
+                              id={`price-${flavor.id}`}
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              value={editedValues.price}
+                              onChange={(e) => setEditedValues({ ...editedValues, price: e.target.value })}
+                              placeholder="0.00"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleSave(flavor.id)}
+                              disabled={isUpdating || !editedValues.name || !editedValues.price}
+                            >
+                              <Save className="w-4 h-4 mr-1" />
+                              Salvar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={handleCancel}
+                              disabled={isUpdating}
+                            >
+                              <X className="w-4 h-4 mr-1" />
+                              Cancelar
+                            </Button>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <>
+                          <div className="flex-1">
+                            <div className="font-medium">{flavor.name}</div>
+                            {flavor.description && (
+                              <div className="text-sm text-muted-foreground">{flavor.description}</div>
+                            )}
+                            <div className="text-sm text-muted-foreground">
+                              R$ {flavor.price.toFixed(2)}
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEdit(flavor)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </>
+                      )}
                     </div>
                   ))}
                 </div>
