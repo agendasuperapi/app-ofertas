@@ -262,8 +262,8 @@ export const FlavorsTab = ({ storeId }: { storeId: string }) => {
                             </div>
                             <div className="flex gap-1">
                               <Button
-                                size="sm"
                                 variant="ghost"
+                                size="sm"
                                 onClick={() => handleToggleAvailability(flavor)}
                                 disabled={isUpdating}
                                 title={flavor.is_available ? 'Inativar' : 'Ativar'}
@@ -275,21 +275,21 @@ export const FlavorsTab = ({ storeId }: { storeId: string }) => {
                                 )}
                               </Button>
                               <Button
-                                size="sm"
                                 variant="ghost"
+                                size="sm"
                                 onClick={() => handleEdit(flavor)}
                                 title="Editar"
                               >
                                 <Edit className="w-4 h-4" />
                               </Button>
                               <Button
-                                size="sm"
                                 variant="ghost"
+                                size="sm"
                                 onClick={() => handleDeleteClick(flavor.id, flavor.name)}
                                 disabled={isDeleting}
                                 title="Excluir"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-4 h-4 text-destructive" />
                               </Button>
                             </div>
                           </>
