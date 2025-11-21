@@ -938,22 +938,33 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
             {activeCategories.length > 0 && (
               <div className="space-y-2">
                 <Label>Categoria (opcional)</Label>
-                <Select
-                  value={formData.category_id || 'none'}
-                  onValueChange={(value) => setFormData({ ...formData, category_id: value === 'none' ? null : value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma categoria" />
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-popover">
-                    <SelectItem value="none">Sem categoria</SelectItem>
-                    {activeCategories.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>
-                        {cat.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select
+                    value={formData.category_id || 'none'}
+                    onValueChange={(value) => setFormData({ ...formData, category_id: value === 'none' ? null : value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent className="z-50 bg-popover">
+                      <SelectItem value="none">Sem categoria</SelectItem>
+                      {activeCategories.map((cat) => (
+                        <SelectItem key={cat.id} value={cat.id}>
+                          {cat.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setShowCategoryFormInModal(true)}
+                    title="Criar nova categoria"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             )}
             
@@ -1333,22 +1344,36 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
               {activeCategories.length > 0 && (
                 <div className="space-y-2">
                   <Label>Categoria (opcional)</Label>
-                  <Select
-                    value={formData.category_id || 'none'}
-                    onValueChange={(value) => setFormData({ ...formData, category_id: value === 'none' ? null : value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione uma categoria" />
-                    </SelectTrigger>
-                    <SelectContent className="z-50 bg-popover">
-                      <SelectItem value="none">Sem categoria</SelectItem>
-                      {activeCategories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select
+                      value={formData.category_id || 'none'}
+                      onValueChange={(value) => setFormData({ ...formData, category_id: value === 'none' ? null : value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma categoria" />
+                      </SelectTrigger>
+                      <SelectContent className="z-50 bg-popover">
+                        <SelectItem value="none">Sem categoria</SelectItem>
+                        {activeCategories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        setShowCategoryFormInModal(true);
+                        setShowStoreFormInModal(false);
+                      }}
+                      title="Criar nova categoria"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               )}
               
