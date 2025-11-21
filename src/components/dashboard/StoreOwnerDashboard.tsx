@@ -229,6 +229,7 @@ export const StoreOwnerDashboard = () => {
   const [scheduledFilter, setScheduledFilter] = useState<'all' | 'scheduled' | 'normal'>('all');
   const [orderSortBy, setOrderSortBy] = useState<'newest' | 'oldest'>('newest');
   const [orderSearchTerm, setOrderSearchTerm] = useState('');
+  const [productSearchTerm, setProductSearchTerm] = useState('');
   const [productStatusFilter, setProductStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [dateFilter, setDateFilter] = useState<'all' | 'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
   const [customDate, setCustomDate] = useState<Date | undefined>(new Date());
@@ -2654,7 +2655,10 @@ export const StoreOwnerDashboard = () => {
                               : productStatusFilter === 'active' 
                                 ? p.is_available 
                                 : !p.is_available;
-                            return matchesCategory && matchesStatus;
+                            const matchesSearch = !productSearchTerm || 
+                              p.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+                              p.description?.toLowerCase().includes(productSearchTerm.toLowerCase());
+                            return matchesCategory && matchesStatus && matchesSearch;
                           }).length}
                         </Badge>
                       )}
@@ -2909,6 +2913,27 @@ export const StoreOwnerDashboard = () => {
 
                 {/* Filters */}
                 <div className="flex flex-wrap items-center gap-4">
+                  {/* Search Input */}
+                  <div className="relative flex-1 min-w-[250px] max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por nome do produto..."
+                      value={productSearchTerm}
+                      onChange={(e) => setProductSearchTerm(e.target.value)}
+                      className="pl-10 pr-10"
+                    />
+                    {productSearchTerm && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                        onClick={() => setProductSearchTerm('')}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+
                   {/* Category Filter */}
                   <div className="flex items-center gap-2">
                     <Tag className="w-4 h-4 text-muted-foreground" />
@@ -2961,6 +2986,22 @@ export const StoreOwnerDashboard = () => {
                       </Button>
                     )}
                   </div>
+
+                  {/* Clear All Filters */}
+                  {(productSearchTerm || categoryFilter !== 'all' || productStatusFilter !== 'all') && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setProductSearchTerm('');
+                        setCategoryFilter('all');
+                        setProductStatusFilter('all');
+                      }}
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Limpar Todos
+                    </Button>
+                  )}
                 </div>
 
                 {/* Products Grid */}
@@ -2972,6 +3013,11 @@ export const StoreOwnerDashboard = () => {
                         if (productStatusFilter === 'active') return product.is_available;
                         if (productStatusFilter === 'inactive') return !product.is_available;
                         return true;
+                      })
+                      .filter(product => {
+                        if (!productSearchTerm) return true;
+                        return product.name.toLowerCase().includes(productSearchTerm.toLowerCase()) ||
+                               product.description?.toLowerCase().includes(productSearchTerm.toLowerCase());
                       });
 
                     if (!filteredProducts || filteredProducts.length === 0) {
@@ -2980,16 +3026,19 @@ export const StoreOwnerDashboard = () => {
                           <Package className="w-16 h-16 text-muted-foreground/50 mb-4" />
                           <h3 className="text-lg font-semibold mb-2">Nenhum produto encontrado</h3>
                           <p className="text-muted-foreground mb-4">
-                            {productStatusFilter !== 'all' 
-                              ? `Não há produtos ${productStatusFilter === 'active' ? 'ativos' : 'inativos'} ${categoryFilter !== 'all' ? `na categoria "${categoryFilter}"` : ''}`
-                              : categoryFilter !== 'all' 
-                                ? `Não há produtos na categoria "${categoryFilter}"`
-                                : 'Adicione seu primeiro produto ao cardápio'}
+                            {productSearchTerm
+                              ? `Nenhum produto encontrado com "${productSearchTerm}"`
+                              : productStatusFilter !== 'all' 
+                                ? `Não há produtos ${productStatusFilter === 'active' ? 'ativos' : 'inativos'} ${categoryFilter !== 'all' ? `na categoria "${categoryFilter}"` : ''}`
+                                : categoryFilter !== 'all' 
+                                  ? `Não há produtos na categoria "${categoryFilter}"`
+                                  : 'Adicione seu primeiro produto ao cardápio'}
                           </p>
-                          {(productStatusFilter !== 'all' || categoryFilter !== 'all') && (
+                          {(productSearchTerm || productStatusFilter !== 'all' || categoryFilter !== 'all') && (
                             <Button
                               variant="outline"
                               onClick={() => {
+                                setProductSearchTerm('');
                                 setProductStatusFilter('all');
                                 setCategoryFilter('all');
                               }}
