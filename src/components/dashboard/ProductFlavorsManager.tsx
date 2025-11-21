@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -150,6 +150,7 @@ export const ProductFlavorsManager = ({ productId, storeId }: ProductFlavorsMana
     price: 0,
     is_available: true,
   });
+  const [storeFlavorSearch, setStoreFlavorSearch] = useState('');
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -157,6 +158,18 @@ export const ProductFlavorsManager = ({ productId, storeId }: ProductFlavorsMana
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  // Filtered store flavors for the dialog
+  const filteredStoreFlavors = useMemo(() => {
+    if (!storeFlavors) return [];
+    if (!storeFlavorSearch.trim()) return storeFlavors;
+    
+    const term = storeFlavorSearch.toLowerCase();
+    return storeFlavors.filter(f => 
+      f.name.toLowerCase().includes(term) || 
+      (f.description && f.description.toLowerCase().includes(term))
+    );
+  }, [storeFlavors, storeFlavorSearch]);
 
   const handleSubmit = () => {
     if (!formData.name.trim()) return;
@@ -984,10 +997,10 @@ export const ProductFlavorsManager = ({ productId, storeId }: ProductFlavorsMana
                   <Button
                     size="sm"
                     onClick={async () => {
-                      if (!storeFlavors || storeFlavors.length === 0) return;
+                      if (!filteredStoreFlavors || filteredStoreFlavors.length === 0) return;
                       
                       try {
-                        for (const flavor of storeFlavors) {
+                        for (const flavor of filteredStoreFlavors) {
                           const isInProduct = flavors?.some(f => f.name === flavor.name);
                           if (!isInProduct) {
                             await handleAddStoreFlavor(flavor);
@@ -1006,7 +1019,7 @@ export const ProductFlavorsManager = ({ productId, storeId }: ProductFlavorsMana
                         });
                       }
                     }}
-                    disabled={!storeFlavors || storeFlavors.length === 0}
+                    disabled={!filteredStoreFlavors || filteredStoreFlavors.length === 0}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Adicionar Todos
@@ -1090,9 +1103,32 @@ export const ProductFlavorsManager = ({ productId, storeId }: ProductFlavorsMana
               </div>
             )}
 
+            {/* Search Field */}
+            <div className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar sabor..."
+                  value={storeFlavorSearch}
+                  onChange={(e) => setStoreFlavorSearch(e.target.value)}
+                  className="pl-9"
+                />
+                {storeFlavorSearch && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7"
+                    onClick={() => setStoreFlavorSearch('')}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
             <div className="space-y-2">
-              {storeFlavors && storeFlavors.length > 0 ? (
-                storeFlavors.map((flavor) => {
+              {filteredStoreFlavors && filteredStoreFlavors.length > 0 ? (
+                filteredStoreFlavors.map((flavor) => {
                   const isInProduct = flavors?.some(f => f.name === flavor.name);
                   
                   return (
@@ -1128,9 +1164,19 @@ export const ProductFlavorsManager = ({ productId, storeId }: ProductFlavorsMana
                   );
                 })
               ) : (
-                <p className="text-center py-4 text-muted-foreground">
-                  Nenhum sabor encontrado na loja
-                </p>
+                <div className="text-center py-8 text-muted-foreground">
+                  {storeFlavorSearch.trim() ? (
+                    <>
+                      <p>Nenhum sabor encontrado para "{storeFlavorSearch}"</p>
+                      <p className="text-sm mt-1">Tente buscar com outros termos</p>
+                    </>
+                  ) : (
+                    <>
+                      <p>Nenhum sabor encontrado na loja</p>
+                      <p className="text-sm mt-1">Adicione sabores em outros produtos para reutilizá-los aqui</p>
+                    </>
+                  )}
+                </div>
               )}
             </div>
           </DialogContent>
