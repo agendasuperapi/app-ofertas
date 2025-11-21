@@ -20,6 +20,8 @@ export const AddonCategoriesManager = ({ storeId }: AddonCategoriesManagerProps)
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
+    min_items: 0,
+    max_items: null as number | null,
   });
 
   const hasPermission = (action: 'create' | 'update' | 'delete') => {
@@ -32,15 +34,30 @@ export const AddonCategoriesManager = ({ storeId }: AddonCategoriesManagerProps)
   const handleSubmit = async () => {
     if (!formData.name.trim()) return;
 
+    // Validação dos limites
+    if (formData.min_items < 0) {
+      alert('O mínimo de itens não pode ser negativo');
+      return;
+    }
+    
+    if (formData.max_items !== null && formData.max_items < formData.min_items) {
+      alert('O máximo de itens deve ser maior ou igual ao mínimo');
+      return;
+    }
+
     try {
       if (editingId) {
-        await updateCategory(editingId, { name: formData.name });
+        await updateCategory(editingId, { 
+          name: formData.name,
+          min_items: formData.min_items,
+          max_items: formData.max_items
+        });
         setEditingId(null);
       } else {
-        await addCategory(formData.name);
+        await addCategory(formData.name, formData.min_items, formData.max_items);
       }
       
-      setFormData({ name: '' });
+      setFormData({ name: '', min_items: 0, max_items: null });
       setIsAdding(false);
     } catch (error) {
       console.error('Error saving category:', error);
@@ -53,6 +70,8 @@ export const AddonCategoriesManager = ({ storeId }: AddonCategoriesManagerProps)
     setEditingId(category.id);
     setFormData({
       name: category.name,
+      min_items: category.min_items || 0,
+      max_items: category.max_items,
     });
     setIsAdding(true);
   };
@@ -60,7 +79,7 @@ export const AddonCategoriesManager = ({ storeId }: AddonCategoriesManagerProps)
   const handleCancel = () => {
     setIsAdding(false);
     setEditingId(null);
-    setFormData({ name: '' });
+    setFormData({ name: '', min_items: 0, max_items: null });
   };
 
   const handleDelete = async (categoryId: string) => {
@@ -119,6 +138,29 @@ export const AddonCategoriesManager = ({ storeId }: AddonCategoriesManagerProps)
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Mínimo de Itens</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="0 = opcional"
+                  value={formData.min_items}
+                  onChange={(e) => setFormData({ ...formData, min_items: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Máximo de Itens</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="Deixe vazio = ilimitado"
+                  value={formData.max_items || ''}
+                  onChange={(e) => setFormData({ ...formData, max_items: e.target.value ? parseInt(e.target.value) : null })}
+                />
+              </div>
+            </div>
+
             <div className="flex gap-2 pt-2">
               <Button onClick={handleSubmit} className="flex-1">
                 {editingId ? 'Atualizar' : 'Adicionar'}
@@ -147,6 +189,11 @@ export const AddonCategoriesManager = ({ storeId }: AddonCategoriesManagerProps)
                   <FolderTree className="w-4 h-4 text-muted-foreground" />
                   <div>
                     <div className="font-medium">{category.name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {category.min_items > 0 ? `Mín: ${category.min_items}` : 'Opcional'}
+                      {category.max_items !== null && ` • Máx: ${category.max_items}`}
+                      {category.max_items === null && category.min_items === 0 && ' • Ilimitado'}
+                    </div>
                   </div>
                 </div>
 

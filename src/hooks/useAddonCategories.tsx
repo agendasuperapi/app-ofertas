@@ -8,6 +8,8 @@ export interface AddonCategory {
   name: string;
   display_order: number;
   is_active: boolean;
+  min_items: number;
+  max_items: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -42,7 +44,7 @@ export const useAddonCategories = (storeId: string | undefined) => {
     }
   };
 
-  const addCategory = async (name: string) => {
+  const addCategory = async (name: string, minItems = 0, maxItems: number | null = null) => {
     if (!storeId) return;
 
     try {
@@ -56,7 +58,9 @@ export const useAddonCategories = (storeId: string | undefined) => {
           store_id: storeId,
           name,
           display_order: maxOrder + 1,
-          is_active: true
+          is_active: true,
+          min_items: minItems,
+          max_items: maxItems
         })
         .select()
         .single();
