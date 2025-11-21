@@ -15,6 +15,7 @@ export interface StoreFlavor {
   description?: string;
   price: number;
   product_name?: string;
+  is_available?: boolean;
 }
 
 export const useStoreAddonsAndFlavors = (storeId?: string) => {
@@ -76,6 +77,7 @@ export const useStoreAddonsAndFlavors = (storeId?: string) => {
           name,
           description,
           price,
+          is_available,
           product:products!inner(
             name,
             store_id
@@ -97,6 +99,7 @@ export const useStoreAddonsAndFlavors = (storeId?: string) => {
             description: flavor.description,
             price: flavor.price,
             product_name: flavor.product?.name,
+            is_available: flavor.is_available,
           });
         }
       });
