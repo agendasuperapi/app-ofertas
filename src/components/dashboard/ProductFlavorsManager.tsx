@@ -983,49 +983,7 @@ export const ProductFlavorsManager = ({ productId, storeId }: ProductFlavorsMana
         <Dialog open={searchFlavorsOpen} onOpenChange={setSearchFlavorsOpen}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="flex items-center justify-between">
-                <span>Buscar Sabores da Loja</span>
-                <div className="flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setShowFlavorFormInModal(!showFlavorFormInModal)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Cadastrar Sabor
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={async () => {
-                      if (!filteredStoreFlavors || filteredStoreFlavors.length === 0) return;
-                      
-                      try {
-                        for (const flavor of filteredStoreFlavors) {
-                          const isInProduct = flavors?.some(f => f.name === flavor.name);
-                          if (!isInProduct) {
-                            await handleAddStoreFlavor(flavor);
-                          }
-                        }
-                        toast({
-                          title: 'Sabores adicionados!',
-                          description: 'Todos os sabores disponíveis foram adicionados.',
-                        });
-                        setSearchFlavorsOpen(false);
-                      } catch (error: any) {
-                        toast({
-                          title: 'Erro ao adicionar sabores',
-                          description: error.message,
-                          variant: 'destructive',
-                        });
-                      }
-                    }}
-                    disabled={!filteredStoreFlavors || filteredStoreFlavors.length === 0}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Adicionar Todos
-                  </Button>
-                </div>
-              </DialogTitle>
+              <DialogTitle>Buscar Sabores da Loja</DialogTitle>
               <DialogDescription>
                 Todos os sabores únicos cadastrados em sua loja
               </DialogDescription>
