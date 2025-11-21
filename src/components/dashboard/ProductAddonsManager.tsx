@@ -45,6 +45,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { addonTemplates, type BusinessTemplate } from "@/lib/addonTemplates";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ProductAddonsManagerProps {
   productId: string;
@@ -159,9 +160,11 @@ const SortableAddon = ({ addon, onEdit, onDelete, onDuplicate, isDeleting, isDup
 };
 
 export default function ProductAddonsManager({ productId, storeId }: ProductAddonsManagerProps) {
+  const queryClient = useQueryClient();
   const { addons, createAddon, updateAddon, deleteAddon, reorderAddons, duplicateAddon, isCreating, isDeleting, isDuplicating } = useProductAddons(productId);
   const { categories, addCategory } = useAddonCategories(storeId);
-  const { addons: storeAddons = [] } = useStoreAddons(storeId);
+  const storeAddonsQuery = useStoreAddons(storeId);
+  const storeAddons = storeAddonsQuery.addons || [];
 
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -1223,6 +1226,10 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
     {/* Store Addons Dialog */}
     <Dialog open={isStoreAddonsOpen} onOpenChange={(open) => {
       setIsStoreAddonsOpen(open);
+      if (open) {
+        // Força atualização dos dados ao abrir o diálogo
+        queryClient.invalidateQueries({ queryKey: ['store-addons', storeId] });
+      }
       if (!open) {
         setShowStoreFormInModal(false);
         setFormData({
