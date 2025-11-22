@@ -22,6 +22,8 @@ import { isStoreOpen, getStoreStatusText } from "@/lib/storeUtils";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductDetailsDialog } from "@/components/product/ProductDetailsDialog";
+import { useFeaturedProducts } from "@/hooks/useFeaturedProducts";
+import { FeaturedProductsCarousel } from "@/components/store/FeaturedProductsCarousel";
 
 export default function StoreDetails() {
   const { slug } = useParams<{ slug: string }>();
@@ -29,6 +31,7 @@ export default function StoreDetails() {
   const [searchParams] = useSearchParams();
   const { data: store, isLoading: storeLoading } = useStore(slug!);
   const { data: products, isLoading: productsLoading } = useProducts(store?.id || '');
+  const { data: featuredProducts } = useFeaturedProducts(store?.id || '');
   const { categories: storeCategories } = useCategories(store?.id);
   const { addToCart, cart } = useCart();
   const { toast } = useToast();
@@ -528,7 +531,20 @@ export default function StoreDetails() {
             transition={{ delay: 0.4, duration: 0.6 }}
             className="lg:col-span-2 space-y-4 pb-16 md:pb-24"
           >
-          <motion.h2 
+            {/* Carrossel de Produtos em Destaque */}
+            {featuredProducts && featuredProducts.length > 0 && (
+              <FeaturedProductsCarousel
+                products={featuredProducts}
+                onAddToCart={(product) => {
+                  setSelectedProduct(product);
+                }}
+                onProductClick={(product) => {
+                  setDetailsProduct(product);
+                }}
+              />
+            )}
+
+          <motion.h2
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}

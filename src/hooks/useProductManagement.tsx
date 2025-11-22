@@ -14,6 +14,7 @@ export interface ProductFormData {
   is_pizza?: boolean;
   max_flavors?: number;
   external_code?: string;
+  is_featured?: boolean;
 }
 
 export const useProductManagement = (storeId?: string) => {
@@ -178,17 +179,50 @@ export const useProductManagement = (storeId?: string) => {
     },
   });
 
+  const toggleProductFeaturedMutation = useMutation({
+    mutationFn: async ({ id, is_featured }: { id: string; is_featured: boolean }) => {
+      const { data, error } = await supabase
+        .from('products')
+        .update({ is_featured } as any)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['my-products'] });
+      queryClient.invalidateQueries({ queryKey: ['featured-products'] });
+      toast({
+        title: data.is_featured ? 'Adicionado aos destaques!' : 'Removido dos destaques!',
+        description: data.is_featured 
+          ? 'O produto agora aparece no carrossel de destaques.' 
+          : 'O produto foi removido do carrossel.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao alterar destaque',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
   return {
     products: productsQuery.data,
     isLoading: productsQuery.isLoading,
     createProduct: createProductMutation.mutate,
     updateProduct: updateProductMutation.mutate,
     toggleProductAvailability: toggleProductAvailabilityMutation.mutate,
+    toggleProductFeatured: toggleProductFeaturedMutation.mutate,
     reorderProducts: reorderProductsMutation.mutate,
     deleteProduct: deleteProductMutation.mutate,
     isCreating: createProductMutation.isPending,
     isUpdating: updateProductMutation.isPending,
     isTogglingAvailability: toggleProductAvailabilityMutation.isPending,
+    isTogglingFeatured: toggleProductFeaturedMutation.isPending,
     isReordering: reorderProductsMutation.isPending,
     isDeleting: deleteProductMutation.isPending,
   };

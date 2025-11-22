@@ -4,8 +4,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Edit, GripVertical, Copy } from 'lucide-react';
+import { Edit, GripVertical, Copy, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface SortableProductCardProps {
   product: any;
@@ -14,6 +15,7 @@ interface SortableProductCardProps {
   hasPermission: (resource: string, action: string) => boolean;
   onEdit: (product: any) => void;
   onToggleAvailability: (id: string, isAvailable: boolean) => void;
+  onToggleFeatured?: (id: string, isFeatured: boolean) => void;
   onDuplicate: (product: any) => void;
 }
 
@@ -24,6 +26,7 @@ export const SortableProductCard = ({
   hasPermission,
   onEdit,
   onToggleAvailability,
+  onToggleFeatured,
   onDuplicate,
 }: SortableProductCardProps) => {
   const {
@@ -61,12 +64,20 @@ export const SortableProductCard = ({
 
             <div className="flex-1">
               {product.image_url && (
-                <div className="aspect-video w-full rounded-lg overflow-hidden mb-3 bg-muted">
+                <div className="aspect-video w-full rounded-lg overflow-hidden mb-3 bg-muted relative">
                   <img
                     src={product.image_url}
                     alt={product.name}
                     className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
                   />
+                  {product.is_featured && (
+                    <div className="absolute top-2 right-2">
+                      <Badge className="bg-yellow-500 text-white border-none shadow-lg">
+                        <Star className="h-3 w-3 mr-1 fill-white" />
+                        Destaque
+                      </Badge>
+                    </div>
+                  )}
                 </div>
               )}
               <div className="flex justify-between items-start mb-2">
@@ -91,6 +102,7 @@ export const SortableProductCard = ({
                   <div className="flex gap-2 items-center">
                     {hasPermission('products', 'update') && (
                       <>
+                        {/* Switch de Disponibilidade */}
                         <div className="flex items-center gap-2 mr-2">
                           <Switch
                             checked={product.is_available}
@@ -102,6 +114,25 @@ export const SortableProductCard = ({
                             {product.is_available ? 'Ativo' : 'Inativo'}
                           </span>
                         </div>
+                        
+                        {/* Switch de Destaque */}
+                        <div className="flex items-center gap-2 mr-2">
+                          <Star className={cn(
+                            "h-4 w-4 transition-colors",
+                            product.is_featured ? "fill-yellow-500 text-yellow-500" : "text-gray-400"
+                          )} />
+                          <Switch
+                            checked={product.is_featured || false}
+                            onCheckedChange={(checked) => {
+                              onToggleFeatured?.(product.id, checked);
+                            }}
+                            className="data-[state=checked]:bg-yellow-500"
+                          />
+                          <span className="text-xs text-muted-foreground">
+                            {product.is_featured ? 'Destaque' : 'Normal'}
+                          </span>
+                        </div>
+                        
                         <Button
                           size="sm"
                           variant="ghost"
