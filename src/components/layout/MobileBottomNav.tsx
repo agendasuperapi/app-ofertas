@@ -134,7 +134,7 @@ export const MobileBottomNav = () => {
             to="/cart"
             className={cn(
               "flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 -mt-6 sm:-mt-8 rounded-full bg-gradient-primary shadow-elegant hover:shadow-glow transition-all relative",
-              isPulsing && "animate-[pulse_0.5s_ease-in-out_2]"
+              isPulsing && "animate-pulse-cart"
             )}
           >
             <ShoppingCart className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground" />

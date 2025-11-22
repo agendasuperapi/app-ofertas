@@ -139,6 +139,16 @@ export default {
           "0%, 100%": { opacity: "1", transform: "scale(1)" },
           "50%": { opacity: "0.7", transform: "scale(0.95)" },
         },
+        "pulse-cart": {
+          "0%, 100%": { 
+            boxShadow: "0 0 30px hsl(var(--success) / 0.6), 0 10px 30px -10px hsl(var(--success) / 0.5)",
+            transform: "scale(1)"
+          },
+          "50%": { 
+            boxShadow: "0 0 40px hsl(var(--warning) / 0.8), 0 10px 40px -10px hsl(var(--warning) / 0.7)",
+            transform: "scale(1.05)"
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -150,6 +160,7 @@ export default {
         "slide-in-left": "slide-in-left 0.3s ease-out",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         "pulse-slow": "pulse-slow 2s ease-in-out infinite",
+        "pulse-cart": "pulse-cart 0.6s ease-in-out 3",
       },
     },
   },
