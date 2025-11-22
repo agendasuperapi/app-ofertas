@@ -183,6 +183,7 @@ export const useProductManagement = (storeId?: string) => {
       console.log('Duplicating product:', product);
       
       // Select only the fields that should be copied
+      // Note: external_code is NOT copied to avoid unique constraint violation
       const productData = {
         store_id: product.store_id,
         name: `${product.name} (Cópia)`,
@@ -195,7 +196,7 @@ export const useProductManagement = (storeId?: string) => {
         image_url: product.image_url,
         is_pizza: product.is_pizza,
         max_flavors: product.max_flavors,
-        external_code: product.external_code,
+        // external_code is intentionally omitted - must be unique per store
         display_order: product.display_order,
       };
 
@@ -219,7 +220,7 @@ export const useProductManagement = (storeId?: string) => {
       queryClient.invalidateQueries({ queryKey: ['my-products'] });
       toast({
         title: 'Produto duplicado!',
-        description: 'O produto foi duplicado com sucesso.',
+        description: 'O produto foi duplicado com sucesso. Lembre-se de definir um novo código externo se necessário.',
       });
     },
     onError: (error: Error) => {
