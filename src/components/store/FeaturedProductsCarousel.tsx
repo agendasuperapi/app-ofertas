@@ -85,22 +85,18 @@ export const FeaturedProductsCarousel = ({
                     className="group relative h-full bg-card rounded-xl border-2 border-yellow-500/30 hover:border-yellow-500 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
                     onClick={() => onProductClick(product)}
                   >
-                    {/* Badge de Destaque */}
-                    <div className="absolute top-2 left-2 z-10">
-                      <Badge className="bg-yellow-500 text-white border-none shadow-lg">
+                    {/* Badges Container */}
+                    <div className="absolute top-2 left-2 z-10 flex flex-col gap-1.5">
+                      <Badge className="bg-yellow-500 text-white border-none shadow-lg w-fit">
                         <Star className="h-3 w-3 mr-1 fill-white" />
                         Destaque
                       </Badge>
-                    </div>
-
-                    {/* Badge de Promoção */}
-                    {hasPromotion && (
-                      <div className="absolute top-2 right-2 z-10">
-                        <Badge variant="destructive" className="shadow-lg">
+                      {hasPromotion && (
+                        <Badge variant="destructive" className="shadow-lg w-fit">
                           Promoção
                         </Badge>
-                      </div>
-                    )}
+                      )}
+                    </div>
 
                     {/* Imagem do Produto */}
                     <div className="relative w-full aspect-square overflow-hidden bg-gradient-to-br from-yellow-500/10 to-orange-500/10">
