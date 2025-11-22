@@ -645,6 +645,7 @@ export default function Cart() {
           customerName,
           customerPhone,
           deliveryType: deliveryType!,
+          deliveryCity: deliveryType === 'delivery' ? deliveryCity.trim() : undefined,
           deliveryStreet: deliveryType === 'delivery' ? (deliveryStreet || undefined) : undefined,
           deliveryNumber: deliveryType === 'delivery' ? (deliveryNumber || undefined) : undefined,
           deliveryNeighborhood: deliveryType === 'delivery' ? (deliveryNeighborhood || undefined) : undefined,
