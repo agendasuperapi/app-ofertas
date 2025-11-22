@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import { Navigation } from "@/components/layout/Navigation";
 import { FloatingCartButton } from "@/components/cart/FloatingCartButton";
-import { AddToCartDialog } from "@/components/cart/AddToCartDialog";
 import { CartSidebar } from "@/components/cart/CartSidebar";
 import { Star, Clock, MapPin, ArrowLeft, Search, Share2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,6 @@ export default function StoreDetails() {
   const { categories: storeCategories } = useCategories(store?.id);
   const { addToCart, cart } = useCart();
   const { toast } = useToast();
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [detailsProduct, setDetailsProduct] = useState<any>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
@@ -116,30 +114,6 @@ export default function StoreDetails() {
     return cart.items
       .filter(item => item.productId === productId)
       .reduce((total, item) => total + item.quantity, 0);
-  };
-
-  const handleAddToCart = (
-    quantity: number, 
-    observation: string, 
-    selectedAddons: Array<{ id: string; name: string; price: number }>,
-    selectedFlavors: Array<{ id: string; name: string; price: number }>
-  ) => {
-    if (!store || !selectedProduct) return;
-    
-    addToCart(
-      selectedProduct.id,
-      selectedProduct.name,
-      selectedProduct.price,
-      store.id,
-      store.name,
-      quantity,
-      selectedProduct.promotional_price,
-      selectedProduct.image_url,
-      observation,
-      store.slug,
-      selectedAddons,
-      selectedFlavors
-    );
   };
 
   const handleShareProduct = async (product: any) => {
@@ -536,7 +510,7 @@ export default function StoreDetails() {
               <FeaturedProductsCarousel
                 products={featuredProducts}
                 onAddToCart={(product) => {
-                  setSelectedProduct(product);
+                  setDetailsProduct(product);
                 }}
                 onProductClick={(product) => {
                   setDetailsProduct(product);
@@ -1166,13 +1140,6 @@ export default function StoreDetails() {
           <CartSidebar />
         </div>
       </main>
-
-      <AddToCartDialog
-        open={!!selectedProduct}
-        onOpenChange={(open) => !open && setSelectedProduct(null)}
-        product={selectedProduct || { id: '', name: '', price: 0 }}
-        onAdd={handleAddToCart}
-      />
 
       <ProductDetailsDialog
         product={detailsProduct}
