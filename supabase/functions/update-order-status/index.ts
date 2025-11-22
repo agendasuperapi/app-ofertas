@@ -100,21 +100,24 @@ Deno.serve(async (req) => {
 
     const isStoreOwner = !storeErr && store && store.owner_id === user.id;
 
-    // Normalize and validate status
+    // Normalize and validate status - map custom status keys to database enum values
     const rawStatus = String(status);
+    
+    // Map custom status keys to valid database enum values
     const statusMap: Record<string, string> = {
       out_for_delivery: 'in_delivery',
     };
-    const normalizedStatus = statusMap[rawStatus] ?? rawStatus;
+    
+    const statusKey = statusMap[rawStatus] || rawStatus;
     const allowedStatuses = new Set(['pending','confirmed','preparing','ready','in_delivery','delivered','cancelled']);
-    if (!allowedStatuses.has(normalizedStatus)) {
-      console.error('[update-order-status] Status inválido recebido:', rawStatus);
+    
+    if (!allowedStatuses.has(statusKey)) {
+      console.error('[update-order-status] Status inválido recebido:', { rawStatus, statusKey });
       return new Response(JSON.stringify({ error: 'Status inválido.' }), {
         status: 400,
         headers: corsHeaders,
       });
     }
-    const statusKey = normalizedStatus;
 
     // If not store owner, check employee permissions
     if (!isStoreOwner) {
