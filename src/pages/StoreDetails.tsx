@@ -87,8 +87,9 @@ export default function StoreDetails() {
     return `${mobileClasses} ${desktopClasses}`;
   };
 
-  // Check if we're using horizontal template
-  const isHorizontalLayout = layoutTemplateMobile === 'template-horizontal' || layoutTemplateDesktop === 'template-horizontal';
+  // Check layout type separately for mobile and desktop
+  const isMobileHorizontal = layoutTemplateMobile === 'template-horizontal';
+  const isDesktopHorizontal = layoutTemplateDesktop === 'template-horizontal';
   
   // Detect shared product from URL and open in popup
   const sharedProductShortId = searchParams.get('product');
@@ -635,9 +636,9 @@ export default function StoreDetails() {
                   <div className="h-1 flex-1 bg-gradient-to-r from-orange-500/50 to-transparent rounded-full" />
                 </div>
                 
-                {isHorizontalLayout ? (
-                  // Horizontal Layout - Image on left, details on right
-                  <div className="flex flex-col gap-4">
+                {/* Mobile Horizontal Layout - Only shown on mobile when template is horizontal */}
+                {isMobileHorizontal && (
+                  <div className="flex flex-col gap-4 lg:hidden">
                     {categoryProducts.map((product, index) => {
                       const cartQuantity = getProductCartQuantity(product.id);
                       const isInCart = cartQuantity > 0;
@@ -746,9 +747,124 @@ export default function StoreDetails() {
                       );
                     })}
                   </div>
-                ) : (
-                  // Grid Layout - Original vertical cards
-                  <div className={`grid ${getGridClasses()} gap-8 md:gap-6`}>
+                )}
+
+                {/* Desktop Horizontal Layout - Only shown on desktop when template is horizontal */}
+                {isDesktopHorizontal && (
+                  <div className="hidden lg:flex lg:flex-col gap-4">
+                    {categoryProducts.map((product, index) => {
+                      const cartQuantity = getProductCartQuantity(product.id);
+                      const isInCart = cartQuantity > 0;
+                      
+                      return (
+                        <motion.div
+                          key={`${product.id}-${cartQuantity}`}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.4, delay: index * 0.03 }}
+                          className="group"
+                        >
+                          <Card
+                            className={`flex items-center gap-4 p-3 transition-all duration-300 cursor-pointer relative ${
+                              isInCart 
+                                ? 'border border-primary ring-2 ring-primary/40 bg-primary/5' 
+                                : 'border border-border hover:border-primary/50 shadow-md hover:shadow-lg'
+                            }`}
+                            onClick={() => setDetailsProduct(product)}
+                          >
+                            {/* Product Image on Left */}
+                            <div className="flex-shrink-0 relative">
+                              <div className="w-20 h-20 md:w-24 md:h-24 rounded-lg overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20">
+                                {product.image_url ? (
+                                  <img 
+                                    src={product.image_url} 
+                                    alt={product.name}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-muted">
+                                    <span className="text-3xl">🍕</span>
+                                  </div>
+                                )}
+                              </div>
+                              {isInCart && (
+                                <motion.div
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  className="absolute -top-1 -right-1 bg-primary text-primary-foreground w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-lg"
+                                >
+                                  {cartQuantity}
+                                </motion.div>
+                              )}
+                            </div>
+                            
+                            {/* Product Info in Center */}
+                            <div className="flex-1 min-w-0 pr-2">
+                              <h4 className="font-bold text-base md:text-lg mb-1 group-hover:text-primary transition-colors">
+                                {product.name}
+                              </h4>
+                              {product.description && (
+                                <p className="text-xs md:text-sm text-muted-foreground line-clamp-2 mb-2">
+                                  {product.description}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-2">
+                                {product.promotional_price ? (
+                                  <>
+                                    <span className="text-xs text-muted-foreground line-through">
+                                      R$ {Number(product.price).toFixed(2)}
+                                    </span>
+                                     <span className="text-lg md:text-xl font-bold text-success">
+                                       R$ {Number(product.promotional_price).toFixed(2)}
+                                     </span>
+                                  </>
+                                ) : (
+                                   <span className="text-lg md:text-xl font-bold text-success">
+                                     R$ {Number(product.price).toFixed(2)}
+                                   </span>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Add Button on Right */}
+                            <div className="flex-shrink-0">
+                              <motion.div
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                              >
+                                <Button 
+                                  size="icon"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDetailsProduct(product);
+                                  }}
+                                  className="rounded-full w-12 h-12 bg-success hover:bg-success/90 shadow-lg"
+                                >
+                                  <ShoppingCart className="w-5 h-5" />
+                                </Button>
+                              </motion.div>
+                            </div>
+                            
+                            {/* Offer Badge */}
+                            {product.promotional_price && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold"
+                              >
+                                OFERTA
+                              </motion.div>
+                            )}
+                          </Card>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Grid Layout - Shown when NOT horizontal on respective screen size */}
+                {!isMobileHorizontal && (
+                  <div className={`grid ${getGridClasses()} gap-8 md:gap-6 lg:hidden`}>
                     {categoryProducts.map((product, index) => {
                       const cartQuantity = getProductCartQuantity(product.id);
                       const isInCart = cartQuantity > 0;
@@ -872,6 +988,144 @@ export default function StoreDetails() {
                                       setDetailsProduct(product);
                                     }}
                                     className="w-full shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary"
+                                  >
+                                    Adicionar
+                                  </Button>
+                                </motion.div>
+                              </div>
+                            </div>
+                          </CardContent>
+                          </Card>
+                        </motion.div>
+                      </motion.div>
+                    );
+                    })}
+                  </div>
+                )}
+
+                {/* Desktop Grid Layout - Only shown on desktop when template is NOT horizontal */}
+                {!isDesktopHorizontal && (
+                  <div className={`hidden lg:grid ${getGridClasses()} gap-8 md:gap-6`}>
+                    {categoryProducts.map((product, index) => {
+                      const cartQuantity = getProductCartQuantity(product.id);
+                      const isInCart = cartQuantity > 0;
+                      
+                      return (
+                      <motion.div
+                        key={`desktop-${product.id}-${cartQuantity}`}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: index * 0.05 }}
+                        whileHover={{ y: -8 }}
+                        className="group"
+                      >
+                        <motion.div
+                          key={`card-${product.id}-${cartQuantity}`}
+                          initial={isInCart ? { scale: 1 } : false}
+                          animate={isInCart ? {
+                            scale: [1, 1.08, 1.02],
+                          } : { scale: 1 }}
+                          transition={{ 
+                            duration: 0.5, 
+                            ease: "easeOut",
+                            times: [0, 0.5, 1]
+                          }}
+                        >
+                          <Card
+                          className={`overflow-hidden h-full transition-all duration-300 cursor-pointer ${
+                            isInCart 
+                              ? 'border border-primary ring-4 ring-primary/40 bg-primary/5 scale-[1.02]' 
+                              : 'border-2 border-orange-300 hover:border-orange-400 shadow-lg hover:shadow-2xl bg-card/50 backdrop-blur-sm'
+                          }`}
+                          onClick={() => setDetailsProduct(product)}
+                        >
+                          {product.image_url && (
+                            <div className="relative h-56 md:h-44 overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20">
+                              <motion.img
+                                initial={{ scale: 0.95, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ duration: 0.6, ease: "easeOut" }}
+                                whileHover={{ scale: 1.15 }}
+                                src={product.image_url} 
+                                alt={product.name}
+                                className="w-full h-full object-cover animate-shine transition-transform duration-500 ease-out"
+                              />
+                              {/* Vignette effect */}
+                              <div className="absolute inset-0 shadow-[inset_0_0_60px_20px_rgba(0,0,0,0.4)] pointer-events-none" />
+                              {/* Enhanced hover overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                              {product.promotional_price && (
+                                <div className="absolute top-2 left-2 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold z-10 shadow-xl animate-pulse">
+                                  OFERTA
+                                </div>
+                              )}
+                              {isInCart && (
+                                <motion.div
+                                  initial={{ scale: 0, rotate: -180 }}
+                                  animate={{ scale: 1, rotate: 0 }}
+                                  transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                                  className="absolute top-2 right-2 bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-xl ring-2 ring-background z-10"
+                                >
+                                  {cartQuantity}
+                                </motion.div>
+                              )}
+                            </div>
+                          )}
+                          <CardContent className="p-4 md:p-6 space-y-3">
+                            <h4 className="font-bold text-lg md:text-xl group-hover:text-primary transition-colors line-clamp-2 min-h-[3.5rem]">
+                              {product.name}
+                            </h4>
+                            {product.description && (
+                              <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+                                {product.description}
+                              </p>
+                            )}
+                            <div className="space-y-3 pt-2">
+                              {product.promotional_price ? (
+                                <div className="space-y-1">
+                                  <div className="text-sm text-muted-foreground line-through">
+                                    R$ {Number(product.price).toFixed(2)}
+                                  </div>
+                                  <div className="text-2xl md:text-3xl font-bold text-success flex items-baseline gap-1">
+                                    <span className="text-lg">R$</span>
+                                    {Number(product.promotional_price).toFixed(2)}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-2xl md:text-3xl font-bold text-success flex items-baseline gap-1">
+                                  <span className="text-lg">R$</span>
+                                  {Number(product.price).toFixed(2)}
+                                </div>
+                              )}
+                              <div className="flex gap-2 pt-1">
+                                <motion.div
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  className="flex-shrink-0"
+                                >
+                                  <Button 
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleShareProduct(product);
+                                    }}
+                                    className="shadow-md hover:shadow-lg transition-all duration-300"
+                                  >
+                                    <Share2 className="w-4 h-4" />
+                                  </Button>
+                                </motion.div>
+                                <motion.div
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  className="flex-1"
+                                >
+                                  <Button 
+                                    className="w-full shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-primary to-primary/80 hover:from-primary hover:to-primary"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setDetailsProduct(product);
+                                    }}
                                   >
                                     Adicionar
                                   </Button>
