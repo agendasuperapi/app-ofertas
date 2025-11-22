@@ -97,14 +97,21 @@ export const LayoutSettings = ({
   const TemplateSelector = ({ 
     selectedTemplate, 
     onSelectTemplate, 
-    currentTemplate 
+    currentTemplate,
+    isMobile = false
   }: { 
     selectedTemplate: string; 
     onSelectTemplate: (id: string) => void;
     currentTemplate: string;
-  }) => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {templates.map((template) => {
+    isMobile?: boolean;
+  }) => {
+    const filteredTemplates = isMobile 
+      ? templates.filter(t => !['template-3', 'template-4', 'template-6'].includes(t.id))
+      : templates;
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredTemplates.map((template) => {
         const Icon = template.icon;
         const isSelected = selectedTemplate === template.id;
         
@@ -174,9 +181,10 @@ export const LayoutSettings = ({
             </Card>
           </motion.div>
         );
-      })}
-    </div>
-  );
+        })}
+      </div>
+    );
+  };
 
   return (
     <Card className="border-border/50 shadow-lg">
@@ -220,6 +228,7 @@ export const LayoutSettings = ({
                 selectedTemplate={selectedMobile}
                 onSelectTemplate={setSelectedMobile}
                 currentTemplate={currentTemplateMobile}
+                isMobile={true}
               />
             </div>
           </TabsContent>
