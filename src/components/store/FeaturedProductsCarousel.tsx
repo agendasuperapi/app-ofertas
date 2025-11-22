@@ -99,7 +99,7 @@ export const FeaturedProductsCarousel = ({
                   className="h-full"
                 >
                   <div
-                    className="group relative h-full bg-card rounded-xl border-2 border-yellow-500/30 hover:border-yellow-500 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
+                    className="group relative flex flex-col h-full bg-card rounded-xl border-2 border-yellow-500/30 hover:border-yellow-500 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer"
                     onClick={() => onProductClick(product)}
                   >
                     {/* Badges Container */}
