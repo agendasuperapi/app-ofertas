@@ -43,6 +43,8 @@ export interface StoreFormData {
   allow_orders_when_closed?: boolean;
   require_delivery_zone?: boolean;
   product_layout_template?: string;
+  product_layout_template_desktop?: string;
+  product_layout_template_mobile?: string;
 }
 
 export const useStoreManagement = () => {

@@ -38,25 +38,49 @@ export default function StoreDetails() {
   const [searchQuery, setSearchQuery] = useState<string>("");
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
   
-  // Get layout template from store
-  const layoutTemplate = (store as any)?.product_layout_template || 'template-4';
+  // Get layout templates from store (separate for desktop and mobile)
+  const layoutTemplateDesktop = (store as any)?.product_layout_template_desktop || 'template-4';
+  const layoutTemplateMobile = (store as any)?.product_layout_template_mobile || 'template-2';
   
-  // Function to get grid classes based on template
+  // Function to get grid classes based on template and screen size
   const getGridClasses = () => {
-    switch (layoutTemplate) {
-      case 'template-2':
-        return 'grid-cols-1 sm:grid-cols-2';
-      case 'template-3':
-        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3';
-      case 'template-4':
-        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4';
-      case 'template-6':
-        return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6';
-      case 'template-list':
-        return 'grid-cols-1';
-      default:
-        return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4';
-    }
+    // Mobile classes (base and sm breakpoint)
+    const mobileClasses = (() => {
+      switch (layoutTemplateMobile) {
+        case 'template-2':
+          return 'grid-cols-1 sm:grid-cols-2';
+        case 'template-3':
+          return 'grid-cols-1 sm:grid-cols-2';
+        case 'template-4':
+          return 'grid-cols-2 sm:grid-cols-2';
+        case 'template-6':
+          return 'grid-cols-2 sm:grid-cols-3';
+        case 'template-list':
+          return 'grid-cols-1';
+        default:
+          return 'grid-cols-1 sm:grid-cols-2';
+      }
+    })();
+
+    // Desktop classes (lg breakpoint and above)
+    const desktopClasses = (() => {
+      switch (layoutTemplateDesktop) {
+        case 'template-2':
+          return 'lg:grid-cols-2';
+        case 'template-3':
+          return 'lg:grid-cols-3';
+        case 'template-4':
+          return 'lg:grid-cols-4';
+        case 'template-6':
+          return 'lg:grid-cols-6';
+        case 'template-list':
+          return 'lg:grid-cols-1';
+        default:
+          return 'lg:grid-cols-4';
+      }
+    })();
+
+    return `${mobileClasses} ${desktopClasses}`;
   };
   
   // Detect shared product from URL and open in popup
