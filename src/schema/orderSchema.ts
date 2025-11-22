@@ -72,6 +72,11 @@ export const orderSchema = z.object({
     .max(50, "Payment method must be less than 50 characters"),
 
   // Delivery address fields with validation
+  deliveryCity: z.string()
+    .trim()
+    .max(100, "City must be less than 100 characters")
+    .optional()
+    .transform(val => val || undefined),
   deliveryStreet: z.string()
     .trim()
     .max(200, "Street name must be less than 200 characters")
@@ -118,13 +123,18 @@ export const orderSchema = z.object({
     .max(50, "Order cannot have more than 50 items"),
 })
 .refine((data) => {
-  // If delivery type is delivery, require delivery address
+  // If delivery type is delivery, require delivery address and city
   if (data.deliveryType === "delivery") {
-    return data.deliveryStreet && data.deliveryNumber && data.deliveryNeighborhood;
+    return (
+      !!data.deliveryCity &&
+      !!data.deliveryStreet &&
+      !!data.deliveryNumber &&
+      !!data.deliveryNeighborhood
+    );
   }
   return true;
 }, {
-  message: "Delivery address is required for delivery orders",
+  message: "Delivery address and city are required for delivery orders",
   path: ["deliveryStreet"],
 });
 

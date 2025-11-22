@@ -96,7 +96,79 @@ export const useOrders = () => {
         (sum, item) => sum + item.unitPrice * item.quantity,
         0
       );
-      const deliveryFee = validatedData.deliveryType === "pickup" ? 0 : 5;
+
+      // 🎯 Calcular taxa de entrega respeitando zonas e configuração da loja
+      let deliveryFee = 0;
+      const isDelivery = validatedData.deliveryType === "delivery";
+
+      if (isDelivery) {
+        // Buscar configurações da loja (taxa padrão e restrição por zona)
+        const { data: store, error: storeError } = await supabase
+          .from('stores')
+          .select('delivery_fee, require_delivery_zone')
+          .eq('id', validatedData.storeId)
+          .single();
+
+        if (storeError) {
+          console.error("❌ Store fetch error:", storeError);
+          throw storeError;
+        }
+
+        const baseDeliveryFee = Number(store?.delivery_fee ?? 0);
+
+        if (store?.require_delivery_zone) {
+          // Buscar zonas ativas da loja
+          const { data: zones, error: zonesError } = await supabase
+            .from('delivery_zones')
+            .select('*')
+            .eq('store_id', validatedData.storeId)
+            .eq('is_active', true);
+
+          if (zonesError) {
+            console.error("❌ Delivery zones fetch error:", zonesError);
+            throw zonesError;
+          }
+
+          if (!zones || zones.length === 0) {
+            throw new Error("A loja não possui zonas de entrega configuradas. Entre em contato com a loja.");
+          }
+
+          const deliveryCity = (validatedData as any).deliveryCity as string | undefined;
+          const normalizedCity = deliveryCity ? deliveryCity.toLowerCase().trim() : '';
+          const normalizedNeighborhood = validatedData.deliveryNeighborhood
+            ? validatedData.deliveryNeighborhood.toLowerCase().trim()
+            : '';
+
+          // Tenta casar primeiro zona específica de bairro
+          const neighborhoodZone = zones.find((zone: any) =>
+            zone.city.toLowerCase().trim() === normalizedCity &&
+            zone.neighborhood &&
+            zone.neighborhood.toLowerCase().trim() === normalizedNeighborhood
+          );
+
+          // Se não houver zona específica, tenta zona genérica da cidade
+          const cityZone = zones.find((zone: any) =>
+            zone.city.toLowerCase().trim() === normalizedCity &&
+            !zone.neighborhood
+          );
+
+          const matchedZone = neighborhoodZone || cityZone;
+
+          if (!matchedZone) {
+            throw new Error(
+              `Fora da área de entrega para ${deliveryCity || 'sua cidade'}${
+                validatedData.deliveryNeighborhood ? ` - ${validatedData.deliveryNeighborhood}` : ''
+              }.`
+            );
+          }
+
+          deliveryFee = Number(matchedZone.delivery_fee) || 0;
+        } else {
+          // Sem restrição por zona: usa taxa padrão da loja
+          deliveryFee = baseDeliveryFee;
+        }
+      }
+
       const couponDiscount = validatedData.couponDiscount || 0;
       const total = subtotal + deliveryFee - couponDiscount;
 
