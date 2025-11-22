@@ -64,14 +64,14 @@ export const FeaturedProductsCarousel = ({
       className="w-full mb-8"
     >
       {/* Header do Carrossel */}
-      <div className="flex items-center gap-3 mb-4">
-        <div className="flex items-center gap-2">
-          <Star className="h-6 w-6 fill-yellow-500 text-yellow-500" />
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent">
+      <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
+        <div className="flex items-center gap-1.5 md:gap-2">
+          <Star className="h-4 w-4 md:h-6 md:w-6 fill-yellow-500 text-yellow-500" />
+          <h2 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent">
             Destaques
           </h2>
         </div>
-        <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30">
+        <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30 text-xs md:text-sm">
           {products.length} {products.length === 1 ? 'produto' : 'produtos'}
         </Badge>
       </div>
@@ -103,13 +103,13 @@ export const FeaturedProductsCarousel = ({
                     onClick={() => onProductClick(product)}
                   >
                     {/* Badges Container */}
-                    <div className="absolute top-2 left-2 z-10 flex flex-col gap-1.5">
-                      <Badge className="bg-yellow-500 text-white border-none shadow-lg w-fit">
-                        <Star className="h-3 w-3 mr-1 fill-white" />
+                    <div className="absolute top-1.5 left-1.5 md:top-2 md:left-2 z-10 flex flex-col gap-1">
+                      <Badge className="bg-yellow-500 text-white border-none shadow-lg w-fit text-[10px] md:text-xs px-1.5 md:px-2.5 py-0.5">
+                        <Star className="h-2.5 w-2.5 md:h-3 md:w-3 mr-0.5 md:mr-1 fill-white" />
                         Destaque
                       </Badge>
                       {hasPromotion && (
-                        <Badge variant="destructive" className="shadow-lg w-fit">
+                        <Badge variant="destructive" className="shadow-lg w-fit text-[10px] md:text-xs px-1.5 md:px-2.5 py-0.5">
                           Promoção
                         </Badge>
                       )}
@@ -134,29 +134,29 @@ export const FeaturedProductsCarousel = ({
                     </div>
 
                     {/* Conteúdo do Card */}
-                    <div className="p-3 space-y-2">
+                    <div className="p-2 md:p-3 space-y-1.5 md:space-y-2">
                       {/* Nome do Produto */}
-                      <h3 className="font-semibold text-base line-clamp-2 group-hover:text-yellow-600 transition-colors">
+                      <h3 className="font-semibold text-sm md:text-base line-clamp-2 group-hover:text-yellow-600 transition-colors">
                         {product.name}
                       </h3>
 
                       {/* Descrição */}
                       {product.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
+                        <p className="text-xs md:text-sm text-muted-foreground line-clamp-1 md:line-clamp-2">
                           {product.description}
                         </p>
                       )}
 
                       {/* Preço e Botão */}
-                      <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center justify-between pt-0.5 md:pt-1">
                         <div className="space-y-0.5">
                           {hasPromotion && (
-                            <p className="text-xs text-muted-foreground line-through">
+                            <p className="text-[10px] md:text-xs text-muted-foreground line-through">
                               {formatCurrency(product.price)}
                             </p>
                           )}
                           <p className={cn(
-                            "font-bold text-lg",
+                            "font-bold text-base md:text-lg",
                             hasPromotion ? "text-red-500" : "text-primary"
                           )}>
                             {formatCurrency(finalPrice)}
@@ -165,13 +165,13 @@ export const FeaturedProductsCarousel = ({
 
                         <Button
                           size="sm"
-                          className="bg-yellow-500 hover:bg-yellow-600 text-white shadow-md hover:shadow-lg transition-all duration-200 h-8 px-3"
+                          className="bg-yellow-500 hover:bg-yellow-600 text-white shadow-md hover:shadow-lg transition-all duration-200 h-7 md:h-8 px-2 md:px-3"
                           onClick={(e) => {
                             e.stopPropagation();
                             onAddToCart(product);
                           }}
                         >
-                          <ShoppingCart className="h-3.5 w-3.5" />
+                          <ShoppingCart className="h-3 w-3 md:h-3.5 md:w-3.5" />
                         </Button>
                       </div>
                     </div>
