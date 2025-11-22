@@ -210,7 +210,7 @@ export const ImageUpload = ({
     <div className="space-y-2">
       <Label className="text-sm font-medium text-foreground">{label}</Label>
       <p className="text-xs text-muted-foreground">
-        {bucket === 'product-images' && 'Recomendado: 800x800px (quadrada)'}
+        {bucket === 'product-images' && 'Recomendado: 800x450'}
         {bucket === 'store-logos' && 'Recomendado: 400x400px (quadrada)'}
         {bucket === 'store-banners' && 'Recomendado: 1200x400px (3:1)'}
       </p>
