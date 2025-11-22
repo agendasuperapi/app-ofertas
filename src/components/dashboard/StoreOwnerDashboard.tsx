@@ -195,6 +195,8 @@ export const StoreOwnerDashboard = () => {
     allow_orders_when_closed: (myStore as any)?.allow_orders_when_closed ?? false,
     require_delivery_zone: (myStore as any)?.require_delivery_zone ?? false,
     product_layout_template: (myStore as any)?.product_layout_template || 'template-4',
+    product_layout_template_desktop: (myStore as any)?.product_layout_template_desktop || 'template-4',
+    product_layout_template_mobile: (myStore as any)?.product_layout_template_mobile || 'template-2',
   });
 
   const [pixValidation, setPixValidation] = useState<{ isValid: boolean; type: string; message: string }>({
@@ -5110,14 +5112,16 @@ export const StoreOwnerDashboard = () => {
             transition={{ duration: 0.5 }}
           >
             <LayoutSettings
-              currentTemplate={(myStore as any)?.product_layout_template || 'template-4'}
-              onUpdate={async (template: string) => {
+              currentTemplateDesktop={(myStore as any)?.product_layout_template_desktop || 'template-4'}
+              currentTemplateMobile={(myStore as any)?.product_layout_template_mobile || 'template-2'}
+              onUpdate={async (desktopTemplate: string, mobileTemplate: string) => {
                 await updateStore({
                   id: myStore.id,
                   name: myStore.name,
                   slug: myStore.slug,
                   category: myStore.category,
-                  product_layout_template: template,
+                  product_layout_template_desktop: desktopTemplate,
+                  product_layout_template_mobile: mobileTemplate,
                 });
               }}
               isUpdating={false}
