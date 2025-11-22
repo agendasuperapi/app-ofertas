@@ -1064,16 +1064,16 @@ export default function StoreDetails() {
                               )}
                             </div>
                           )}
-                          <CardContent className="p-4 md:p-6 space-y-1.5">
+                          <CardContent className="p-4 md:p-6 space-y-0">
                             <h4 className="font-bold text-lg md:text-xl group-hover:text-primary transition-colors line-clamp-2 min-h-[3.5rem]">
                               {product.name}
                             </h4>
                             {product.description && (
-                              <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem]">
+                              <p className="text-sm text-muted-foreground line-clamp-2 min-h-[2.5rem] mb-1">
                                 {product.description}
                               </p>
                             )}
-                            <div className="space-y-3 pt-1">
+                            <div className="space-y-3">
                               {product.promotional_price ? (
                                 <div className="space-y-1">
                                   <div className="text-sm text-muted-foreground line-through">
