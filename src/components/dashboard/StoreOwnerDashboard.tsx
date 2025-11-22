@@ -21,7 +21,7 @@ import { useStoreManagement, type StoreFormData } from "@/hooks/useStoreManageme
 import { useProductManagement } from "@/hooks/useProductManagement";
 import { useStoreOrders } from "@/hooks/useStoreOrders";
 import { useCategories } from "@/hooks/useCategories";
-import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, ArrowUp, ArrowDown, FolderTree, User, Lock, Edit2, Eye, Printer, AlertCircle, CheckCircle, Loader2, Bell, Shield, XCircle, Receipt, Truck, Save, Sparkles, LayoutGrid, Table as TableIcon } from "lucide-react";
+import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, ArrowUp, ArrowDown, FolderTree, User, Lock, Edit2, Eye, Printer, AlertCircle, CheckCircle, Loader2, Bell, Shield, XCircle, Receipt, Truck, Save, Sparkles, LayoutGrid, Table as TableIcon, Star } from "lucide-react";
 import { validatePixKey } from "@/lib/pixValidation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ProductAddonsManager from "./ProductAddonsManager";
@@ -92,7 +92,7 @@ export const StoreOwnerDashboard = () => {
   const { isStoreOwner } = useUserRole();
   const employeeAccess = useEmployeeAccess();
   const { myStore, isLoading, updateStore } = useStoreManagement();
-  const { products, createProduct, updateProduct, toggleProductAvailability, reorderProducts, deleteProduct } = useProductManagement(myStore?.id);
+  const { products, createProduct, updateProduct, toggleProductAvailability, toggleProductFeatured, reorderProducts, deleteProduct } = useProductManagement(myStore?.id);
   const { orders, updateOrderStatus, updateOrder } = useStoreOrders(myStore?.id);
   
 
@@ -155,6 +155,7 @@ export const StoreOwnerDashboard = () => {
     is_pizza: false,
     max_flavors: 2,
     external_code: '',
+    is_featured: false,
   });
 
   const [activeProductTab, setActiveProductTab] = useState("info");
@@ -3303,6 +3304,21 @@ export const StoreOwnerDashboard = () => {
                             />
                             <Label>Disponível</Label>
                           </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              id="is_featured"
+                              checked={productForm.is_featured || false}
+                              onCheckedChange={(checked) => 
+                                setProductForm({ ...productForm, is_featured: checked })
+                              }
+                              className="data-[state=checked]:bg-yellow-500"
+                            />
+                            <Label htmlFor="is_featured" className="flex items-center gap-2 cursor-pointer">
+                              <Star className={productForm.is_featured ? "h-4 w-4 fill-yellow-500 text-yellow-500" : "h-4 w-4 text-gray-400"} />
+                              Produto em Destaque
+                            </Label>
+                          </div>
                         </TabsContent>
 
                         <TabsContent value="addons" className="mt-4 max-h-[50vh] overflow-y-auto pr-2">
@@ -3707,6 +3723,28 @@ export const StoreOwnerDashboard = () => {
                                 </TableCell>
                                 <TableCell className="text-center">
                                   {hasPermission('products', 'update') ? (
+                                    <div className="flex items-center justify-center gap-2">
+                                      <Switch
+                                        checked={product.is_featured || false}
+                                        onCheckedChange={(checked) => 
+                                          toggleProductFeatured({ id: product.id, is_featured: checked })
+                                        }
+                                        className="data-[state=checked]:bg-yellow-500"
+                                      />
+                                      {product.is_featured && (
+                                        <Star className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                                      )}
+                                    </div>
+                                  ) : (
+                                    product.is_featured ? (
+                                      <Star className="h-4 w-4 fill-yellow-500 text-yellow-500 mx-auto" />
+                                    ) : (
+                                      <span className="text-muted-foreground">-</span>
+                                    )
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  {hasPermission('products', 'update') ? (
                                     <Switch
                                       checked={product.is_available}
                                       onCheckedChange={(checked) => 
@@ -3803,6 +3841,9 @@ export const StoreOwnerDashboard = () => {
                                         onToggleAvailability={(id, isAvailable) => 
                                           toggleProductAvailability({ id, is_available: isAvailable })
                                         }
+                                        onToggleFeatured={(id, isFeatured) => 
+                                          toggleProductFeatured({ id, is_featured: isFeatured })
+                                        }
                                         onDuplicate={handleDuplicateProduct}
                                       />
                                     ))}
@@ -3856,6 +3897,9 @@ export const StoreOwnerDashboard = () => {
                                   onEdit={handleEditProduct}
                                   onToggleAvailability={(id, isAvailable) => 
                                     toggleProductAvailability({ id, is_available: isAvailable })
+                                  }
+                                  onToggleFeatured={(id, isFeatured) => 
+                                    toggleProductFeatured({ id, is_featured: isFeatured })
                                   }
                                   onDuplicate={handleDuplicateProduct}
                                 />
