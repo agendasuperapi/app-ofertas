@@ -5,7 +5,7 @@ import { Navigation } from "@/components/layout/Navigation";
 import { FloatingCartButton } from "@/components/cart/FloatingCartButton";
 import { AddToCartDialog } from "@/components/cart/AddToCartDialog";
 import { CartSidebar } from "@/components/cart/CartSidebar";
-import { Star, Clock, MapPin, ArrowLeft, Search, Share2, ShoppingCart } from "lucide-react";
+import { Star, Clock, MapPin, ArrowLeft, Search, Share2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -727,7 +727,7 @@ export default function StoreDetails() {
                                   }}
                                   className="rounded-full w-12 h-12 bg-success hover:bg-success/90 shadow-lg"
                                 >
-                                  <ShoppingCart className="w-5 h-5" />
+                                  <Plus className="w-5 h-5" />
                                 </Button>
                               </motion.div>
                             </div>
@@ -840,7 +840,7 @@ export default function StoreDetails() {
                                   }}
                                   className="rounded-full w-12 h-12 bg-success hover:bg-success/90 shadow-lg"
                                 >
-                                  <ShoppingCart className="w-5 h-5" />
+                                  <Plus className="w-5 h-5" />
                                 </Button>
                               </motion.div>
                             </div>
