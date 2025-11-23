@@ -92,7 +92,7 @@ export const FeaturedProductsCarousel = ({
             const hasPromotion = product.promotional_price && product.promotional_price < product.price;
 
             return (
-              <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-1/3 md:basis-1/4 lg:basis-1/4 xl:basis-1/4">
+              <CarouselItem key={product.id} className="pl-2 md:pl-4 basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/4 xl:basis-1/4">
                 <motion.div
                   whileHover={{ scale: 1.02 }}
                   transition={{ duration: 0.2 }}
@@ -133,7 +133,7 @@ export const FeaturedProductsCarousel = ({
                     </div>
 
                     {/* Conteúdo do Card */}
-                    <div className="p-2 md:p-3 pb-1 md:pb-1.5 flex flex-col flex-1">
+                    <div className="p-1.5 md:p-3 pb-1 md:pb-1.5 flex flex-col flex-1">
                       {/* Nome do Produto */}
                       <h3 className="font-semibold text-sm md:text-base line-clamp-2 group-hover:text-yellow-600 transition-colors mb-0.5">
                         {product.name}
@@ -147,16 +147,16 @@ export const FeaturedProductsCarousel = ({
                       </div>
 
                       {/* Preço e Botão - colados na descrição, sem rodapé sobrando */}
-                      <div className="mt-auto flex items-center justify-between">
-                        <div className="flex flex-col justify-center">
+                      <div className="mt-auto flex items-center justify-between gap-1">
+                        <div className="flex flex-col justify-center min-w-0 flex-1">
                           {hasPromotion && (
-                            <p className="text-[10px] md:text-xs text-muted-foreground line-through leading-tight">
+                            <p className="text-[9px] md:text-xs text-muted-foreground line-through leading-tight">
                               {formatCurrency(product.price)}
                             </p>
                           )}
                           <p
                             className={cn(
-                              "font-bold text-base md:text-lg leading-tight",
+                              "font-bold text-sm md:text-lg leading-tight truncate",
                               hasPromotion ? "text-red-500" : "text-primary"
                             )}
                           >
@@ -166,7 +166,7 @@ export const FeaturedProductsCarousel = ({
 
                         <Button
                           size="sm"
-                          className="bg-orange-500 hover:bg-orange-600 text-white shadow-md hover:shadow-lg transition-all duration-200 h-7 md:h-8 px-2 md:px-3 flex-shrink-0"
+                          className="bg-orange-500 hover:bg-orange-600 text-white shadow-md hover:shadow-lg transition-all duration-200 h-6 md:h-8 px-1.5 md:px-3 flex-shrink-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             onAddToCart(product);
