@@ -167,7 +167,7 @@ export const FeaturedProductsCarousel = ({
 
                         <Button
                           size="sm"
-                          className="bg-yellow-500 hover:bg-yellow-600 text-white shadow-md hover:shadow-lg transition-all duration-200 h-7 md:h-8 px-2 md:px-3 flex-shrink-0"
+                          className="bg-orange-500 hover:bg-orange-600 text-white shadow-md hover:shadow-lg transition-all duration-200 h-7 md:h-8 px-2 md:px-3 flex-shrink-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             onAddToCart(product);
