@@ -19,6 +19,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCoupons } from "@/hooks/useCoupons";
 import { useDeliveryZones } from "@/hooks/useDeliveryZones";
 import { usePickupLocations } from "@/hooks/usePickupLocations";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { Minus, Plus, Trash2, ShoppingBag, Clock, Store, Pencil, ArrowLeft, Package, Tag, X, Loader2, Search, MapPin, Eye, EyeOff } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -35,6 +36,7 @@ export default function Cart() {
   const { validateCoupon } = useCoupons(cart.storeId || undefined);
   const { zones: deliveryZones } = useDeliveryZones(cart.storeId || undefined);
   const { data: pickupLocations = [] } = usePickupLocations(cart.storeId || undefined);
+  const isMobile = useIsMobile();
   const [editingItem, setEditingItem] = useState<any>(null);
   const [couponInput, setCouponInput] = useState("");
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
@@ -98,6 +100,13 @@ export default function Cart() {
       setSelectedPickupLocation(pickupLocations[0].id);
     }
   }, [deliveryType, pickupLocations]);
+
+  // Scroll to top on mobile when user is logged in
+  useEffect(() => {
+    if (isMobile && user) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, []);
 
   // Effect when pickup location is selected -> highlight payment section
   useEffect(() => {
