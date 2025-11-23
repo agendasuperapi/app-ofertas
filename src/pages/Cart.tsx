@@ -873,7 +873,7 @@ export default function Cart() {
             animate={{ opacity: 1, x: 0 }}
           >
             <Card className="sticky top-24">
-              <CardContent className="p-6 space-y-6">
+              <CardContent className="p-8 space-y-6">
                 {/* Step Indicator */}
                 <div className="flex items-center justify-center gap-2 mb-6">
                   <div className={`flex flex-col items-center ${
