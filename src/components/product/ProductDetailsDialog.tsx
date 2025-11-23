@@ -435,17 +435,31 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
                     <div key={category.id}>
                       <div className="space-y-1.5">
                         <div className="space-y-1">
-                          <p className="text-sm font-bold text-foreground">
-                            {category.name}
-                            {category.min_items > 0 && (
-                              <span className="text-destructive ml-1">*</span>
-                            )}
-                            {category.max_items === 1 && (
-                              <Badge variant="outline" className="ml-2 text-xs">
-                                Escolha 1
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-bold text-foreground">
+                              {category.name}
+                              {category.min_items > 0 && (
+                                <span className="text-destructive ml-1">*</span>
+                              )}
+                              {category.max_items === 1 && (
+                                <Badge variant="outline" className="ml-2 text-xs">
+                                  Escolha 1
+                                </Badge>
+                              )}
+                            </p>
+                            {category.max_items !== null && category.max_items > 1 && (
+                              <Badge 
+                                variant={
+                                  (selectedAddonsByCategory[category.id]?.size || 0) >= category.min_items 
+                                    ? "default" 
+                                    : "secondary"
+                                }
+                                className="text-xs"
+                              >
+                                {selectedAddonsByCategory[category.id]?.size || 0}/{category.max_items}
                               </Badge>
                             )}
-                          </p>
+                          </div>
                           <p className="text-xs text-muted-foreground">
                             {category.max_items === 1 ? (
                               'Apenas 1 opção'
