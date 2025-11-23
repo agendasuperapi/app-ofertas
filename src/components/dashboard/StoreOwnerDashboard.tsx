@@ -4845,18 +4845,6 @@ export const StoreOwnerDashboard = () => {
                     placeholder="Apto, sala, etc. (opcional)"
                   />
                 </div>
-
-                <div>
-                  <Label>Endereço Completo (legado)</Label>
-                  <Input
-                    value={storeForm.address}
-                    onChange={(e) => setStoreForm({ ...storeForm, address: e.target.value })}
-                    placeholder="Endereço completo..."
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Campo mantido para compatibilidade. Use os campos acima.
-                  </p>
-                </div>
               </div>
 
 
