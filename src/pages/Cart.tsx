@@ -70,9 +70,12 @@ export default function Cart() {
   const [showEmailExistsAlert, setShowEmailExistsAlert] = useState(false);
   
   const [storeData, setStoreData] = useState<any>(null);
+  const [highlightPickupLocation, setHighlightPickupLocation] = useState(false);
+  const [highlightPayment, setHighlightPayment] = useState(false);
   const deliveryTypeRef = useRef<HTMLDivElement>(null);
   const cartItemsRef = useRef<HTMLDivElement>(null);
   const paymentSectionRef = useRef<HTMLDivElement>(null);
+  const pickupLocationRef = useRef<HTMLDivElement>(null);
 
   // Reset email exists alert when email changes
   useEffect(() => {
@@ -95,6 +98,26 @@ export default function Cart() {
       setSelectedPickupLocation(pickupLocations[0].id);
     }
   }, [deliveryType, pickupLocations]);
+
+  // Effect when pickup location is selected -> highlight payment section
+  useEffect(() => {
+    if (selectedPickupLocation && deliveryType === 'pickup') {
+      setHighlightPayment(true);
+      
+      setTimeout(() => {
+        paymentSectionRef.current?.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+      }, 100);
+
+      const timer = setTimeout(() => {
+        setHighlightPayment(false);
+      }, 2500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [selectedPickupLocation, deliveryType]);
 
   const storeIsOpen = storeData ? isStoreOpen(storeData.operating_hours) : true;
   const storeStatusText = storeData ? getStoreStatusText(storeData.operating_hours) : '';
@@ -1098,7 +1121,38 @@ export default function Cart() {
                         {((storeData as any)?.accepts_pickup ?? true) && (
                           <button
                             type="button"
-                            onClick={() => setDeliveryType('pickup')}
+                            onClick={() => {
+                              setDeliveryType('pickup');
+                              
+                              // Only highlight if there are multiple pickup locations
+                              if (pickupLocations.length > 1) {
+                                setHighlightPickupLocation(true);
+                                
+                                setTimeout(() => {
+                                  pickupLocationRef.current?.scrollIntoView({ 
+                                    behavior: 'smooth', 
+                                    block: 'center' 
+                                  });
+                                }, 100);
+
+                                setTimeout(() => {
+                                  setHighlightPickupLocation(false);
+                                }, 2500);
+                              } else {
+                                // If only one location, highlight payment directly
+                                setTimeout(() => {
+                                  setHighlightPayment(true);
+                                  paymentSectionRef.current?.scrollIntoView({ 
+                                    behavior: 'smooth', 
+                                    block: 'center' 
+                                  });
+                                }, 100);
+
+                                setTimeout(() => {
+                                  setHighlightPayment(false);
+                                }, 2500);
+                              }
+                            }}
                             className={`p-4 rounded-lg border-2 transition-all ${
                               deliveryType === 'pickup'
                                 ? 'border-primary bg-primary/10'
@@ -1263,7 +1317,14 @@ export default function Cart() {
 
                     {/* Pickup Location Selection - Moved above Payment Section */}
                     {deliveryType === 'pickup' && (
-                      <div className="mb-6">
+                      <div 
+                        ref={pickupLocationRef}
+                        className={`mb-6 rounded-lg transition-all duration-300 ${
+                          highlightPickupLocation 
+                            ? 'ring-4 ring-primary/50 bg-primary/5 p-4 shadow-lg' 
+                            : ''
+                        }`}
+                      >
                         {pickupLocations.length === 0 ? (
                           <Alert>
                             <Store className="h-4 w-4" />
@@ -1312,7 +1373,14 @@ export default function Cart() {
                     <Separator />
 
                     {/* Payment Section */}
-                    <div ref={paymentSectionRef} className="space-y-4">
+                    <div 
+                      ref={paymentSectionRef} 
+                      className={`space-y-4 rounded-lg transition-all duration-300 ${
+                        highlightPayment 
+                          ? 'ring-4 ring-primary/50 bg-primary/5 p-4 shadow-lg' 
+                          : ''
+                      }`}
+                    >
                       <div>
                         <Label htmlFor="payment">Forma de Pagamento *</Label>
                         <Select value={paymentMethod} onValueChange={(value: 'pix' | 'dinheiro' | 'cartao') => setPaymentMethod(value)}>
