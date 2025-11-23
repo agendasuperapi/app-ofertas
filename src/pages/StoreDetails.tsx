@@ -1035,7 +1035,7 @@ export default function StoreDetails() {
                           )}
                           <CardContent className="p-2 sm:p-3 pt-1.5 flex-1 flex flex-col">
                             <div className="flex-grow">
-                              <h4 className="font-bold text-base sm:text-lg group-hover:text-primary transition-colors line-clamp-2 h-[2.75rem] mb-0.5">{product.name}</h4>
+                              <h4 className="font-bold text-base sm:text-lg group-hover:text-primary transition-colors line-clamp-2 h-[2.75rem]">{product.name}</h4>
                               <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-snug h-[2.25rem]">
                                 {product.description || ' '}
                               </p>
@@ -1178,7 +1178,7 @@ export default function StoreDetails() {
                           )}
                           <CardContent className="p-3 md:p-4 pt-1.5 md:pt-2 space-y-0 flex-1 flex flex-col">
                             <div className="flex-grow">
-                              <h4 className="font-bold text-lg md:text-xl group-hover:text-primary transition-colors line-clamp-2 h-[3.25rem] mb-0.5">
+                              <h4 className="font-bold text-lg md:text-xl group-hover:text-primary transition-colors line-clamp-2 h-[3.25rem]">
                                 {product.name}
                               </h4>
                               <p className="text-sm text-muted-foreground line-clamp-2 h-[2.75rem]">
