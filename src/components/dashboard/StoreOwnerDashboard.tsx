@@ -352,6 +352,57 @@ export const StoreOwnerDashboard = () => {
     }
   }, [categories]);
 
+  // Sync store form with myStore data
+  useEffect(() => {
+    if (myStore) {
+      setStoreForm({
+        name: myStore.name || '',
+        slug: myStore.slug || '',
+        logo_url: myStore.logo_url || '',
+        banner_url: myStore.banner_url || '',
+        description: myStore.description || '',
+        category: myStore.category || 'Outros',
+        delivery_fee: myStore.delivery_fee || 0,
+        min_order_value: myStore.min_order_value || 0,
+        avg_delivery_time: myStore.avg_delivery_time || 30,
+        show_avg_delivery_time: (myStore as any)?.show_avg_delivery_time ?? true,
+        accepts_delivery: myStore.accepts_delivery ?? true,
+        accepts_pickup: myStore.accepts_pickup ?? true,
+        accepts_pix: myStore.accepts_pix ?? true,
+        accepts_card: myStore.accepts_card ?? true,
+        accepts_cash: myStore.accepts_cash ?? true,
+        address: myStore.address || '',
+        pickup_address: myStore.pickup_address || '',
+        store_cep: (myStore as any)?.store_cep || '',
+        store_city: (myStore as any)?.store_city || '',
+        store_street: (myStore as any)?.store_street || '',
+        store_street_number: (myStore as any)?.store_street_number || '',
+        store_neighborhood: (myStore as any)?.store_neighborhood || '',
+        store_complement: (myStore as any)?.store_complement || '',
+        phone: myStore.phone || '',
+        menu_label: myStore.menu_label || 'Cardápio',
+        pix_key: (myStore as any)?.pix_key || '',
+        show_pix_key_to_customer: (myStore as any)?.show_pix_key_to_customer ?? true,
+        pix_message_enabled: (myStore as any)?.pix_message_enabled ?? false,
+        pix_message_title: (myStore as any)?.pix_message_title || '',
+        pix_message_description: (myStore as any)?.pix_message_description || '',
+        pix_message_footer: (myStore as any)?.pix_message_footer || '',
+        pix_message_button_text: (myStore as any)?.pix_message_button_text || '',
+        pix_copiacola_message_enabled: (myStore as any)?.pix_copiacola_message_enabled ?? false,
+        pix_copiacola_message_title: (myStore as any)?.pix_copiacola_message_title || '',
+        pix_copiacola_message_description: (myStore as any)?.pix_copiacola_message_description || '',
+        pix_copiacola_message_footer: (myStore as any)?.pix_copiacola_message_footer || '',
+        pix_copiacola_message_button_text: (myStore as any)?.pix_copiacola_message_button_text || '',
+        pix_copiacola_button_text: (myStore as any)?.pix_copiacola_button_text || '',
+        allow_orders_when_closed: (myStore as any)?.allow_orders_when_closed ?? false,
+        require_delivery_zone: (myStore as any)?.require_delivery_zone ?? false,
+        product_layout_template: (myStore as any)?.product_layout_template || 'template-4',
+        product_layout_template_desktop: (myStore as any)?.product_layout_template_desktop || 'template-4',
+        product_layout_template_mobile: (myStore as any)?.product_layout_template_mobile || 'template-2',
+      });
+    }
+  }, [myStore]);
+
   // Memoize filtered products for bulk operations
   const filteredProducts = useMemo(() => {
     const displayProducts = isReorderMode ? localProducts : products;

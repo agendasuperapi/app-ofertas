@@ -1223,6 +1223,12 @@ export type Database = {
           show_pix_key_to_customer: boolean | null
           slug: string
           status: Database["public"]["Enums"]["store_status"]
+          store_cep: string | null
+          store_city: string | null
+          store_complement: string | null
+          store_neighborhood: string | null
+          store_street: string | null
+          store_street_number: string | null
           total_reviews: number | null
           updated_at: string
         }
@@ -1272,6 +1278,12 @@ export type Database = {
           show_pix_key_to_customer?: boolean | null
           slug: string
           status?: Database["public"]["Enums"]["store_status"]
+          store_cep?: string | null
+          store_city?: string | null
+          store_complement?: string | null
+          store_neighborhood?: string | null
+          store_street?: string | null
+          store_street_number?: string | null
           total_reviews?: number | null
           updated_at?: string
         }
@@ -1321,6 +1333,12 @@ export type Database = {
           show_pix_key_to_customer?: boolean | null
           slug?: string
           status?: Database["public"]["Enums"]["store_status"]
+          store_cep?: string | null
+          store_city?: string | null
+          store_complement?: string | null
+          store_neighborhood?: string | null
+          store_street?: string | null
+          store_street_number?: string | null
           total_reviews?: number | null
           updated_at?: string
         }
