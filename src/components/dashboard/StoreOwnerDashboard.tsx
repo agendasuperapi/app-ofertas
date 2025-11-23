@@ -365,6 +365,19 @@ export const StoreOwnerDashboard = () => {
   // Sync store form with myStore data
   useEffect(() => {
     if (myStore) {
+      console.log('🏪 [StoreOwnerDashboard] Carregando dados da loja no formulário:', {
+        store_id: myStore.id,
+        store_name: myStore.name,
+        address_fields: {
+          store_cep: (myStore as any)?.store_cep,
+          store_city: (myStore as any)?.store_city,
+          store_street: (myStore as any)?.store_street,
+          store_street_number: (myStore as any)?.store_street_number,
+          store_neighborhood: (myStore as any)?.store_neighborhood,
+          store_complement: (myStore as any)?.store_complement,
+        }
+      });
+      
       setStoreForm({
         name: myStore.name || '',
         slug: myStore.slug || '',
