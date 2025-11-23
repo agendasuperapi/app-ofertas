@@ -743,7 +743,7 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
               </div>
             </div>
 
-            <div className="flex-shrink-0 border-t bg-background p-4">
+            <div className="flex-shrink-0 border-t bg-background p-6">
               {footerContent}
             </div>
           </div>
