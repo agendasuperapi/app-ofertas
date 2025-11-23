@@ -1079,13 +1079,13 @@ export default function StoreDetails() {
                                   <div className="text-sm text-muted-foreground line-through">
                                     R$ {Number(product.price).toFixed(2)}
                                   </div>
-                                  <div className="text-2xl md:text-3xl font-bold text-success flex items-baseline gap-1">
+                                  <div className="text-2xl md:text-2xl font-bold text-success flex items-baseline gap-1">
                                     <span className="text-lg">R$</span>
                                     {Number(product.promotional_price).toFixed(2)}
                                   </div>
                                 </div>
                               ) : (
-                                <div className="text-2xl md:text-3xl font-bold text-success flex items-baseline gap-1">
+                                <div className="text-2xl md:text-2xl font-bold text-success flex items-baseline gap-1">
                                   <span className="text-lg">R$</span>
                                   {Number(product.price).toFixed(2)}
                                 </div>
