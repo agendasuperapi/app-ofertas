@@ -988,8 +988,8 @@ export default function StoreDetails() {
                             times: [0, 0.5, 1]
                           }}
                         >
-                        <Card
-                          className={`overflow-hidden h-full flex flex-col transition-all duration-300 cursor-pointer ${
+                          <Card
+                          className={`overflow-hidden h-full transition-all duration-300 cursor-pointer ${
                             isInCart 
                               ? 'border border-primary ring-4 ring-primary/40 bg-primary/5 scale-[1.02]' 
                               : 'border-2 border-orange-300 hover:border-orange-400 shadow-lg hover:shadow-2xl bg-card/50 backdrop-blur-sm'
@@ -998,21 +998,50 @@ export default function StoreDetails() {
                         >
                           {product.image_url && (
                             <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20">
-...
+                              <motion.img
+                                initial={{ scale: 0.95, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ duration: 0.6, ease: "easeOut" }}
+                                whileHover={{ scale: 1.15 }}
+                                src={product.image_url} 
+                                alt={product.name}
+                                className="w-full h-full object-cover animate-shine transition-transform duration-500 ease-out"
+                              />
+                              {/* Vignette effect */}
+                              <div className="absolute inset-0 shadow-[inset_0_0_60px_20px_rgba(0,0,0,0.4)] pointer-events-none" />
+                              {/* Enhanced hover overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                              {product.promotional_price && (
+                                <motion.div
+                                  initial={{ scale: 0, rotate: -12 }}
+                                  animate={{ scale: 1, rotate: -12 }}
+                                  transition={{ type: "spring", stiffness: 200 }}
+                                  className="absolute top-3 right-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg z-10"
+                                >
+                                  OFERTA
+                                </motion.div>
+                              )}
+                              {isInCart && (
+                                <motion.div
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                  className={`absolute top-3 ${product.promotional_price ? 'left-3' : 'right-3'} bg-primary text-primary-foreground px-3 py-2 rounded-full text-sm font-bold shadow-lg z-10`}
+                                >
+                                  <span>{cartQuantity}</span>
+                                </motion.div>
+                              )}
                             </div>
                           )}
-                          <CardContent className="p-2.5 sm:p-4 pt-2 flex flex-col flex-1">
-                            <h4 className="font-bold text-base sm:text-lg mb-1 group-hover:text-primary transition-colors line-clamp-2 min-h-[2.5rem] sm:min-h-[3rem]">{product.name}</h4>
+                          <CardContent className="p-2.5 sm:p-4 pt-2">
+                            <h4 className="font-bold text-base sm:text-lg mb-1 group-hover:text-primary transition-colors line-clamp-2">{product.name}</h4>
                             {product.description && (
-                              <p className="text-xs sm:text-sm text-muted-foreground mb-2 line-clamp-2 leading-snug min-h-[2rem] sm:min-h-[2.5rem]">
+                              <p className="text-xs sm:text-sm text-muted-foreground mb-2 line-clamp-2 leading-snug">
                                 {product.description}
                               </p>
                             )}
-                            {!product.description && (
-                              <div className="mb-2 min-h-[2rem] sm:min-h-[2.5rem]" />
-                            )}
                             <Separator className="my-2" />
-                            <div className="mt-auto">
+                            <div>
                               {product.promotional_price ? (
                                 <div className="space-y-0.5 mb-2">
                                   <span className="text-xs sm:text-sm text-muted-foreground line-through block">
@@ -1101,7 +1130,7 @@ export default function StoreDetails() {
                           }}
                         >
                           <Card
-                          className={`overflow-hidden h-full flex flex-col transition-all duration-300 cursor-pointer ${
+                          className={`overflow-hidden h-full transition-all duration-300 cursor-pointer ${
                             isInCart 
                               ? 'border border-primary ring-4 ring-primary/40 bg-primary/5 scale-[1.02]' 
                               : 'border-2 border-orange-300 hover:border-orange-400 shadow-lg hover:shadow-2xl bg-card/50 backdrop-blur-sm'
@@ -1110,10 +1139,37 @@ export default function StoreDetails() {
                         >
                           {product.image_url && (
                             <div className="relative h-56 md:h-44 overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20">
-...
+                              <motion.img
+                                initial={{ scale: 0.95, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ duration: 0.6, ease: "easeOut" }}
+                                whileHover={{ scale: 1.15 }}
+                                src={product.image_url} 
+                                alt={product.name}
+                                className="w-full h-full object-cover animate-shine transition-transform duration-500 ease-out"
+                              />
+                              {/* Vignette effect */}
+                              <div className="absolute inset-0 shadow-[inset_0_0_60px_20px_rgba(0,0,0,0.4)] pointer-events-none" />
+                              {/* Enhanced hover overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                              {product.promotional_price && (
+                                <div className="absolute top-2 left-2 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold z-10 shadow-xl animate-pulse">
+                                  OFERTA
+                                </div>
+                              )}
+                              {isInCart && (
+                                <motion.div
+                                  initial={{ scale: 0, rotate: -180 }}
+                                  animate={{ scale: 1, rotate: 0 }}
+                                  transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                                  className="absolute top-2 right-2 bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-xl ring-2 ring-background z-10"
+                                >
+                                  {cartQuantity}
+                                </motion.div>
+                              )}
                             </div>
                           )}
-                          <CardContent className="p-4 md:p-6 pt-2 md:pt-3 space-y-0 flex flex-col flex-1">
+                          <CardContent className="p-4 md:p-6 pt-2 md:pt-3 space-y-0">
                             <h4 className="font-bold text-lg md:text-xl group-hover:text-primary transition-colors line-clamp-2 min-h-[3.5rem]">
                               {product.name}
                             </h4>
@@ -1122,10 +1178,7 @@ export default function StoreDetails() {
                                 {product.description}
                               </p>
                             )}
-                            {!product.description && (
-                              <div className="min-h-[2.5rem] mb-1" />
-                            )}
-                            <div className="space-y-3 mt-auto">
+                            <div className="space-y-3">
                               {product.promotional_price ? (
                                 <div className="space-y-1">
                                   <div className="text-sm text-muted-foreground line-through">
