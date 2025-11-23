@@ -1033,16 +1033,16 @@ export default function StoreDetails() {
                               )}
                             </div>
                           )}
-                          <CardContent className="p-2.5 sm:p-4 pt-2 flex-1 flex flex-col">
+                          <CardContent className="p-2 sm:p-3 pt-1.5 flex-1 flex flex-col">
                             <div className="flex-grow">
-                              <h4 className="font-bold text-base sm:text-lg group-hover:text-primary transition-colors line-clamp-2 h-[3rem]">{product.name}</h4>
-                              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-snug h-[2.5rem]">
+                              <h4 className="font-bold text-base sm:text-lg group-hover:text-primary transition-colors line-clamp-2 h-[2.75rem] mb-0.5">{product.name}</h4>
+                              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-snug h-[2.25rem]">
                                 {product.description || ' '}
                               </p>
                             </div>
-                            <Separator className="my-1.5" />
-                            <div className="mt-auto pt-1">
-                              <div className="mb-2 h-[3.25rem] flex flex-col justify-center">
+                            <Separator className="my-1" />
+                            <div className="mt-auto">
+                              <div className="mb-1.5 h-[3rem] flex flex-col justify-center">
                                 {product.promotional_price ? (
                                   <>
                                     <span className="text-xs sm:text-sm text-muted-foreground line-through block">
@@ -1176,17 +1176,17 @@ export default function StoreDetails() {
                               )}
                             </div>
                           )}
-                          <CardContent className="p-4 md:p-6 pt-2 md:pt-3 space-y-0 flex-1 flex flex-col">
+                          <CardContent className="p-3 md:p-4 pt-1.5 md:pt-2 space-y-0 flex-1 flex flex-col">
                             <div className="flex-grow">
-                              <h4 className="font-bold text-lg md:text-xl group-hover:text-primary transition-colors line-clamp-2 h-[3.5rem]">
+                              <h4 className="font-bold text-lg md:text-xl group-hover:text-primary transition-colors line-clamp-2 h-[3.25rem] mb-0.5">
                                 {product.name}
                               </h4>
-                              <p className="text-sm text-muted-foreground line-clamp-2 h-[3rem]">
+                              <p className="text-sm text-muted-foreground line-clamp-2 h-[2.75rem]">
                                 {product.description || ' '}
                               </p>
                             </div>
-                            <div className="space-y-3 mt-auto pt-2">
-                              <div className="space-y-1 h-[3.25rem] flex flex-col justify-center">
+                            <div className="space-y-2 mt-auto pt-1">
+                              <div className="space-y-0.5 h-[3rem] flex flex-col justify-center">
                                 {product.promotional_price ? (
                                   <>
                                     <div className="text-sm text-muted-foreground line-through">
@@ -1209,7 +1209,7 @@ export default function StoreDetails() {
                                   </>
                                 )}
                               </div>
-                              <div className="flex gap-2 pt-1">
+                              <div className="flex gap-2">
                                 <motion.div
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
