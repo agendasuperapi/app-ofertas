@@ -3,15 +3,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
-import { Check, LayoutGrid, List, Grid2X2, Grid3x3, Monitor, Smartphone, Rows } from "lucide-react";
+import { Check, LayoutGrid, List, Grid2X2, Grid3x3, Monitor, Smartphone, Rows, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface LayoutSettingsProps {
   currentTemplateDesktop?: string;
   currentTemplateMobile?: string;
-  onUpdate: (desktopTemplate: string, mobileTemplate: string) => Promise<void>;
+  showAddress?: boolean;
+  onUpdate: (desktopTemplate: string, mobileTemplate: string, showAddress: boolean) => Promise<void>;
   isUpdating: boolean;
 }
 
@@ -63,11 +65,13 @@ const templates = [
 export const LayoutSettings = ({ 
   currentTemplateDesktop = 'template-4', 
   currentTemplateMobile = 'template-2',
+  showAddress = true,
   onUpdate, 
   isUpdating 
 }: LayoutSettingsProps) => {
   const [selectedDesktop, setSelectedDesktop] = useState(currentTemplateDesktop);
   const [selectedMobile, setSelectedMobile] = useState(currentTemplateMobile);
+  const [showAddressEnabled, setShowAddressEnabled] = useState(showAddress);
 
   // Sync state with props when they change
   useEffect(() => {
@@ -78,17 +82,21 @@ export const LayoutSettings = ({
     setSelectedMobile(currentTemplateMobile);
   }, [currentTemplateMobile]);
 
+  useEffect(() => {
+    setShowAddressEnabled(showAddress);
+  }, [showAddress]);
+
   const handleSave = async () => {
     try {
-      await onUpdate(selectedDesktop, selectedMobile);
+      await onUpdate(selectedDesktop, selectedMobile, showAddressEnabled);
       toast({
-        title: "Layout atualizado!",
-        description: "Os templates foram aplicados com sucesso à sua loja.",
+        title: "Configurações atualizadas!",
+        description: "As configurações de exibição foram aplicadas com sucesso.",
       });
     } catch (error) {
       toast({
-        title: "Erro ao atualizar layout",
-        description: "Não foi possível aplicar os templates. Tente novamente.",
+        title: "Erro ao atualizar configurações",
+        description: "Não foi possível aplicar as configurações. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -241,24 +249,57 @@ export const LayoutSettings = ({
           </TabsContent>
         </Tabs>
 
-        <div className="flex items-center justify-between pt-4 border-t">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">Desktop:</span>{' '}
-              {templates.find(t => t.id === selectedDesktop)?.name}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">Mobile:</span>{' '}
-              {templates.find(t => t.id === selectedMobile)?.name}
-            </p>
+        <div className="space-y-4 pt-4 border-t">
+          {/* Address visibility setting */}
+          <Card className="bg-muted/30">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-background">
+                    <MapPin className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <Label htmlFor="show-address" className="text-base font-semibold cursor-pointer">
+                      Exibir Endereço na Página da Loja
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Mostrar o endereço completo no cabeçalho da sua loja
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="show-address"
+                  checked={showAddressEnabled}
+                  onCheckedChange={setShowAddressEnabled}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Summary and save button */}
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Desktop:</span>{' '}
+                {templates.find(t => t.id === selectedDesktop)?.name}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">Mobile:</span>{' '}
+                {templates.find(t => t.id === selectedMobile)?.name}
+              </p>
+            </div>
+            <Button
+              onClick={handleSave}
+              disabled={isUpdating || (
+                selectedDesktop === currentTemplateDesktop && 
+                selectedMobile === currentTemplateMobile &&
+                showAddressEnabled === showAddress
+              )}
+              className="min-w-[120px]"
+            >
+              {isUpdating ? "Salvando..." : "Salvar Configurações"}
+            </Button>
           </div>
-          <Button
-            onClick={handleSave}
-            disabled={isUpdating || (selectedDesktop === currentTemplateDesktop && selectedMobile === currentTemplateMobile)}
-            className="min-w-[120px]"
-          >
-            {isUpdating ? "Salvando..." : "Salvar Layout"}
-          </Button>
         </div>
       </CardContent>
     </Card>
