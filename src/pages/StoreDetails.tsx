@@ -835,7 +835,7 @@ export default function StoreDetails() {
                               <motion.div
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}
-                                className="absolute top-2 right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold"
+                                className="absolute top-1 right-1 md:top-2 md:right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold shadow-md"
                               >
                                 OFERTA
                               </motion.div>
