@@ -62,6 +62,8 @@ export const useStoreManagement = () => {
     queryFn: async () => {
       if (!user?.id) return null;
 
+      console.log('🔍 [useStoreManagement] Buscando loja para user_id:', user.id);
+
       // Primeiro, tentar buscar loja onde o usuário é owner
       const { data: ownerStore, error: ownerError } = await supabase
         .from('stores')
@@ -73,6 +75,18 @@ export const useStoreManagement = () => {
       
       // Se encontrou como owner, retornar
       if (ownerStore) {
+        console.log('✅ [useStoreManagement] Loja encontrada (owner):', {
+          store_id: ownerStore.id,
+          store_name: ownerStore.name,
+          address_data: {
+            store_cep: ownerStore.store_cep,
+            store_city: ownerStore.store_city,
+            store_street: ownerStore.store_street,
+            store_street_number: ownerStore.store_street_number,
+            store_neighborhood: ownerStore.store_neighborhood,
+            store_complement: ownerStore.store_complement,
+          }
+        });
         return ownerStore;
       }
 
@@ -90,7 +104,22 @@ export const useStoreManagement = () => {
       if (employeeError) throw employeeError;
       
       // Retornar a loja do funcionário
-      return employeeData ? (employeeData as any).stores : null;
+      const employeeStore = employeeData ? (employeeData as any).stores : null;
+      if (employeeStore) {
+        console.log('✅ [useStoreManagement] Loja encontrada (employee):', {
+          store_id: employeeStore.id,
+          store_name: employeeStore.name,
+          address_data: {
+            store_cep: employeeStore.store_cep,
+            store_city: employeeStore.store_city,
+            store_street: employeeStore.store_street,
+            store_street_number: employeeStore.store_street_number,
+            store_neighborhood: employeeStore.store_neighborhood,
+            store_complement: employeeStore.store_complement,
+          }
+        });
+      }
+      return employeeStore;
     },
     enabled: !!user,
   });
@@ -278,6 +307,18 @@ export const useStoreManagement = () => {
 
   const updateStoreMutation = useMutation({
     mutationFn: async ({ id, slug, ...storeData }: StoreFormData & { id: string }) => {
+      console.log('💾 [useStoreManagement] Atualizando loja:', {
+        store_id: id,
+        address_data: {
+          store_cep: storeData.store_cep,
+          store_city: storeData.store_city,
+          store_street: storeData.store_street,
+          store_street_number: storeData.store_street_number,
+          store_neighborhood: storeData.store_neighborhood,
+          store_complement: storeData.store_complement,
+        }
+      });
+
       // Validar slug antes de atualizar (double-check no backend)
       if (slug) {
         const { data: existingStore, error: checkError } = await supabase
@@ -304,12 +345,29 @@ export const useStoreManagement = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [useStoreManagement] Erro ao atualizar loja:', error);
+        throw error;
+      }
+      
+      console.log('✅ [useStoreManagement] Loja atualizada com sucesso:', {
+        store_id: data.id,
+        address_data: {
+          store_cep: data.store_cep,
+          store_city: data.store_city,
+          store_street: data.store_street,
+          store_street_number: data.store_street_number,
+          store_neighborhood: data.store_neighborhood,
+          store_complement: data.store_complement,
+        }
+      });
+      
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-store'] });
       queryClient.invalidateQueries({ queryKey: ['stores'] });
+      console.log('🔄 [useStoreManagement] Queries invalidadas, aguardando refetch...');
       toast({
         title: 'Loja atualizada!',
         description: 'As informações da sua loja foram atualizadas.',

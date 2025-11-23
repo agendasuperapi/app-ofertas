@@ -378,7 +378,7 @@ export const StoreOwnerDashboard = () => {
         }
       });
       
-      setStoreForm({
+      const newFormData = {
         name: myStore.name || '',
         slug: myStore.slug || '',
         logo_url: myStore.logo_url || '',
@@ -422,7 +422,20 @@ export const StoreOwnerDashboard = () => {
         product_layout_template: (myStore as any)?.product_layout_template || 'template-4',
         product_layout_template_desktop: (myStore as any)?.product_layout_template_desktop || 'template-4',
         product_layout_template_mobile: (myStore as any)?.product_layout_template_mobile || 'template-2',
+      };
+      
+      console.log('📝 [StoreOwnerDashboard] Formulário atualizado:', {
+        address_fields: {
+          store_cep: newFormData.store_cep,
+          store_city: newFormData.store_city,
+          store_street: newFormData.store_street,
+          store_street_number: newFormData.store_street_number,
+          store_neighborhood: newFormData.store_neighborhood,
+          store_complement: newFormData.store_complement,
+        }
       });
+      
+      setStoreForm(newFormData);
     }
   }, [myStore]);
 
@@ -1502,6 +1515,18 @@ export const StoreOwnerDashboard = () => {
 
   const handleUpdateStore = async () => {
     if (!myStore) return;
+    
+    console.log('🔄 [handleUpdateStore] Iniciando atualização da loja');
+    console.log('📝 [handleUpdateStore] Dados do formulário:', {
+      address_data: {
+        store_cep: storeForm.store_cep,
+        store_city: storeForm.store_city,
+        store_street: storeForm.store_street,
+        store_street_number: storeForm.store_street_number,
+        store_neighborhood: storeForm.store_neighborhood,
+        store_complement: storeForm.store_complement,
+      }
+    });
     
     // Validação: impedir salvar se slug estiver em uso
     if (storeForm.slug !== myStore.slug && slugAvailability.isAvailable === false) {
@@ -4815,7 +4840,10 @@ export const StoreOwnerDashboard = () => {
                   <div className="relative">
                     <Input
                       value={storeForm.store_cep}
-                      onChange={(e) => handleCepChange(e.target.value)}
+                      onChange={(e) => {
+                        console.log('✏️ [Input CEP] Novo valor:', e.target.value);
+                        handleCepChange(e.target.value);
+                      }}
                       placeholder="00000-000"
                       maxLength={9}
                       disabled={isLoadingCep}
@@ -4833,7 +4861,10 @@ export const StoreOwnerDashboard = () => {
                   <Label>Cidade</Label>
                   <Input
                     value={storeForm.store_city}
-                    onChange={(e) => setStoreForm({ ...storeForm, store_city: e.target.value })}
+                    onChange={(e) => {
+                      console.log('✏️ [Input Cidade] Novo valor:', e.target.value);
+                      setStoreForm({ ...storeForm, store_city: e.target.value });
+                    }}
                     placeholder="Nome da cidade"
                   />
                 </div>
@@ -4842,7 +4873,10 @@ export const StoreOwnerDashboard = () => {
                   <Label>Rua</Label>
                   <Input
                     value={storeForm.store_street}
-                    onChange={(e) => setStoreForm({ ...storeForm, store_street: e.target.value })}
+                    onChange={(e) => {
+                      console.log('✏️ [Input Rua] Novo valor:', e.target.value);
+                      setStoreForm({ ...storeForm, store_street: e.target.value });
+                    }}
                     placeholder="Nome da rua"
                   />
                 </div>
@@ -4852,7 +4886,10 @@ export const StoreOwnerDashboard = () => {
                     <Label>Número</Label>
                     <Input
                       value={storeForm.store_street_number}
-                      onChange={(e) => setStoreForm({ ...storeForm, store_street_number: e.target.value })}
+                      onChange={(e) => {
+                        console.log('✏️ [Input Número] Novo valor:', e.target.value);
+                        setStoreForm({ ...storeForm, store_street_number: e.target.value });
+                      }}
                       placeholder="123"
                     />
                   </div>
@@ -4861,7 +4898,10 @@ export const StoreOwnerDashboard = () => {
                     <Label>Bairro</Label>
                     <Input
                       value={storeForm.store_neighborhood}
-                      onChange={(e) => setStoreForm({ ...storeForm, store_neighborhood: e.target.value })}
+                      onChange={(e) => {
+                        console.log('✏️ [Input Bairro] Novo valor:', e.target.value);
+                        setStoreForm({ ...storeForm, store_neighborhood: e.target.value });
+                      }}
                       placeholder="Nome do bairro"
                     />
                   </div>
@@ -4871,7 +4911,10 @@ export const StoreOwnerDashboard = () => {
                   <Label>Complemento</Label>
                   <Input
                     value={storeForm.store_complement}
-                    onChange={(e) => setStoreForm({ ...storeForm, store_complement: e.target.value })}
+                    onChange={(e) => {
+                      console.log('✏️ [Input Complemento] Novo valor:', e.target.value);
+                      setStoreForm({ ...storeForm, store_complement: e.target.value });
+                    }}
                     placeholder="Apto, sala, etc. (opcional)"
                   />
                 </div>
