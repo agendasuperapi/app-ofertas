@@ -4516,7 +4516,7 @@ export const StoreOwnerDashboard = () => {
               <CardHeader>
                 <CardTitle>Configurações de Exibição</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="space-y-0.5">
                     <Label htmlFor="show_avg_delivery_time">Exibir Tempo de Entrega</Label>
@@ -4529,6 +4529,22 @@ export const StoreOwnerDashboard = () => {
                     checked={storeForm.show_avg_delivery_time ?? true}
                     onCheckedChange={(checked) => 
                       handleUpdateDeliveryOption('show_avg_delivery_time', checked)
+                    }
+                  />
+                </div>
+                
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="space-y-0.5">
+                    <Label htmlFor="show_address_on_store_page">Exibir Endereço na Loja</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Mostrar o endereço completo no cabeçalho da página da loja
+                    </p>
+                  </div>
+                  <Switch
+                    id="show_address_on_store_page"
+                    checked={storeForm.show_address_on_store_page !== false}
+                    onCheckedChange={(checked) => 
+                      handleUpdateDeliveryOption('show_address_on_store_page', checked)
                     }
                   />
                 </div>
