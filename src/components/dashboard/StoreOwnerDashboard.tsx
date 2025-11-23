@@ -1590,6 +1590,7 @@ export const StoreOwnerDashboard = () => {
         store_neighborhood: storeForm.store_neighborhood,
         store_complement: storeForm.store_complement,
         phone: storeForm.phone,
+        whatsapp: (storeForm as any).whatsapp,
         menu_label: storeForm.menu_label,
         show_pix_key_to_customer: storeForm.show_pix_key_to_customer,
         pix_key: storeForm.pix_key,
