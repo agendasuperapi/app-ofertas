@@ -145,8 +145,8 @@ export default {
             transform: "scale(1)"
           },
           "50%": { 
-            boxShadow: "0 0 40px hsl(var(--warning) / 0.8), 0 10px 40px -10px hsl(var(--warning) / 0.7)",
-            transform: "scale(1.05)"
+            boxShadow: "0 0 50px hsl(var(--warning) / 0.9), 0 15px 50px -10px hsl(var(--warning) / 0.8)",
+            transform: "scale(1.2)"
           },
         },
       },
