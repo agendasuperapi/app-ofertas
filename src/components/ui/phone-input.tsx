@@ -5,11 +5,14 @@ import { motion } from "framer-motion";
 
 export interface PhoneInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
-  value: string;
+  value: string | undefined | null;
   onChange: (value: string) => void;
 }
 
-const getDisplayValue = (value: string): string => {
+const getDisplayValue = (value: string | undefined | null): string => {
+  // Verifica se o valor existe
+  if (!value) return '';
+  
   // Remove o código do país para exibição
   const numbers = value.replace(/\D/g, '');
   const withoutCountryCode = numbers.startsWith('55') ? numbers.slice(2) : numbers;
@@ -122,7 +125,7 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
             exit={{ opacity: 0, y: -10 }}
             className="absolute -bottom-6 left-0 text-xs text-muted-foreground"
           >
-            {value.replace(/\D/g, '').replace(/^55/, '').length} dígitos (10-11)
+            {(value || '').replace(/\D/g, '').replace(/^55/, '').length} dígitos (10-11)
           </motion.div>
         )}
         
