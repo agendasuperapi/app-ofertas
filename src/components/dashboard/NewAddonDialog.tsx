@@ -123,9 +123,16 @@ export const NewAddonDialog = ({
   }) => {
     setIsCreatingCategory(true);
     try {
-      await addCategory(data.name, data.min_items, data.max_items, data.is_exclusive);
+      const newCategory = await addCategory(data.name, data.min_items, data.max_items, data.is_exclusive);
       await refetch();
+      
+      // Auto-selecionar a nova categoria criada
+      if (newCategory?.id) {
+        setFormData({ ...formData, category_id: newCategory.id });
+      }
+      
       toast.success("Categoria criada com sucesso!");
+      setShowCategoryDialog(false);
     } catch (error) {
       toast.error("Erro ao criar categoria");
       console.error(error);
