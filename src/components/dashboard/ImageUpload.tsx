@@ -160,6 +160,19 @@ export const ImageUpload = ({
       // Redimensionar a imagem
       const resizedBlob = await resizeImage(file, maxWidth, maxHeight);
 
+      // Remover imagem antiga antes de fazer upload da nova
+      if (currentImageUrl && bucket === 'product-images' && productId) {
+        try {
+          const oldPath = currentImageUrl.split(`${bucket}/`)[1]?.split('?')[0];
+          if (oldPath) {
+            console.log('🗑️ Removendo imagem antiga:', oldPath);
+            await supabase.storage.from(bucket).remove([oldPath]);
+          }
+        } catch (error) {
+          console.error('Erro ao remover imagem antiga:', error);
+        }
+      }
+
       // Para product-images, usar productId.jpg ao invés de temp/random
       let fileName: string;
       if (bucket === 'product-images' && productId) {
@@ -188,7 +201,7 @@ export const ImageUpload = ({
       const urlWithTimestamp = `${publicUrl}?t=${Date.now()}`;
       
       setPreviewUrl(urlWithTimestamp);
-      onUploadComplete(publicUrl);
+      onUploadComplete(urlWithTimestamp);
 
       toast({
         title: 'Upload concluído!',
