@@ -169,22 +169,20 @@ export const useProductAddons = (productId?: string) => {
       return data;
     },
     onSuccess: async (data) => {
-      console.log('[useProductAddons] 🔄 onSuccess - Forçando atualização imediata');
+      console.log('[useProductAddons] 🔄 onSuccess CREATE - Forçando atualização imediata');
       
-      // Invalidar todas as queries relacionadas
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['product-addons', productId] }),
-        queryClient.invalidateQueries({ queryKey: ['store-addons'] }),
-        queryClient.invalidateQueries({ queryKey: ['store-all-addons'] })
-      ]);
+      // Invalidar e refetch forçado
+      queryClient.invalidateQueries({ queryKey: ['product-addons', productId] });
+      queryClient.invalidateQueries({ queryKey: ['store-addons'] });
+      queryClient.invalidateQueries({ queryKey: ['store-all-addons'] });
       
-      // Refetch imediato e forçado
       await queryClient.refetchQueries({ 
         queryKey: ['product-addons', productId],
+        exact: true,
         type: 'active'
       });
       
-      console.log('[useProductAddons] ✅ Queries atualizadas com sucesso');
+      console.log('[useProductAddons] ✅ Lista atualizada após CREATE');
       
       toast({
         title: 'Adicional criado!',
@@ -214,10 +212,20 @@ export const useProductAddons = (productId?: string) => {
       return data;
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['product-addons', productId] });
-      await queryClient.invalidateQueries({ queryKey: ['store-addons'] });
-      await queryClient.invalidateQueries({ queryKey: ['store-all-addons'] });
-      await queryClient.refetchQueries({ queryKey: ['product-addons', productId] });
+      console.log('[useProductAddons] 🔄 onSuccess UPDATE - Forçando refresh');
+      
+      queryClient.invalidateQueries({ queryKey: ['product-addons', productId] });
+      queryClient.invalidateQueries({ queryKey: ['store-addons'] });
+      queryClient.invalidateQueries({ queryKey: ['store-all-addons'] });
+      
+      await queryClient.refetchQueries({ 
+        queryKey: ['product-addons', productId],
+        exact: true,
+        type: 'active'
+      });
+      
+      console.log('[useProductAddons] ✅ Lista atualizada após UPDATE');
+      
       toast({
         title: 'Adicional atualizado!',
         description: 'As informações do adicional foram atualizadas.',
@@ -241,10 +249,21 @@ export const useProductAddons = (productId?: string) => {
 
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      console.log('[useProductAddons] 🔄 onSuccess DELETE - Forçando refresh');
+      
       queryClient.invalidateQueries({ queryKey: ['product-addons', productId] });
       queryClient.invalidateQueries({ queryKey: ['store-addons'] });
       queryClient.invalidateQueries({ queryKey: ['store-all-addons'] });
+      
+      await queryClient.refetchQueries({ 
+        queryKey: ['product-addons', productId],
+        exact: true,
+        type: 'active'
+      });
+      
+      console.log('[useProductAddons] ✅ Lista atualizada após DELETE');
+      
       toast({
         title: 'Adicional removido!',
         description: 'O adicional foi removido do produto.',
@@ -272,10 +291,20 @@ export const useProductAddons = (productId?: string) => {
       const error = results.find(r => r.error)?.error;
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      console.log('[useProductAddons] 🔄 onSuccess REORDER - Forçando refresh');
+      
       queryClient.invalidateQueries({ queryKey: ['product-addons', productId] });
       queryClient.invalidateQueries({ queryKey: ['store-addons'] });
       queryClient.invalidateQueries({ queryKey: ['store-all-addons'] });
+      
+      await queryClient.refetchQueries({ 
+        queryKey: ['product-addons', productId],
+        exact: true,
+        type: 'active'
+      });
+      
+      console.log('[useProductAddons] ✅ Lista atualizada após REORDER');
     },
     onError: (error: Error) => {
       toast({
@@ -313,10 +342,21 @@ export const useProductAddons = (productId?: string) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      console.log('[useProductAddons] 🔄 onSuccess DUPLICATE - Forçando refresh');
+      
       queryClient.invalidateQueries({ queryKey: ['product-addons', productId] });
       queryClient.invalidateQueries({ queryKey: ['store-addons'] });
       queryClient.invalidateQueries({ queryKey: ['store-all-addons'] });
+      
+      await queryClient.refetchQueries({ 
+        queryKey: ['product-addons', productId],
+        exact: true,
+        type: 'active'
+      });
+      
+      console.log('[useProductAddons] ✅ Lista atualizada após DUPLICATE');
+      
       toast({
         title: 'Adicional duplicado!',
         description: 'O adicional foi duplicado com sucesso.',
