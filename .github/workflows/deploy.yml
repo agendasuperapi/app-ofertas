@@ -28,11 +28,34 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify environment variables
+        run: |
+          if [ -z "${{ secrets.VITE_SUPABASE_URL }}" ]; then
+            echo "⚠️ VITE_SUPABASE_URL não está configurado"
+          fi
+          if [ -z "${{ secrets.VITE_SUPABASE_ANON_KEY }}" ]; then
+            echo "⚠️ VITE_SUPABASE_ANON_KEY não está configurado"
+          fi
+
       - name: Build web application
         run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+
+      - name: Verify build output
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ Erro: Diretório dist não foi criado"
+            exit 1
+          fi
+          if [ -z "$(ls -A dist)" ]; then
+            echo "❌ Erro: Diretório dist está vazio"
+            exit 1
+          fi
+          echo "✅ Build concluído com sucesso"
+          echo "📦 Arquivos gerados:"
+          ls -lah dist/ | head -20
 
       - name: Upload web build artifacts
         uses: actions/upload-artifact@v4
@@ -40,12 +63,14 @@ jobs:
           name: web-build
           path: dist/
           retention-days: 7
+          if-no-files-found: error
 
   # Job 2: Deploy to Hostinger
   deploy-hostinger:
     name: Deploy to Hostinger
     needs: build-web
     runs-on: ubuntu-latest
+    if: success()
     
     steps:
       - name: Checkout code
@@ -56,6 +81,14 @@ jobs:
         with:
           name: web-build
           path: dist/
+
+      - name: Verify build files
+        run: |
+          if [ ! -d "dist" ] || [ -z "$(ls -A dist)" ]; then
+            echo "❌ Erro: Diretório dist está vazio ou não existe"
+            exit 1
+          fi
+          echo "✅ Build verificado: $(ls -la dist | wc -l) arquivos encontrados"
 
       - name: Deploy to Hostinger via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -70,8 +103,10 @@ jobs:
             **/.git*/**
             **/node_modules/**
             **/.env*
+          dangerous-clean-slate: false
+          dry-run: false
 
-      - name: Deploy .htaccess file
+      - name: Deploy .htaccess and share.php
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.HOSTINGER_FTP_HOST }}
@@ -82,6 +117,8 @@ jobs:
           include: |
             .htaccess
             share.php
+          dangerous-clean-slate: false
+          dry-run: false
 
   # Job 3: Build Android APK and AAB
   build-android:
