@@ -297,35 +297,36 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
   }, [addons, categoryFilter, availabilityFilter, searchTerm, lastUpdate]);
 
   const addonsByCategory = useMemo(() => {
-    if (!addons) return {};
+    if (!addons) return { uncategorized: [] };
     
-    // Primeiro aplicar filtros de disponibilidade e busca
-    let filtered = addons;
+    // ✅ CORREÇÃO: Usar filteredAddons ao invés de replicar lógica de filtro
+    // Isso garante que quando os filtros mudam, a visualização por categoria também muda
     
-    // Filter by availability
-    if (availabilityFilter === 'available') {
-      filtered = filtered.filter(a => a.is_available);
-    } else if (availabilityFilter === 'unavailable') {
-      filtered = filtered.filter(a => !a.is_available);
-    }
-    
-    // Filter by search term
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(a => a.name.toLowerCase().includes(term));
-    }
-    
-    // Depois agrupar por categoria
+    // Agrupar por categoria APENAS os adicionais já filtrados
     const grouped: Record<string, typeof addons> = {
-      uncategorized: filtered.filter(a => !a.category_id)
+      uncategorized: filteredAddons.filter(a => !a.category_id)
     };
 
     activeCategories.forEach(cat => {
-      grouped[cat.id] = filtered.filter(a => a.category_id === cat.id);
+      grouped[cat.id] = filteredAddons.filter(a => a.category_id === cat.id);
+    });
+    
+    // 🔍 DEBUG: Log para verificar agrupamento
+    console.log('[ProductAddonsManager] 🗂️ Agrupamento por categoria:', {
+      totalFiltered: filteredAddons.length,
+      uncategorized: grouped.uncategorized.length,
+      byCategory: Object.keys(grouped)
+        .filter(k => k !== 'uncategorized')
+        .map(catId => ({
+          categoryId: catId,
+          categoryName: activeCategories.find(c => c.id === catId)?.name,
+          count: grouped[catId]?.length || 0,
+          items: grouped[catId]?.map(a => a.name)
+        }))
     });
 
     return grouped;
-  }, [addons, activeCategories, availabilityFilter, searchTerm, lastUpdate]);
+  }, [filteredAddons, activeCategories, lastUpdate]);
 
   // Autocomplete suggestions combining store addons and templates
   const autocompleteSuggestions = useMemo(() => {
