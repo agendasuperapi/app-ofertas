@@ -351,7 +351,7 @@ export const StoreOwnerDashboard = () => {
       newSearchParams.set('tab', activeTab);
       setSearchParams(newSearchParams, { replace: true });
     }
-  }, [activeTab, tabFromUrl, searchParams, setSearchParams]);
+  }, [activeTab, tabFromUrl, setSearchParams]);
 
   // Sync local products with fetched products
   useEffect(() => {
@@ -661,7 +661,7 @@ export const StoreOwnerDashboard = () => {
         }
       }
     }
-  }, [employeeAccess.isEmployee, employeeAccess.permissions, canViewAllOrders, canViewPendingOrders, canViewConfirmedOrders, canViewPreparingOrders, canViewOutForDeliveryOrders, canViewDeliveredOrders, canViewCancelledOrders, customStatuses, orderStatusFilter]);
+  }, [employeeAccess.isEmployee, employeeAccess.permissions, canViewAllOrders, canViewPendingOrders, canViewConfirmedOrders, canViewPreparingOrders, canViewOutForDeliveryOrders, canViewDeliveredOrders, canViewCancelledOrders, customStatuses]);
 
   // (removido) havia um segundo useEffect sincronizando storeForm com myStore,
   // o que sobrescrevia os campos de endereço personalizados. Agora toda a
