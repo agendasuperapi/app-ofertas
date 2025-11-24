@@ -782,7 +782,7 @@ export const OrdersReport = ({ storeId, storeName = "Minha Loja", dateRange }: O
                   {visibleColumns.delivery_fee && <TableHead className="text-right">Taxa</TableHead>}
                   {visibleColumns.discount && <TableHead className="text-right">Desconto</TableHead>}
                   {visibleColumns.total && <TableHead className="text-right">Total</TableHead>}
-                  {visibleColumns.payment_method && <TableHead>Pagamento</TableHead>}
+                  {visibleColumns.payment_method && <TableHead>Forma Pagamento</TableHead>}
                   {visibleColumns.payment_status && <TableHead>Status Pgto</TableHead>}
                   {visibleColumns.delivery_type && <TableHead>Entrega</TableHead>}
                   {visibleColumns.scheduled && <TableHead>Agendado</TableHead>}
