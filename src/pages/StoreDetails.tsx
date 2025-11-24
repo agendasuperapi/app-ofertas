@@ -188,9 +188,11 @@ export default function StoreDetails() {
     : groupedProducts;
 
   // Get categories in the correct display_order, filtering only those with products
-  const categories = storeCategories
-    ?.filter(cat => cat.is_active && groupedProducts?.[cat.name] && groupedProducts[cat.name].length > 0)
-    .map(cat => cat.name) || Object.keys(groupedProducts || {});
+  const categories = storeCategories && storeCategories.length > 0
+    ? storeCategories
+        .filter(cat => cat.is_active && groupedProducts?.[cat.name] && groupedProducts[cat.name].length > 0)
+        .map(cat => cat.name)
+    : Object.keys(groupedProducts || {}).sort();
 
   const scrollToCategory = (category: string) => {
     setSelectedCategory(category);
