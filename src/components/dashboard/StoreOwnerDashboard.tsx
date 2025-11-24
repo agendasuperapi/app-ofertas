@@ -298,6 +298,8 @@ export const StoreOwnerDashboard = () => {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [isDuplicating, setIsDuplicating] = useState(false);
+  const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
+  const [productToDuplicate, setProductToDuplicate] = useState<any>(null);
   const [duplicatingFromProductId, setDuplicatingFromProductId] = useState<string | null>(null);
   const [isHoursDialogOpen, setIsHoursDialogOpen] = useState(false);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
@@ -1287,6 +1289,11 @@ export const StoreOwnerDashboard = () => {
     setIsProductDialogOpen(true);
   };
 
+  const openDuplicateDialog = (product: any) => {
+    setProductToDuplicate(product);
+    setIsDuplicateDialogOpen(true);
+  };
+
   const handleDuplicateProduct = (product: any) => {
     // Set flags for duplication
     setIsDuplicating(true);
@@ -1316,6 +1323,14 @@ export const StoreOwnerDashboard = () => {
       title: 'Produto copiado',
       description: 'Edite os dados e clique em salvar. Os complementos e sabores também serão copiados.',
     });
+  };
+
+  const confirmDuplicate = () => {
+    if (productToDuplicate) {
+      handleDuplicateProduct(productToDuplicate);
+      setIsDuplicateDialogOpen(false);
+      setProductToDuplicate(null);
+    }
   };
 
   const handleUpdateProduct = async () => {
@@ -3904,7 +3919,7 @@ export const StoreOwnerDashboard = () => {
                                         <Button
                                           variant="ghost"
                                           size="icon"
-                                          onClick={() => handleDuplicateProduct(product)}
+                                          onClick={() => openDuplicateDialog(product)}
                                           title="Duplicar produto"
                                         >
                                           <Copy className="w-4 h-4" />
@@ -3984,7 +3999,7 @@ export const StoreOwnerDashboard = () => {
                                         onToggleFeatured={(id, isFeatured) => 
                                           toggleProductFeatured({ id, is_featured: isFeatured })
                                         }
-                                        onDuplicate={handleDuplicateProduct}
+                                        onDuplicate={openDuplicateDialog}
                                       />
                                     ))}
                                   </div>
@@ -4041,7 +4056,7 @@ export const StoreOwnerDashboard = () => {
                                   onToggleFeatured={(id, isFeatured) => 
                                     toggleProductFeatured({ id, is_featured: isFeatured })
                                   }
-                                  onDuplicate={handleDuplicateProduct}
+                                  onDuplicate={openDuplicateDialog}
                                 />
                               ))}
                             </div>
@@ -5916,6 +5931,29 @@ export const StoreOwnerDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de confirmação para duplicar produto */}
+      <AlertDialog open={isDuplicateDialogOpen} onOpenChange={setIsDuplicateDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Duplicar produto?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja duplicar o produto "{productToDuplicate?.name}"? Uma cópia será criada com todos os complementos e sabores.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setIsDuplicateDialogOpen(false);
+              setProductToDuplicate(null);
+            }}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDuplicate}>
+              Duplicar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
