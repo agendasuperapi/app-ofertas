@@ -137,6 +137,9 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
   // ETAPA 4: Estado para feedback visual de realtime
   const [isRealtimeUpdating, setIsRealtimeUpdating] = useState(false);
   
+  // Estado para indicar que está aguardando carregamento com polling
+  const [isWaitingForLoad, setIsWaitingForLoad] = useState(false);
+  
   // Forçar refresh do realtime quando productId mudar
   useEffect(() => {
     console.log('[ProductAddonsManager] 🔄 ProductId mudou, forçando remount do realtime:', productId);
@@ -189,15 +192,6 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
       supabase.removeChannel(channel);
     };
   }, [productId]);
-
-  // Debug: Log quando addons mudar
-  console.log('[ProductAddonsManager] 📊 Addons atualizados:', {
-    count: addons?.length || 0,
-    addons: addons,
-    productId,
-    componentKey,
-    lastUpdate
-  });
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAddon, setEditingAddon] = useState<any>(null);
@@ -337,6 +331,20 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
     return grouped;
   }, [filteredStoreAddons, activeCategories]);
 
+  // ETAPA 5: Debug logging detalhado (movido para depois de todas as declarações)
+  useEffect(() => {
+    console.log('[ProductAddonsManager] 🔍 Estado atual:', {
+      addonsCount: addons?.length || 0,
+      addonsNames: addons?.map(a => a.name),
+      filteredCount: filteredAddons.length,
+      categoryFilter,
+      availabilityFilter,
+      searchTerm,
+      lastUpdate,
+      componentKey
+    });
+  }, [addons, filteredAddons, categoryFilter, availabilityFilter, searchTerm, lastUpdate, componentKey]);
+
   const handleSubmit = async (data: {
     name: string;
     price: number;
@@ -353,47 +361,54 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
       
       const isEditing = !!editingAddon;
       const addonName = data.name;
-      const currentAddonsCount = addons?.length || 0;
+      let newAddonId: string | undefined;
       
       if (isEditing) {
         await updateAddonAsync({ id: editingAddon.id, ...data });
+        newAddonId = editingAddon.id;
       } else {
-        await createAddonAsync({ ...data, product_id: productId });
+        const result = await createAddonAsync({ ...data, product_id: productId });
+        newAddonId = result?.id;
       }
       
-      console.log('[ProductAddonsManager] Adicional salvo - Iniciando verificação automática');
+      console.log('[ProductAddonsManager] Adicional salvo:', { addonName, newAddonId });
       
       setIsDialogOpen(false);
       setEditingAddon(null);
       
-      // Aguardar 2 segundos antes de verificar
-      setTimeout(async () => {
-        console.log('[ProductAddonsManager] 🔄 Primeira tentativa de refresh');
-        await handleManualRefresh();
-        
-        // Aguardar mais 1 segundo e verificar se carregou
-        setTimeout(async () => {
-          const currentData = queryClient.getQueryData(['product-addons', productId]) as any[];
-          const wasLoaded = isEditing 
-            ? currentData?.some(a => a.id === editingAddon.id && a.name === addonName)
-            : currentData?.length > currentAddonsCount;
-          
-          if (!wasLoaded) {
-            console.log('[ProductAddonsManager] ⚠️ Adicional não detectado, tentando novamente');
-            await handleManualRefresh();
-            
-            toast({
-              title: "🔄 Atualizando lista",
-              description: "Garantindo que o adicional foi carregado...",
-            });
-          } else {
-            console.log('[ProductAddonsManager] ✅ Adicional carregado com sucesso');
-          }
-        }, 1000);
-      }, 2000);
+      // Mostrar toast de "processando"
+      toast({
+        title: "⏳ Processando...",
+        description: "Aguarde enquanto o adicional é carregado",
+      });
+      
+      // Aguardar 2 segundos para propagação inicial
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Usar polling para garantir carregamento
+      const loaded = await waitForAddonToLoad(addonName, newAddonId, 5);
+      
+      if (!loaded) {
+        console.error('[ProductAddonsManager] ❌ FALHA: Adicional não carregou após 5 tentativas');
+        toast({
+          title: "⚠️ Atenção",
+          description: "O adicional foi salvo, mas pode não estar visível. Tente recarregar a página.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "✅ Sucesso!",
+          description: `${addonName} foi ${isEditing ? 'atualizado' : 'adicionado'} com sucesso`,
+        });
+      }
       
     } catch (error) {
       console.error('[ProductAddonsManager] Erro ao submeter:', error);
+      toast({
+        title: "❌ Erro",
+        description: "Falha ao salvar adicional. Tente novamente.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -446,18 +461,99 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
     });
   };
 
-  // ETAPA 5: Função para refresh manual
-  const handleManualRefresh = async () => {
+  // ETAPA 1: Função para refresh manual (retorna boolean)
+  const handleManualRefresh = async (): Promise<boolean> => {
     console.log('[ProductAddonsManager] 🔄 Refresh manual iniciado');
+    
     await queryClient.invalidateQueries({ queryKey: ['product-addons', productId] });
     await queryClient.refetchQueries({ 
       queryKey: ['product-addons', productId],
       exact: true,
       type: 'active'
     });
+    
+    // Aguardar um pouco para garantir propagação
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    const currentData = queryClient.getQueryData(['product-addons', productId]) as any[];
+    console.log('[ProductAddonsManager] 📊 Dados após refresh:', {
+      count: currentData?.length || 0,
+      items: currentData?.map(a => a.name)
+    });
+    
     toast({
       title: "✅ Lista atualizada!",
-      description: "Adicionais foram recarregados",
+      description: `${currentData?.length || 0} adicionais carregados`,
+    });
+    
+    return true;
+  };
+
+  // ETAPA 1: Sistema de polling com tentativas múltiplas
+  const waitForAddonToLoad = async (
+    expectedName: string, 
+    expectedId?: string,
+    maxAttempts: number = 5
+  ): Promise<boolean> => {
+    console.log('[ProductAddonsManager] ⏳ Aguardando adicional:', { expectedName, expectedId, maxAttempts });
+    
+    setIsWaitingForLoad(true);
+    
+    try {
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        console.log(`[ProductAddonsManager] 🔄 Tentativa ${attempt}/${maxAttempts}`);
+        
+        await handleManualRefresh();
+        
+        const currentData = queryClient.getQueryData(['product-addons', productId]) as any[];
+        
+        // Verificar se o adicional está presente
+        const found = expectedId 
+          ? currentData?.some(a => a.id === expectedId)
+          : currentData?.some(a => a.name === expectedName);
+        
+        if (found) {
+          console.log('[ProductAddonsManager] ✅ Adicional encontrado!');
+          return true;
+        }
+        
+        if (attempt < maxAttempts) {
+          console.log(`[ProductAddonsManager] ⏳ Aguardando 1s antes da próxima tentativa...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+      
+      console.log('[ProductAddonsManager] ❌ Adicional não encontrado após todas as tentativas');
+      return false;
+    } finally {
+      setIsWaitingForLoad(false);
+    }
+  };
+
+  // ETAPA 6: Emergency refresh
+  const handleEmergencyRefresh = async () => {
+    console.log('[ProductAddonsManager] 🚨 EMERGENCY REFRESH');
+    
+    // 1. Limpar cache completamente
+    queryClient.removeQueries({ queryKey: ['product-addons'] });
+    queryClient.removeQueries({ queryKey: ['store-addons'] });
+    
+    // 2. Forçar remount do componente
+    setComponentKey(prev => prev + 1);
+    
+    // 3. Aguardar um pouco
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // 4. Refetch forçado
+    await queryClient.refetchQueries({ 
+      queryKey: ['product-addons', productId],
+      exact: true,
+      type: 'active'
+    });
+    
+    toast({
+      title: "🔄 Refresh completo executado",
+      description: "Todos os dados foram recarregados",
     });
   };
 
@@ -725,7 +821,17 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
 
   return (
     <>
-      <Card>
+      <Card className="relative">
+        {/* ETAPA 4: Overlay de loading durante polling */}
+        {isWaitingForLoad && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
+            <div className="text-center">
+              <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">Carregando adicional...</p>
+            </div>
+          </div>
+        )}
+        
         <CardHeader>
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex-1">
@@ -757,10 +863,22 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
                 variant="outline"
                 size="sm"
                 className="w-full sm:w-auto shrink-0"
-                disabled={isRealtimeUpdating}
+                disabled={isRealtimeUpdating || isWaitingForLoad}
               >
                 <RefreshCw className={`w-4 h-4 mr-2 ${isRealtimeUpdating ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Atualizar</span>
+              </Button>
+              {/* ETAPA 6: Botão de Emergency Refresh */}
+              <Button
+                onClick={handleEmergencyRefresh}
+                variant="destructive"
+                size="sm"
+                className="w-full sm:w-auto shrink-0"
+                disabled={isWaitingForLoad}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Refresh Forçado</span>
+                <span className="sm:hidden">Forçado</span>
               </Button>
               <Button 
                 size="sm" 
