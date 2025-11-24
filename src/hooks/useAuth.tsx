@@ -23,6 +23,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    let initialSessionReceived = false;
 
     // Set up auth state listener FIRST to avoid race conditions
     const {
@@ -30,26 +31,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
       console.log('[Auth] onAuthStateChange:', { event, session });
+      
       setSession(session ?? null);
       setUser(session?.user ?? null);
 
-      // Evita encerrar o loading no evento INITIAL_SESSION; quem faz isso é o getSession
-      if (event !== 'INITIAL_SESSION') {
+      // INITIAL_SESSION é o evento que indica que o Supabase terminou de verificar o storage
+      if (event === 'INITIAL_SESSION') {
+        initialSessionReceived = true;
+        setLoading(false);
+      } else if (initialSessionReceived) {
+        // Só atualiza loading para outros eventos APÓS receber a sessão inicial
         setLoading(false);
       }
     });
 
-    // Then check for an existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      console.log('[Auth] getSession result:', session);
-      setSession(session ?? null);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // Fallback: Se após 3 segundos não receber INITIAL_SESSION, usa getSession
+    const timeoutId = setTimeout(() => {
+      if (!mounted || initialSessionReceived) return;
+      
+      console.log('[Auth] Fallback: getSession after timeout');
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (!mounted) return;
+        console.log('[Auth] getSession fallback result:', session);
+        setSession(session ?? null);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      });
+    }, 3000);
 
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);
