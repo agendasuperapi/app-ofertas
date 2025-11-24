@@ -110,6 +110,10 @@ export const NewAddonDialog = ({
     try {
       await addCategory(data.name, data.min_items, data.max_items, data.is_exclusive);
       await refetch();
+      
+      // Dispatch event to notify other components
+      window.dispatchEvent(new CustomEvent('addonCategoryCreated'));
+      
       toast.success("Categoria criada com sucesso!");
     } catch (error) {
       toast.error("Erro ao criar categoria");

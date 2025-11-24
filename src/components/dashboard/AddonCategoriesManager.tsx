@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -139,7 +139,7 @@ const SortableCategory = ({ category, hasPermission, onEdit, onDelete, onToggleS
 };
 
 export const AddonCategoriesManager = ({ storeId }: AddonCategoriesManagerProps) => {
-  const { categories, loading, addCategory, updateCategory, toggleCategoryStatus, deleteCategory, reorderCategories } = useAddonCategories(storeId);
+  const { categories, loading, addCategory, updateCategory, toggleCategoryStatus, deleteCategory, reorderCategories, refetch } = useAddonCategories(storeId);
   const employeeAccess = useEmployeeAccess();
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -149,6 +149,19 @@ export const AddonCategoriesManager = ({ storeId }: AddonCategoriesManagerProps)
     max_items: null as number | null,
     is_exclusive: false,
   });
+
+  // Listen for category creation events from other components
+  useEffect(() => {
+    const handleCategoryCreated = () => {
+      refetch();
+    };
+
+    window.addEventListener('addonCategoryCreated', handleCategoryCreated);
+    
+    return () => {
+      window.removeEventListener('addonCategoryCreated', handleCategoryCreated);
+    };
+  }, [refetch]);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
