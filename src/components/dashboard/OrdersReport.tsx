@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { Search, ShoppingCart, Download, Tag, FileText, FileSpreadsheet, Clock, Truck, Wallet, DollarSign } from "lucide-react";
+import { Search, ShoppingCart, Download, Tag, FileText, FileSpreadsheet, Clock, Truck, Wallet, DollarSign, Filter, Settings } from "lucide-react";
 import { ScrollableTable } from "@/components/ui/scrollable-table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -357,6 +357,16 @@ export const OrdersReport = ({ storeId, storeName = "Minha Loja", dateRange }: O
       
       <Card>
       <CardHeader className="flex flex-col gap-4">
+          <div className="flex gap-3">
+            <Button variant="outline" size="default" className="gap-2">
+              <Filter className="h-4 w-4" />
+              Filtros
+            </Button>
+            <Button variant="outline" size="default" className="gap-2">
+              <Settings className="h-4 w-4" />
+              Colunas
+            </Button>
+          </div>
           <div className="flex flex-col sm:flex-row gap-4 w-full">
             <div className="flex-1">
               <div className="relative">
