@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Menu, LogOut, Package, ShoppingCart, ShieldCheck, User, Store, UserPlus } from "lucide-react";
+import { LayoutDashboard, Menu, LogOut, Package, ShoppingCart, ShieldCheck, User, Store } from "lucide-react";
 import { AnimatedButton } from "@/components/ui/animated-button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -185,25 +185,11 @@ export const Navigation = () => {
                     </Button>
                   </Link>
                 )}
-                <AnimatedButton 
-                  size="sm" 
-                  className="bg-gradient-primary min-w-[140px] px-3"
-                  onClick={() => {
-                    const element = document.getElementById('cadastre-sua-loja');
-                    if (element) {
-                      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    } else {
-                      navigate('/');
-                      setTimeout(() => {
-                        const retryElement = document.getElementById('cadastre-sua-loja');
-                        retryElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      }, 100);
-                    }
-                  }}
-                >
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Cadastrar
-                </AnimatedButton>
+                <Link to="/auth">
+                  <AnimatedButton size="sm" className="bg-gradient-primary">
+                    {location.pathname === '/become-partner' ? 'Cadastrar' : 'Entrar / Cadastrar'}
+                  </AnimatedButton>
+                </Link>
               </>
             )}
           </div>
@@ -285,24 +271,11 @@ export const Navigation = () => {
                       </Button>
                     </>
                   ) : (
-                    <Button 
-                      className="w-full bg-gradient-primary"
-                      onClick={() => {
-                        const element = document.getElementById('cadastre-sua-loja');
-                        if (element) {
-                          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        } else {
-                          navigate('/');
-                          setTimeout(() => {
-                            const retryElement = document.getElementById('cadastre-sua-loja');
-                            retryElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                          }, 100);
-                        }
-                      }}
-                    >
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      {location.pathname === '/become-partner' ? 'Cadastrar' : 'Entrar / Cadastrar'}
-                    </Button>
+                    <Link to="/auth" className="block">
+                      <Button className="w-full bg-gradient-primary">
+                        {location.pathname === '/become-partner' ? 'Cadastrar' : 'Entrar / Cadastrar'}
+                      </Button>
+                    </Link>
                   )}
                 </div>
               </div>
