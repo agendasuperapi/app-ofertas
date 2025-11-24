@@ -1857,7 +1857,7 @@ export const StoreOwnerDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-background w-full overflow-x-hidden">
+    <div className="flex h-full bg-background w-full overflow-hidden">
         {/* Mobile Sidebar (Drawer) */}
         <DashboardMobileSidebar
           activeTab={activeTab}
@@ -1879,9 +1879,9 @@ export const StoreOwnerDashboard = () => {
         />
       
       
-      <div className="flex-1 min-w-0 overflow-x-hidden">
+      <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden">
         {/* Home Tab */}
-        <div className={cn("p-4 md:p-8 space-y-6 max-w-full", activeTab !== 'home' && 'hidden')}>
+        <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 w-full", activeTab !== 'home' && 'hidden')}>
 
             {/* Store Header */}
             <motion.div
@@ -2571,12 +2571,12 @@ export const StoreOwnerDashboard = () => {
         </div>
         
         {/* Metricas Tab */}
-        <div className={cn("p-8", activeTab !== 'metricas' && 'hidden')}>
+        <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8", activeTab !== 'metricas' && 'hidden')}>
           <MetricsComparison orders={orders} products={products} />
         </div>
 
         {/* Pedidos Tab */}
-        <div className={cn("p-8 space-y-6", activeTab !== 'pedidos' && 'hidden')}>
+        <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6", activeTab !== 'pedidos' && 'hidden')}>
           <div className="mb-6">
               <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
@@ -3156,21 +3156,21 @@ export const StoreOwnerDashboard = () => {
         
         {/* Cupons Tab */}
         {myStore?.id && (
-          <div className={cn("p-8", activeTab !== 'cupons' && 'hidden')}>
+          <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8", activeTab !== 'cupons' && 'hidden')}>
             <CouponsManager storeId={myStore.id} />
           </div>
         )}
 
         {/* Funcionarios Tab */}
         {myStore?.id && (
-          <div className={cn("p-8", activeTab !== 'funcionarios' && 'hidden')}>
+          <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8", activeTab !== 'funcionarios' && 'hidden')}>
             <EmployeesManager storeId={myStore.id} />
           </div>
         )}
 
         {/* WhatsApp Tab */}
         {myStore?.id && (
-          <div className={cn("p-8 space-y-6", activeTab !== 'whatsapp' && 'hidden')}>
+          <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6", activeTab !== 'whatsapp' && 'hidden')}>
             <Tabs defaultValue="integracao" className="space-y-6">
               <TabsList className="grid w-full grid-cols-2 gap-2 bg-muted/50 h-auto p-2">
                 <TabsTrigger value="integracao" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
@@ -3222,7 +3222,7 @@ export const StoreOwnerDashboard = () => {
 
         {/* Produtos Tab */}
         {myStore?.id && (
-          <div className={cn("p-8 space-y-6", activeTab !== 'produtos' && 'hidden')}>
+          <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6", activeTab !== 'produtos' && 'hidden')}>
             <Tabs defaultValue="lista" className="w-full">
               <TabsList className="grid w-full grid-cols-4 mb-6">
                 <TabsTrigger value="lista" className="flex items-center gap-2">
@@ -4464,7 +4464,7 @@ export const StoreOwnerDashboard = () => {
         )}
 
         {/* Result Tab */}
-        <div className={cn("p-8 space-y-6", activeTab !== 'result' && 'hidden')}>
+        <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6", activeTab !== 'result' && 'hidden')}>
           {/* Tabs */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
