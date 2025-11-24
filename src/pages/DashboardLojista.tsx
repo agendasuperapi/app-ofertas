@@ -33,7 +33,7 @@ const DashboardLojista = () => {
       </motion.header>
 
       <main className="flex-1 w-full overflow-y-auto overflow-x-hidden">
-        <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+        <div className="w-[80%] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
