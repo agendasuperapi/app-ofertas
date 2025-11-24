@@ -66,22 +66,59 @@ export const OrdersReport = ({ storeId, storeName = "Minha Loja", dateRange }: O
   const itemsPerPage = 10;
   const [storeData, setStoreData] = useState<{ operating_hours: any; allow_orders_when_closed: boolean } | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [visibleColumns, setVisibleColumns] = useState({
-    order_number: true,
-    date: true,
-    customer_name: true,
-    customer_phone: true,
-    status: true,
-    subtotal: true,
-    delivery_fee: true,
-    discount: true,
-    total: true,
-    payment_method: true,
-    payment_status: true,
-    delivery_type: true,
-    scheduled: true,
-    coupon: true,
+  const [visibleColumns, setVisibleColumns] = useState(() => {
+    const saved = localStorage.getItem(`ordersReport-columns-${storeId}`);
+    return saved ? JSON.parse(saved) : {
+      order_number: true,
+      date: true,
+      customer_name: true,
+      customer_phone: true,
+      status: true,
+      subtotal: true,
+      delivery_fee: true,
+      discount: true,
+      total: true,
+      payment_method: true,
+      payment_status: true,
+      delivery_type: true,
+      scheduled: true,
+      coupon: true,
+    };
   });
+
+  // Carregar filtros salvos do localStorage
+  useEffect(() => {
+    const savedFilters = localStorage.getItem(`ordersReport-filters-${storeId}`);
+    if (savedFilters) {
+      const filters = JSON.parse(savedFilters);
+      setSearchTerm(filters.searchTerm || "");
+      setStatusFilter(filters.statusFilter || "all");
+      setPaymentFilter(filters.paymentFilter || "all");
+      setScheduledFilter(filters.scheduledFilter || "all");
+      setDeliveryTypeFilter(filters.deliveryTypeFilter || "all");
+      setPaymentMethodFilter(filters.paymentMethodFilter || "all");
+      setValueRangeFilter(filters.valueRangeFilter || "all");
+    }
+  }, [storeId]);
+
+  // Salvar filtros no localStorage quando mudarem
+  useEffect(() => {
+    const filters = {
+      searchTerm,
+      statusFilter,
+      paymentFilter,
+      scheduledFilter,
+      deliveryTypeFilter,
+      paymentMethodFilter,
+      valueRangeFilter,
+    };
+    localStorage.setItem(`ordersReport-filters-${storeId}`, JSON.stringify(filters));
+  }, [searchTerm, statusFilter, paymentFilter, scheduledFilter, deliveryTypeFilter, paymentMethodFilter, valueRangeFilter, storeId]);
+
+  // Salvar colunas visíveis no localStorage quando mudarem
+  useEffect(() => {
+    localStorage.setItem(`ordersReport-columns-${storeId}`, JSON.stringify(visibleColumns));
+  }, [visibleColumns, storeId]);
 
   // Mapeamento entre status do banco (enum) e status_key customizado
   const denormalizeStatusKey = (uiStatus: string): string => {
