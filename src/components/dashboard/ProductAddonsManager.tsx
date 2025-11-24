@@ -60,9 +60,11 @@ interface SortableAddonProps {
   onDelete: (id: string) => void;
   onToggleAvailability: (addon: any) => void;
   isDeleting: boolean;
+  isHighlighted?: boolean;
+  addonRef?: React.RefObject<HTMLDivElement>;
 }
 
-const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleting }: SortableAddonProps) => {
+const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleting, isHighlighted, addonRef }: SortableAddonProps) => {
   const {
     attributes,
     listeners,
@@ -78,19 +80,18 @@ const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleti
     opacity: isDragging ? 0.5 : 1,
   };
 
-  console.log('[SortableAddon] Renderizando:', { 
-    id: addon.id, 
-    name: addon.name, 
-    isAvailable: addon.is_available,
-    isDragging,
-    style 
-  });
-
   return (
     <div
-      ref={setNodeRef}
+      ref={(node) => {
+        setNodeRef(node);
+        if (addonRef && node) {
+          (addonRef as any).current = node;
+        }
+      }}
       style={style}
-      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors bg-background"
+      className={`flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-all duration-500 bg-background ${
+        isHighlighted ? 'ring-2 ring-primary shadow-lg scale-105' : ''
+      }`}
     >
       <div className="flex items-center gap-3 flex-1">
         <button
@@ -231,7 +232,9 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
     is_exclusive: false,
   });
   const [productSearchTerm, setProductSearchTerm] = useState('');
+  const [highlightedAddonId, setHighlightedAddonId] = useState<string | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
+  const newAddonRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -387,6 +390,11 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
       setIsDialogOpen(false);
       setEditingAddon(null);
       
+      // Resetar filtros para garantir visibilidade
+      setCategoryFilter('all');
+      setAvailabilityFilter('available');
+      setSearchTerm('');
+      
       // Mostrar toast de "processando"
       toast({
         title: "⏳ Processando...",
@@ -407,6 +415,24 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
           variant: "destructive",
         });
       } else {
+        // Destacar o novo adicional
+        if (newAddonId) {
+          setHighlightedAddonId(newAddonId);
+          
+          // Scroll para o novo adicional após um pequeno delay
+          setTimeout(() => {
+            newAddonRef.current?.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center' 
+            });
+          }, 300);
+          
+          // Remover destaque após 3 segundos
+          setTimeout(() => {
+            setHighlightedAddonId(null);
+          }, 3000);
+        }
+        
         toast({
           title: "✅ Sucesso!",
           description: `${addonName} foi ${isEditing ? 'atualizado' : 'adicionado'} com sucesso`,
@@ -1038,6 +1064,8 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
                             onDelete={(id) => handleDeleteClick(id, addon.name)}
                             onToggleAvailability={handleToggleAvailability}
                             isDeleting={isDeleting}
+                            isHighlighted={highlightedAddonId === addon.id}
+                            addonRef={highlightedAddonId === addon.id ? newAddonRef : undefined}
                           />
                         ))}
                       </SortableContext>
@@ -1067,6 +1095,8 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
                             onDelete={(id) => handleDeleteClick(id, addon.name)}
                             onToggleAvailability={handleToggleAvailability}
                             isDeleting={isDeleting}
+                            isHighlighted={highlightedAddonId === addon.id}
+                            addonRef={highlightedAddonId === addon.id ? newAddonRef : undefined}
                           />
                           ))}
                         </SortableContext>
@@ -1089,6 +1119,8 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
                       onDelete={(id) => handleDeleteClick(id, addon.name)}
                       onToggleAvailability={handleToggleAvailability}
                       isDeleting={isDeleting}
+                      isHighlighted={highlightedAddonId === addon.id}
+                      addonRef={highlightedAddonId === addon.id ? newAddonRef : undefined}
                     />
                   ))}
                 </SortableContext>
