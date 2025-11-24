@@ -332,6 +332,7 @@ export const StoreOwnerDashboard = () => {
     direction: 'asc',
   });
   const [isReorderCategoriesMode, setIsReorderCategoriesMode] = useState(false);
+  const [categoryViewMode, setCategoryViewMode] = useState<'grid' | 'table'>('grid');
   const [localCategories, setLocalCategories] = useState<any[]>([]);
   const [dateFilter, setDateFilter] = useState<'all' | 'daily' | 'weekly' | 'monthly' | 'custom'>('daily');
   const [customDate, setCustomDate] = useState<Date | undefined>(new Date());
@@ -4059,7 +4060,27 @@ export const StoreOwnerDashboard = () => {
                     <p className="text-muted-foreground">Organize os produtos da sua loja</p>
                   </div>
                   <div className="flex gap-2">
-                    {hasPermission('categories', 'update') && filteredCategories && filteredCategories.length > 1 && (
+                    {/* View Mode Toggle */}
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant={categoryViewMode === 'grid' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setCategoryViewMode('grid')}
+                      >
+                        <LayoutGrid className="w-4 h-4 mr-2" />
+                        Grid
+                      </Button>
+                      <Button
+                        variant={categoryViewMode === 'table' ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setCategoryViewMode('table')}
+                      >
+                        <TableIcon className="w-4 h-4 mr-2" />
+                        Tabela
+                      </Button>
+                    </div>
+                    
+                    {hasPermission('categories', 'update') && filteredCategories && filteredCategories.length > 1 && categoryViewMode === 'grid' && (
                       <Button
                         variant={isReorderCategoriesMode ? "default" : "outline"}
                         onClick={() => setIsReorderCategoriesMode(!isReorderCategoriesMode)}
@@ -4139,7 +4160,85 @@ export const StoreOwnerDashboard = () => {
                     <div className="animate-spin">⏳</div>
                   </div>
                 ) : filteredCategories && filteredCategories.length > 0 ? (
-                  isReorderCategoriesMode ? (
+                  categoryViewMode === 'table' ? (
+                    // Table View
+                    <ScrollableTable maxHeight="calc(100vh - 400px)">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nome</TableHead>
+                            <TableHead className="text-center">Produtos</TableHead>
+                            <TableHead className="text-center">Status</TableHead>
+                            <TableHead className="text-center w-[200px]">Ações</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredCategories.map((category) => {
+                            const categoryProducts = products?.filter(p => p.category === category.name) || [];
+                            return (
+                              <TableRow key={category.id} className={!category.is_active ? 'opacity-60' : ''}>
+                                <TableCell>
+                                  <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-primary/10">
+                                      <FolderTree className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div>
+                                      <div className="font-semibold">{category.name}</div>
+                                    </div>
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <Badge variant="secondary">
+                                    {categoryProducts.length} produtos
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  {hasPermission('categories', 'update') ? (
+                                    <Switch
+                                      checked={category.is_active}
+                                      onCheckedChange={(checked) => toggleCategoryStatus(category.id, checked)}
+                                    />
+                                  ) : (
+                                    <Badge variant={category.is_active ? 'default' : 'secondary'}>
+                                      {category.is_active ? 'Ativa' : 'Inativa'}
+                                    </Badge>
+                                  )}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center justify-center gap-2">
+                                    {hasPermission('categories', 'update') && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => {
+                                          setEditingCategory(category);
+                                          setEditCategoryName(category.name);
+                                          setIsEditCategoryDialogOpen(true);
+                                        }}
+                                      >
+                                        <Edit className="w-4 h-4 mr-2" />
+                                        Editar
+                                      </Button>
+                                    )}
+                                    {hasPermission('categories', 'delete') && (
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => deleteCategory(category.id)}
+                                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                    </ScrollableTable>
+                  ) : isReorderCategoriesMode ? (
                     <DndContext
                       sensors={sensors}
                       collisionDetection={closestCenter}
