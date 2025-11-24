@@ -119,7 +119,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className={cn(
-                      "w-full flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-lg relative transition-all duration-200",
+                      "w-full flex flex-col items-center gap-2 py-3 px-2 rounded-lg relative transition-all duration-200",
                       isOpen
                         ? "bg-primary/10 text-primary shadow-sm" 
                         : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -166,7 +166,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           className={cn(
-                            "w-full flex flex-col items-center gap-1 py-2 px-2 rounded-lg relative transition-all duration-200",
+                            "w-full flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-lg relative transition-all duration-200",
                             isSubActive 
                               ? "bg-primary/15 text-primary shadow-sm" 
                               : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
@@ -175,13 +175,13 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
                           {isSubActive && (
                             <motion.div
                               layoutId="activeSubTab"
-                              className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-6 bg-primary rounded-r-full"
+                              className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-7 bg-primary rounded-r-full"
                               initial={false}
                               transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                             />
                           )}
                           <SubIcon className={cn(
-                            "w-4 h-4 relative z-10 transition-colors",
+                            "w-4.5 h-4.5 relative z-10 transition-colors",
                             isSubActive && "drop-shadow-sm"
                           )} />
                           <span className={cn(
@@ -208,7 +208,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className={cn(
-                "w-full flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-lg relative transition-all duration-200",
+                "w-full flex flex-col items-center gap-2 py-3 px-2 rounded-lg relative transition-all duration-200",
                 isActive 
                   ? "bg-primary/10 text-primary shadow-sm" 
                   : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -246,7 +246,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={onSignOut}
-            className="w-full flex flex-col items-center gap-1.5 py-2.5 px-2 rounded-lg text-destructive hover:bg-destructive/10 transition-all duration-200"
+            className="w-full flex flex-col items-center gap-2 py-3 px-2 rounded-lg text-destructive hover:bg-destructive/10 transition-all duration-200"
           >
             <LogOut className="w-5 h-5" />
             <span className="text-xs font-medium uppercase">Sair</span>
