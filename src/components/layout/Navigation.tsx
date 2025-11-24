@@ -187,7 +187,7 @@ export const Navigation = () => {
                 )}
                 <Link to="/auth">
                   <AnimatedButton size="sm" className="bg-gradient-primary">
-                    Entrar / Cadastrar
+                    {location.pathname === '/become-partner' ? 'Cadastrar' : 'Entrar / Cadastrar'}
                   </AnimatedButton>
                 </Link>
               </>
@@ -273,7 +273,7 @@ export const Navigation = () => {
                   ) : (
                     <Link to="/auth" className="block">
                       <Button className="w-full bg-gradient-primary">
-                        Entrar / Cadastrar
+                        {location.pathname === '/become-partner' ? 'Cadastrar' : 'Entrar / Cadastrar'}
                       </Button>
                     </Link>
                   )}
