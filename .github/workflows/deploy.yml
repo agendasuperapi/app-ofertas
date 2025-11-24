@@ -205,6 +205,31 @@ jobs:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
+      - name: Sync Capacitor
+        if: steps.check_android.outputs.exists == 'true'
+        run: |
+          npx cap sync android
+          echo "✅ Capacitor sincronizado"
+          
+          # Verificar se os arquivos necessários foram gerados
+          if [ ! -f "android/app/capacitor.build.gradle" ]; then
+            echo "⚠️ Aviso: capacitor.build.gradle não encontrado"
+          fi
+          
+          # Verificar se o diretório capacitor-cordova-android-plugins existe
+          if [ ! -d "android/capacitor-cordova-android-plugins" ]; then
+            echo "⚠️ Aviso: Diretório capacitor-cordova-android-plugins não encontrado"
+            echo "Criando diretório..."
+            mkdir -p android/capacitor-cordova-android-plugins
+          fi
+          
+          # Verificar se cordova.variables.gradle existe, se não, criar um vazio
+          if [ ! -f "android/capacitor-cordova-android-plugins/cordova.variables.gradle" ]; then
+            echo "⚠️ Criando cordova.variables.gradle vazio"
+            touch android/capacitor-cordova-android-plugins/cordova.variables.gradle
+            echo "// Arquivo gerado automaticamente pelo Capacitor" > android/capacitor-cordova-android-plugins/cordova.variables.gradle
+          fi
+
       - name: Setup Java
         if: steps.check_android.outputs.exists == 'true'
         uses: actions/setup-java@v4
@@ -216,9 +241,11 @@ jobs:
         if: steps.check_android.outputs.exists == 'true'
         uses: android-actions/setup-android@v3
         with:
-          api-level: 33
-          target: default
-          arch: x64
+          packages: |
+            platform-tools
+            platforms;android-33
+            build-tools;33.0.0
+          accept-android-sdk-licenses: true
 
       - name: Setup Keystore for signing
         if: steps.check_android.outputs.exists == 'true'
