@@ -3275,7 +3275,7 @@ export const StoreOwnerDashboard = () => {
                       Novo Produto
                     </Button>
                   </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+                <DialogContent className="w-[90vw] max-w-[90vw] max-h-[90vh] overflow-hidden flex flex-col">
                   <DialogHeader className="flex-shrink-0">
                     <DialogTitle>
                       {editingProduct ? 'Editar Produto' : 'Novo Produto'}
