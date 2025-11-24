@@ -1,10 +1,10 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Edit, DollarSign, FolderTree, X, GripVertical, Search, Store, Lightbulb, Download, Package, Filter, Power, PowerOff, RefreshCw } from "lucide-react";
+import { Plus, Trash2, Edit, DollarSign, FolderTree, X, GripVertical, Search, Store, Lightbulb, Download, Package, Filter, Power, PowerOff } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProductAddons } from "@/hooks/useProductAddons";
 import { useAddonCategories } from "@/hooks/useAddonCategories";
@@ -60,11 +60,9 @@ interface SortableAddonProps {
   onDelete: (id: string) => void;
   onToggleAvailability: (addon: any) => void;
   isDeleting: boolean;
-  isHighlighted?: boolean;
-  addonRef?: React.RefObject<HTMLDivElement>;
 }
 
-const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleting, isHighlighted, addonRef }: SortableAddonProps) => {
+const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleting }: SortableAddonProps) => {
   const {
     attributes,
     listeners,
@@ -82,16 +80,9 @@ const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleti
 
   return (
     <div
-      ref={(node) => {
-        setNodeRef(node);
-        if (addonRef && node) {
-          (addonRef as any).current = node;
-        }
-      }}
+      ref={setNodeRef}
       style={style}
-      className={`flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-all duration-500 bg-background ${
-        isHighlighted ? 'ring-2 ring-primary shadow-lg scale-105' : ''
-      }`}
+      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
     >
       <div className="flex items-center gap-3 flex-1">
         <button
@@ -103,10 +94,7 @@ const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleti
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className="font-medium text-foreground">{addon.name}</span>
-            {!addon.is_available && (
-              <Badge variant="outline" className="text-xs">Inativo</Badge>
-            )}
+            <span className="font-medium">{addon.name}</span>
           </div>
           <p className="text-sm text-muted-foreground">
             + R$ {addon.price.toFixed(2)}
@@ -141,74 +129,15 @@ const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleti
 
 export default function ProductAddonsManager({ productId, storeId }: ProductAddonsManagerProps) {
   const queryClient = useQueryClient();
-  const [componentKey, setComponentKey] = useState(0);
-  
-  // ETAPA 2: Estado para forçar re-render
-  const [lastUpdate, setLastUpdate] = useState(Date.now());
-  
-  // ETAPA 4: Estado para feedback visual de realtime
-  const [isRealtimeUpdating, setIsRealtimeUpdating] = useState(false);
-  
-  // Estado para indicar que está aguardando carregamento com polling
-  const [isWaitingForLoad, setIsWaitingForLoad] = useState(false);
-  
-  // Forçar refresh do realtime quando productId mudar
-  useEffect(() => {
-    console.log('[ProductAddonsManager] 🔄 ProductId mudou, forçando remount do realtime:', productId);
-    setComponentKey(prev => prev + 1);
-    
-    // Forçar refetch imediato
-    queryClient.invalidateQueries({ queryKey: ['product-addons', productId] });
-  }, [productId, queryClient]);
-  
-  const { addons, createAddon, createAddonAsync, updateAddon, updateAddonAsync, deleteAddon, reorderAddons, isCreating, isDeleting } = useProductAddons(productId);
+  const { addons, createAddon, updateAddon, deleteAddon, reorderAddons, isCreating, isDeleting } = useProductAddons(productId);
   const { categories, addCategory } = useAddonCategories(storeId);
   const storeAddonsQuery = useStoreAddons(storeId);
   const storeAddons = storeAddonsQuery.addons || [];
 
-  // ETAPA 2: Forçar re-render quando addons mudarem
-  useEffect(() => {
-    if (addons) {
-      console.log('[ProductAddonsManager] 🔄 Adicionais mudaram, forçando re-render');
-      setLastUpdate(Date.now());
-    }
-  }, [addons]);
-
-  // ETAPA 4: Listener de realtime para feedback visual na UI
-  useEffect(() => {
-    if (!productId) return;
-
-    const channel = supabase.channel(`ui-product-addons-${productId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'product_addons',
-        filter: `product_id=eq.${productId}`
-      }, (payload) => {
-        console.log('[ProductAddonsManager UI] 🔔 Novo adicional detectado via realtime!');
-        setIsRealtimeUpdating(true);
-        
-        toast({
-          title: "✨ Novo adicional detectado!",
-          description: `${payload.new.name} foi adicionado`,
-        });
-        
-        // Resetar indicador após 2 segundos
-        setTimeout(() => {
-          setIsRealtimeUpdating(false);
-        }, 2000);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [productId]);
-
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAddon, setEditingAddon] = useState<any>(null);
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available' | 'unavailable'>('all'); // ✅ CORRIGIDO: Mostrar TODOS por padrão
+  const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available' | 'unavailable'>('available');
   const [searchTerm, setSearchTerm] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
   const [isStoreAddonsOpen, setIsStoreAddonsOpen] = useState(false);
@@ -232,9 +161,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
     is_exclusive: false,
   });
   const [productSearchTerm, setProductSearchTerm] = useState('');
-  const [highlightedAddonId, setHighlightedAddonId] = useState<string | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
-  const newAddonRef = useRef<HTMLDivElement>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -282,57 +209,45 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
       filtered = filtered.filter(a => a.name.toLowerCase().includes(term));
     }
     
-    // 🔍 DEBUG: Log para verificar filtragem
-    console.log('[ProductAddonsManager] 📊 Filtragem:', {
-      total: addons?.length || 0,
-      filteredCount: filtered.length,
-      categoryFilter,
-      availabilityFilter,
-      searchTerm,
-      allNames: addons?.map(a => a.name),
-      filteredNames: filtered.map(a => a.name)
-    });
-    
     return filtered;
-  }, [addons, categoryFilter, availabilityFilter, searchTerm, lastUpdate]);
+  }, [addons, categoryFilter, availabilityFilter, searchTerm]);
 
   const addonsByCategory = useMemo(() => {
-    if (!addons) return { uncategorized: [] };
+    if (!addons) return {};
     
-    // ✅ CORREÇÃO: Usar filteredAddons ao invés de replicar lógica de filtro
-    // Isso garante que quando os filtros mudam, a visualização por categoria também muda
+    // Primeiro aplicar filtros de disponibilidade e busca
+    let filtered = addons;
     
-    // Agrupar por categoria APENAS os adicionais já filtrados
+    // Filter by availability
+    if (availabilityFilter === 'available') {
+      filtered = filtered.filter(a => a.is_available);
+    } else if (availabilityFilter === 'unavailable') {
+      filtered = filtered.filter(a => !a.is_available);
+    }
+    
+    // Filter by search term
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(a => a.name.toLowerCase().includes(term));
+    }
+    
+    // Depois agrupar por categoria
     const grouped: Record<string, typeof addons> = {
-      uncategorized: filteredAddons.filter(a => !a.category_id)
+      uncategorized: filtered.filter(a => !a.category_id)
     };
 
     activeCategories.forEach(cat => {
-      grouped[cat.id] = filteredAddons.filter(a => a.category_id === cat.id);
-    });
-    
-    // 🔍 DEBUG: Log para verificar agrupamento
-    console.log('[ProductAddonsManager] 🗂️ Agrupamento por categoria:', {
-      totalFiltered: filteredAddons.length,
-      uncategorized: grouped.uncategorized.length,
-      byCategory: Object.keys(grouped)
-        .filter(k => k !== 'uncategorized')
-        .map(catId => ({
-          categoryId: catId,
-          categoryName: activeCategories.find(c => c.id === catId)?.name,
-          count: grouped[catId]?.length || 0,
-          items: grouped[catId]?.map(a => a.name)
-        }))
+      grouped[cat.id] = filtered.filter(a => a.category_id === cat.id);
     });
 
     return grouped;
-  }, [filteredAddons, activeCategories, lastUpdate]);
+  }, [addons, activeCategories, availabilityFilter, searchTerm]);
 
   // Autocomplete suggestions combining store addons and templates
   const autocompleteSuggestions = useMemo(() => {
     const term = '';
     return [];
-  }, [storeAddons, addons, lastUpdate]);
+  }, [storeAddons, addons]);
 
   // Filtered store addons for the dialog
   const filteredStoreAddons = useMemo(() => {
@@ -357,131 +272,21 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
     return grouped;
   }, [filteredStoreAddons, activeCategories]);
 
-  // ETAPA 5: Debug logging detalhado (movido para depois de todas as declarações)
-  useEffect(() => {
-    console.log('[ProductAddonsManager] 🔍 Estado atual:', {
-      addonsCount: addons?.length || 0,
-      addonsNames: addons?.map(a => a.name),
-      filteredCount: filteredAddons.length,
-      categoryFilter,
-      availabilityFilter,
-      searchTerm,
-      lastUpdate,
-      componentKey
-    });
-  }, [addons, filteredAddons, categoryFilter, availabilityFilter, searchTerm, lastUpdate, componentKey]);
-
-  const handleSubmit = async (data: {
+  const handleSubmit = (data: {
     name: string;
     price: number;
     category_id: string | null;
     is_available: boolean;
     allow_quantity: boolean;
   }) => {
-    try {
-      console.log('[ProductAddonsManager] handleSubmit chamado:', {
-        data,
-        isEditing: !!editingAddon,
-        productId
-      });
-      
-      const isEditing = !!editingAddon;
-      const addonName = data.name;
-      let newAddonId: string | undefined;
-      
-      if (isEditing) {
-        await updateAddonAsync({ id: editingAddon.id, ...data });
-        newAddonId = editingAddon.id;
-      } else {
-        const result = await createAddonAsync({ ...data, product_id: productId });
-        newAddonId = result?.id;
-      }
-      
-      console.log('[ProductAddonsManager] Adicional salvo:', { addonName, newAddonId });
-      
-      setIsDialogOpen(false);
-      setEditingAddon(null);
-      
-      // SOLUÇÃO ROBUSTA: Forçar visibilidade imediata
-      
-      // 1. Resetar TODOS os filtros ANTES de qualquer operação
-      setCategoryFilter('all');
-      setAvailabilityFilter('all');
-      setSearchTerm('');
-      
-      // 2. Forçar atualização do timestamp para invalidar useMemo
-      setLastUpdate(Date.now());
-      
-      // 3. Invalidar cache AGRESSIVAMENTE
-      await queryClient.invalidateQueries({ queryKey: ['product-addons'] });
-      await queryClient.refetchQueries({ 
-        queryKey: ['product-addons', productId],
-        exact: true
-      });
-      
-      // 4. Aguardar apenas 500ms (reduzido de 2s)
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // 5. Forçar mais uma atualização do timestamp
-      setLastUpdate(Date.now());
-      
-      // 6. Verificar se carregou
-      const currentData = queryClient.getQueryData(['product-addons', productId]) as any[];
-      const loaded = currentData?.some(a => a.id === newAddonId || a.name === addonName);
-      
-      console.log('[ProductAddonsManager] 📊 Status:', { 
-        loaded, 
-        totalAddons: currentData?.length,
-        names: currentData?.map(a => a.name)
-      });
-      
-      if (!loaded) {
-        console.error('[ProductAddonsManager] ❌ FALHA: Adicional não encontrado');
-        toast({
-          title: "⚠️ Salvando...",
-          description: "O adicional foi salvo. Recarregando lista...",
-        });
-        
-        // Última tentativa: recarregar página
-        setTimeout(() => window.location.reload(), 1500);
-      } else {
-        // 7. Destacar o novo adicional COM GARANTIA DE VISIBILIDADE
-        if (newAddonId) {
-          setHighlightedAddonId(newAddonId);
-          
-          // Forçar mais uma atualização para garantir render
-          setTimeout(() => {
-            setLastUpdate(Date.now());
-            
-            // Scroll após garantir render
-            setTimeout(() => {
-              newAddonRef.current?.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'center' 
-              });
-            }, 200);
-          }, 100);
-          
-          // Remover destaque após 3 segundos
-          setTimeout(() => {
-            setHighlightedAddonId(null);
-          }, 3000);
-        }
-        
-        toast({
-          title: "✅ Sucesso!",
-          description: `${addonName} foi ${isEditing ? 'atualizado' : 'adicionado'} e está visível (${currentData?.length} total)`,
-        });
-      }
-      
-    } catch (error) {
-      console.error('[ProductAddonsManager] Erro ao submeter:', error);
-      toast({
-        title: "❌ Erro",
-        description: "Falha ao salvar adicional. Tente novamente.",
-        variant: "destructive",
-      });
+    if (editingAddon) {
+      updateAddon({ id: editingAddon.id, ...data });
+    } else {
+      createAddon({ ...data, product_id: productId });
     }
+    
+    setIsDialogOpen(false);
+    setEditingAddon(null);
   };
 
   const handleEdit = (addon: any) => {
@@ -530,102 +335,6 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
       is_available: !addon.is_available,
       category_id: addon.category_id,
       allow_quantity: addon.allow_quantity,
-    });
-  };
-
-  // ETAPA 1: Função para refresh manual (retorna boolean)
-  const handleManualRefresh = async (): Promise<boolean> => {
-    console.log('[ProductAddonsManager] 🔄 Refresh manual iniciado');
-    
-    await queryClient.invalidateQueries({ queryKey: ['product-addons', productId] });
-    await queryClient.refetchQueries({ 
-      queryKey: ['product-addons', productId],
-      exact: true,
-      type: 'active'
-    });
-    
-    // Aguardar um pouco para garantir propagação
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const currentData = queryClient.getQueryData(['product-addons', productId]) as any[];
-    console.log('[ProductAddonsManager] 📊 Dados após refresh:', {
-      count: currentData?.length || 0,
-      items: currentData?.map(a => a.name)
-    });
-    
-    toast({
-      title: "✅ Lista atualizada!",
-      description: `${currentData?.length || 0} adicionais carregados`,
-    });
-    
-    return true;
-  };
-
-  // ETAPA 1: Sistema de polling com tentativas múltiplas
-  const waitForAddonToLoad = async (
-    expectedName: string, 
-    expectedId?: string,
-    maxAttempts: number = 5
-  ): Promise<boolean> => {
-    console.log('[ProductAddonsManager] ⏳ Aguardando adicional:', { expectedName, expectedId, maxAttempts });
-    
-    setIsWaitingForLoad(true);
-    
-    try {
-      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-        console.log(`[ProductAddonsManager] 🔄 Tentativa ${attempt}/${maxAttempts}`);
-        
-        await handleManualRefresh();
-        
-        const currentData = queryClient.getQueryData(['product-addons', productId]) as any[];
-        
-        // Verificar se o adicional está presente
-        const found = expectedId 
-          ? currentData?.some(a => a.id === expectedId)
-          : currentData?.some(a => a.name === expectedName);
-        
-        if (found) {
-          console.log('[ProductAddonsManager] ✅ Adicional encontrado!');
-          return true;
-        }
-        
-        if (attempt < maxAttempts) {
-          console.log(`[ProductAddonsManager] ⏳ Aguardando 1s antes da próxima tentativa...`);
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-      }
-      
-      console.log('[ProductAddonsManager] ❌ Adicional não encontrado após todas as tentativas');
-      return false;
-    } finally {
-      setIsWaitingForLoad(false);
-    }
-  };
-
-  // ETAPA 6: Emergency refresh
-  const handleEmergencyRefresh = async () => {
-    console.log('[ProductAddonsManager] 🚨 EMERGENCY REFRESH');
-    
-    // 1. Limpar cache completamente
-    queryClient.removeQueries({ queryKey: ['product-addons'] });
-    queryClient.removeQueries({ queryKey: ['store-addons'] });
-    
-    // 2. Forçar remount do componente
-    setComponentKey(prev => prev + 1);
-    
-    // 3. Aguardar um pouco
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // 4. Refetch forçado
-    await queryClient.refetchQueries({ 
-      queryKey: ['product-addons', productId],
-      exact: true,
-      type: 'active'
-    });
-    
-    toast({
-      title: "🔄 Refresh completo executado",
-      description: "Todos os dados foram recarregados",
     });
   };
 
@@ -893,17 +602,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
 
   return (
     <>
-      <Card className="relative">
-        {/* ETAPA 4: Overlay de loading durante polling */}
-        {isWaitingForLoad && (
-          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center rounded-lg">
-            <div className="text-center">
-              <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">Carregando adicional...</p>
-            </div>
-          </div>
-        )}
-        
+      <Card>
         <CardHeader>
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex-1">
@@ -928,29 +627,6 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Adicional
-              </Button>
-              {/* ETAPA 5: Botão de refresh manual */}
-              <Button
-                onClick={handleManualRefresh}
-                variant="outline"
-                size="sm"
-                className="w-full sm:w-auto shrink-0"
-                disabled={isRealtimeUpdating || isWaitingForLoad}
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${isRealtimeUpdating ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">Atualizar</span>
-              </Button>
-              {/* ETAPA 6: Botão de Emergency Refresh */}
-              <Button
-                onClick={handleEmergencyRefresh}
-                variant="destructive"
-                size="sm"
-                className="w-full sm:w-auto shrink-0"
-                disabled={isWaitingForLoad}
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Refresh Forçado</span>
-                <span className="sm:hidden">Forçado</span>
               </Button>
               <Button 
                 size="sm" 
@@ -1075,14 +751,13 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
-            key={`dnd-${lastUpdate}-${componentKey}`}
           >
-            <div className="space-y-3" key={`addons-list-${lastUpdate}`}>
+            <div className="space-y-2 min-h-[800px]">
               {categoryFilter === 'all' ? (
                 // Group by category view
                 <>
                   {addonsByCategory.uncategorized.length > 0 && (
-                    <div key={`uncategorized-${lastUpdate}`} className="space-y-2">
+                    <div key="uncategorized" className="space-y-2">
                       <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-2">
                         <FolderTree className="w-4 h-4" />
                         Sem categoria
@@ -1099,8 +774,6 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
                             onDelete={(id) => handleDeleteClick(id, addon.name)}
                             onToggleAvailability={handleToggleAvailability}
                             isDeleting={isDeleting}
-                            isHighlighted={highlightedAddonId === addon.id}
-                            addonRef={highlightedAddonId === addon.id ? newAddonRef : undefined}
                           />
                         ))}
                       </SortableContext>
@@ -1112,7 +785,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
                     if (!categoryAddons || categoryAddons.length === 0) return null;
 
                     return (
-                      <div key={`${category.id}-${lastUpdate}`} className="space-y-2">
+                      <div key={category.id} className="space-y-2">
                         <Separator className="my-4" />
                         <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-2">
                           <FolderTree className="w-4 h-4" />
@@ -1130,8 +803,6 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
                             onDelete={(id) => handleDeleteClick(id, addon.name)}
                             onToggleAvailability={handleToggleAvailability}
                             isDeleting={isDeleting}
-                            isHighlighted={highlightedAddonId === addon.id}
-                            addonRef={highlightedAddonId === addon.id ? newAddonRef : undefined}
                           />
                           ))}
                         </SortableContext>
@@ -1144,18 +815,15 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
                 <SortableContext
                   items={filteredAddons.map((a) => a.id)}
                   strategy={verticalListSortingStrategy}
-                  key={`filtered-${lastUpdate}`}
                 >
                   {filteredAddons.map((addon) => (
                     <SortableAddon
-                      key={`${addon.id}-${lastUpdate}`}
+                      key={addon.id}
                       addon={addon}
                       onEdit={handleEdit}
                       onDelete={(id) => handleDeleteClick(id, addon.name)}
                       onToggleAvailability={handleToggleAvailability}
                       isDeleting={isDeleting}
-                      isHighlighted={highlightedAddonId === addon.id}
-                      addonRef={highlightedAddonId === addon.id ? newAddonRef : undefined}
                     />
                   ))}
                 </SortableContext>

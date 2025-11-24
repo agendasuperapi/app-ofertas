@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { useEffect } from 'react';
 
 export interface ProductAddon {
   id: string;
@@ -30,181 +29,39 @@ export const useProductAddons = (productId?: string) => {
   const addonsQuery = useQuery({
     queryKey: ['product-addons', productId],
     queryFn: async () => {
-      console.log('[useProductAddons] 🔍 Fetching addons for product:', productId);
-      if (!productId) return [];
-      
       const { data, error } = await supabase
         .from('product_addons')
         .select('*')
-        .eq('product_id', productId)
+        .eq('product_id', productId!)
         .order('display_order', { ascending: true });
 
-      if (error) {
-        console.error('[useProductAddons] ❌ Error fetching:', error);
-        throw error;
-      }
-      
-      console.log('[useProductAddons] ✅ Fetched addons:', data?.length || 0, 'items');
+      if (error) throw error;
       return data as ProductAddon[];
     },
     enabled: !!productId,
-    staleTime: 0,
-    refetchOnMount: true,
-    refetchOnWindowFocus: true,
   });
-
-  // 🔥 REALTIME: Sistema de atualização em tempo real
-  useEffect(() => {
-    if (!productId) {
-      console.log('[useProductAddons] ⚠️ ProductId não definido, pulando realtime');
-      return;
-    }
-
-    console.log('[useProductAddons] 🎧 Configurando REALTIME para product_id:', productId);
-
-    const channel = supabase
-      .channel(`product-addons-realtime-${productId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'product_addons',
-          filter: `product_id=eq.${productId}`
-        },
-        (payload) => {
-          console.log('[useProductAddons] 🔔 REALTIME INSERT detectado:', payload);
-          console.log('[useProductAddons] 🔔 Novo adicional:', payload.new);
-          
-          // FORÇA BRUTA: Limpar cache completamente
-          queryClient.removeQueries({ 
-            queryKey: ['product-addons', productId],
-            exact: true 
-          });
-          
-          // Aguardar propagação do banco
-          setTimeout(async () => {
-            console.log('[useProductAddons] 🔄 Iniciando refetch após INSERT');
-            
-            await queryClient.refetchQueries({ 
-              queryKey: ['product-addons', productId],
-              exact: true,
-              type: 'active'
-            });
-            
-            const newData = queryClient.getQueryData(['product-addons', productId]);
-            console.log('[useProductAddons] ✅ Lista atualizada após INSERT:', {
-              count: (newData as any[])?.length || 0,
-              items: (newData as any[])?.map(a => a.name)
-            });
-          }, 200);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'product_addons',
-          filter: `product_id=eq.${productId}`
-        },
-        async (payload) => {
-          console.log('[useProductAddons] 🔔 REALTIME UPDATE detectado:', payload);
-          console.log('[useProductAddons] 🔔 Adicional atualizado:', payload.new);
-          
-          // Atualização OTIMISTA
-          queryClient.setQueryData(['product-addons', productId], (old: ProductAddon[] | undefined) => {
-            if (!old) return [payload.new as ProductAddon];
-            return old.map(addon => 
-              addon.id === payload.new.id ? payload.new as ProductAddon : addon
-            );
-          });
-          
-          console.log('[useProductAddons] ✅ Adicional atualizado via REALTIME!');
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'product_addons',
-          filter: `product_id=eq.${productId}`
-        },
-        async (payload) => {
-          console.log('[useProductAddons] 🔔 REALTIME DELETE detectado:', payload);
-          console.log('[useProductAddons] 🔔 Adicional removido:', payload.old);
-          
-          // Atualização OTIMISTA
-          queryClient.setQueryData(['product-addons', productId], (old: ProductAddon[] | undefined) => {
-            if (!old) return [];
-            return old.filter(addon => addon.id !== payload.old.id);
-          });
-          
-          console.log('[useProductAddons] ✅ Adicional removido via REALTIME!');
-        }
-      )
-      .subscribe((status) => {
-        console.log('[useProductAddons] 📡 REALTIME Status mudou:', status, 'para produto:', productId);
-        
-        if (status === 'SUBSCRIBED') {
-          console.log('[useProductAddons] ✅ ✅ ✅ REALTIME ATIVO E CONECTADO para produto:', productId);
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('[useProductAddons] ❌ ERRO no canal REALTIME - verifique permissões');
-        } else if (status === 'TIMED_OUT') {
-          console.error('[useProductAddons] ⏱️ TIMEOUT no canal REALTIME - reconectando...');
-        } else if (status === 'CLOSED') {
-          console.warn('[useProductAddons] 🔌 Canal REALTIME foi fechado');
-        }
-      });
-
-    return () => {
-      console.log('[useProductAddons] 🔌 Desconectando REALTIME para produto:', productId);
-      supabase.removeChannel(channel);
-    };
-  }, [productId, queryClient]);
 
   const createAddonMutation = useMutation({
     mutationFn: async (addonData: AddonFormData & { product_id: string }) => {
-      console.log('[useProductAddons] 🔵 Iniciando criação de adicional:', addonData);
-      
       const { data, error } = await supabase
         .from('product_addons')
         .insert(addonData)
         .select()
         .single();
 
-      if (error) {
-        console.error('[useProductAddons] ❌ Erro ao inserir:', error);
-        throw error;
-      }
-      
-      console.log('[useProductAddons] ✅ Adicional inserido com sucesso:', data);
+      if (error) throw error;
       return data;
     },
-    onSuccess: async (data) => {
-      console.log('[useProductAddons] 🔄 onSuccess CREATE - Forçando atualização imediata');
-      
-      // Invalidar e refetch forçado
-      queryClient.invalidateQueries({ queryKey: ['product-addons', productId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product-addons'] });
       queryClient.invalidateQueries({ queryKey: ['store-addons'] });
       queryClient.invalidateQueries({ queryKey: ['store-all-addons'] });
-      
-      await queryClient.refetchQueries({ 
-        queryKey: ['product-addons', productId],
-        exact: true,
-        type: 'active'
-      });
-      
-      console.log('[useProductAddons] ✅ Lista atualizada após CREATE');
-      
       toast({
         title: 'Adicional criado!',
         description: 'O adicional foi adicionado ao produto.',
       });
     },
     onError: (error: Error) => {
-      console.error('[useProductAddons] ❌ Erro:', error);
       toast({
         title: 'Erro ao criar adicional',
         description: error.message,
@@ -225,21 +82,10 @@ export const useProductAddons = (productId?: string) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: async () => {
-      console.log('[useProductAddons] 🔄 onSuccess UPDATE - Forçando refresh');
-      
-      queryClient.invalidateQueries({ queryKey: ['product-addons', productId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product-addons'] });
       queryClient.invalidateQueries({ queryKey: ['store-addons'] });
       queryClient.invalidateQueries({ queryKey: ['store-all-addons'] });
-      
-      await queryClient.refetchQueries({ 
-        queryKey: ['product-addons', productId],
-        exact: true,
-        type: 'active'
-      });
-      
-      console.log('[useProductAddons] ✅ Lista atualizada após UPDATE');
-      
       toast({
         title: 'Adicional atualizado!',
         description: 'As informações do adicional foram atualizadas.',
@@ -263,21 +109,10 @@ export const useProductAddons = (productId?: string) => {
 
       if (error) throw error;
     },
-    onSuccess: async () => {
-      console.log('[useProductAddons] 🔄 onSuccess DELETE - Forçando refresh');
-      
-      queryClient.invalidateQueries({ queryKey: ['product-addons', productId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product-addons'] });
       queryClient.invalidateQueries({ queryKey: ['store-addons'] });
       queryClient.invalidateQueries({ queryKey: ['store-all-addons'] });
-      
-      await queryClient.refetchQueries({ 
-        queryKey: ['product-addons', productId],
-        exact: true,
-        type: 'active'
-      });
-      
-      console.log('[useProductAddons] ✅ Lista atualizada após DELETE');
-      
       toast({
         title: 'Adicional removido!',
         description: 'O adicional foi removido do produto.',
@@ -305,20 +140,10 @@ export const useProductAddons = (productId?: string) => {
       const error = results.find(r => r.error)?.error;
       if (error) throw error;
     },
-    onSuccess: async () => {
-      console.log('[useProductAddons] 🔄 onSuccess REORDER - Forçando refresh');
-      
-      queryClient.invalidateQueries({ queryKey: ['product-addons', productId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product-addons'] });
       queryClient.invalidateQueries({ queryKey: ['store-addons'] });
       queryClient.invalidateQueries({ queryKey: ['store-all-addons'] });
-      
-      await queryClient.refetchQueries({ 
-        queryKey: ['product-addons', productId],
-        exact: true,
-        type: 'active'
-      });
-      
-      console.log('[useProductAddons] ✅ Lista atualizada após REORDER');
     },
     onError: (error: Error) => {
       toast({
@@ -356,21 +181,10 @@ export const useProductAddons = (productId?: string) => {
       if (error) throw error;
       return data;
     },
-    onSuccess: async () => {
-      console.log('[useProductAddons] 🔄 onSuccess DUPLICATE - Forçando refresh');
-      
-      queryClient.invalidateQueries({ queryKey: ['product-addons', productId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product-addons'] });
       queryClient.invalidateQueries({ queryKey: ['store-addons'] });
       queryClient.invalidateQueries({ queryKey: ['store-all-addons'] });
-      
-      await queryClient.refetchQueries({ 
-        queryKey: ['product-addons', productId],
-        exact: true,
-        type: 'active'
-      });
-      
-      console.log('[useProductAddons] ✅ Lista atualizada após DUPLICATE');
-      
       toast({
         title: 'Adicional duplicado!',
         description: 'O adicional foi duplicado com sucesso.',
@@ -389,9 +203,7 @@ export const useProductAddons = (productId?: string) => {
     addons: addonsQuery.data,
     isLoading: addonsQuery.isLoading,
     createAddon: createAddonMutation.mutate,
-    createAddonAsync: createAddonMutation.mutateAsync,
     updateAddon: updateAddonMutation.mutate,
-    updateAddonAsync: updateAddonMutation.mutateAsync,
     deleteAddon: deleteAddonMutation.mutate,
     reorderAddons: reorderAddonsMutation.mutate,
     duplicateAddon: duplicateAddonMutation.mutate,

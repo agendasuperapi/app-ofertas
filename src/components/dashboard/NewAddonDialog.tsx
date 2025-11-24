@@ -86,33 +86,18 @@ export const NewAddonDialog = ({
   }, [editData, open]);
 
   const handleSubmit = () => {
-    console.log('[NewAddonDialog] handleSubmit iniciado', {
-      formData,
-      hasName: !!formData.name.trim(),
-      price: formData.price
-    });
-    
-    if (!formData.name.trim()) {
-      console.warn('[NewAddonDialog] Nome vazio, cancelando');
-      return;
-    }
+    if (!formData.name.trim()) return;
 
     const price = parseFloat(formData.price);
-    if (isNaN(price) || price < 0) {
-      console.warn('[NewAddonDialog] Preço inválido, cancelando', { price });
-      return;
-    }
+    if (isNaN(price) || price < 0) return;
 
-    const submitData = {
+    onSubmit({
       name: formData.name.trim(),
       price,
       category_id: formData.category_id || null,
       is_available: formData.is_available,
       allow_quantity: formData.allow_quantity,
-    };
-    
-    console.log('[NewAddonDialog] Chamando onSubmit com:', submitData);
-    onSubmit(submitData);
+    });
   };
 
   const handleCreateCategory = async (data: {
@@ -123,16 +108,9 @@ export const NewAddonDialog = ({
   }) => {
     setIsCreatingCategory(true);
     try {
-      const newCategory = await addCategory(data.name, data.min_items, data.max_items, data.is_exclusive);
+      await addCategory(data.name, data.min_items, data.max_items, data.is_exclusive);
       await refetch();
-      
-      // Auto-selecionar a nova categoria criada
-      if (newCategory?.id) {
-        setFormData({ ...formData, category_id: newCategory.id });
-      }
-      
       toast.success("Categoria criada com sucesso!");
-      setShowCategoryDialog(false);
     } catch (error) {
       toast.error("Erro ao criar categoria");
       console.error(error);
