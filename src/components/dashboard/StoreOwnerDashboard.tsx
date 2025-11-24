@@ -1861,7 +1861,8 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
   };
 
   return (
-    <div className="flex h-full bg-background w-full overflow-hidden justify-center">
+    <div className="flex h-full bg-background w-full overflow-hidden">
+      <div className="flex w-full max-w-[1920px] mx-auto">
         {/* Mobile Sidebar (Drawer) */}
         <DashboardMobileSidebar
           activeTab={activeTab}
@@ -1885,8 +1886,8 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
         />
       
       
-      <div className="flex-1 overflow-y-auto overflow-x-hidden flex justify-center">
-        <div className="w-full max-w-[1600px] px-4 sm:px-6 lg:px-12 xl:px-16">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="w-full px-4 sm:px-6 lg:px-12 xl:px-16">
         {/* Home Tab */}
         <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 w-full", activeTab !== 'home' && 'hidden')}>
 
@@ -5974,6 +5975,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
         </AlertDialogContent>
       </AlertDialog>
       </div>
+    </div>
     </div>
   );
 };
