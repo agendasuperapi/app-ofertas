@@ -670,13 +670,13 @@ export const OrdersReport = ({
                   {visibleColumns.status && <TableHead>Status</TableHead>}
                   {visibleColumns.subtotal && <TableHead className="text-right">Subtotal</TableHead>}
                   {visibleColumns.delivery_fee && <TableHead className="text-right">Taxa</TableHead>}
-                  {visibleColumns.discount && <TableHead className="text-right">Desconto</TableHead>}
                   {visibleColumns.total && <TableHead className="text-right">Total</TableHead>}
                   {visibleColumns.payment_method && <TableHead>Forma Pag</TableHead>}
                   {visibleColumns.payment_status && <TableHead>Status Pgto</TableHead>}
                   {visibleColumns.delivery_type && <TableHead>Entrega</TableHead>}
                   {visibleColumns.scheduled && <TableHead>Agendado</TableHead>}
                   {visibleColumns.coupon && <TableHead>Cupom</TableHead>}
+                  {visibleColumns.discount && <TableHead className="text-right">Desconto</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -711,9 +711,6 @@ export const OrdersReport = ({
                         </TableCell>}
                       {visibleColumns.delivery_fee && <TableCell className="text-right text-muted-foreground">
                           {order.delivery_fee > 0 ? `R$ ${order.delivery_fee.toFixed(2)}` : '-'}
-                        </TableCell>}
-                      {visibleColumns.discount && <TableCell className="text-right">
-                          {order.coupon_discount && order.coupon_discount > 0 ? <span className="text-green-600">-R$ {order.coupon_discount.toFixed(2)}</span> : <span className="text-muted-foreground">-</span>}
                         </TableCell>}
                       {visibleColumns.total && <TableCell className="text-right font-bold">
                           R$ {order.total.toFixed(2)}
@@ -753,6 +750,9 @@ export const OrdersReport = ({
                               <Tag className="h-3 w-3" />
                               {order.coupon_code}
                             </Badge> : <span className="text-muted-foreground">-</span>}
+                        </TableCell>}
+                      {visibleColumns.discount && <TableCell className="text-right">
+                          {order.coupon_discount && order.coupon_discount > 0 ? <span className="text-green-600">-R$ {order.coupon_discount.toFixed(2)}</span> : <span className="text-muted-foreground">-</span>}
                         </TableCell>}
                     </TableRow>)}
               </TableBody>
