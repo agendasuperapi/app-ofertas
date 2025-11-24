@@ -177,6 +177,25 @@ export const useAddonCategories = (storeId: string | undefined) => {
     }
   };
 
+  const updateUncategorizedPosition = async (displayOrder: number) => {
+    if (!storeId) return;
+
+    try {
+      const { error } = await (supabase as any)
+        .from('stores')
+        .update({ uncategorized_display_order: displayOrder })
+        .eq('id', storeId);
+
+      if (error) throw error;
+
+      toast.success('Posição da seção "Sem categoria" atualizada!');
+    } catch (error: any) {
+      console.error('Error updating uncategorized position:', error);
+      toast.error('Erro ao atualizar posição');
+      throw error;
+    }
+  };
+
   const refetch = () => {
     fetchCategories();
   };
@@ -189,6 +208,7 @@ export const useAddonCategories = (storeId: string | undefined) => {
     toggleCategoryStatus,
     deleteCategory,
     reorderCategories,
+    updateUncategorizedPosition,
     refetch
   };
 };
