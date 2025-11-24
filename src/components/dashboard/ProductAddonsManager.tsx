@@ -45,7 +45,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { addonTemplates, type BusinessTemplate } from "@/lib/addonTemplates";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import { NewAddonDialog } from "./NewAddonDialog";
 import { AddonCategoriesManager } from "./AddonCategoriesManager";
 
@@ -152,21 +152,17 @@ const SortableCategory = ({ category, addons, onEdit, onDelete, onToggleAvailabi
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const isUncategorized = category.id === 'uncategorized';
-
   return (
     <div ref={setNodeRef} style={style} className="space-y-2">
       <Separator className="my-4" />
       <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-2">
-        {!isUncategorized && (
-          <button
-            className="cursor-grab active:cursor-grabbing touch-none"
-            {...attributes}
-            {...listeners}
-          >
-            <GripVertical className="w-4 h-4" />
-          </button>
-        )}
+        <button
+          className="cursor-grab active:cursor-grabbing touch-none"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
         <FolderTree className="w-4 h-4" />
         {category.name}
       </div>
@@ -192,9 +188,33 @@ const SortableCategory = ({ category, addons, onEdit, onDelete, onToggleAvailabi
 export default function ProductAddonsManager({ productId, storeId }: ProductAddonsManagerProps) {
   const queryClient = useQueryClient();
   const { addons, createAddon, updateAddon, deleteAddon, reorderAddons, isCreating, isDeleting } = useProductAddons(productId);
-  const { categories, addCategory, reorderCategories, refetch: refetchCategories } = useAddonCategories(storeId);
+  const { categories, addCategory, reorderCategories, updateUncategorizedPosition, refetch: refetchCategories } = useAddonCategories(storeId);
   const storeAddonsQuery = useStoreAddons(storeId);
   const storeAddons = storeAddonsQuery.addons || [];
+
+  // Get uncategorized position from store settings
+  const { data: storeData } = useQuery({
+    queryKey: ['store-uncategorized-order', storeId],
+    queryFn: async () => {
+      if (!storeId) return { uncategorized_display_order: 0 };
+      try {
+        const { data, error } = await (supabase as any)
+          .from('stores')
+          .select('uncategorized_display_order')
+          .eq('id', storeId)
+          .single();
+        
+        if (error) throw error;
+        return data as { uncategorized_display_order: number };
+      } catch (error) {
+        // Column might not exist yet, return default
+        return { uncategorized_display_order: 0 };
+      }
+    },
+    enabled: !!storeId
+  });
+
+  const uncategorizedDisplayOrder = storeData?.uncategorized_display_order ?? 0;
 
   // Listen for new categories created from NewAddonDialog
   useEffect(() => {
@@ -330,7 +350,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
       name: 'Sem categoria',
       store_id: storeId,
       is_active: true,
-      display_order: -1,
+      display_order: uncategorizedDisplayOrder,
       created_at: '',
       updated_at: '',
       min_items: 0,
@@ -338,8 +358,10 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
       is_exclusive: false
     };
 
-    return [uncategorizedCategory, ...activeCategories];
-  }, [activeCategories, addonsByCategory.uncategorized, storeId]);
+    // Combine and sort by display_order
+    const combined = [uncategorizedCategory, ...activeCategories];
+    return combined.sort((a, b) => a.display_order - b.display_order);
+  }, [activeCategories, addonsByCategory.uncategorized, storeId, uncategorizedDisplayOrder]);
 
   // Autocomplete suggestions combining store addons and templates
   const autocompleteSuggestions = useMemo(() => {
@@ -397,7 +419,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
     setIsDialogOpen(true);
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
 
     if (!over || active.id === over.id) return;
@@ -406,18 +428,32 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
     const isDraggingCategory = allCategoriesForDisplay.some(cat => cat.id === active.id);
 
     if (isDraggingCategory) {
-      // Ignorar se for tentar arrastar a categoria "uncategorized"
-      if (active.id === 'uncategorized' || over.id === 'uncategorized') {
-        return;
-      }
+      const oldIndex = allCategoriesForDisplay.findIndex((cat) => cat.id === active.id);
+      const newIndex = allCategoriesForDisplay.findIndex((cat) => cat.id === over.id);
 
-      // Reorder categories (apenas as reais, não a virtual)
-      const oldIndex = activeCategories.findIndex((cat) => cat.id === active.id);
-      const newIndex = activeCategories.findIndex((cat) => cat.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
 
-      if (oldIndex !== -1 && newIndex !== -1) {
-        const reordered = arrayMove(activeCategories, oldIndex, newIndex);
-        reorderCategories(reordered);
+      const newOrder = arrayMove(allCategoriesForDisplay, oldIndex, newIndex).map(
+        (cat, index) => ({
+          ...cat,
+          display_order: index
+        })
+      );
+
+      try {
+        // If moving uncategorized, update its position in stores table
+        if (active.id === 'uncategorized') {
+          const uncatNewOrder = newOrder.find(cat => cat.id === 'uncategorized')?.display_order;
+          if (uncatNewOrder !== undefined && updateUncategorizedPosition) {
+            await updateUncategorizedPosition(uncatNewOrder);
+          }
+        }
+
+        // Update real categories positions
+        const realCategories = newOrder.filter(cat => cat.id !== 'uncategorized');
+        await reorderCategories(realCategories);
+      } catch (error) {
+        console.error('Error reordering categories:', error);
       }
     } else if (addons) {
       // Reorder addons
