@@ -3,7 +3,7 @@ import { ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export const FloatingCartButton = () => {
@@ -12,6 +12,7 @@ export const FloatingCartButton = () => {
   const navigate = useNavigate();
   const controls = useAnimation();
   const isMobile = useIsMobile();
+  const [shouldAnimate, setShouldAnimate] = useState(false);
   
   const itemCount = getItemCount();
   const total = getTotal();
@@ -29,14 +30,24 @@ export const FloatingCartButton = () => {
   console.log('🎨 FloatingCartButton:', { itemCount, total, cartItems: cart.items.length });
 
   useEffect(() => {
-    if (itemCount > 0) {
-      console.log('✨ Animating button');
+    if (cart.items.length > 0) {
+      console.log('✨ Animating button - forcing zoom');
+      setShouldAnimate(true);
+      
+      // Trigger framer-motion animation
       controls.start({
-        scale: [1, 1.1, 1],
-        transition: { duration: 0.3 }
+        scale: [1, 1.5, 1],
+        transition: { duration: 0.6, ease: "easeInOut" }
       });
+
+      // Remove CSS animation class after it completes
+      const timer = setTimeout(() => {
+        setShouldAnimate(false);
+      }, 600);
+
+      return () => clearTimeout(timer);
     }
-  }, [itemCount, controls]);
+  }, [cart.items.length, controls]);
 
   if (itemCount === 0) {
     console.log('❌ FloatingCartButton: hidden (no items)');
@@ -58,7 +69,7 @@ export const FloatingCartButton = () => {
           <motion.div animate={controls} className="w-full max-w-md">
             <Button
               onClick={handleCartClick}
-              className="w-full bg-gradient-primary hover:opacity-90 shadow-lg h-12 sm:h-14 text-sm sm:text-base font-semibold rounded-full border-2 border-orange-500 hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] transition-all duration-500"
+              className={`w-full bg-gradient-primary hover:opacity-90 shadow-lg h-12 sm:h-14 text-sm sm:text-base font-semibold rounded-full border-2 border-orange-500 hover:shadow-[0_0_20px_rgba(249,115,22,0.6)] transition-all duration-500 ${shouldAnimate ? 'animate-pulse-cart' : ''}`}
               size="lg"
             >
               <div className="flex items-center justify-between w-full px-2 sm:px-4">
