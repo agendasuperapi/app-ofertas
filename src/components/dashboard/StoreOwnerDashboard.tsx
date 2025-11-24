@@ -4316,11 +4316,15 @@ export const StoreOwnerDashboard = () => {
               </Tabs>
             </motion.div>
           )}
-
-        {(activeTab === 'relatorio-clientes' ||
-          activeTab === 'relatorio-produtos-vendidos' || 
-          activeTab === 'relatorio-pedidos' ? 'block' : 'hidden'
-        }`}>
+        <div
+          className={
+            activeTab === 'relatorio-clientes' ||
+            activeTab === 'relatorio-produtos-vendidos' ||
+            activeTab === 'relatorio-pedidos'
+              ? 'block'
+              : 'hidden'
+          }
+        >
           {myStore?.id && (
             <>
               <ReportsFilters
@@ -5413,10 +5417,6 @@ export const StoreOwnerDashboard = () => {
             />
           </motion.div>
         </TabsContent>
-      </Tabs>
-      </motion.div>
-    </motion.div>
-      </div>
       
       {/* Edit Order Dialog */}
       <EditOrderDialog
