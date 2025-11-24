@@ -3814,7 +3814,7 @@ export const StoreOwnerDashboard = () => {
                                   </div>
                                 </TableHead>
                                 <TableHead className="text-center">Destaque</TableHead>
-                                <TableHead className="text-center w-[120px]">Ações</TableHead>
+                                <TableHead className="text-center w-[120px]">Ativo / Inativo</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
