@@ -435,7 +435,7 @@ export default function StoreDetails() {
                   />
                 )}
                 <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-2">
                     <h1 className="text-2xl md:text-4xl font-bold gradient-text">{store.name}</h1>
                     <motion.div 
                       whileHover={{ scale: 1.05 }}
