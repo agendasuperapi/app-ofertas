@@ -109,7 +109,7 @@ export const generateOrdersReport = (
           body: itemsData,
           startY: currentY,
           styles: { fontSize: 8, cellPadding: 2 },
-          headStyles: { fillColor: [79, 70, 229], textColor: 255, fontSize: 8 },
+          headStyles: { fillColor: [245, 245, 245], textColor: 0, fontSize: 8 },
           margin: { left: 14, right: 14 },
           theme: 'striped',
         });
@@ -132,7 +132,7 @@ export const generateOrdersReport = (
       body: tableData,
       startY: 65,
       styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [79, 70, 229], textColor: 255 },
+      headStyles: { fillColor: [245, 245, 245], textColor: 0 },
       alternateRowStyles: { fillColor: [245, 245, 245] },
     });
   }
@@ -175,7 +175,7 @@ export const generateProductsReport = (
     body: tableData,
     startY: 60,
     styles: { fontSize: 9, cellPadding: 3 },
-    headStyles: { fillColor: [79, 70, 229], textColor: 255 },
+    headStyles: { fillColor: [245, 245, 245], textColor: 0 },
     alternateRowStyles: { fillColor: [245, 245, 245] },
   });
   
@@ -219,7 +219,7 @@ export const generateCustomersReport = (
     body: tableData,
     startY: 65,
     styles: { fontSize: 9, cellPadding: 3 },
-    headStyles: { fillColor: [79, 70, 229], textColor: 255 },
+    headStyles: { fillColor: [245, 245, 245], textColor: 0 },
     alternateRowStyles: { fillColor: [245, 245, 245] },
   });
   
@@ -258,7 +258,7 @@ export const generateBestSellersReport = (
     body: tableData,
     startY: 50,
     styles: { fontSize: 9, cellPadding: 3 },
-    headStyles: { fillColor: [79, 70, 229], textColor: 255 },
+    headStyles: { fillColor: [245, 245, 245], textColor: 0 },
     alternateRowStyles: { fillColor: [245, 245, 245] },
   });
   
@@ -300,7 +300,7 @@ export const generateCouponsReport = (
     body: tableData,
     startY: 45,
     styles: { fontSize: 9, cellPadding: 3 },
-    headStyles: { fillColor: [79, 70, 229], textColor: 255 },
+    headStyles: { fillColor: [245, 245, 245], textColor: 0 },
     alternateRowStyles: { fillColor: [245, 245, 245] },
   });
   
