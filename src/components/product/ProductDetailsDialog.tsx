@@ -585,7 +585,7 @@ export function ProductDetailsDialog({
             <DialogHeader>
               <DialogTitle>Adicionar Observação</DialogTitle>
             </DialogHeader>
-            <Textarea autoFocus value={tempObservation} onChange={e => setTempObservation(e.target.value)} className="min-h-32 max-h-40 resize-none text-base" placeholder="Observa\xE7\xE3o..." />
+            <Textarea autoFocus value={tempObservation} onChange={e => setTempObservation(e.target.value)} className="min-h-32 max-h-40 resize-none text-base" placeholder="Observacao..." />
             <DialogFooter className="flex-row gap-2 mt-4">
               <Button variant="outline" onClick={handleObservationCancel} className="flex-1">
                 Cancelar
