@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { generateOrdersReport } from "@/lib/pdfReports";
 import { isStoreOpen } from "@/lib/storeUtils";
 import * as XLSX from 'xlsx';
+import { useOrderStatuses } from "@/hooks/useOrderStatuses";
 interface OrderItem {
   id: string;
   product_name: string;
@@ -115,6 +116,9 @@ export const OrdersReport = ({
       coupon: true
     };
   });
+
+  // Buscar status ativos da loja
+  const { statuses: activeStatuses } = useOrderStatuses(storeId);
 
   // Carregar filtros salvos do localStorage
   useEffect(() => {
@@ -618,13 +622,11 @@ export const OrdersReport = ({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">Todos</SelectItem>
-                        <SelectItem value="pending">Pendente</SelectItem>
-                        <SelectItem value="confirmed">Confirmado</SelectItem>
-                        <SelectItem value="preparing">Preparando</SelectItem>
-                        <SelectItem value="ready">Pronto</SelectItem>
-                        <SelectItem value="out_for_delivery">Saiu para entrega</SelectItem>
-                        <SelectItem value="delivered">Entregue</SelectItem>
-                        <SelectItem value="cancelled">Cancelado</SelectItem>
+                        {activeStatuses.map((status) => (
+                          <SelectItem key={status.id} value={status.status_key}>
+                            {status.status_label}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
