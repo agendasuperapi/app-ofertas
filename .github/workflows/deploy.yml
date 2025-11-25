@@ -288,27 +288,35 @@ jobs:
           echo "✅ Debug APK gerado (não precisa de assinatura)"
       
       - name: Build Android Release APK (requires keystore)
-        if: steps.check_android.outputs.exists == 'true' && secrets.KEYSTORE_BASE64 != ''
+        if: steps.check_android.outputs.exists == 'true'
         working-directory: ./android
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          ./gradlew assembleRelease --no-daemon --warning-mode all
-          echo "✅ Release APK gerado (com assinatura)"
+          if [ -f "app/my-release-key.jks" ]; then
+            ./gradlew assembleRelease --no-daemon --warning-mode all
+            echo "✅ Release APK gerado (com assinatura)"
+          else
+            echo "⚠️ Keystore não encontrado, pulando Release APK"
+          fi
         continue-on-error: true
 
       - name: Build AAB (App Bundle) - requires keystore
-        if: steps.check_android.outputs.exists == 'true' && secrets.KEYSTORE_BASE64 != ''
+        if: steps.check_android.outputs.exists == 'true'
         working-directory: ./android
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          ./gradlew bundleRelease --no-daemon --warning-mode all
-          echo "✅ AAB gerado (com assinatura)"
+          if [ -f "app/my-release-key.jks" ]; then
+            ./gradlew bundleRelease --no-daemon --warning-mode all
+            echo "✅ AAB gerado (com assinatura)"
+          else
+            echo "⚠️ Keystore não encontrado, pulando AAB"
+          fi
         continue-on-error: true
 
       - name: Upload Debug APK artifact
@@ -321,7 +329,7 @@ jobs:
           if-no-files-found: warn
       
       - name: Upload Release APK artifact
-        if: steps.check_android.outputs.exists == 'true' && secrets.KEYSTORE_BASE64 != ''
+        if: steps.check_android.outputs.exists == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: app-release
@@ -330,7 +338,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Upload AAB artifact
-        if: steps.check_android.outputs.exists == 'true' && secrets.KEYSTORE_BASE64 != ''
+        if: steps.check_android.outputs.exists == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: app-release-bundle
