@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageSquare, Send, X, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-
 interface WhatsAppConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -17,7 +16,6 @@ interface WhatsAppConfirmDialogProps {
   onConfirm: () => void;
   onSkip: () => void;
 }
-
 export function WhatsAppConfirmDialog({
   open,
   onOpenChange,
@@ -28,64 +26,51 @@ export function WhatsAppConfirmDialog({
   currentStatus,
   newStatus,
   onConfirm,
-  onSkip,
+  onSkip
 }: WhatsAppConfirmDialogProps) {
   const [messagePreview, setMessagePreview] = useState<string>('');
   const [isLoadingPreview, setIsLoadingPreview] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [currentStatusLabel, setCurrentStatusLabel] = useState<string>('');
   const [newStatusLabel, setNewStatusLabel] = useState<string>('');
-
   const loadMessagePreview = useCallback(async () => {
     setIsLoadingPreview(true);
     try {
       // Busca o pedido completo
-      const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .select(`
+      const {
+        data: order,
+        error: orderError
+      } = await supabase.from('orders').select(`
           *,
           order_items!inner (
             *,
             order_item_addons (*),
             order_item_flavors (*)
           )
-        `)
-        .eq('id', orderId)
-        .single();
-
+        `).eq('id', orderId).single();
       if (orderError) throw orderError;
 
       // Busca a loja
-      const { data: store, error: storeError } = await supabase
-        .from('stores')
-        .select('*')
-        .eq('id', order.store_id)
-        .single();
-
+      const {
+        data: store,
+        error: storeError
+      } = await supabase.from('stores').select('*').eq('id', order.store_id).single();
       if (storeError) throw storeError;
 
       // Busca os labels dos status
-      const { data: statusConfigs } = await supabase
-        .from('order_status_configs')
-        .select('status_key, status_label, whatsapp_message')
-        .eq('store_id', order.store_id)
-        .in('status_key', [currentStatus, newStatus]);
-
+      const {
+        data: statusConfigs
+      } = await supabase.from('order_status_configs').select('status_key, status_label, whatsapp_message').eq('store_id', order.store_id).in('status_key', [currentStatus, newStatus]);
       const currentConfig = statusConfigs?.find(s => s.status_key === currentStatus);
       const newConfig = statusConfigs?.find(s => s.status_key === newStatus);
-
       setCurrentStatusLabel(currentConfig?.status_label || currentStatus);
       setNewStatusLabel(newConfig?.status_label || newStatus);
 
       // Busca a configuração do status novo para mensagem
-      const { data: statusConfig, error: statusError } = await supabase
-        .from('order_status_configs')
-        .select('whatsapp_message')
-        .eq('store_id', order.store_id)
-        .eq('status_key', newStatus)
-        .eq('is_active', true)
-        .single();
-
+      const {
+        data: statusConfig,
+        error: statusError
+      } = await supabase.from('order_status_configs').select('whatsapp_message').eq('store_id', order.store_id).eq('status_key', newStatus).eq('is_active', true).single();
       if (statusError || !statusConfig?.whatsapp_message) {
         setMessagePreview('Nenhuma mensagem configurada para este status.');
         setIsLoadingPreview(false);
@@ -93,27 +78,21 @@ export function WhatsAppConfirmDialog({
       }
 
       // Formata os itens
-      const itemsList = order.order_items
-        .map((item: any) => {
-          let itemText = `• ${item.quantity}x ${item.product_name}`;
-          
-          if (item.order_item_flavors && item.order_item_flavors.length > 0) {
-            const flavors = item.order_item_flavors.map((f: any) => f.flavor_name).join(', ');
-            itemText += `\n  Sabores: ${flavors}`;
-          }
-          
-          if (item.order_item_addons && item.order_item_addons.length > 0) {
-            const addons = item.order_item_addons.map((a: any) => a.addon_name).join(', ');
-            itemText += `\n  Adicionais: ${addons}`;
-          }
-          
-          if (item.observation) {
-            itemText += `\n  Obs: ${item.observation}`;
-          }
-          
-          return itemText;
-        })
-        .join('\n\n');
+      const itemsList = order.order_items.map((item: any) => {
+        let itemText = `• ${item.quantity}x ${item.product_name}`;
+        if (item.order_item_flavors && item.order_item_flavors.length > 0) {
+          const flavors = item.order_item_flavors.map((f: any) => f.flavor_name).join(', ');
+          itemText += `\n  Sabores: ${flavors}`;
+        }
+        if (item.order_item_addons && item.order_item_addons.length > 0) {
+          const addons = item.order_item_addons.map((a: any) => a.addon_name).join(', ');
+          itemText += `\n  Adicionais: ${addons}`;
+        }
+        if (item.observation) {
+          itemText += `\n  Obs: ${item.observation}`;
+        }
+        return itemText;
+      }).join('\n\n');
 
       // Formata endereço
       let address = '';
@@ -130,7 +109,7 @@ export function WhatsAppConfirmDialog({
       const paymentMap: Record<string, string> = {
         'cash': 'Dinheiro',
         'card': 'Cartão',
-        'pix': 'PIX',
+        'pix': 'PIX'
       };
       const paymentMethod = paymentMap[order.payment_method] || order.payment_method;
 
@@ -152,7 +131,6 @@ export function WhatsAppConfirmDialog({
       message = message.replace(/\{#if_pickup\}([\s\S]*?)\{\/if_pickup\}/g, (_, content) => {
         return order.delivery_type === 'pickup' ? content : '';
       });
-
       setMessagePreview(message);
     } catch (error) {
       console.error('Erro ao carregar preview:', error);
@@ -168,13 +146,12 @@ export function WhatsAppConfirmDialog({
       loadMessagePreview();
     }
   }, [open, orderId, loadMessagePreview]);
-
   const handleConfirmAndSend = async () => {
     setIsSending(true);
     try {
       // Chama o callback que atualiza o status
       await onConfirm();
-      
+
       // O envio do WhatsApp será feito automaticamente pelo trigger do banco
       onOpenChange(false);
       setMessagePreview(''); // Limpa o preview
@@ -184,7 +161,6 @@ export function WhatsAppConfirmDialog({
       setIsSending(false);
     }
   };
-
   const handleSkip = async () => {
     setIsSending(true);
     try {
@@ -197,9 +173,7 @@ export function WhatsAppConfirmDialog({
       setIsSending(false);
     }
   };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -211,11 +185,11 @@ export function WhatsAppConfirmDialog({
               Deseja notificar o cliente <strong>{customerName}</strong> sobre a mudança de status do pedido <strong>#{orderNumber}</strong>?
             </p>
             <div className="flex items-center gap-2 text-sm">
-              <span className="px-2 py-1 rounded bg-muted font-medium">
+              <span className="px-2 py-1 rounded font-medium bg-red-100">
                 {currentStatusLabel}
               </span>
               <span className="text-muted-foreground">→</span>
-              <span className="px-2 py-1 rounded bg-primary/10 text-primary font-medium">
+              <span className="px-2 py-1 rounded font-medium text-teal-800 bg-emerald-300">
                 {newStatusLabel}
               </span>
             </div>
@@ -225,17 +199,13 @@ export function WhatsAppConfirmDialog({
         <div className="space-y-4">
           <div>
             <p className="text-sm font-medium mb-2">Preview da mensagem:</p>
-            {isLoadingPreview ? (
-              <div className="flex items-center justify-center p-8">
+            {isLoadingPreview ? <div className="flex items-center justify-center p-8">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <ScrollArea className="h-[300px] w-full rounded-md border bg-muted/30 p-4">
+              </div> : <ScrollArea className="h-[300px] w-full rounded-md border bg-muted/30 p-4">
                 <pre className="text-sm whitespace-pre-wrap font-sans">
                   {messagePreview}
                 </pre>
-              </ScrollArea>
-            )}
+              </ScrollArea>}
           </div>
 
           <div className="rounded-lg border border-border bg-muted/30 p-3">
@@ -246,40 +216,19 @@ export function WhatsAppConfirmDialog({
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSending}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSending}>
             <X className="w-4 h-4 mr-2" />
             Cancelar
           </Button>
-          <Button
-            variant="secondary"
-            onClick={handleSkip}
-            disabled={isSending}
-          >
-            {isSending ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <X className="w-4 h-4 mr-2" />
-            )}
+          <Button variant="secondary" onClick={handleSkip} disabled={isSending}>
+            {isSending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <X className="w-4 h-4 mr-2" />}
             Pular envio
           </Button>
-          <Button
-            onClick={handleConfirmAndSend}
-            disabled={isSending || isLoadingPreview}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            {isSending ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4 mr-2" />
-            )}
+          <Button onClick={handleConfirmAndSend} disabled={isSending || isLoadingPreview} className="bg-green-600 hover:bg-green-700">
+            {isSending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
             Enviar WhatsApp
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 }
