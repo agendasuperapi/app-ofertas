@@ -23,14 +23,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const prevUserRef = useRef<User | null>(null);
 
-  // Log de visibilidade
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      console.log('[Auth] 👁️ Visibilidade mudou:', document.visibilityState, 'timestamp:', Date.now());
-    };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
-  }, []);
+  // Log de visibilidade (removido para evitar re-renders desnecessários)
+  // useEffect removido - não é necessário logar mudanças de visibilidade
 
   useEffect(() => {
     let mounted = true;
@@ -56,17 +50,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const currentUserId = session?.user?.id;
         const prevUserId = prevUserRef.current?.id;
         
-        if (currentUserId === prevUserId) {
-          console.log('[Auth] ⏭️ TOKEN_REFRESHED ignorado - mesmo usuário');
+        // Se é o mesmo usuário, não atualizar estado (evita refresh visual)
+        if (currentUserId === prevUserId && currentUserId) {
+          console.log('[Auth] ⏭️ TOKEN_REFRESHED ignorado - mesmo usuário, sem atualização de estado');
+          // Atualizar apenas a ref, mas não o estado
+          prevUserRef.current = session?.user ?? null;
           return;
         }
       }
       
       console.log('[Auth] ✅ Evento processado:', event, 'novo userId:', session?.user?.id);
       
+      // Só atualizar estado se realmente mudou (evita re-renders desnecessários)
+      const newUser = session?.user ?? null;
+      const currentUser = prevUserRef.current;
+      
+      // Comparar IDs para evitar atualizações desnecessárias
+      if (newUser?.id === currentUser?.id && newUser?.id) {
+        // Mesmo usuário - só atualizar ref, não o estado (evita refresh visual)
+        prevUserRef.current = newUser;
+        console.log('[Auth] ⏭️ Mesmo usuário, sem atualização de estado');
+        return;
+      }
+      
       setSession(session ?? null);
-      setUser(session?.user ?? null);
-      prevUserRef.current = session?.user ?? null;
+      setUser(newUser);
+      prevUserRef.current = newUser;
 
       // INITIAL_SESSION é o evento que indica que o Supabase terminou de verificar o storage
       if (event === 'INITIAL_SESSION') {
