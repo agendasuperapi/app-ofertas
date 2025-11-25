@@ -23,6 +23,23 @@ import { cn } from "@/lib/utils";
 import { generateOrdersReport } from "@/lib/pdfReports";
 import { isStoreOpen } from "@/lib/storeUtils";
 import * as XLSX from 'xlsx';
+interface OrderItem {
+  id: string;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+  observation: string | null;
+  addons: Array<{
+    addon_name: string;
+    addon_price: number;
+  }>;
+  flavors: Array<{
+    flavor_name: string;
+    flavor_price: number;
+  }>;
+}
+
 interface OrderReport {
   id: string;
   order_number: string;
@@ -44,6 +61,7 @@ interface OrderReport {
   change_amount: number | null;
   notes: string | null;
   created_at: string;
+  items?: OrderItem[];
 }
 interface OrdersReportProps {
   storeId: string;
@@ -178,6 +196,57 @@ export const OrdersReport = ({
         error
       } = await query;
       if (error) throw error;
+
+      // Buscar itens dos pedidos se o filtro estiver ativo
+      let orderItemsMap: Record<string, OrderItem[]> = {};
+      if (showOrderItems && data && data.length > 0) {
+        const orderIds = data.map((o: any) => o.id);
+        
+        const { data: itemsData, error: itemsError } = await supabase
+          .from('order_items')
+          .select(`
+            id,
+            order_id,
+            product_name,
+            quantity,
+            unit_price,
+            subtotal,
+            observation,
+            order_item_addons (
+              addon_name,
+              addon_price
+            ),
+            order_item_flavors (
+              flavor_name,
+              flavor_price
+            )
+          `)
+          .in('order_id', orderIds)
+          .is('deleted_at', null)
+          .order('created_at', { ascending: true });
+
+        if (itemsError) throw itemsError;
+
+        // Organizar items por order_id
+        if (itemsData) {
+          itemsData.forEach((item: any) => {
+            if (!orderItemsMap[item.order_id]) {
+              orderItemsMap[item.order_id] = [];
+            }
+            orderItemsMap[item.order_id].push({
+              id: item.id,
+              product_name: item.product_name,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              subtotal: item.subtotal,
+              observation: item.observation,
+              addons: item.order_item_addons || [],
+              flavors: item.order_item_flavors || []
+            });
+          });
+        }
+      }
+
       const mappedData: OrderReport[] = (data || []).map((order: any) => ({
         id: order.id,
         order_number: order.order_number,
@@ -198,7 +267,8 @@ export const OrdersReport = ({
         delivery_complement: order.delivery_complement || null,
         change_amount: order.change_amount || null,
         notes: order.notes || null,
-        created_at: order.created_at
+        created_at: order.created_at,
+        items: orderItemsMap[order.id] || []
       }));
       setOrders(mappedData);
     } catch (error) {
@@ -216,7 +286,7 @@ export const OrdersReport = ({
     if (storeId) {
       fetchOrders();
     }
-  }, [storeId, dateRange]);
+  }, [storeId, dateRange, showOrderItems]);
 
   // Função para verificar se um pedido é agendado
   const isOrderScheduled = (order: OrderReport): boolean => {
@@ -750,77 +820,125 @@ export const OrdersReport = ({
                     <TableCell colSpan={Object.values(visibleColumns).filter(Boolean).length} className="text-center text-muted-foreground">
                       {searchTerm || statusFilter !== "all" ? 'Nenhum pedido encontrado com os filtros selecionados' : 'Nenhum pedido no período selecionado'}
                     </TableCell>
-                  </TableRow> : paginatedOrders.map(order => <TableRow key={order.id}>
-                      {visibleColumns.order_number && <TableCell className="font-mono font-medium">
-                          #{order.order_number}
-                        </TableCell>}
-                      {visibleColumns.date && <TableCell className="text-sm whitespace-nowrap">
-                          {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", {
-                    locale: ptBR
-                  })}
-                        </TableCell>}
-                      {visibleColumns.customer_name && <TableCell className="font-medium">{order.customer_name}</TableCell>}
-                      {visibleColumns.customer_phone && <TableCell className="text-sm">{order.customer_phone}</TableCell>}
-                      {visibleColumns.status && <TableCell>
-                          <Badge variant={order.status === 'delivered' ? 'default' : order.status === 'cancelled' ? 'destructive' : order.status === 'pending' ? 'secondary' : 'outline'} className="capitalize">
-                            {order.status === 'pending' && 'Pendente'}
-                            {order.status === 'confirmed' && 'Confirmado'}
-                            {order.status === 'preparing' && 'Preparando'}
-                            {order.status === 'ready' && 'Pronto'}
-                            {order.status === 'out_for_delivery' && 'Saiu p/ entrega'}
-                            {order.status === 'delivered' && 'Entregue'}
-                            {order.status === 'cancelled' && 'Cancelado'}
-                          </Badge>
-                        </TableCell>}
-                      {visibleColumns.subtotal && <TableCell className="text-right">
-                          R$ {order.subtotal.toFixed(2)}
-                        </TableCell>}
-                      {visibleColumns.delivery_fee && <TableCell className="text-right text-muted-foreground">
-                          {order.delivery_fee > 0 ? `R$ ${order.delivery_fee.toFixed(2)}` : '-'}
-                        </TableCell>}
-                      {visibleColumns.total && <TableCell className="text-right font-bold">
-                          R$ {order.total.toFixed(2)}
-                        </TableCell>}
-                      {visibleColumns.payment_method && <TableCell className="capitalize text-sm">
-                          {order.payment_method === 'pix' && 'PIX'}
-                          {order.payment_method === 'credit_card' && 'Cartão Crédito'}
-                          {order.payment_method === 'debit_card' && 'Cartão Débito'}
-                          {order.payment_method === 'cash' && 'Dinheiro'}
-                          {order.payment_method === 'voucher' && 'Vale'}
-                          {!['pix', 'credit_card', 'debit_card', 'cash', 'voucher'].includes(order.payment_method) && order.payment_method}
-                          {order.change_amount && order.change_amount > 0 && <div className="text-xs text-muted-foreground">
-                              Troco: R$ {order.change_amount.toFixed(2)}
-                            </div>}
-                        </TableCell>}
-                      {visibleColumns.payment_status && <TableCell>
-                          <Badge variant={order.payment_received ? 'default' : 'secondary'} className={order.payment_received ? 'bg-green-600' : 'bg-yellow-600'}>
-                            {order.payment_received ? 'Pagamento recebido' : 'Pagamento pendente'}
-                          </Badge>
-                        </TableCell>}
-                      {visibleColumns.delivery_type && <TableCell className="capitalize">
-                          <Badge variant={order.delivery_type === 'delivery' ? 'default' : 'secondary'}>
-                            {order.delivery_type === 'delivery' ? 'Entrega' : 'Retirada'}
-                          </Badge>
-                          {order.delivery_type === 'delivery' && order.delivery_neighborhood && <div className="text-xs text-muted-foreground mt-1 max-w-[150px] truncate">
-                              {order.delivery_neighborhood}
-                            </div>}
-                        </TableCell>}
-                      {visibleColumns.scheduled && <TableCell className="text-center">
-                          {isOrderScheduled(order) ? <Badge variant="outline" className="gap-1">
-                              <Clock className="h-3 w-3" />
-                              Sim
-                            </Badge> : <span className="text-muted-foreground">-</span>}
-                        </TableCell>}
-                      {visibleColumns.coupon && <TableCell>
-                          {order.coupon_code ? <Badge variant="outline" className="gap-1">
-                              <Tag className="h-3 w-3" />
-                              {order.coupon_code}
-                            </Badge> : <span className="text-muted-foreground">-</span>}
-                        </TableCell>}
-                      {visibleColumns.discount && <TableCell className="text-right">
-                          {order.coupon_discount && order.coupon_discount > 0 ? <span className="text-green-600">-R$ {order.coupon_discount.toFixed(2)}</span> : <span className="text-muted-foreground">-</span>}
-                        </TableCell>}
-                    </TableRow>)}
+                   </TableRow> : paginatedOrders.map(order => (
+                    <>
+                      <TableRow key={order.id}>
+                        {visibleColumns.order_number && <TableCell className="font-mono font-medium">
+                            #{order.order_number}
+                          </TableCell>}
+                        {visibleColumns.date && <TableCell className="text-sm whitespace-nowrap">
+                            {format(new Date(order.created_at), "dd/MM/yyyy HH:mm", {
+                      locale: ptBR
+                    })}
+                          </TableCell>}
+                        {visibleColumns.customer_name && <TableCell className="font-medium">{order.customer_name}</TableCell>}
+                        {visibleColumns.customer_phone && <TableCell className="text-sm">{order.customer_phone}</TableCell>}
+                        {visibleColumns.status && <TableCell>
+                            <Badge variant={order.status === 'delivered' ? 'default' : order.status === 'cancelled' ? 'destructive' : order.status === 'pending' ? 'secondary' : 'outline'} className="capitalize">
+                              {order.status === 'pending' && 'Pendente'}
+                              {order.status === 'confirmed' && 'Confirmado'}
+                              {order.status === 'preparing' && 'Preparando'}
+                              {order.status === 'ready' && 'Pronto'}
+                              {order.status === 'out_for_delivery' && 'Saiu p/ entrega'}
+                              {order.status === 'delivered' && 'Entregue'}
+                              {order.status === 'cancelled' && 'Cancelado'}
+                            </Badge>
+                          </TableCell>}
+                        {visibleColumns.subtotal && <TableCell className="text-right">
+                            R$ {order.subtotal.toFixed(2)}
+                          </TableCell>}
+                        {visibleColumns.delivery_fee && <TableCell className="text-right text-muted-foreground">
+                            {order.delivery_fee > 0 ? `R$ ${order.delivery_fee.toFixed(2)}` : '-'}
+                          </TableCell>}
+                        {visibleColumns.total && <TableCell className="text-right font-bold">
+                            R$ {order.total.toFixed(2)}
+                          </TableCell>}
+                        {visibleColumns.payment_method && <TableCell className="capitalize text-sm">
+                            {order.payment_method === 'pix' && 'PIX'}
+                            {order.payment_method === 'credit_card' && 'Cartão Crédito'}
+                            {order.payment_method === 'debit_card' && 'Cartão Débito'}
+                            {order.payment_method === 'cash' && 'Dinheiro'}
+                            {order.payment_method === 'voucher' && 'Vale'}
+                            {!['pix', 'credit_card', 'debit_card', 'cash', 'voucher'].includes(order.payment_method) && order.payment_method}
+                            {order.change_amount && order.change_amount > 0 && <div className="text-xs text-muted-foreground">
+                                Troco: R$ {order.change_amount.toFixed(2)}
+                              </div>}
+                          </TableCell>}
+                        {visibleColumns.payment_status && <TableCell>
+                            <Badge variant={order.payment_received ? 'default' : 'secondary'} className={order.payment_received ? 'bg-green-600' : 'bg-yellow-600'}>
+                              {order.payment_received ? 'Pagamento recebido' : 'Pagamento pendente'}
+                            </Badge>
+                          </TableCell>}
+                        {visibleColumns.delivery_type && <TableCell className="capitalize">
+                            <Badge variant={order.delivery_type === 'delivery' ? 'default' : 'secondary'}>
+                              {order.delivery_type === 'delivery' ? 'Entrega' : 'Retirada'}
+                            </Badge>
+                            {order.delivery_type === 'delivery' && order.delivery_neighborhood && <div className="text-xs text-muted-foreground mt-1 max-w-[150px] truncate">
+                                {order.delivery_neighborhood}
+                              </div>}
+                          </TableCell>}
+                        {visibleColumns.scheduled && <TableCell className="text-center">
+                            {isOrderScheduled(order) ? <Badge variant="outline" className="gap-1">
+                                <Clock className="h-3 w-3" />
+                                Sim
+                              </Badge> : <span className="text-muted-foreground">-</span>}
+                          </TableCell>}
+                        {visibleColumns.coupon && <TableCell>
+                            {order.coupon_code ? <Badge variant="outline" className="gap-1">
+                                <Tag className="h-3 w-3" />
+                                {order.coupon_code}
+                              </Badge> : <span className="text-muted-foreground">-</span>}
+                          </TableCell>}
+                        {visibleColumns.discount && <TableCell className="text-right">
+                            {order.coupon_discount && order.coupon_discount > 0 ? <span className="text-green-600">-R$ {order.coupon_discount.toFixed(2)}</span> : <span className="text-muted-foreground">-</span>}
+                          </TableCell>}
+                      </TableRow>
+                      
+                      {/* Linha de itens do pedido */}
+                      {showOrderItems && order.items && order.items.length > 0 && (
+                        <TableRow key={`${order.id}-items`} className="bg-muted/30">
+                          <TableCell colSpan={Object.values(visibleColumns).filter(Boolean).length}>
+                            <div className="p-3 space-y-2">
+                              <p className="text-sm font-semibold text-muted-foreground mb-2">Itens do Pedido:</p>
+                              {order.items.map((item, idx) => (
+                                <div key={item.id} className="border-l-2 border-primary pl-3 py-1">
+                                  <div className="flex justify-between items-start">
+                                    <div className="flex-1">
+                                      <p className="font-medium text-sm">
+                                        {item.quantity}x {item.product_name}
+                                      </p>
+                                      
+                                      {item.flavors.length > 0 && (
+                                        <div className="text-xs text-muted-foreground mt-1">
+                                          <span className="font-semibold">Sabores:</span> {item.flavors.map(f => f.flavor_name).join(', ')}
+                                        </div>
+                                      )}
+                                      
+                                      {item.addons.length > 0 && (
+                                        <div className="text-xs text-muted-foreground mt-1">
+                                          <span className="font-semibold">Adicionais:</span> {item.addons.map(a => a.addon_name).join(', ')}
+                                        </div>
+                                      )}
+                                      
+                                      {item.observation && (
+                                        <div className="text-xs text-muted-foreground mt-1">
+                                          <span className="font-semibold">Obs:</span> {item.observation}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="text-right ml-4">
+                                      <p className="text-sm font-medium">R$ {item.subtotal.toFixed(2)}</p>
+                                      <p className="text-xs text-muted-foreground">R$ {item.unit_price.toFixed(2)} un.</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
+                  ))}
               </TableBody>
               </Table>
             </ScrollableTable>
