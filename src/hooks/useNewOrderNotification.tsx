@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQueryClient } from '@tanstack/react-query';
@@ -69,6 +69,19 @@ const requestNotificationPermission = async () => {
 export const useNewOrderNotification = (storeId: string | undefined) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const invalidateTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Função debounced para invalidar queries (evita múltiplas invalidações rápidas)
+  const debouncedInvalidateQueries = () => {
+    if (invalidateTimeoutRef.current) {
+      clearTimeout(invalidateTimeoutRef.current);
+    }
+    
+    invalidateTimeoutRef.current = setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey: ['store-orders'] });
+      console.log('✅ Lista de pedidos atualizada');
+    }, 2000); // Debounce de 2 segundos
+  };
 
   useEffect(() => {
     if (!storeId) return;
@@ -148,10 +161,8 @@ export const useNewOrderNotification = (storeId: string | undefined) => {
             console.log('ℹ️ Notificações do navegador desabilitadas nas configurações ou não suportadas');
           }
           
-          // Invalidar queries para atualizar a lista automaticamente
-          queryClient.invalidateQueries({ queryKey: ['store-orders'] });
-          
-          console.log('✅ Notificação processada e lista atualizada');
+          // Invalidar queries com debounce para atualizar a lista automaticamente
+          debouncedInvalidateQueries();
         }
       )
       .subscribe((status) => {
@@ -160,6 +171,9 @@ export const useNewOrderNotification = (storeId: string | undefined) => {
 
     return () => {
       console.log('🔕 Encerrando escuta de novos pedidos');
+      if (invalidateTimeoutRef.current) {
+        clearTimeout(invalidateTimeoutRef.current);
+      }
       supabase.removeChannel(channel);
     };
   }, [storeId, toast, queryClient]);
