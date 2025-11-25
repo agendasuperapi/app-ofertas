@@ -317,15 +317,30 @@ export const AddonsTab = ({ storeId }: { storeId: string }) => {
   const { categories } = useAddonCategories(storeId);
   const { addons, isLoading, createAddon, updateAddon, deleteAddon, isCreating, isUpdating } = useStoreAddons(storeId);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available' | 'unavailable'>('all');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingAddon, setEditingAddon] = useState<any>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [addonToDelete, setAddonToDelete] = useState<string | null>(null);
 
   const filteredAddons = addons?.filter(addon => {
-    if (categoryFilter === "all") return true;
-    if (categoryFilter === "uncategorized") return !addon.category_id;
-    return addon.category_id === categoryFilter;
+    // Filtro de categoria
+    let matchesCategory = true;
+    if (categoryFilter === "uncategorized") {
+      matchesCategory = !addon.category_id;
+    } else if (categoryFilter !== "all") {
+      matchesCategory = addon.category_id === categoryFilter;
+    }
+    
+    // Filtro de disponibilidade
+    let matchesAvailability = true;
+    if (availabilityFilter === 'available') {
+      matchesAvailability = addon.is_available;
+    } else if (availabilityFilter === 'unavailable') {
+      matchesAvailability = !addon.is_available;
+    }
+    
+    return matchesCategory && matchesAvailability;
   });
 
   const addonsByCategory = filteredAddons?.reduce((acc, addon) => {
@@ -432,22 +447,38 @@ export const AddonsTab = ({ storeId }: { storeId: string }) => {
           </Button>
         </div>
 
-        <div className="space-y-2">
-          <Label>Filtrar por categoria</Label>
-          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Todas as categorias" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas as categorias</SelectItem>
-              <SelectItem value="uncategorized">Sem categoria</SelectItem>
-              {categories?.filter(c => c.is_active).map((category) => (
-                <SelectItem key={category.id} value={category.id}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Filtrar por categoria</Label>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todas as categorias" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas as categorias</SelectItem>
+                <SelectItem value="uncategorized">Sem categoria</SelectItem>
+                {categories?.filter(c => c.is_active).map((category) => (
+                  <SelectItem key={category.id} value={category.id}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Filtrar por status</Label>
+            <Select value={availabilityFilter} onValueChange={(v: any) => setAvailabilityFilter(v)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="available">Disponíveis</SelectItem>
+                <SelectItem value="unavailable">Indisponíveis</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="space-y-4">
