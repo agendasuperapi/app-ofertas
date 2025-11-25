@@ -34,6 +34,8 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
   const [addonQuantities, setAddonQuantities] = useState<Map<string, number>>(new Map());
   const [selectedAddonsByCategory, setSelectedAddonsByCategory] = useState<Record<string, Set<string>>>({});
   const [selectedFlavors, setSelectedFlavors] = useState<Set<string>>(new Set());
+  const snapPoints = [0.86, 1];
+  const [activeSnapPoint, setActiveSnapPoint] = useState<number | string | null>(0.86);
   const { addons } = useProductAddons(product?.id);
   const { flavors } = useProductFlavors(product?.id);
   const { categories } = useAddonCategories(store?.id);
@@ -49,8 +51,15 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
       setAddonQuantities(new Map());
       setSelectedFlavors(new Set());
       setSelectedAddonsByCategory({});
+      setActiveSnapPoint(0.86);
     }
   }, [open]);
+
+  const handleObservationFocus = () => {
+    if (isMobile) {
+      setActiveSnapPoint(1);
+    }
+  };
 
   if (!product || !store) return null;
 
@@ -747,13 +756,14 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
         <Label htmlFor="observation" className="text-sm font-semibold">
           Observações (opcional)
         </Label>
-        <Textarea
-          id="observation"
-          placeholder="Observação..."
-          value={observation}
-          onChange={(e) => setObservation(e.target.value)}
-          className="min-h-16 resize-none text-base md:text-sm"
-        />
+            <Textarea
+              id="observation"
+              placeholder="Observação..."
+              value={observation}
+              onChange={(e) => setObservation(e.target.value)}
+              onFocus={handleObservationFocus}
+              className="min-h-16 resize-none text-base md:text-sm"
+            />
       </div>
 
       {/* Informações Adicionais */}
@@ -795,8 +805,15 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={onOpenChange} shouldScaleBackground={false}>
-        <DrawerContent className="h-[86vh] p-0 mt-0 rounded-t-3xl overflow-hidden border-0 [&>div:first-child]:hidden animate-in slide-in-from-bottom duration-300 touch-manipulation [&_input]:text-base [&_textarea]:text-base">
+      <Drawer 
+        open={open} 
+        onOpenChange={onOpenChange} 
+        shouldScaleBackground={false}
+        snapPoints={snapPoints}
+        activeSnapPoint={activeSnapPoint}
+        setActiveSnapPoint={setActiveSnapPoint}
+      >
+        <DrawerContent className="p-0 mt-0 rounded-t-3xl overflow-hidden border-0 [&>div:first-child]:hidden animate-in slide-in-from-bottom duration-300 touch-manipulation [&_input]:text-base [&_textarea]:text-base">
           <div className="flex flex-col h-full overflow-hidden relative animate-scale-in">
             <DrawerTitle className="sr-only">{product.name}</DrawerTitle>
             
