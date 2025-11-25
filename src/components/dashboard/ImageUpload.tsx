@@ -168,7 +168,7 @@ export const ImageUpload = ({
       const recommendedDimensions = {
         'product-images': { width: 800, height: 450, label: 'Produtos (800x450px)' },
         'store-logos': { width: 400, height: 400, label: 'Logo (400x400px - Quadrada)' },
-        'store-banners': { width: 1200, height: 400, label: 'Banner (1200x400px - 3:1)' },
+        'store-banners': { width: 1800, height: 600, label: 'Banner (1800x600px - 3:1)' },
       };
 
       const recommended = recommendedDimensions[bucket];
@@ -193,7 +193,7 @@ export const ImageUpload = ({
       const compressionSettings = {
         'product-images': { width: 800, height: 450, maxSize: 300 * 1024 }, // 300KB
         'store-logos': { width: 400, height: 400, maxSize: 300 * 1024 }, // 300KB
-        'store-banners': { width: 1200, height: 400, maxSize: 1024 * 1024 }, // 1MB para manter qualidade
+        'store-banners': { width: 1800, height: 600, maxSize: 1024 * 1024 }, // 1MB para manter qualidade
       };
 
       const settings = compressionSettings[bucket];
@@ -290,7 +290,7 @@ export const ImageUpload = ({
       <p className="text-xs text-muted-foreground">
         {bucket === 'product-images' && 'Recomendado: 800x450'}
         {bucket === 'store-logos' && 'Recomendado: 400x400px (quadrada)'}
-        {bucket === 'store-banners' && 'Recomendado: 1200x400px (3:1)'}
+        {bucket === 'store-banners' && 'Recomendado: 1800x600px (3:1)'}
       </p>
       
       {previewUrl ? (
