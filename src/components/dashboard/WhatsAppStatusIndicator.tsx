@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, XCircle, Loader2, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,9 @@ export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProp
   const { isEmployee, permissions, storeId: employeeStoreId } = useEmployeeAccess();
   const [status, setStatus] = useState<ConnectionStatus>('loading');
   const [hasPermission, setHasPermission] = useState<boolean>(false);
+  
+  // Usar useRef para rastrear o status anterior e evitar atualizações desnecessárias
+  const prevStatusRef = useRef<ConnectionStatus>('loading');
 
   useEffect(() => {
     checkPermissions();
@@ -27,8 +30,8 @@ export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProp
     if (hasPermission) {
       checkConnectionStatus();
       
-      // Verificar status a cada 30 segundos
-      const interval = setInterval(checkConnectionStatus, 30000);
+      // Verificar status a cada 60 segundos (otimizado)
+      const interval = setInterval(checkConnectionStatus, 60000);
       
       return () => clearInterval(interval);
     } else {
@@ -72,7 +75,10 @@ export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProp
 
   const checkConnectionStatus = async () => {
     if (!hasPermission) {
-      setStatus('no-permission');
+      if (prevStatusRef.current !== 'no-permission') {
+        setStatus('no-permission');
+        prevStatusRef.current = 'no-permission';
+      }
       return;
     }
 
@@ -91,7 +97,10 @@ export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProp
 
       if (!instanceId) {
         console.log('[WhatsApp Status] Sem instância - definindo como desconectado');
-        setStatus('disconnected');
+        if (prevStatusRef.current !== 'disconnected') {
+          setStatus('disconnected');
+          prevStatusRef.current = 'disconnected';
+        }
         return;
       }
 
@@ -110,11 +119,17 @@ export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProp
         // Se for erro 403, não temos permissão
         if (error.message?.includes('403') || error.message?.includes('Forbidden')) {
           console.warn('[WhatsApp Status] Sem permissão para acessar esta loja');
-          setStatus('no-permission');
+          if (prevStatusRef.current !== 'no-permission') {
+            setStatus('no-permission');
+            prevStatusRef.current = 'no-permission';
+          }
           return;
         }
         console.error('[WhatsApp Status] Erro ao verificar status:', error);
-        setStatus('disconnected');
+        if (prevStatusRef.current !== 'disconnected') {
+          setStatus('disconnected');
+          prevStatusRef.current = 'disconnected';
+        }
         return;
       }
 
@@ -132,7 +147,10 @@ export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProp
 
       if (!rawStatus) {
         console.warn('[WhatsApp Status] Sem campo de status reconhecido na resposta:', data);
-        setStatus('disconnected');
+        if (prevStatusRef.current !== 'disconnected') {
+          setStatus('disconnected');
+          prevStatusRef.current = 'disconnected';
+        }
         return;
       }
 
@@ -149,22 +167,32 @@ export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProp
 
       const hasAny = (set: Set<string>) => tokens.some(t => set.has(t));
 
+      let newStatus: ConnectionStatus;
       if (hasAny(disconnectedSet)) {
         console.log('[WhatsApp Status] ❌ Status DESCONECTADO detectado');
-        setStatus('disconnected');
+        newStatus = 'disconnected';
       } else if (hasAny(connectedSet)) {
         console.log('[WhatsApp Status] ✅ Status CONECTADO detectado');
-        setStatus('connected');
+        newStatus = 'connected';
       } else if (hasAny(connectingSet)) {
         console.log('[WhatsApp Status] ⏳ Status CONECTANDO detectado');
-        setStatus('connecting');
+        newStatus = 'connecting';
       } else {
         console.log('[WhatsApp Status] ❌ Status DESCONECTADO - status não reconhecido:', statusLower);
-        setStatus('disconnected');
+        newStatus = 'disconnected';
+      }
+      
+      // Só atualiza o estado se o valor realmente mudou
+      if (prevStatusRef.current !== newStatus) {
+        setStatus(newStatus);
+        prevStatusRef.current = newStatus;
       }
     } catch (error) {
       console.error('[WhatsApp Status] Erro na verificação:', error);
-      setStatus('disconnected');
+      if (prevStatusRef.current !== 'disconnected') {
+        setStatus('disconnected');
+        prevStatusRef.current = 'disconnected';
+      }
     }
   };
 

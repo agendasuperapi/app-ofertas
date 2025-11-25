@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,10 +79,16 @@ export const WhatsAppIntegration = ({ storeId, store, onStoreUpdate }: WhatsAppI
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<string>("disconnected");
-  const [connectionLogs, setConnectionLogs] = useState<Array<{ time: string; message: string; type: 'info' | 'success' | 'error' }>>([]);
+  // Usar useRef para logs para evitar re-renders desnecessários
+  const connectionLogsRef = useRef<Array<{ time: string; message: string; type: 'info' | 'success' | 'error' }>>([]);
+  const [logsVersion, setLogsVersion] = useState(0); // Contador para forçar atualização visual quando necessário
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
   const [autoReconnectEnabled, setAutoReconnectEnabled] = useState(true);
+  
+  // Refs para prevenir atualizações de estado desnecessárias
+  const prevIsConnectedRef = useRef<boolean>(false);
+  const prevConnectionStatusRef = useRef<string>("");
 
   useEffect(() => {
     checkExistingInstance();
@@ -98,7 +104,11 @@ export const WhatsAppIntegration = ({ storeId, store, onStoreUpdate }: WhatsAppI
 
     const addLog = (message: string, type: 'info' | 'success' | 'error' = 'info') => {
       const time = new Date().toLocaleTimeString('pt-BR');
-      setConnectionLogs(prev => [...prev, { time, message, type }]);
+      connectionLogsRef.current = [...connectionLogsRef.current, { time, message, type }];
+      // Só atualiza o contador visual a cada 5 logs para reduzir re-renders
+      if (connectionLogsRef.current.length % 5 === 0) {
+        setLogsVersion(prev => prev + 1);
+      }
     };
 
     const performHealthCheck = async () => {
@@ -121,8 +131,15 @@ export const WhatsAppIntegration = ({ storeId, store, onStoreUpdate }: WhatsAppI
         const connected = isConnectedState(data?.status);
         
         if (connected) {
-          setIsConnected(true);
-          setConnectionStatus(data.status);
+          // Só atualiza estado se realmente mudou
+          if (prevIsConnectedRef.current !== true) {
+            setIsConnected(true);
+            prevIsConnectedRef.current = true;
+          }
+          if (prevConnectionStatusRef.current !== data.status) {
+            setConnectionStatus(data.status);
+            prevConnectionStatusRef.current = data.status;
+          }
           setReconnectAttempts(0);
           setIsReconnecting(false);
           addLog('✅ Health check: Conexão ativa', 'success');
@@ -218,8 +235,8 @@ export const WhatsAppIntegration = ({ storeId, store, onStoreUpdate }: WhatsAppI
       }, delay);
     };
 
-    // Health check a cada 15 segundos (mais frequente para detecção rápida)
-    healthCheckInterval = setInterval(performHealthCheck, 15000);
+    // Health check a cada 60 segundos (otimizado para reduzir re-renders)
+    healthCheckInterval = setInterval(performHealthCheck, 60000);
     
     // Executar primeiro check imediatamente
     performHealthCheck();
@@ -335,7 +352,8 @@ export const WhatsAppIntegration = ({ storeId, store, onStoreUpdate }: WhatsAppI
   const checkConnectionStatus = async (instance: string) => {
     const addLog = (message: string, type: 'info' | 'success' | 'error' = 'info') => {
       const time = new Date().toLocaleTimeString('pt-BR');
-      setConnectionLogs(prev => [...prev, { time, message, type }]);
+      connectionLogsRef.current = [...connectionLogsRef.current, { time, message, type }];
+      setLogsVersion(prev => prev + 1);
     };
 
     try {
@@ -362,8 +380,15 @@ export const WhatsAppIntegration = ({ storeId, store, onStoreUpdate }: WhatsAppI
           isConnected: connected
         });
         
-        setConnectionStatus(data.status || 'unknown');
-        setIsConnected(connected);
+        // Só atualiza estado se realmente mudou
+        if (prevConnectionStatusRef.current !== (data.status || 'unknown')) {
+          setConnectionStatus(data.status || 'unknown');
+          prevConnectionStatusRef.current = data.status || 'unknown';
+        }
+        if (prevIsConnectedRef.current !== connected) {
+          setIsConnected(connected);
+          prevIsConnectedRef.current = connected;
+        }
         
         if (connected) {
           addLog('✅ WhatsApp conectado com sucesso!', 'success');
@@ -803,7 +828,7 @@ await invokeEvolution({
                 </Button>
               </div>
 
-              {connectionLogs.length > 0 && (
+              {connectionLogsRef.current.length > 0 && (
                 <div className="p-4 bg-muted rounded-lg space-y-2">
                   <div className="flex items-center gap-2 mb-2">
                     <MessageSquare className="w-4 h-4" />
@@ -811,7 +836,10 @@ await invokeEvolution({
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      onClick={() => setConnectionLogs([])}
+                      onClick={() => {
+                        connectionLogsRef.current = [];
+                        setLogsVersion(prev => prev + 1);
+                      }}
                       className="ml-auto h-6 text-xs"
                     >
                       Limpar
@@ -819,7 +847,7 @@ await invokeEvolution({
                   </div>
                   <ScrollArea className="h-[200px] w-full rounded border bg-background p-3">
                     <div className="space-y-2 text-xs font-mono">
-                      {connectionLogs.map((log, index) => (
+                      {connectionLogsRef.current.map((log, index) => (
                         <div 
                           key={index} 
                           className={`${
