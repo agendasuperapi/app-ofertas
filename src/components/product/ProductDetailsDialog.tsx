@@ -39,6 +39,8 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
   const { categories } = useAddonCategories(store?.id);
   
   const observationRef = useRef<HTMLTextAreaElement>(null);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isScrollingRef = useRef(false);
 
   const maxFlavors = product?.max_flavors || 1;
   const hasFlavors = product?.is_pizza && flavors && flavors.length > 0;
@@ -51,6 +53,10 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
       setAddonQuantities(new Map());
       setSelectedFlavors(new Set());
       setSelectedAddonsByCategory({});
+      isScrollingRef.current = false;
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
     }
   }, [open]);
 
@@ -59,16 +65,43 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
   const currentPrice = product.promotional_price || product.price || 0;
   const hasDiscount = product.promotional_price && product.promotional_price < product.price;
 
-  // Handler para scroll automático em mobile quando o campo de observação recebe foco
+  // Handler aprimorado para scroll automático em mobile
   const handleObservationFocus = () => {
-    if (isMobile && observationRef.current) {
-      setTimeout(() => {
-        observationRef.current?.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'center' 
-        });
-      }, 300);
+    if (!isMobile || !observationRef.current || isScrollingRef.current) return;
+    
+    isScrollingRef.current = true;
+    
+    // Limpa timeout anterior se existir
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
     }
+    
+    // Usa requestAnimationFrame para garantir que o scroll ocorra no momento certo
+    scrollTimeoutRef.current = setTimeout(() => {
+      requestAnimationFrame(() => {
+        if (observationRef.current) {
+          const element = observationRef.current;
+          const rect = element.getBoundingClientRect();
+          const viewportHeight = window.innerHeight;
+          const keyboardOffset = viewportHeight * 0.5; // Assume que o teclado ocupa ~50% da tela
+          const isInView = rect.top >= 80 && rect.bottom <= (viewportHeight - keyboardOffset);
+          
+          // Só faz scroll se o elemento não estiver totalmente visível
+          if (!isInView) {
+            element.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center',
+              inline: 'nearest'
+            });
+          }
+          
+          // Reset flag após animação
+          setTimeout(() => {
+            isScrollingRef.current = false;
+          }, 600);
+        }
+      });
+    }, 350);
   };
 
   const handleAddonToggle = (addonId: string, categoryId?: string, allowQuantity?: boolean) => {
@@ -757,7 +790,7 @@ export function ProductDetailsDialog({ product, store, open, onOpenChange }: Pro
 
 
       {/* Observação */}
-      <div className="space-y-1.5 px-4 md:px-0 pb-32 md:pb-0">
+      <div className="space-y-1.5 px-4 md:px-0 pb-24 md:pb-0">
         <Label htmlFor="observation" className="text-sm font-semibold">
           Observações (opcional)
         </Label>
