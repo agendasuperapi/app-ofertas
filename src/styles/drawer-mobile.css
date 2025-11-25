@@ -50,10 +50,10 @@ body.keyboard-open::after {
     touch-action: pan-y !important;
   }
 
-  /* Ajuste do drawer quando teclado está aberto */
+  /* Ajuste do drawer quando teclado está aberto - move para cima sem mudar altura */
   body.keyboard-open [data-vaul-drawer] {
-    /* Mantém o drawer visível acima do teclado */
-    max-height: calc(var(--initial-viewport-height, 100vh) - var(--keyboard-height, 0px)) !important;
+    transform: translateY(calc(-1 * var(--keyboard-height, 0px))) !important;
+    transition: transform 0.3s ease-out;
   }
 
   /* Overlay do drawer */
