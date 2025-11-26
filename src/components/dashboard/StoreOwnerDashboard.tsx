@@ -4479,12 +4479,8 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
 
               <TabsContent value="edit">
                 <div className="space-y-6">
-                  <Tabs defaultValue="templates" className="w-full">
+                  <Tabs defaultValue="adicionais" className="w-full">
                     <TabsList className="grid w-full grid-cols-3 mb-6">
-                      <TabsTrigger value="templates" className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4" />
-                        Templates
-                      </TabsTrigger>
                       <TabsTrigger value="adicionais" className="flex items-center gap-2">
                         <Plus className="w-4 h-4" />
                         Adicionais
@@ -4493,11 +4489,11 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                         <Pizza className="w-4 h-4" />
                         Sabores
                       </TabsTrigger>
+                      <TabsTrigger value="templates" className="flex items-center gap-2">
+                        <Sparkles className="w-4 h-4" />
+                        Templates
+                      </TabsTrigger>
                     </TabsList>
-
-                    <TabsContent value="templates">
-                      <TemplatesTab storeId={myStore.id} />
-                    </TabsContent>
 
                     <TabsContent value="adicionais">
                       <div className="space-y-6">
@@ -4526,6 +4522,10 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
 
                     <TabsContent value="sabores">
                       <ProductFlavorsManagement storeId={myStore.id} />
+                    </TabsContent>
+
+                    <TabsContent value="templates">
+                      <TemplatesTab storeId={myStore.id} />
                     </TabsContent>
                   </Tabs>
                 </div>
