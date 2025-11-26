@@ -513,28 +513,40 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
   const handleDeleteClick = async (id: string, name: string) => {
     // Buscar todos os produtos que têm esse adicional (mesmo nome)
     try {
-      const { data: linkedAddons, error } = await supabase
+      // Primeiro buscar todos os addons com esse nome
+      const { data: linkedAddons, error: addonsError } = await supabase
         .from('product_addons')
-        .select(`
-          id,
-          name,
-          product_id,
-          product:products!inner(
-            id,
-            name,
-            store_id
-          )
-        `)
-        .eq('name', name)
-        .eq('product.store_id', storeId);
+        .select('id, name, product_id')
+        .eq('name', name);
 
-      if (error) throw error;
+      if (addonsError) throw addonsError;
 
-      const linkedProducts = linkedAddons?.map((addon: any) => ({
-        id: addon.id,
-        name: addon.product.name,
-        product_id: addon.product_id,
-      })) || [];
+      if (!linkedAddons || linkedAddons.length === 0) {
+        setConfirmDelete({ id, name, linkedProducts: [] });
+        return;
+      }
+
+      // Buscar informações dos produtos
+      const productIds = linkedAddons.map(addon => addon.product_id);
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('id, name, store_id')
+        .in('id', productIds)
+        .eq('store_id', storeId);
+
+      if (productsError) throw productsError;
+
+      // Combinar os dados
+      const linkedProducts = linkedAddons
+        .map((addon: any) => {
+          const product = products?.find(p => p.id === addon.product_id);
+          return product ? {
+            id: addon.id,
+            name: product.name,
+            product_id: addon.product_id,
+          } : null;
+        })
+        .filter(Boolean) as Array<{ id: string; name: string; product_id: string }>;
 
       setConfirmDelete({ id, name, linkedProducts });
     } catch (error) {
