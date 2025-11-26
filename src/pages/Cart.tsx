@@ -78,6 +78,7 @@ export default function Cart() {
   const cartItemsRef = useRef<HTMLDivElement>(null);
   const paymentSectionRef = useRef<HTMLDivElement>(null);
   const pickupLocationRef = useRef<HTMLDivElement>(null);
+  const authSectionRef = useRef<HTMLDivElement>(null);
 
   // Reset email exists alert when email changes
   useEffect(() => {
@@ -771,7 +772,14 @@ export default function Cart() {
             <Button
               variant="outline"
               onClick={() => {
-                deliveryTypeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                if (!user) {
+                  // Se não estiver logado, rola para a seção de criar conta
+                  authSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  setCurrentStep(1);
+                } else {
+                  // Se já estiver logado, rola para a seção de tipo de entrega
+                  deliveryTypeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
               }}
               className="gap-2 w-full"
             >
@@ -922,6 +930,7 @@ export default function Cart() {
                 {/* Step 1: Authentication Only */}
                 {currentStep === 1 && (
                   <motion.div
+                    ref={authSectionRef}
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
