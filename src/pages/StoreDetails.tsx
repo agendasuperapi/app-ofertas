@@ -1007,10 +1007,8 @@ export default function StoreDetails() {
                                 whileHover={{ scale: 1.15 }}
                                 src={product.image_url} 
                                 alt={product.name}
-                                className="w-full h-full object-cover animate-shine transition-transform duration-500 ease-out"
+                                className="w-full h-full object-cover transition-transform duration-500 ease-out"
                               />
-                              {/* Enhanced hover overlay */}
-                              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                               {product.promotional_price && (
                                 <motion.div
                                   initial={{ scale: 0, rotate: -12 }}
@@ -1153,10 +1151,8 @@ export default function StoreDetails() {
                                 whileHover={{ scale: 1.15 }}
                                 src={product.image_url} 
                                 alt={product.name}
-                                className="w-full h-full object-cover animate-shine transition-transform duration-500 ease-out"
+                                className="w-full h-full object-cover transition-transform duration-500 ease-out"
                               />
-                              {/* Enhanced hover overlay */}
-                              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                               {product.promotional_price && (
                                 <div className="absolute top-2 left-2 bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold z-10 shadow-xl animate-pulse">
                                   OFERTA
