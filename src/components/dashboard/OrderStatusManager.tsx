@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, GripVertical, Save, AlertCircle, Edit } from "lucide-react";
+import { Plus, Trash2, GripVertical, Save, AlertCircle, Edit, RotateCcw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useEmployeeAccess } from "@/hooks/useEmployeeAccess";
@@ -25,6 +25,89 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { arrayMove } from "@dnd-kit/sortable";
+
+const defaultWhatsAppMessages: Record<string, string> = {
+  pendente: `*PEDIDO {{store_name}}.*
+
+Olá {{customer_name}}! 
+
+Recebemos seu pedido: *{{order_number}}*
+📌*Status: Pendente*
+
+---------------------------------------
+🛍*RESUMO DO PEDIDO*
+---------------------------------------
+
+{{items}}
+
+🛒 TOTAL PRODUTOS: {{subtotal}}
+🏍 TAXA  ENTREGA : {{delivery_fee}}
+------------------------------
+💵 TOTAL PEDIDO  : {{total}}
+
+💰 FORMA PAG.: {{payment_method}}
+
+📌 *{{delivery_type}}:*
+ {{delivery_address}}
+ {{pickup_address}}
+
+🛍️ *VISITE NOSSO SITE:*
+{{store_url}}
+
+*Salve nosso número nos seus contatos para não perder nenhuma atualização e novidades.*`,
+  
+  confirmado: `*PEDIDO {{store_name}}.*
+
+Olá {{customer_name}}
+Seu pedido {{order_number}} foi confirmado com sucesso!
+Já estamos preparando tudo com carinho.
+
+🛍️ *VISITE NOSSA VITRINE DE OFERTAS*
+{{store_url}}`,
+  
+  preparando: `*PEDIDO {{store_name}}.*
+
+Olá {{customer_name}}
+Seu pedido #{{order_number}} está sendo preparado!
+
+🛍️ *VISITE NOSSA VITRINE DE OFERTAS*
+{{store_url}}`,
+  
+  pronto: `*PEDIDO {{store_name}}.*
+
+Olá {{customer_name}}
+Seu pedido #{{order_number}} Está Aguardando retirada.
+
+📍*ENDEREÇO RETIRADA*
+• {{pickup_address}} -
+
+🛍️ *VISITE NOSSA VITRINE DE OFERTAS*
+{{store_url}}`,
+  
+  saiu_para_entrega: `*PEDIDO {{store_name}}.*
+
+Olá {{customer_name}}
+Boa notícia seu pedido #{{order_number}} saiu para entrega!
+Chegará em breve.
+
+🛍️ *VISITE NOSSA LOJA*
+{{store_url}}`,
+  
+  entregue: `*PEDIDO {{store_name}}.*
+
+Olá {{customer_name}}!
+Seu pedido #{{order_number}} foi entregue! Obrigado pela preferência!
+
+🛍️ Visite nossa Vitrine de ofertas e não perca as promoções do dia.
+
+Acesse: {{store_url}}`,
+  
+  cancelado: `*PEDIDO {{store_name}}.*
+
+Olá {{customer_name}}
+Pedido #{{order_number}} foi cancelado. 
+Entre em contato para mais informações.`
+};
 
 interface OrderStatus {
   id: string;
@@ -249,6 +332,29 @@ export const OrderStatusManager = ({ storeId }: OrderStatusManagerProps) => {
     setIsDialogOpen(true);
   };
 
+  const handleRestoreDefaultMessage = () => {
+    if (!editingStatus) return;
+    
+    const defaultMessage = defaultWhatsAppMessages[editingStatus.status_key];
+    
+    if (defaultMessage) {
+      setEditingStatus({
+        ...editingStatus,
+        whatsapp_message: defaultMessage
+      });
+      toast({
+        title: "Mensagem restaurada",
+        description: "A mensagem padrão foi restaurada com sucesso."
+      });
+    } else {
+      toast({
+        title: "Mensagem padrão não encontrada",
+        description: "Não existe mensagem padrão para este status.",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return <div>Carregando...</div>;
   }
@@ -402,6 +508,18 @@ export const OrderStatusManager = ({ storeId }: OrderStatusManagerProps) => {
                         placeholder="Olá {{customer_name}}! Seu pedido #{{order_number}} está sendo preparado..."
                         rows={10}
                       />
+                      <div className="flex justify-end mt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleRestoreDefaultMessage}
+                          disabled={!defaultWhatsAppMessages[editingStatus.status_key]}
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" />
+                          Restaurar Padrão
+                        </Button>
+                      </div>
                       <Alert>
                         <AlertCircle className="h-4 w-4" />
                         <AlertDescription>
