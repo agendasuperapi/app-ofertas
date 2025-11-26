@@ -250,11 +250,16 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available' | 'unavailable'>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [confirmDelete, setConfirmDelete] = useState<{ 
-    id: string; 
+  const [confirmDelete, setConfirmDelete] = useState<{
+    id: string;
     name: string;
     linkedProducts: Array<{ id: string; name: string; product_id: string }>;
   } | null>(null);
+
+  // Debug: Log addons carregados
+  useEffect(() => {
+    console.log(`[ProductAddonsManager] 📦 Addons carregados do produto ${productId}:`, addons?.length || 0, addons);
+  }, [addons, productId]);
   const [selectedProductsToDelete, setSelectedProductsToDelete] = useState<string[]>([]);
 
   // Auto-selecionar todos os produtos quando o dialog de exclusão abrir
@@ -526,7 +531,11 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
   };
 
   const handleDeleteClick = async (id: string, name: string) => {
-    console.log(`[Delete Addon] 🔴 INICIANDO EXCLUSÃO - ID: ${id}, Nome: "${name}"`);
+    console.log(`[Delete Addon] ====== FUNÇÃO CHAMADA ======`);
+    console.log(`[Delete Addon] 🔴 ID: ${id}`);
+    console.log(`[Delete Addon] 🔴 Nome: "${name}"`);
+    console.log(`[Delete Addon] 🔴 StoreId: ${storeId}`);
+    console.log(`[Delete Addon] 🔴 ProductId: ${productId}`);
     
     // Buscar todos os produtos que têm esse adicional (busca case-insensitive)
     try {
@@ -589,7 +598,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
       console.log(`[Delete Addon] 🔍 Passo 3: Combinando dados de produtos e adicionais...`);
       
       // Combinar os dados
-      const linkedProducts = linkedAddons
+      let linkedProducts = linkedAddons
         .map((addon: any) => {
           const product = storeProducts.find(p => p.id === addon.product_id);
           return product ? {
@@ -601,8 +610,29 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
         .filter(Boolean) as Array<{ id: string; name: string; product_id: string }>;
 
       console.log(`[Delete Addon] 📋 Produtos vinculados preparados:`, linkedProducts.length, linkedProducts);
-      console.log(`[Delete Addon] ✅ Abrindo dialog de confirmação...`);
       
+      // Se não há produtos vinculados mas o adicional existe no produto atual, mostrar o produto atual
+      if (linkedProducts.length === 0) {
+        console.log(`[Delete Addon] ⚠️ Nenhum produto vinculado. Buscando produto atual ${productId}...`);
+        const { data: currentProduct, error: currentProductError } = await supabase
+          .from('products')
+          .select('id, name')
+          .eq('id', productId)
+          .single();
+
+        if (currentProductError) {
+          console.error(`[Delete Addon] ❌ Erro ao buscar produto atual:`, currentProductError);
+        } else if (currentProduct) {
+          console.log(`[Delete Addon] ✅ Produto atual encontrado:`, currentProduct);
+          linkedProducts = [{
+            id: id,
+            name: currentProduct.name,
+            product_id: productId
+          }];
+        }
+      }
+      
+      console.log(`[Delete Addon] ✅ Abrindo dialog de confirmação com ${linkedProducts.length} produto(s)...`);
       setConfirmDelete({ id, name, linkedProducts });
       console.log(`[Delete Addon] ✅ Dialog state atualizado!`);
     } catch (error) {
@@ -1148,7 +1178,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
                       key={addon.id}
                       addon={addon}
                       onEdit={handleEdit}
-                      onDelete={(id) => handleDeleteClick(id, addon.name)}
+                      onDelete={handleDeleteClick}
                       onToggleAvailability={handleToggleAvailability}
                       isDeleting={isDeleting}
                     />
