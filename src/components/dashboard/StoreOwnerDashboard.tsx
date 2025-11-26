@@ -4591,10 +4591,6 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                     <DollarSign className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="truncate">PIX</span>
                   </TabsTrigger>
-                  <TabsTrigger value="layout" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
-                    <LayoutGrid className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">Layout</span>
-                  </TabsTrigger>
                   <TabsTrigger value="order-status" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
                     <Menu className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="truncate">Status dos Pedidos</span>
@@ -4602,6 +4598,10 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                   <TabsTrigger value="notifications" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
                     <Shield className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="truncate">Permissões</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="layout" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
+                    <LayoutGrid className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                    <span className="truncate">Layout</span>
                   </TabsTrigger>
                   <TabsTrigger value="security" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
                     <Lock className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
