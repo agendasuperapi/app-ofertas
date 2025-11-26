@@ -18,7 +18,7 @@ BEGIN
       '#F59E0B',
       0,
       true,
-      E'Olá {{customer_name}}! \n\nRecebemos seu pedido: *{{order_number}}*\n📌*Status: Pendente*\n\n---------------------------------------\n🛍RESUMO DO PEDIDO\n---------------------------------------\n\n{{items}}\n\n🛒 TOTAL PRODUTOS: {{subtotal}}\n🏍 TAXA  ENTREGA : {{delivery_fee}}\n------------------------------\n💵 TOTAL PEDIDO  : {{total}}\n\n💰 *FORMA PAG.: {{payment_method}} *\n\n\n📌 *{{delivery_location_label}}:* \n------------------------------\n*ENDEREÇO:* {{address}}'
+      E'*PEDIDO {{store_name}}.*\n\nOlá {{customer_name}}! \n\nRecebemos seu pedido: *{{order_number}}*\n📌*Status: Pendente*\n\n---------------------------------------\n🛍RESUMO DO PEDIDO\n---------------------------------------\n\n{{items}}\n\n🛒 TOTAL PRODUTOS: {{subtotal}}\n🏍 TAXA  ENTREGA : {{delivery_fee}}\n------------------------------\n💵 TOTAL PEDIDO  : {{total}}\n\n💰 *FORMA PAG.: {{payment_method}} *\n\n📌 *ENDEREÇO:*\n {{delivery_address}}\n  {{pickup_address}}\n\n🛍️ *VISITE NOSSA VITRINE DE OFERTAS*\nhttps://ofertas.app/drogaclaraofertas\n\n*Salve nosso número nos seus contatos para não perder nenhuma atualização e novidades.*'
     ),
     
     -- Status 2: Confirmado
@@ -29,7 +29,7 @@ BEGIN
       '#3B82F6',
       1,
       true,
-      E'Pedido {{order_number}} confirmado! Estamos preparando seu pedido.'
+      E'*PEDIDO {{store_name}}.*\n\nOlá  {{customer_name}} \nSeu pedido {{order_number}} foi confirmado com sucesso! \nJá estamos preparando tudo com carinho.\n\n🛍️ *VISITE NOSSA VITRINE DE OFERTAS*\nhttps://ofertas.app/drogaclaraofertas'
     ),
     
     -- Status 3: Preparando
@@ -40,18 +40,18 @@ BEGIN
       '#9333EA',
       2,
       true,
-      E'Seu pedido #{{order_number}} está sendo preparado com carinho!'
+      E'*PEDIDO {{store_name}}.*\n\nOlá {{customer_name}}\nSeu pedido #{{order_number}} está sendo preparado!\n\n🛍️ *VISITE NOSSA VITRINE DE OFERTAS*\nhttps://ofertas.app/drogaclaraofertas'
     ),
     
-    -- Status 4: Pronto
+    -- Status 4: Pronto / Aguardando Retirada
     (
       NEW.id,
       'pronto',
-      'Pronto',
+      'Aguardando Retirada',
       '#10B981',
       3,
       true,
-      E'Pedido #{{order_number}} pronto! {{#if_delivery}}Já saiu para entrega!{{else}}Pode vir buscar!{{/if_delivery}}'
+      E'*PEDIDO {{store_name}}.*\n\nOlá {{customer_name}} \nSeu pedido #{{order_number}} Está Aguardando retirada.\n\n📍*ENDEREÇO RETIRADA*\n• {{pickup_address}} -\n\n🛍️ *VISITE NOSSA VITRINE DE OFERTAS*\nhttps://ofertas.app/drogaclaraofertas'
     ),
     
     -- Status 5: Saiu para Entrega
@@ -62,7 +62,7 @@ BEGIN
       '#06B6D4',
       4,
       true,
-      E'Seu pedido #{{order_number}} saiu para entrega! Chegará em breve.'
+      E'*PEDIDO {{store_name}}.*\n\nOlá {{customer_name}} \nBoa notícia seu pedido #{{order_number}} saiu para entrega! \nChegará em breve.\n\n🛍️ *VISITE NOSSA LOJA*\nhttps://ofertas.app/drogaclaraofertas'
     ),
     
     -- Status 6: Entregue
@@ -73,7 +73,7 @@ BEGIN
       '#10B981',
       5,
       true,
-      E'Pedido #{{order_number}} entregue! Obrigado pela preferência! {{store_url}}'
+      E'*PEDIDO {{store_name}}.*\n\nOlá {{customer_name}}! \nSeu pedido #{{order_number}} foi entregue! Obrigado pela preferência!\n\n🛍️ Visite nossa Vitrine de ofertas e não perca as promoções do dia.\n\nAcesse: https://ofertas.app/drogaclaraofertas'
     ),
     
     -- Status 7: Cancelado
@@ -84,7 +84,7 @@ BEGIN
       '#EF4444',
       6,
       true,
-      E'Pedido #{{order_number}} foi cancelado. Entre em contato para mais informações.'
+      E'*PEDIDO {{store_name}}.*\n\nOlá {{customer_name}}\nPedido #{{order_number}} foi cancelado. \nEntre em contato para mais informações.'
     );
   
   RETURN NEW;
@@ -126,7 +126,7 @@ BEGIN
           '#F59E0B',
           0,
           true,
-          E'Olá {{customer_name}}! \n\nRecebemos seu pedido: *{{order_number}}*\n📌*Status: Pendente*\n\n---------------------------------------\n🛍RESUMO DO PEDIDO\n---------------------------------------\n\n{{items}}\n\n🛒 TOTAL PRODUTOS: {{subtotal}}\n🏍 TAXA  ENTREGA : {{delivery_fee}}\n------------------------------\n💵 TOTAL PEDIDO  : {{total}}\n\n💰 *FORMA PAG.: {{payment_method}} *\n\n\n📌 *{{delivery_location_label}}:* \n------------------------------\n*ENDEREÇO:* {{address}}'
+          E'*PEDIDO {{store_name}}.*\n\nOlá {{customer_name}}! \n\nRecebemos seu pedido: *{{order_number}}*\n📌*Status: Pendente*\n\n---------------------------------------\n🛍RESUMO DO PEDIDO\n---------------------------------------\n\n{{items}}\n\n🛒 TOTAL PRODUTOS: {{subtotal}}\n🏍 TAXA  ENTREGA : {{delivery_fee}}\n------------------------------\n💵 TOTAL PEDIDO  : {{total}}\n\n💰 *FORMA PAG.: {{payment_method}} *\n\n📌 *ENDEREÇO:*\n {{delivery_address}}\n  {{pickup_address}}\n\n🛍️ *VISITE NOSSA VITRINE DE OFERTAS*\nhttps://ofertas.app/drogaclaraofertas\n\n*Salve nosso número nos seus contatos para não perder nenhuma atualização e novidades.*'
         ),
         (
           store_record.id,
@@ -135,7 +135,7 @@ BEGIN
           '#3B82F6',
           1,
           true,
-          E'Pedido {{order_number}} confirmado! Estamos preparando seu pedido.'
+          E'*PEDIDO {{store_name}}.*\n\nOlá  {{customer_name}} \nSeu pedido {{order_number}} foi confirmado com sucesso! \nJá estamos preparando tudo com carinho.\n\n🛍️ *VISITE NOSSA VITRINE DE OFERTAS*\nhttps://ofertas.app/drogaclaraofertas'
         ),
         (
           store_record.id,
@@ -144,16 +144,16 @@ BEGIN
           '#9333EA',
           2,
           true,
-          E'Seu pedido #{{order_number}} está sendo preparado com carinho!'
+          E'*PEDIDO {{store_name}}.*\n\nOlá {{customer_name}}\nSeu pedido #{{order_number}} está sendo preparado!\n\n🛍️ *VISITE NOSSA VITRINE DE OFERTAS*\nhttps://ofertas.app/drogaclaraofertas'
         ),
         (
           store_record.id,
           'pronto',
-          'Pronto',
+          'Aguardando Retirada',
           '#10B981',
           3,
           true,
-          E'Pedido #{{order_number}} pronto! {{#if_delivery}}Já saiu para entrega!{{else}}Pode vir buscar!{{/if_delivery}}'
+          E'*PEDIDO {{store_name}}.*\n\nOlá {{customer_name}} \nSeu pedido #{{order_number}} Está Aguardando retirada.\n\n📍*ENDEREÇO RETIRADA*\n• {{pickup_address}} -\n\n🛍️ *VISITE NOSSA VITRINE DE OFERTAS*\nhttps://ofertas.app/drogaclaraofertas'
         ),
         (
           store_record.id,
@@ -162,7 +162,7 @@ BEGIN
           '#06B6D4',
           4,
           true,
-          E'Seu pedido #{{order_number}} saiu para entrega! Chegará em breve.'
+          E'*PEDIDO {{store_name}}.*\n\nOlá {{customer_name}} \nBoa notícia seu pedido #{{order_number}} saiu para entrega! \nChegará em breve.\n\n🛍️ *VISITE NOSSA LOJA*\nhttps://ofertas.app/drogaclaraofertas'
         ),
         (
           store_record.id,
@@ -171,7 +171,7 @@ BEGIN
           '#10B981',
           5,
           true,
-          E'Pedido #{{order_number}} entregue! Obrigado pela preferência! {{store_url}}'
+          E'*PEDIDO {{store_name}}.*\n\nOlá {{customer_name}}! \nSeu pedido #{{order_number}} foi entregue! Obrigado pela preferência!\n\n🛍️ Visite nossa Vitrine de ofertas e não perca as promoções do dia.\n\nAcesse: https://ofertas.app/drogaclaraofertas'
         ),
         (
           store_record.id,
@@ -180,7 +180,7 @@ BEGIN
           '#EF4444',
           6,
           true,
-          E'Pedido #{{order_number}} foi cancelado. Entre em contato para mais informações.'
+          E'*PEDIDO {{store_name}}.*\n\nOlá {{customer_name}}\nPedido #{{order_number}} foi cancelado. \nEntre em contato para mais informações.'
         );
       
       RAISE NOTICE 'Created default statuses for store %', store_record.id;
