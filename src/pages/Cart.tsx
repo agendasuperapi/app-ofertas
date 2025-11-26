@@ -769,6 +769,7 @@ export default function Cart() {
             </Button>
             
             <Button
+              variant="outline"
               onClick={() => {
                 deliveryTypeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
               }}
