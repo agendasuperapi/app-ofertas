@@ -751,7 +751,7 @@ export default function Cart() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div ref={cartItemsRef} className="lg:col-span-2 space-y-4">
-            <Button
+          <Button
               variant="outline"
               onClick={() => {
                 console.log('🔍 Navegando para loja, storeSlug:', cart.storeSlug);
@@ -766,6 +766,15 @@ export default function Cart() {
             >
               <Plus className="w-4 h-4" />
               Adicionar Mais Produtos
+            </Button>
+            
+            <Button
+              onClick={() => {
+                deliveryTypeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }}
+              className="gap-2 w-full"
+            >
+              Concluir Pedido
             </Button>
             {cart.items.map((item, index) => (
               <motion.div
