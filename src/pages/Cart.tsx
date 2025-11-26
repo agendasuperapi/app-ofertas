@@ -21,7 +21,7 @@ import { useDeliveryZones } from "@/hooks/useDeliveryZones";
 import { usePickupLocations } from "@/hooks/usePickupLocations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
-import { Minus, Plus, Trash2, ShoppingBag, Clock, Store, Pencil, ArrowLeft, Package, Tag, X, Loader2, Search, MapPin, Eye, EyeOff } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, Clock, Store, Pencil, ArrowLeft, Package, Tag, X, Loader2, Search, MapPin, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { isStoreOpen, getStoreStatusText } from "@/lib/storeUtils";
 import { EditCartItemDialog } from "@/components/cart/EditCartItemDialog";
@@ -774,6 +774,7 @@ export default function Cart() {
               }}
               className="gap-2 w-full"
             >
+              <CheckCircle className="w-4 h-4" />
               Concluir Pedido
             </Button>
             {cart.items.map((item, index) => (
