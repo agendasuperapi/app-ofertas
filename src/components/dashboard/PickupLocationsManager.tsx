@@ -33,7 +33,7 @@ export const PickupLocationsManager = ({ storeId }: PickupLocationsManagerProps)
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("stores")
-        .select("store_street, store_street_number, store_neighborhood, store_city, store_complement")
+        .select("store_street, store_street_number, store_neighborhood, store_city, store_complement, store_address_pickup_enabled")
         .eq("id", storeId)
         .single();
 
@@ -67,7 +67,7 @@ export const PickupLocationsManager = ({ storeId }: PickupLocationsManagerProps)
       storeData.store_city,
       storeData.store_complement
     ].filter(Boolean).join(", "),
-    is_active: true,
+    is_active: storeData.store_address_pickup_enabled ?? true,
     isStoreAddress: true
   } : null;
 
@@ -109,6 +109,24 @@ export const PickupLocationsManager = ({ storeId }: PickupLocationsManagerProps)
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pickup-locations", storeId] });
       toast.success("Status atualizado");
+    },
+    onError: () => {
+      toast.error("Erro ao atualizar status");
+    },
+  });
+
+  const toggleStoreAddressMutation = useMutation({
+    mutationFn: async (is_active: boolean) => {
+      const { error } = await (supabase as any)
+        .from("stores")
+        .update({ store_address_pickup_enabled: is_active })
+        .eq("id", storeId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["store-address", storeId] });
+      toast.success("Status do endereço da loja atualizado");
     },
     onError: () => {
       toast.error("Erro ao atualizar status");
@@ -236,14 +254,18 @@ export const PickupLocationsManager = ({ storeId }: PickupLocationsManagerProps)
                 <div className="text-xs text-muted-foreground">{location.address}</div>
               </div>
               <div className="flex items-center gap-2">
+                <Switch
+                  checked={location.is_active}
+                  onCheckedChange={(checked) => {
+                    if (location.isStoreAddress) {
+                      toggleStoreAddressMutation.mutate(checked);
+                    } else {
+                      toggleLocationMutation.mutate({ id: location.id, is_active: checked });
+                    }
+                  }}
+                />
                 {!location.isStoreAddress && (
                   <>
-                    <Switch
-                      checked={location.is_active}
-                      onCheckedChange={(checked) =>
-                        toggleLocationMutation.mutate({ id: location.id, is_active: checked })
-                      }
-                    />
                     <Button
                       variant="ghost"
                       size="sm"
@@ -263,7 +285,7 @@ export const PickupLocationsManager = ({ storeId }: PickupLocationsManagerProps)
                   </>
                 )}
                 {location.isStoreAddress && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground ml-2">
                     (Padrão da loja)
                   </span>
                 )}

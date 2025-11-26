@@ -1305,6 +1305,7 @@ export type Database = {
           show_whatsapp_on_store_page: boolean | null
           slug: string
           status: Database["public"]["Enums"]["store_status"]
+          store_address_pickup_enabled: boolean | null
           store_cep: string | null
           store_city: string | null
           store_complement: string | null
@@ -1365,6 +1366,7 @@ export type Database = {
           show_whatsapp_on_store_page?: boolean | null
           slug: string
           status?: Database["public"]["Enums"]["store_status"]
+          store_address_pickup_enabled?: boolean | null
           store_cep?: string | null
           store_city?: string | null
           store_complement?: string | null
@@ -1425,6 +1427,7 @@ export type Database = {
           show_whatsapp_on_store_page?: boolean | null
           slug?: string
           status?: Database["public"]["Enums"]["store_status"]
+          store_address_pickup_enabled?: boolean | null
           store_cep?: string | null
           store_city?: string | null
           store_complement?: string | null
