@@ -2896,9 +2896,9 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                     <Button
                       variant="link"
                       className="p-0 h-auto text-primary"
-                      onClick={() => setActiveTab('whatsapp')}
+                      onClick={() => setActiveTab('result')}
                     >
-                      WhatsApp → Status dos Pedidos
+                      Configurações → Status dos Pedidos
                     </Button>
                   </p>
                 </div>
@@ -3291,52 +3291,25 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
         {/* WhatsApp Tab */}
         {myStore?.id && (
           <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6", activeTab !== 'whatsapp' && 'hidden')}>
-            <Tabs defaultValue="integracao" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2 gap-2 bg-muted/50 h-auto p-2">
-                <TabsTrigger value="integracao" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
-                  <MessageSquare className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  <span className="truncate">Integração</span>
-                </TabsTrigger>
-                <TabsTrigger value="etapas" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
-                  <Menu className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  <span className="truncate">Status dos Pedidos</span>
-                </TabsTrigger>
-              </TabsList>
-
-              {/* Integração Tab */}
-              <TabsContent value="integracao">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <WhatsAppIntegration 
-                    storeId={myStore.id} 
-                    store={myStore}
-                    onStoreUpdate={async (data) => {
-                      await updateStore({
-                        id: myStore.id,
-                        name: myStore.name,
-                        slug: myStore.slug,
-                        category: myStore.category,
-                        ...data,
-                      });
-                    }}
-                  />
-                </motion.div>
-              </TabsContent>
-
-              {/* Status dos Pedidos Tab */}
-              <TabsContent value="etapas">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <OrderStatusManager storeId={myStore.id} />
-                </motion.div>
-              </TabsContent>
-            </Tabs>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <WhatsAppIntegration 
+                storeId={myStore.id} 
+                store={myStore}
+                onStoreUpdate={async (data) => {
+                  await updateStore({
+                    id: myStore.id,
+                    name: myStore.name,
+                    slug: myStore.slug,
+                    category: myStore.category,
+                    ...data,
+                  });
+                }}
+              />
+            </motion.div>
           </div>
         )}
 
@@ -4601,7 +4574,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
             transition={{ delay: 0.3 }}
           >
             <Tabs defaultValue="personal" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-7 gap-2 bg-muted/50 h-auto p-2">
+                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-8 gap-2 bg-muted/50 h-auto p-2">
                   <TabsTrigger value="personal" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
                     <User className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="truncate">Dados Pessoais</span>
@@ -4621,6 +4594,10 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                   <TabsTrigger value="layout" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
                     <LayoutGrid className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="truncate">Layout</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="order-status" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
+                    <Menu className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                    <span className="truncate">Status dos Pedidos</span>
                   </TabsTrigger>
                   <TabsTrigger value="notifications" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
                     <Shield className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
@@ -5237,6 +5214,17 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
             transition={{ duration: 0.5 }}
           >
             <SecuritySettings />
+          </motion.div>
+        </TabsContent>
+
+        {/* Order Status Tab */}
+        <TabsContent value="order-status">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            {myStore?.id && <OrderStatusManager storeId={myStore.id} />}
           </motion.div>
         </TabsContent>
 
