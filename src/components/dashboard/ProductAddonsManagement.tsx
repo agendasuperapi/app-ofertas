@@ -887,9 +887,9 @@ export const AddonsTab = ({ storeId }: { storeId: string }) => {
                           title={addon.is_available ? "Inativar" : "Ativar"}
                         >
                           {addon.is_available ? (
-                            <EyeOff className="w-4 h-4" />
+                            <EyeOff className="w-4 h-4 text-red-600" />
                           ) : (
-                            <Power className="w-4 h-4" />
+                            <Power className="w-4 h-4 text-green-600" />
                           )}
                         </Button>
                         <Button
