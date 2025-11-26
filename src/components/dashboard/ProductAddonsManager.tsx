@@ -140,7 +140,11 @@ const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleti
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => onDelete(addon.id, addon.name)}
+            onClick={() => {
+              console.log(`[SortableAddon] 🔴 BOTÃO CLICADO!`, { id: addon.id, name: addon.name });
+              console.log(`[SortableAddon] onDelete função tipo:`, typeof onDelete);
+              onDelete(addon.id, addon.name);
+            }}
             disabled={isDeleting}
             title="Excluir"
             className="text-destructive hover:text-destructive"
@@ -203,6 +207,7 @@ const SortableCategory = ({ category, addons, onEdit, onDelete, onToggleAvailabi
 };
 
 export default function ProductAddonsManager({ productId, storeId }: ProductAddonsManagerProps) {
+  console.log(`[ProductAddonsManager] 🎨 Renderizado - productId: ${productId}, storeId: ${storeId}`);
   const queryClient = useQueryClient();
   const { addons, createAddon, updateAddon, deleteAddon, reorderAddons, isCreating, isDeleting } = useProductAddons(productId);
   const { categories, addCategory, reorderCategories, updateUncategorizedPosition, refetch: refetchCategories } = useAddonCategories(storeId);
@@ -260,6 +265,11 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
   useEffect(() => {
     console.log(`[ProductAddonsManager] 📦 Addons carregados do produto ${productId}:`, addons?.length || 0, addons);
   }, [addons, productId]);
+
+  // Debug: Log confirmDelete state
+  useEffect(() => {
+    console.log(`[ProductAddonsManager] 🔔 confirmDelete mudou:`, confirmDelete);
+  }, [confirmDelete]);
   const [selectedProductsToDelete, setSelectedProductsToDelete] = useState<string[]>([]);
 
   // Auto-selecionar todos os produtos quando o dialog de exclusão abrir
