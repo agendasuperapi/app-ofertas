@@ -147,6 +147,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
     // Mapa de fallback de enums comuns para status_key
     const enumToKeyMap: Record<string, string[]> = {
       'pending': ['pendente', 'pending', 'aguardando', 'novo'],
+      'confirmed': ['confirmado', 'confirmed', 'aceito'],
       'preparing': ['preparando', 'preparing', 'separação', 'separacao', 'em_preparacao'],
       'ready': ['pronto', 'ready', 'finalizado'],
       'in_delivery': ['a_caminho', 'out_for_delivery', 'em_entrega', 'saiu_para_entrega'],
@@ -174,6 +175,9 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
       'pending': 'pending',
       'aguardando': 'pending',
       'novo': 'pending',
+      'confirmado': 'confirmed',
+      'aceito': 'confirmed',
+      'confirmed': 'confirmed',
       'preparando': 'preparing',
       'preparing': 'preparing',
       'separação': 'preparing',
@@ -205,17 +209,23 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
   // Helpers para mudança de status conforme permissões
   const canChangeTo = (statusKey: string) => {
     if (hasPermission('orders', 'change_any_status')) return true;
+    
+    // Converter status customizado para enum primeiro
+    const enumStatus = getEnumFromStatusKey(statusKey);
+    
     const map: Record<string, string> = {
-      confirmed: 'change_status_confirmed',
-      preparing: 'change_status_preparing',
-      in_delivery: 'change_status_out_for_delivery',
-      out_for_delivery: 'change_status_out_for_delivery',
-      delivered: 'change_status_delivered',
-      cancelled: 'change_status_cancelled',
-      ready: 'change_status_preparing', // aproximação: pronto ~ preparar concluído
+      'pending': 'change_status_pending',
+      'confirmed': 'change_status_confirmed',
+      'preparing': 'change_status_preparing',
+      'ready': 'change_status_ready',
+      'in_delivery': 'change_status_out_for_delivery',
+      'out_for_delivery': 'change_status_out_for_delivery',
+      'delivered': 'change_status_delivered',
+      'cancelled': 'change_status_cancelled',
     };
-    const perm = map[statusKey];
-    return perm ? hasPermission('orders', perm) : false;
+    
+    const perm = map[enumStatus];
+    return perm ? hasPermission('orders', perm) : true; // Se não encontrar, permite (owner)
   };
 
   const { categories, loading: loadingCategories, addCategory, updateCategory, toggleCategoryStatus, deleteCategory, reorderCategories } = useCategories(myStore?.id);
