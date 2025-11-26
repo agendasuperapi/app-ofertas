@@ -146,7 +146,7 @@ export const ProductFlavorsManager = ({ productId, storeId }: ProductFlavorsMana
     is_available: true,
   });
   const [storeFlavorSearch, setStoreFlavorSearch] = useState('');
-  const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available' | 'unavailable'>('available');
+  const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available' | 'unavailable'>('all');
   const [flavorSearchTerm, setFlavorSearchTerm] = useState('');
   const [newFlavorModalOpen, setNewFlavorModalOpen] = useState(false);
   const [productSearchTerm, setProductSearchTerm] = useState('');
