@@ -5467,76 +5467,65 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
 
                 {storeForm.pix_key && (
                   <div className="space-y-4">
-                    {/* Mostrar switch do PIX Copia e Cola apenas se Chave PIX Fixa não estiver ativo */}
-                    {!storeForm.pix_message_enabled && (
-                      <>
-                        <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
-                          <div className="space-y-0.5">
-                            <Label className="text-base font-medium">PIX Copia e Cola</Label>
-                            <p className="text-sm text-muted-foreground">
-                              Gerar código PIX dinâmico (Copia e Cola) automaticamente
-                            </p>
-                          </div>
-                          <Switch
-                            checked={storeForm.pix_copiacola_message_enabled ?? false}
-                            onCheckedChange={async (checked) => {
-                              setStoreForm({ ...storeForm, pix_copiacola_message_enabled: checked });
-                              if (myStore?.id) {
-                                await updateStore({
-                                  id: myStore.id,
-                                  name: myStore.name,
-                                  slug: myStore.slug,
-                                  category: myStore.category,
-                                  pix_copiacola_message_enabled: checked,
-                                });
-                                toast({
-                                  title: checked ? "PIX Copia e Cola ativado" : "PIX Copia e Cola desativado",
-                                  description: checked 
-                                    ? "O código PIX Copia e Cola será gerado automaticamente" 
-                                    : "O código PIX Copia e Cola não será mais gerado",
-                                });
-                              }
-                            }}
-                          />
-                        </div>
-                        
-                      </>
-                    )}
+                    <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
+                      <div className="space-y-0.5">
+                        <Label className="text-base font-medium">PIX Copia e Cola</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Gerar código PIX dinâmico (Copia e Cola) automaticamente
+                        </p>
+                      </div>
+                      <Switch
+                        checked={storeForm.pix_copiacola_message_enabled ?? false}
+                        onCheckedChange={async (checked) => {
+                          setStoreForm({ ...storeForm, pix_copiacola_message_enabled: checked });
+                          if (myStore?.id) {
+                            await updateStore({
+                              id: myStore.id,
+                              name: myStore.name,
+                              slug: myStore.slug,
+                              category: myStore.category,
+                              pix_copiacola_message_enabled: checked,
+                            });
+                            toast({
+                              title: checked ? "PIX Copia e Cola ativado" : "PIX Copia e Cola desativado",
+                              description: checked 
+                                ? "O código PIX Copia e Cola será gerado automaticamente" 
+                                : "O código PIX Copia e Cola não será mais gerado",
+                            });
+                          }
+                        }}
+                      />
+                    </div>
 
-                    {/* Mostrar switch da Chave PIX Fixa apenas se PIX Copia e Cola não estiver ativo */}
-                    {!storeForm.pix_copiacola_message_enabled && (
-                      <>
-                        <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
-                          <div className="space-y-0.5">
-                            <Label className="text-base font-medium">Chave PIX Fixa</Label>
-                            <p className="text-sm text-muted-foreground">
-                              Mostrar chave PIX estática para o cliente copiar manualmente
-                            </p>
-                          </div>
-                          <Switch
-                            checked={storeForm.pix_message_enabled ?? false}
-                            onCheckedChange={async (checked) => {
-                              setStoreForm({ ...storeForm, pix_message_enabled: checked });
-                              if (myStore?.id) {
-                                await updateStore({
-                                  id: myStore.id,
-                                  name: myStore.name,
-                                  slug: myStore.slug,
-                                  category: myStore.category,
-                                  pix_message_enabled: checked,
-                                });
-                                toast({
-                                  title: checked ? "Chave PIX Fixa ativada" : "Chave PIX Fixa desativada",
-                                  description: checked 
-                                    ? "A chave PIX estática será exibida aos clientes" 
-                                    : "A chave PIX estática não será mais exibida",
-                                });
-                              }
-                            }}
-                          />
-                        </div>
-                      </>
-                    )}
+                    <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
+                      <div className="space-y-0.5">
+                        <Label className="text-base font-medium">Chave PIX Fixa</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Mostrar chave PIX estática para o cliente copiar manualmente
+                        </p>
+                      </div>
+                      <Switch
+                        checked={storeForm.pix_message_enabled ?? false}
+                        onCheckedChange={async (checked) => {
+                          setStoreForm({ ...storeForm, pix_message_enabled: checked });
+                          if (myStore?.id) {
+                            await updateStore({
+                              id: myStore.id,
+                              name: myStore.name,
+                              slug: myStore.slug,
+                              category: myStore.category,
+                              pix_message_enabled: checked,
+                            });
+                            toast({
+                              title: checked ? "Chave PIX Fixa ativada" : "Chave PIX Fixa desativada",
+                              description: checked 
+                                ? "A chave PIX estática será exibida aos clientes" 
+                                : "A chave PIX estática não será mais exibida",
+                            });
+                          }
+                        }}
+                      />
+                    </div>
                   </div>
                 )}
               </CardContent>
