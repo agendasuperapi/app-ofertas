@@ -406,6 +406,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
   const [orderSearchTerm, setOrderSearchTerm] = useState('');
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [productStatusFilter, setProductStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
+  const [productSectionTab, setProductSectionTab] = useState('lista');
   const [isReorderMode, setIsReorderMode] = useState(false);
   const [productViewMode, setProductViewMode] = useState<'grid' | 'table'>('grid');
   const [localProducts, setLocalProducts] = useState<any[]>([]);
@@ -3484,25 +3485,41 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
         {/* Produtos Tab */}
         {myStore?.id && (
           <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6", activeTab !== 'produtos' && 'hidden')}>
-            <Tabs defaultValue="lista" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 mb-6">
-                <TabsTrigger value="lista" className="flex items-center gap-2">
-                  <Package className="w-4 h-4" />
-                  Lista de Produtos
-                </TabsTrigger>
-                <TabsTrigger value="categorias" className="flex items-center gap-2">
-                  <FolderTree className="w-4 h-4" />
-                  Categorias de Produtos
-                </TabsTrigger>
-                <TabsTrigger value="combos" className="flex items-center gap-2">
-                  <ShoppingBag className="w-4 h-4" />
-                  Combos
-                </TabsTrigger>
-                <TabsTrigger value="edit" className="flex items-center gap-2">
-                  <Edit className="w-4 h-4" />
-                  Adicionais & Sabores
-                </TabsTrigger>
-              </TabsList>
+            <div className="mb-6">
+              <Select value={productSectionTab} onValueChange={setProductSectionTab}>
+                <SelectTrigger className="w-full max-w-md">
+                  <SelectValue placeholder="Selecione uma seção" />
+                </SelectTrigger>
+                <SelectContent className="bg-background z-50">
+                  <SelectItem value="lista">
+                    <div className="flex items-center gap-2">
+                      <Package className="w-4 h-4" />
+                      <span>Lista de Produtos</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="categorias">
+                    <div className="flex items-center gap-2">
+                      <FolderTree className="w-4 h-4" />
+                      <span>Categorias de Produtos</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="combos">
+                    <div className="flex items-center gap-2">
+                      <ShoppingBag className="w-4 h-4" />
+                      <span>Combos</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="edit">
+                    <div className="flex items-center gap-2">
+                      <Edit className="w-4 h-4" />
+                      <span>Adicionais & Sabores</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <Tabs value={productSectionTab} onValueChange={setProductSectionTab} className="w-full">
 
               <TabsContent value="lista" className="space-y-6">
                 <div className="flex justify-between items-center">
