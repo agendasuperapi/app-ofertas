@@ -788,9 +788,11 @@ export const OrderStatusManager = ({ storeId }: OrderStatusManagerProps) => {
                   index={index}
                   canEdit={canEdit}
                   onEdit={(status) => {
+                    // Para status "ready"/"pronto", definir padrão apenas retirada
+                    const isReadyStatus = status.status_key === 'ready' || status.status_key === 'pronto';
                     setEditingStatus({
                       ...status,
-                      show_for_delivery: status.show_for_delivery ?? true,
+                      show_for_delivery: status.show_for_delivery ?? (isReadyStatus ? false : true),
                       show_for_pickup: status.show_for_pickup ?? true,
                     });
                     setIsDialogOpen(true);
