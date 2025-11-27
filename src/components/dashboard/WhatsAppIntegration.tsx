@@ -62,9 +62,10 @@ interface WhatsAppIntegrationProps {
   storeId: string;
   store?: any;
   onStoreUpdate?: (data: any) => Promise<void>;
+  isActive?: boolean; // Se a aba WhatsApp está ativa
 }
 
-export const WhatsAppIntegration = ({ storeId, store, onStoreUpdate }: WhatsAppIntegrationProps) => {
+export const WhatsAppIntegration = ({ storeId, store, onStoreUpdate, isActive = true }: WhatsAppIntegrationProps) => {
   const { toast } = useToast();
   const { isEmployee, permissions } = useEmployeeAccess();
   const { isAdmin, isStoreOwner } = useUserRole();
@@ -96,7 +97,8 @@ export const WhatsAppIntegration = ({ storeId, store, onStoreUpdate }: WhatsAppI
 
   // Sistema profissional de monitoramento e reconexão automática
   useEffect(() => {
-    if (!instanceName || !autoReconnectEnabled) return;
+    // OTIMIZAÇÃO: Só executa health check se a aba estiver ativa
+    if (!instanceName || !autoReconnectEnabled || !isActive) return;
 
     let healthCheckInterval: NodeJS.Timeout;
     let reconnectTimeout: NodeJS.Timeout;
@@ -113,6 +115,12 @@ export const WhatsAppIntegration = ({ storeId, store, onStoreUpdate }: WhatsAppI
 
     const performHealthCheck = async () => {
       if (isCheckingHealth) return;
+      
+      // OTIMIZAÇÃO: Verificar visibilidade da página
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        return;
+      }
+      
       isCheckingHealth = true;
 
       try {
@@ -245,11 +253,17 @@ export const WhatsAppIntegration = ({ storeId, store, onStoreUpdate }: WhatsAppI
       clearInterval(healthCheckInterval);
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
     };
-  }, [instanceName, autoReconnectEnabled, reconnectAttempts, isReconnecting, phoneNumber, storeId]);
+  }, [instanceName, autoReconnectEnabled, reconnectAttempts, isReconnecting, phoneNumber, storeId, isActive]);
 
   // Atualizar QR code automaticamente a cada 10 segundos enquanto não conectar
   useEffect(() => {
-    if (!qrCode || isConnected || !instanceName) return;
+    // OTIMIZAÇÃO: Só atualiza QR code se a aba estiver ativa e visível
+    if (!qrCode || isConnected || !instanceName || !isActive) return;
+    
+    // Verificar visibilidade da página
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+      return;
+    }
 
     console.log('[WhatsApp] Iniciando atualização automática do QR code');
     
@@ -276,7 +290,7 @@ export const WhatsAppIntegration = ({ storeId, store, onStoreUpdate }: WhatsAppI
       console.log('[WhatsApp] Parando atualização automática do QR code');
       clearInterval(qrRefreshInterval);
     };
-  }, [qrCode, isConnected, instanceName, phoneNumber, storeId]);
+  }, [qrCode, isConnected, instanceName, phoneNumber, storeId, isActive]);
 
   const checkExistingInstance = async () => {
     try {
