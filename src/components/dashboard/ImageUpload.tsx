@@ -5,6 +5,16 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Upload, X } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface ImageUploadProps {
   bucket: 'store-logos' | 'store-banners' | 'product-images';
@@ -29,6 +39,7 @@ export const ImageUpload = ({
 }: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   // Sincronizar previewUrl com currentImageUrl quando mudar
   useEffect(() => {
@@ -262,7 +273,11 @@ export const ImageUpload = ({
     }
   };
 
-  const handleRemove = async () => {
+  const handleRemove = () => {
+    setShowDeleteDialog(true);
+  };
+
+  const confirmRemove = async () => {
     if (currentImageUrl) {
       try {
         // Extrair o caminho do arquivo da URL
@@ -276,6 +291,12 @@ export const ImageUpload = ({
     }
     setPreviewUrl(null);
     onUploadComplete('');
+    setShowDeleteDialog(false);
+    
+    toast({
+      title: 'Imagem removida',
+      description: 'A imagem foi removida com sucesso.',
+    });
   };
 
   const sizeClasses = {
@@ -285,55 +306,74 @@ export const ImageUpload = ({
   };
 
   return (
-    <div className="space-y-2">
-      <Label className="text-sm font-medium text-foreground">{label}</Label>
-      <p className="text-xs text-muted-foreground">
-        {bucket === 'product-images' && 'Recomendado: 800x450'}
-        {bucket === 'store-logos' && 'Recomendado: 400x400px (quadrada)'}
-        {bucket === 'store-banners' && 'Recomendado: 1800x600px (3:1)'}
-      </p>
-      
-      {previewUrl ? (
-        <div className="relative">
-          <div className={`${aspectRatio} ${sizeClasses[size]} w-full sm:w-auto rounded-lg overflow-hidden border border-border bg-muted/30`}>
-            <img
-              src={previewUrl}
-              alt="Preview"
-              className="w-full h-full object-contain sm:object-cover"
-            />
+    <>
+      <div className="space-y-2">
+        <Label className="text-sm font-medium text-foreground">{label}</Label>
+        <p className="text-xs text-muted-foreground">
+          {bucket === 'product-images' && 'Recomendado: 800x450'}
+          {bucket === 'store-logos' && 'Recomendado: 400x400px (quadrada)'}
+          {bucket === 'store-banners' && 'Recomendado: 1800x600px (3:1)'}
+        </p>
+        
+        {previewUrl ? (
+          <div className="relative">
+            <div className={`${aspectRatio} ${sizeClasses[size]} w-full sm:w-auto rounded-lg overflow-hidden border border-border bg-muted/30`}>
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="w-full h-full object-contain sm:object-cover"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute top-2 right-2"
+              onClick={handleRemove}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            className="absolute top-2 right-2"
-            onClick={handleRemove}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      ) : (
-        <div className={`${aspectRatio} ${sizeClasses[size]} rounded-lg border-2 border-dashed border-border flex items-center justify-center`}>
-          <Label
-            htmlFor={`upload-${bucket}-${folder}`}
-            className="cursor-pointer flex flex-col items-center justify-center p-4 text-center"
-          >
-            <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              Clique para selecionar uma imagem
-            </span>
-          </Label>
-        </div>
-      )}
-      
-      <Input
-        id={`upload-${bucket}-${folder}`}
-        type="file"
-        accept="image/*"
-        onChange={handleUpload}
-        disabled={uploading}
-        className="hidden"
-      />
-    </div>
+        ) : (
+          <div className={`${aspectRatio} ${sizeClasses[size]} rounded-lg border-2 border-dashed border-border flex items-center justify-center`}>
+            <Label
+              htmlFor={`upload-${bucket}-${folder}`}
+              className="cursor-pointer flex flex-col items-center justify-center p-4 text-center"
+            >
+              <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                Clique para selecionar uma imagem
+              </span>
+            </Label>
+          </div>
+        )}
+        
+        <Input
+          id={`upload-${bucket}-${folder}`}
+          type="file"
+          accept="image/*"
+          onChange={handleUpload}
+          disabled={uploading}
+          className="hidden"
+        />
+      </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar remoção</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover esta imagem? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRemove} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
