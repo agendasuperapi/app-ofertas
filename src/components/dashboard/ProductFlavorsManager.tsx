@@ -77,41 +77,43 @@ const SortableFlavorItem = ({ flavor, onEdit, onDelete, onToggleAvailability, is
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-2 p-3 border rounded-lg hover:bg-muted/50 transition-colors bg-background"
+      className="flex items-center gap-2 sm:gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors bg-background"
     >
-      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
-        <GripVertical className="w-5 h-5 text-muted-foreground" />
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing flex-shrink-0">
+        <GripVertical className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
       </div>
-      <div className="flex-1">
-        <div className="flex items-center gap-2 mb-1">
-          <p className="font-medium">{flavor.name}</p>
-          <span className="text-sm text-muted-foreground">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1 flex-wrap">
+          <p className="font-medium text-sm sm:text-base truncate">{flavor.name}</p>
+          <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
             R$ {flavor.price.toFixed(2)}
           </span>
         </div>
         {flavor.description && (
-          <p className="text-sm text-muted-foreground">{flavor.description}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{flavor.description}</p>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
         <Button
           variant="ghost"
           size="icon"
           onClick={onToggleAvailability}
           title={flavor.is_available ? 'Inativar' : 'Ativar'}
+          className="h-8 w-8 sm:h-10 sm:w-10"
         >
           {flavor.is_available ? (
-            <PowerOff className="w-4 h-4" />
+            <PowerOff className="w-3 h-3 sm:w-4 sm:h-4" />
           ) : (
-            <Power className="w-4 h-4" />
+            <Power className="w-3 h-3 sm:w-4 sm:h-4" />
           )}
         </Button>
         <Button
           variant="ghost"
           size="icon"
           onClick={onEdit}
+          className="h-8 w-8 sm:h-10 sm:w-10"
         >
-          <Edit className="w-4 h-4" />
+          <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
         </Button>
       </div>
     </div>

@@ -91,42 +91,42 @@ const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleti
     <div
       ref={setNodeRef}
       style={style}
-      className={`flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors ${!addon.is_available ? 'opacity-60 bg-muted/30' : ''}`}
+      className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-3 border rounded-lg hover:bg-muted/50 transition-colors ${!addon.is_available ? 'opacity-60 bg-muted/30' : ''}`}
     >
-      <div className="flex items-center gap-3 flex-1">
+      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
         <button
-          className="cursor-grab active:cursor-grabbing touch-none"
+          className="cursor-grab active:cursor-grabbing touch-none flex-shrink-0"
           {...attributes}
           {...listeners}
         >
           <GripVertical className="w-4 h-4 text-muted-foreground" />
         </button>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <span className="font-medium">{addon.name}</span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium text-sm sm:text-base truncate">{addon.name}</span>
             <Badge 
               variant={addon.is_available ? "default" : "secondary"} 
-              className={`text-xs ${addon.is_available ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+              className={`text-xs whitespace-nowrap ${addon.is_available ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
             >
               {addon.is_available ? 'Ativo' : 'Inativo'}
             </Badge>
           </div>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             + R$ {addon.price.toFixed(2)}
           </p>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 flex-shrink-0">
           <Button
             size="sm"
             variant="ghost"
             onClick={() => onToggleAvailability(addon)}
             title={addon.is_available ? 'Inativar' : 'Ativar'}
-            className={addon.is_available ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}
+            className={`h-8 w-8 sm:h-9 sm:w-9 ${addon.is_available ? 'text-red-600 hover:text-red-700' : 'text-green-600 hover:text-green-700'}`}
           >
             {addon.is_available ? (
-              <PowerOff className="w-4 h-4" />
+              <PowerOff className="w-3 h-3 sm:w-4 sm:h-4" />
             ) : (
-              <Power className="w-4 h-4" />
+              <Power className="w-3 h-3 sm:w-4 sm:h-4" />
             )}
           </Button>
           <Button
@@ -134,8 +134,9 @@ const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleti
             variant="ghost"
             onClick={() => onEdit(addon)}
             title="Editar"
+            className="h-8 w-8 sm:h-9 sm:w-9"
           >
-            <Edit className="w-4 h-4" />
+            <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
           </Button>
           <Button
             size="sm"
@@ -147,9 +148,9 @@ const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleti
             }}
             disabled={isDeleting}
             title="Excluir"
-            className="text-destructive hover:text-destructive"
+            className="text-destructive hover:text-destructive h-8 w-8 sm:h-9 sm:w-9"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
           </Button>
         </div>
       </div>
