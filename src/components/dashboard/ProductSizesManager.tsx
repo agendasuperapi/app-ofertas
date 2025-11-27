@@ -57,25 +57,25 @@ function SortableSizeItem({ size, onEdit, onDelete, onToggleAvailability }: Sort
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 p-4 bg-card border rounded-lg hover:border-primary/50 transition-colors"
+      className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 bg-card border rounded-lg hover:border-primary/50 transition-colors"
     >
-      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing">
-        <GripVertical className="h-5 w-5 text-muted-foreground" />
+      <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing flex-shrink-0">
+        <GripVertical className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
       </div>
       
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <h4 className="text-sm font-semibold">{size.name}</h4>
-          <span className="text-base font-bold text-primary">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h4 className="text-sm font-semibold truncate">{size.name}</h4>
+          <span className="text-sm sm:text-base font-bold text-primary whitespace-nowrap">
             R$ {size.price.toFixed(2)}
           </span>
         </div>
         {size.description && (
-          <p className="text-sm text-muted-foreground mt-1">{size.description}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{size.description}</p>
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
         <Switch
           checked={size.is_available}
           onCheckedChange={(checked) => onToggleAvailability({ id: size.id, is_available: checked })}
@@ -84,15 +84,17 @@ function SortableSizeItem({ size, onEdit, onDelete, onToggleAvailability }: Sort
           variant="ghost"
           size="icon"
           onClick={() => onEdit(size)}
+          className="h-8 w-8 sm:h-10 sm:w-10"
         >
-          <Pencil className="h-4 w-4" />
+          <Pencil className="h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
           onClick={() => onDelete(size.id)}
+          className="h-8 w-8 sm:h-10 sm:w-10"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
         </Button>
       </div>
     </div>
@@ -182,8 +184,8 @@ export function ProductSizesManager({ productId }: ProductSizesManagerProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex-1 flex gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+        <div className="flex flex-col sm:flex-row flex-1 gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
@@ -194,7 +196,7 @@ export function ProductSizesManager({ productId }: ProductSizesManagerProps) {
             />
           </div>
           <Select value={availabilityFilter} onValueChange={(value: any) => setAvailabilityFilter(value)}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full sm:w-[180px]">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue />
             </SelectTrigger>
@@ -205,7 +207,7 @@ export function ProductSizesManager({ productId }: ProductSizesManagerProps) {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => handleOpenDialog()}>
+        <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Novo Tamanho
         </Button>
