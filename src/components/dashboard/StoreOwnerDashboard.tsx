@@ -2456,7 +2456,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                   </CardHeader>
                   <CardContent className="relative z-10">
                     <div className="flex items-end justify-between">
-                      <div className="text-3xl font-bold gradient-text">{totalOrders}</div>
+                      <div className="text-xl sm:text-3xl font-bold gradient-text">{totalOrders}</div>
                       {periodFilter !== "all" && previousTotalOrders > 0 && (
                         <div className={cn(
                           "flex items-center gap-1 text-sm font-semibold px-2 py-1 rounded-md",
@@ -2487,7 +2487,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                   </CardHeader>
                   <CardContent className="relative z-10">
                     <div className="flex items-end justify-between gap-2">
-                      <div className="text-3xl font-bold text-green-500">
+                      <div className="text-xl sm:text-3xl font-bold text-green-500">
                         R$ {totalRevenue.toFixed(2)}
                       </div>
                       {periodFilter !== "all" && previousTotalRevenue > 0 && (
@@ -2520,7 +2520,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                   </CardHeader>
                   <CardContent className="relative z-10">
                     <div className="flex items-end justify-between gap-2">
-                      <div className="text-3xl font-bold text-purple-500">
+                      <div className="text-xl sm:text-3xl font-bold text-purple-500">
                         R$ {averageOrderValue.toFixed(2)}
                       </div>
                       {periodFilter !== "all" && previousAverageOrderValue > 0 && (
