@@ -272,6 +272,7 @@ export const StoreOwnerDashboard = ({
     is_featured: false
   });
   const [activeProductTab, setActiveProductTab] = useState("info");
+  const [profileSettingsTab, setProfileSettingsTab] = useState("personal");
   const [pixKeyType, setPixKeyType] = useState<'cpf' | 'cnpj' | 'email' | 'phone' | 'random'>('cpf');
   const [storeForm, setStoreForm] = useState<StoreFormData>({
     name: myStore?.name || '',
@@ -4091,44 +4092,68 @@ export const StoreOwnerDashboard = ({
             }} transition={{
               delay: 0.3
             }}>
-            <Tabs defaultValue="personal" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2 lg:grid-cols-8 gap-2 bg-muted/50 h-auto p-2">
-                  <TabsTrigger value="personal" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
-                    <User className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">Dados Pessoais</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="settings" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
-                    <Settings className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">Loja</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="entregas" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
-                    <Truck className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">Entregas</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="pix" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
-                    <DollarSign className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">PIX</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="order-status" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
-                    <Menu className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">Status dos Pedidos</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="notifications" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
-                    <Shield className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">Permissões</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="layout" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
-                    <LayoutGrid className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">Layout</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="security" className="data-[state=active]:bg-gradient-primary data-[state=active]:text-white text-xs sm:text-sm whitespace-nowrap">
-                    <Lock className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">Segurança</span>
-                  </TabsTrigger>
-                </TabsList>
+            <div className="space-y-6">
+                <Select 
+                  value={profileSettingsTab} 
+                  onValueChange={setProfileSettingsTab}
+                >
+                  <SelectTrigger className="w-full bg-background border-2">
+                    <SelectValue placeholder="Selecione uma opção" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background z-50">
+                    <SelectItem value="personal">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4" />
+                        <span>Dados Pessoais</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="settings">
+                      <div className="flex items-center gap-2">
+                        <Settings className="w-4 h-4" />
+                        <span>Loja</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="entregas">
+                      <div className="flex items-center gap-2">
+                        <Truck className="w-4 h-4" />
+                        <span>Entregas</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="pix">
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4" />
+                        <span>PIX</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="order-status">
+                      <div className="flex items-center gap-2">
+                        <Menu className="w-4 h-4" />
+                        <span>Status dos Pedidos</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="notifications">
+                      <div className="flex items-center gap-2">
+                        <Shield className="w-4 h-4" />
+                        <span>Permissões</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="layout">
+                      <div className="flex items-center gap-2">
+                        <LayoutGrid className="w-4 h-4" />
+                        <span>Layout</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="security">
+                      <div className="flex items-center gap-2">
+                        <Lock className="w-4 h-4" />
+                        <span>Segurança</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
 
         {/* Personal Data Tab */}
-        <TabsContent value="personal">
+        {profileSettingsTab === "personal" && (
           <motion.div initial={{
                     opacity: 0,
                     y: 20
@@ -4140,30 +4165,31 @@ export const StoreOwnerDashboard = ({
                   }}>
             <PersonalDataSettings />
           </motion.div>
-        </TabsContent>
+        )}
 
         {/* Permissions Tab */}
-        <TabsContent value="notifications" className="space-y-6">
-          <motion.div initial={{
-                    opacity: 0,
-                    y: 20
-                  }} animate={{
-                    opacity: 1,
-                    y: 0
-                  }} transition={{
-                    duration: 0.3
-                  }}>
-            <div className="mb-6 p-4 rounded-lg bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20">
-              <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-2">
-                <Shield className="w-5 h-5 text-primary" />
-                Permissões e Configurações de Acesso
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Configure as permissões de acesso, notificações, tipos de entrega e métodos de pagamento aceitos pela sua loja. 
-                Estas configurações controlam como sua loja opera e como você recebe atualizações sobre novos pedidos.
-              </p>
-            </div>
-          </motion.div>
+        {profileSettingsTab === "notifications" && (
+          <>
+            <motion.div initial={{
+                      opacity: 0,
+                      y: 20
+                    }} animate={{
+                      opacity: 1,
+                      y: 0
+                    }} transition={{
+                      duration: 0.3
+                    }}>
+              <div className="mb-6 p-4 rounded-lg bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2 mb-2">
+                  <Shield className="w-5 h-5 text-primary" />
+                  Permissões e Configurações de Acesso
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Configure as permissões de acesso, notificações, tipos de entrega e métodos de pagamento aceitos pela sua loja. 
+                  Estas configurações controlam como sua loja opera e como você recebe atualizações sobre novos pedidos.
+                </p>
+              </div>
+            </motion.div>
 
           <motion.div initial={{
                     opacity: 0,
@@ -4294,10 +4320,12 @@ export const StoreOwnerDashboard = ({
             </Card>
 
           </motion.div>
-        </TabsContent>
+        </>
+        )}
 
         {/* Settings Tab */}
-        <TabsContent value="settings" className="space-y-4">
+        {profileSettingsTab === "settings" && (
+          <div className="space-y-4">
           {/* Store URL Card */}
           <motion.div initial={{
                     opacity: 0,
@@ -4660,10 +4688,11 @@ export const StoreOwnerDashboard = ({
             </CardContent>
           </Card>
           </motion.div>
-        </TabsContent>
+          </div>
+        )}
 
         {/* Security Tab */}
-        <TabsContent value="security">
+        {profileSettingsTab === "security" && (
           <motion.div initial={{
                     opacity: 0,
                     y: 20
@@ -4675,10 +4704,10 @@ export const StoreOwnerDashboard = ({
                   }}>
             <SecuritySettings />
           </motion.div>
-        </TabsContent>
+        )}
 
         {/* Order Status Tab */}
-        <TabsContent value="order-status">
+        {profileSettingsTab === "order-status" && (
           <motion.div initial={{
                     opacity: 0,
                     y: 20
@@ -4690,10 +4719,10 @@ export const StoreOwnerDashboard = ({
                   }}>
             {myStore?.id && <OrderStatusManager storeId={myStore.id} />}
           </motion.div>
-        </TabsContent>
+        )}
 
         {/* Entregas Tab */}
-        <TabsContent value="entregas">
+        {profileSettingsTab === "entregas" && (
           <motion.div initial={{
                     opacity: 0,
                     y: 20
@@ -4743,10 +4772,10 @@ export const StoreOwnerDashboard = ({
             <PickupLocationsManager storeId={myStore.id} />
             <DeliveryZonesManager storeId={myStore.id} />
           </motion.div>
-        </TabsContent>
+        )}
 
         {/* PIX Configuration Tab */}
-        <TabsContent value="pix">
+        {profileSettingsTab === "pix" && (
           <motion.div initial={{
                     opacity: 0,
                     y: 20
@@ -4993,10 +5022,10 @@ export const StoreOwnerDashboard = ({
                       });
                     }} />
           </motion.div>
-        </TabsContent>
+        )}
 
         {/* Layout Tab */}
-        <TabsContent value="layout">
+        {profileSettingsTab === "layout" && (
           <motion.div initial={{
                     opacity: 0,
                     y: 20
@@ -5017,8 +5046,8 @@ export const StoreOwnerDashboard = ({
                       });
                     }} isUpdating={false} />
           </motion.div>
-        </TabsContent>
-      </Tabs>
+        )}
+      </div>
       </motion.div>
     </div>
   </div>
