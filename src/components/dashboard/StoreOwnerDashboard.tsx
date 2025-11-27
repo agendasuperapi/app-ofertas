@@ -3817,32 +3817,32 @@ export const StoreOwnerDashboard = ({
               </TabsContent>
 
               <TabsContent value="categorias" className="space-y-6">
-                <div className="flex justify-between items-center mb-6">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
                   <div>
-                    <h2 className="text-2xl font-bold gradient-text">Categorias de Produtos</h2>
-                    <p className="text-muted-foreground">Organize os produtos da sua loja</p>
+                    <h2 className="text-xl sm:text-2xl font-bold gradient-text">Categorias de Produtos</h2>
+                    <p className="text-sm text-muted-foreground">Organize os produtos da sua loja</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     {/* View Mode Toggle */}
                     <div className="flex items-center gap-2">
-                      <Button variant={categoryViewMode === 'grid' ? 'default' : 'outline'} size="sm" onClick={() => setCategoryViewMode('grid')}>
-                        <LayoutGrid className="w-4 h-4 mr-2" />
-                        Grid
+                      <Button variant={categoryViewMode === 'grid' ? 'default' : 'outline'} size="sm" onClick={() => setCategoryViewMode('grid')} className="flex-1 sm:flex-none">
+                        <LayoutGrid className="w-4 h-4 mr-1 sm:mr-2" />
+                        <span className="text-xs sm:text-sm">Grid</span>
                       </Button>
-                      <Button variant={categoryViewMode === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setCategoryViewMode('table')}>
-                        <TableIcon className="w-4 h-4 mr-2" />
-                        Tabela
+                      <Button variant={categoryViewMode === 'table' ? 'default' : 'outline'} size="sm" onClick={() => setCategoryViewMode('table')} className="flex-1 sm:flex-none">
+                        <TableIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                        <span className="text-xs sm:text-sm">Tabela</span>
                       </Button>
                     </div>
                     
-                    {hasPermission('categories', 'update') && filteredCategories && filteredCategories.length > 1 && categoryViewMode === 'grid' && <Button variant={isReorderCategoriesMode ? "default" : "outline"} onClick={() => setIsReorderCategoriesMode(!isReorderCategoriesMode)} size="lg">
+                    {hasPermission('categories', 'update') && filteredCategories && filteredCategories.length > 1 && categoryViewMode === 'grid' && <Button variant={isReorderCategoriesMode ? "default" : "outline"} onClick={() => setIsReorderCategoriesMode(!isReorderCategoriesMode)} size="sm" className="w-full sm:w-auto">
                         <GripVertical className="w-4 h-4 mr-2" />
-                        {isReorderCategoriesMode ? "Concluir" : "Reordenar"}
+                        <span className="text-xs sm:text-sm">{isReorderCategoriesMode ? "Concluir" : "Reordenar"}</span>
                       </Button>}
                     {hasPermission('categories', 'create') && <ResponsiveDialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-                        <Button size="lg" onClick={() => setIsCategoryDialogOpen(true)}>
+                        <Button size="sm" onClick={() => setIsCategoryDialogOpen(true)} className="w-full sm:w-auto">
                           <Plus className="w-4 h-4 mr-2" />
-                          Nova Categoria
+                          <span className="text-xs sm:text-sm">Nova Categoria</span>
                         </Button>
                         <ResponsiveDialogContent>
                           <ResponsiveDialogHeader>
@@ -3869,10 +3869,10 @@ export const StoreOwnerDashboard = ({
                 </div>
 
                 {/* Filtro de Status das Categorias */}
-                <div className="flex items-center gap-2 mb-4">
-                  <Tag className="w-4 h-4 text-muted-foreground" />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 mb-4">
+                  <Tag className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                   <Select value={categoryStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setCategoryStatusFilter(value)}>
-                    <SelectTrigger className="w-[200px]">
+                    <SelectTrigger className="w-full sm:w-[200px]">
                       <SelectValue placeholder="Filtrar por status" />
                     </SelectTrigger>
                     <SelectContent>
@@ -3881,7 +3881,7 @@ export const StoreOwnerDashboard = ({
                       <SelectItem value="all">Todas as Categorias</SelectItem>
                     </SelectContent>
                   </Select>
-                  {categoryStatusFilter !== 'active' && <Button variant="ghost" size="sm" onClick={() => setCategoryStatusFilter('active')}>
+                  {categoryStatusFilter !== 'active' && <Button variant="ghost" size="sm" onClick={() => setCategoryStatusFilter('active')} className="w-full sm:w-auto">
                       <X className="w-4 h-4 mr-1" />
                       Limpar
                     </Button>}
@@ -3954,7 +3954,7 @@ export const StoreOwnerDashboard = ({
                       }} onDelete={deleteCategory} onToggleStatus={toggleCategoryStatus} />)}
                         </div>
                       </SortableContext>
-                    </DndContext> : <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                    </DndContext> : <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
                       {filteredCategories.map((category, index) => <SortableCategoryCard key={category.id} category={category} index={index} isReorderMode={false} hasPermission={hasPermission} products={products} onEdit={cat => {
                     setEditingCategory(cat);
                     setEditCategoryName(cat.name);
