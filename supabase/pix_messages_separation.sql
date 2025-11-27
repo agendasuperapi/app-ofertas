@@ -8,7 +8,7 @@
 -- =====================================================
 ALTER TABLE public.stores
   ADD COLUMN IF NOT EXISTS pix_copiacola_message_title TEXT DEFAULT '💳 Código PIX Gerado',
-  ADD COLUMN IF NOT EXISTS pix_copiacola_message_description TEXT DEFAULT 'Use o código PIX Copia e Cola gerado automaticamente para este pedido. Clique no botão abaixo para copiar.',
+  ADD COLUMN IF NOT EXISTS pix_copiacola_message_description TEXT DEFAULT E'1️⃣ Copie o código PIX abaixo.\n2️⃣ Abra o app do seu banco e vá até a opção PIX, como se fosse fazer uma transferência.\n3️⃣ Toque em "PIX Copia e Cola", cole o código e confirme o pagamento. 💳✨',
   ADD COLUMN IF NOT EXISTS pix_copiacola_message_footer TEXT DEFAULT 'Código válido para este pedido específico.',
   ADD COLUMN IF NOT EXISTS pix_copiacola_message_button_text TEXT DEFAULT '📋 COPIAR CÓDIGO PIX',
   ADD COLUMN IF NOT EXISTS pix_copiacola_message_enabled BOOLEAN DEFAULT false;
