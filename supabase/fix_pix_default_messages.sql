@@ -1,4 +1,12 @@
--- Function to set default PIX messages when a new store is created
+-- =====================================================
+-- Fix PIX Default Messages
+-- Description: Updates the default PIX messages function
+--              and fixes existing stores with incorrect values
+-- =====================================================
+
+-- 1. Drop and recreate the function with correct default values
+DROP FUNCTION IF EXISTS set_default_pix_messages() CASCADE;
+
 CREATE OR REPLACE FUNCTION set_default_pix_messages()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -29,7 +37,9 @@ BEGIN
   END IF;
   
   IF NEW.pix_copiacola_message_description IS NULL THEN
-    NEW.pix_copiacola_message_description := '1️⃣ Copie o código PIX abaixo.\n2️⃣ Abra o app do seu banco e vá até a opção PIX.\n3️⃣ Toque em "PIX Copia e Cola", cole o código e confirme o pagamento. 💳✨';
+    NEW.pix_copiacola_message_description := '1️⃣ Copie o código PIX abaixo.
+2️⃣ Abra o app do seu banco e vá até a opção PIX.
+3️⃣ Toque em "PIX Copia e Cola", cole o código e confirme o pagamento. 💳✨';
   END IF;
   
   IF NEW.pix_copiacola_message_footer IS NULL THEN
@@ -57,31 +67,35 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger to run before insert on stores
+-- 2. Recreate trigger
 DROP TRIGGER IF EXISTS set_default_pix_messages_trigger ON public.stores;
 CREATE TRIGGER set_default_pix_messages_trigger
   BEFORE INSERT ON public.stores
   FOR EACH ROW
   EXECUTE FUNCTION set_default_pix_messages();
 
--- Grant necessary permissions
+-- 3. Grant necessary permissions
 GRANT EXECUTE ON FUNCTION set_default_pix_messages() TO authenticated;
 GRANT EXECUTE ON FUNCTION set_default_pix_messages() TO service_role;
 
--- Update existing stores that don't have PIX messages configured
+-- 4. Update ALL existing stores with the correct default values
 UPDATE public.stores
 SET
-  pix_message_title = COALESCE(pix_message_title, '💳 Pagamento via PIX'),
-  pix_message_description = COALESCE(pix_message_description, 'Clique no botão abaixo para copiar a chave PIX, favor enviar o comprovante após o pagamento.'),
-  pix_message_footer = COALESCE(pix_message_footer, 'Obrigado pela preferência!'),
-  pix_message_button_text = COALESCE(pix_message_button_text, '📋 COPIAR CHAVE PIX'),
-  pix_message_enabled = COALESCE(pix_message_enabled, false),
-  pix_copiacola_message_title = COALESCE(pix_copiacola_message_title, '💳 Código PIX Gerado'),
-  pix_copiacola_message_description = COALESCE(pix_copiacola_message_description, '1️⃣ Copie o código PIX abaixo.\n2️⃣ Abra o app do seu banco e vá até a opção PIX.\n3️⃣ Toque em "PIX Copia e Cola", cole o código e confirme o pagamento. 💳✨'),
-  pix_copiacola_message_footer = COALESCE(pix_copiacola_message_footer, 'Código válido para este pedido específico.'),
-  pix_copiacola_message_button_text = COALESCE(pix_copiacola_message_button_text, '📋 COPIAR CÓDIGO PIX'),
-  pix_copiacola_button_text = COALESCE(pix_copiacola_button_text, '📋 COPIAR CÓDIGO PIX'),
-  pix_copiacola_message_enabled = COALESCE(pix_copiacola_message_enabled, false),
-  show_pix_key_to_customer = COALESCE(show_pix_key_to_customer, true)
-WHERE pix_message_title IS NULL 
-   OR pix_copiacola_message_title IS NULL;
+  pix_message_title = '💳 Pagamento via PIX',
+  pix_message_description = 'Clique no botão abaixo para copiar a chave PIX, favor enviar o comprovante após o pagamento.',
+  pix_message_footer = 'Obrigado pela preferência!',
+  pix_message_button_text = '📋 COPIAR CHAVE PIX',
+  pix_message_enabled = false,
+  pix_copiacola_message_title = '💳 Código PIX Gerado',
+  pix_copiacola_message_description = '1️⃣ Copie o código PIX abaixo.
+2️⃣ Abra o app do seu banco e vá até a opção PIX.
+3️⃣ Toque em "PIX Copia e Cola", cole o código e confirme o pagamento. 💳✨',
+  pix_copiacola_message_footer = 'Código válido para este pedido específico.',
+  pix_copiacola_message_button_text = '📋 COPIAR CÓDIGO PIX',
+  pix_copiacola_button_text = '📋 COPIAR CÓDIGO PIX',
+  pix_copiacola_message_enabled = false,
+  show_pix_key_to_customer = true;
+
+-- =====================================================
+-- END OF MIGRATION
+-- =====================================================
