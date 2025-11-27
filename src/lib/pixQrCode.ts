@@ -72,7 +72,22 @@ export function generatePixQrCode({
   txId,
 }: PixQrCodeParams): string {
   // Normalizar chave PIX
-  const cleanPixKey = pixKey.trim();
+  let cleanPixKey = pixKey.trim();
+  
+  // Se for telefone, garantir formato correto com +55
+  const digitsOnly = cleanPixKey.replace(/\D/g, '');
+  
+  // Telefone brasileiro: 11 dígitos (DDD + número) ou 13 dígitos (55 + DDD + número)
+  if (digitsOnly.length === 11) {
+    // Formato: 38999524679 -> +5538999524679
+    cleanPixKey = `+55${digitsOnly}`;
+  } else if (digitsOnly.length === 13 && digitsOnly.startsWith('55')) {
+    // Formato: 5538999524679 -> +5538999524679
+    cleanPixKey = `+${digitsOnly}`;
+  } else if (digitsOnly.length === 10) {
+    // Formato: 3899524679 (fixo) -> +553899524679
+    cleanPixKey = `+55${digitsOnly}`;
+  }
   
   // Normalizar nome e cidade (apenas letras, números e espaços)
   const cleanMerchantName = merchantName
