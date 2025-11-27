@@ -276,7 +276,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
     phone: myStore?.phone || '',
     whatsapp: (myStore as any)?.whatsapp || '',
     menu_label: myStore?.menu_label || 'Cardápio',
-    pix_key: (myStore as any)?.pix_key || '',
+    pix_key: displayPixKey((myStore as any)?.pix_key || ''),
     show_pix_key_to_customer: (myStore as any)?.show_pix_key_to_customer ?? true,
     pix_message_enabled: (myStore as any)?.pix_message_enabled ?? false,
     pix_message_title: (myStore as any)?.pix_message_title || '',
