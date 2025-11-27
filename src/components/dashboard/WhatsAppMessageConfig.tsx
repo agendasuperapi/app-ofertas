@@ -366,34 +366,36 @@ export const WhatsAppMessageConfig = ({ store, onUpdate }: WhatsAppMessageConfig
             </Card>
           )}
 
-          {/* Configuração do botão na página de pedidos */}
-          <Card className="border-2">
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="mb-1">Página de Pedidos</Badge>
-              </div>
-              <CardTitle className="text-lg text-orange-600">Botão na pagina de Pedidos do Cliente.</CardTitle>
-              <CardDescription>
-                Personalize o texto do botão "PIX Copia e Cola" que aparece na página de acompanhamento de pedidos
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+          {/* Configuração do botão na página de pedidos - Parte do PIX Copia e Cola */}
+          {!formData.pix_message_enabled && (
+            <Card className="border-2">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="mb-1">Página de Pedidos</Badge>
+                </div>
+                <CardTitle className="text-lg text-orange-600">Botão na pagina de Pedidos do Cliente.</CardTitle>
+                <CardDescription>
+                  Personalize o texto do botão "PIX Copia e Cola" que aparece na página de acompanhamento de pedidos
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
 
-            <div className="space-y-2">
-              <Label htmlFor="copiacolaButtonText">Texto do Botão "PIX Copia e Cola"</Label>
-              <Input
-                id="copiacolaButtonText"
-                placeholder="Ex: PIX Copia e Cola"
-                value={formData.pix_copiacola_button_text}
-                onChange={(e) => setFormData({ ...formData, pix_copiacola_button_text: e.target.value })}
-                maxLength={50}
-              />
-              <p className="text-xs text-muted-foreground">
-                Texto do botão que aparece na página de pedidos (Máximo de 50 caracteres)
-              </p>
-            </div>
-            </CardContent>
-          </Card>
+              <div className="space-y-2">
+                <Label htmlFor="copiacolaButtonText">Texto do Botão "PIX Copia e Cola"</Label>
+                <Input
+                  id="copiacolaButtonText"
+                  placeholder="Ex: PIX Copia e Cola"
+                  value={formData.pix_copiacola_button_text}
+                  onChange={(e) => setFormData({ ...formData, pix_copiacola_button_text: e.target.value })}
+                  maxLength={50}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Texto do botão que aparece na página de pedidos (Máximo de 50 caracteres)
+                </p>
+              </div>
+              </CardContent>
+            </Card>
+          )}
 
           {(formData.pix_message_enabled || formData.pix_copiacola_message_enabled) && (
             <Alert>
