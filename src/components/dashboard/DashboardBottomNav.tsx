@@ -6,17 +6,28 @@ interface DashboardBottomNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onMenuClick: () => void;
+  onRelatoriosClick?: () => void;
   pendingOrdersCount?: number;
 }
 
-export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendingOrdersCount = 0 }: DashboardBottomNavProps) => {
+export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, onRelatoriosClick, pendingOrdersCount = 0 }: DashboardBottomNavProps) => {
   const navItems = [
     { id: "home", label: "Início", icon: Home },
     { id: "produtos", label: "Produtos", icon: Package },
     { id: "pedidos", label: "Pedidos", icon: ShoppingBag },
-    { id: "relatorios", label: "Relatórios", icon: TrendingUp, isMenu: true },
+    { id: "relatorios", label: "Relatórios", icon: TrendingUp, isRelatorios: true },
     { id: "menu", label: "Menu", icon: Menu, isMenu: true },
   ];
+
+  const handleClick = (item: typeof navItems[0]) => {
+    if (item.isMenu) {
+      onMenuClick();
+    } else if (item.isRelatorios && onRelatoriosClick) {
+      onRelatoriosClick();
+    } else {
+      onTabChange(item.id);
+    }
+  };
 
   return (
     <motion.nav
@@ -33,15 +44,15 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendin
           return (
             <button
               key={item.id}
-              onClick={() => item.isMenu ? onMenuClick() : onTabChange(item.id)}
+              onClick={() => handleClick(item)}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 relative transition-colors",
                 "active:scale-95 transition-transform duration-100",
-                isActive && !item.isMenu ? "text-primary" : "text-muted-foreground"
+                isActive && !item.isMenu && !item.isRelatorios ? "text-primary" : "text-muted-foreground"
               )}
             >
               {/* Indicador de aba ativa */}
-              {isActive && !item.isMenu && (
+              {isActive && !item.isMenu && !item.isRelatorios && (
                 <motion.div
                   layoutId="activeTab"
                   className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-primary rounded-b-full"
@@ -52,8 +63,8 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendin
               {/* Ícone com animação e badge */}
               <motion.div
                 animate={{
-                  scale: isActive && !item.isMenu ? 1.1 : 1,
-                  y: isActive && !item.isMenu ? -2 : 0,
+                  scale: isActive && !item.isMenu && !item.isRelatorios ? 1.1 : 1,
+                  y: isActive && !item.isMenu && !item.isRelatorios ? -2 : 0,
                 }}
                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 className="relative"
@@ -61,7 +72,7 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendin
                 <Icon 
                   className={cn(
                     "w-5 h-5 transition-all",
-                    isActive && !item.isMenu && "stroke-[2.5]"
+                    isActive && !item.isMenu && !item.isRelatorios && "stroke-[2.5]"
                   )} 
                 />
                 
@@ -83,7 +94,7 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendin
               <span 
                 className={cn(
                   "text-[10px] font-medium transition-all",
-                  isActive && !item.isMenu && "font-semibold"
+                  isActive && !item.isMenu && !item.isRelatorios && "font-semibold"
                 )}
               >
                 {item.label}

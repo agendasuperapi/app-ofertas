@@ -389,6 +389,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
   const [isHoursDialogOpen, setIsHoursDialogOpen] = useState(false);
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [openRelatoriosMenu, setOpenRelatoriosMenu] = useState(false);
   const [editingCategory, setEditingCategory] = useState<any>(null);
   const [isEditCategoryDialogOpen, setIsEditCategoryDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<any>(null);
@@ -890,6 +891,13 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
       }
     }
   }, [employeeAccess.isEmployee, employeeAccess.permissions, canViewAllOrders, canViewPendingOrders, canViewConfirmedOrders, canViewPreparingOrders, canViewOutForDeliveryOrders, canViewDeliveredOrders, canViewCancelledOrders, customStatuses, orderStatusFilter]);
+
+  // Resetar estado de openRelatoriosMenu quando sidebar fechar
+  useEffect(() => {
+    if (!isMobileSidebarOpen) {
+      setOpenRelatoriosMenu(false);
+    }
+  }, [isMobileSidebarOpen]);
 
   // (removido) havia um segundo useEffect sincronizando storeForm com myStore,
   // o que sobrescrevia os campos de endereço personalizados. Agora toda a
@@ -2110,6 +2118,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
           onSignOut={onSignOut}
           isOpen={isMobileSidebarOpen}
           onOpenChange={setIsMobileSidebarOpen}
+          openRelatoriosMenu={openRelatoriosMenu}
         />
         
         {/* Desktop Sidebar */}
@@ -6357,7 +6366,14 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
         <DashboardBottomNav
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          onMenuClick={() => setIsMobileSidebarOpen(true)}
+          onMenuClick={() => {
+            setOpenRelatoriosMenu(false);
+            setIsMobileSidebarOpen(true);
+          }}
+          onRelatoriosClick={() => {
+            setOpenRelatoriosMenu(true);
+            setIsMobileSidebarOpen(true);
+          }}
           pendingOrdersCount={pendingOrdersCount}
         />
       )}
