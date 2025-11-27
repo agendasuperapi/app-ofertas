@@ -2090,7 +2090,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                             <Clock className="w-3 h-3 mr-1" />
                             {storeStatusText}
                           </Badge>
-                          <WhatsAppStatusIndicator storeId={myStore.id} />
+                          {myStore?.id && <WhatsAppStatusIndicator storeId={myStore.id} />}
                         </div>
                       </div>
                       <motion.p
@@ -2740,9 +2740,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                   <h2 className="text-2xl font-bold gradient-text">Pedidos</h2>
                   <p className="text-muted-foreground">Gerencie os pedidos da sua loja</p>
                 </div>
-                {myStore?.id && (
-                  <WhatsAppStatusIndicator storeId={myStore.id} />
-                )}
+                <WhatsAppStatusIndicator storeId={myStore?.id || ''} />
               </div>
 
               {/* Filtros de Data */}

@@ -22,6 +22,11 @@ export const WhatsAppStatusIndicator = ({ storeId }: WhatsAppStatusIndicatorProp
   // Usar useRef para rastrear o status anterior e evitar atualizações desnecessárias
   const prevStatusRef = useRef<ConnectionStatus>('loading');
 
+  // Não renderizar se não houver storeId válido
+  if (!storeId) {
+    return null;
+  }
+
   useEffect(() => {
     checkPermissions();
   }, [user, storeId, isAdmin, isEmployee, employeeStoreId, permissions]);
