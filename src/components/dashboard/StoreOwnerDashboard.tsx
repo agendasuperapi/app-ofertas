@@ -5477,19 +5477,24 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                       <Switch
                         checked={storeForm.pix_copiacola_message_enabled ?? false}
                         onCheckedChange={async (checked) => {
-                          setStoreForm({ ...storeForm, pix_copiacola_message_enabled: checked });
+                          // Se ativar PIX Copia e Cola, desativar Chave PIX Fixa
+                          const updates = {
+                            pix_copiacola_message_enabled: checked,
+                            ...(checked && { pix_message_enabled: false })
+                          };
+                          setStoreForm({ ...storeForm, ...updates });
                           if (myStore?.id) {
                             await updateStore({
                               id: myStore.id,
                               name: myStore.name,
                               slug: myStore.slug,
                               category: myStore.category,
-                              pix_copiacola_message_enabled: checked,
+                              ...updates,
                             });
                             toast({
                               title: checked ? "PIX Copia e Cola ativado" : "PIX Copia e Cola desativado",
                               description: checked 
-                                ? "O código PIX Copia e Cola será gerado automaticamente" 
+                                ? "O código PIX Copia e Cola será gerado automaticamente. Chave PIX Fixa foi desativada." 
                                 : "O código PIX Copia e Cola não será mais gerado",
                             });
                           }
@@ -5507,19 +5512,24 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                       <Switch
                         checked={storeForm.pix_message_enabled ?? false}
                         onCheckedChange={async (checked) => {
-                          setStoreForm({ ...storeForm, pix_message_enabled: checked });
+                          // Se ativar Chave PIX Fixa, desativar PIX Copia e Cola
+                          const updates = {
+                            pix_message_enabled: checked,
+                            ...(checked && { pix_copiacola_message_enabled: false })
+                          };
+                          setStoreForm({ ...storeForm, ...updates });
                           if (myStore?.id) {
                             await updateStore({
                               id: myStore.id,
                               name: myStore.name,
                               slug: myStore.slug,
                               category: myStore.category,
-                              pix_message_enabled: checked,
+                              ...updates,
                             });
                             toast({
                               title: checked ? "Chave PIX Fixa ativada" : "Chave PIX Fixa desativada",
                               description: checked 
-                                ? "A chave PIX estática será exibida aos clientes" 
+                                ? "A chave PIX estática será exibida aos clientes. PIX Copia e Cola foi desativado." 
                                 : "A chave PIX estática não será mais exibida",
                             });
                           }
