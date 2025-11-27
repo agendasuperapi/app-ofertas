@@ -3393,6 +3393,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
               <WhatsAppIntegration 
                 storeId={myStore.id} 
                 store={myStore}
+                isActive={activeTab === 'whatsapp'}
                 onStoreUpdate={async (data) => {
                   await updateStore({
                     id: myStore.id,
