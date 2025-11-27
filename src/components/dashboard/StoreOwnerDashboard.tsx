@@ -5503,7 +5503,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                         {storeForm.pix_copiacola_message_enabled && (
                           <Card className="border-primary/20">
                             <CardHeader>
-                              <CardTitle className="text-base">Personalizar mensagens - PIX Copia e Cola</CardTitle>
+                              <CardTitle className="text-base">PIX Copia e Cola</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                               <div className="space-y-2">
