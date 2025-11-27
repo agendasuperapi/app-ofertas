@@ -78,6 +78,7 @@ import { useEmployeeAccess } from "@/hooks/useEmployeeAccess";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobileOrTablet } from "@/hooks/use-mobile-or-tablet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { CustomersReport } from "./CustomersReport";
 import { BestSellingProductsReport } from "./BestSellingProductsReport";
 import { RegisteredProductsReport } from "./RegisteredProductsReport";
@@ -102,6 +103,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const isMobile = useIsMobileOrTablet();
+  const isMobileDevice = useIsMobile();
   const { isStoreOwner } = useUserRole();
   const employeeAccess = useEmployeeAccess();
   const { myStore, isLoading, updateStore } = useStoreManagement();
@@ -378,6 +380,8 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
 
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
+  const [isDescriptionDialogOpen, setIsDescriptionDialogOpen] = useState(false);
+  const [tempDescription, setTempDescription] = useState('');
   const [isDuplicating, setIsDuplicating] = useState(false);
   const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
   const [productToDuplicate, setProductToDuplicate] = useState<any>(null);
@@ -3726,11 +3730,27 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                           </div>
                           <div>
                             <Label>Descrição</Label>
-                            <Textarea
-                              value={productForm.description}
-                              onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                              rows={3}
-                            />
+                            {isMobileDevice ? (
+                              <div 
+                                className="min-h-[80px] p-3 border rounded-md bg-background cursor-pointer hover:bg-muted/50 transition-colors"
+                                onClick={() => {
+                                  setTempDescription(productForm.description);
+                                  setIsDescriptionDialogOpen(true);
+                                }}
+                              >
+                                {productForm.description || (
+                                  <span className="text-muted-foreground text-sm">
+                                    Toque para adicionar descrição
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <Textarea
+                                value={productForm.description}
+                                onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                                rows={3}
+                              />
+                            )}
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -6271,6 +6291,46 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal de descrição em mobile */}
+      <ResponsiveDialog open={isDescriptionDialogOpen} onOpenChange={setIsDescriptionDialogOpen}>
+        <ResponsiveDialogContent className="max-h-[60vh] h-[60vh] flex flex-col">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Descrição do Produto</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              Digite a descrição do produto abaixo
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <div className="flex-1 overflow-y-auto px-4">
+            <Textarea
+              value={tempDescription}
+              onChange={(e) => setTempDescription(e.target.value)}
+              rows={8}
+              className="w-full resize-none"
+              placeholder="Digite a descrição do produto..."
+              autoFocus
+            />
+          </div>
+          <ResponsiveDialogFooter className="flex-shrink-0">
+            <Button
+              variant="outline"
+              onClick={() => setIsDescriptionDialogOpen(false)}
+              className="w-full sm:w-auto"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                setProductForm({ ...productForm, description: tempDescription });
+                setIsDescriptionDialogOpen(false);
+              }}
+              className="w-full sm:w-auto"
+            >
+              Salvar
+            </Button>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
       </div>
 
       {/* Mobile Bottom Navigation */}
