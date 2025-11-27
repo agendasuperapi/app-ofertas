@@ -5385,18 +5385,52 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                       id="pix_key"
                       type="text"
                       placeholder="Digite a chave PIX (CPF, CNPJ, E-mail, Telefone ou Chave Aleatória)"
-                      value={storeForm.pix_key ? storeForm.pix_key.replace(/^\+55/, '') : ''}
+                      value={storeForm.pix_key || ''}
                       onChange={(e) => {
-                        let value = e.target.value.trim();
-                        
-                        // Auto-normalize phone numbers: if 10-11 digits, add +55
+                        let value = e.target.value;
                         const digitsOnly = value.replace(/\D/g, '');
-                        if (digitsOnly.length === 10 || digitsOnly.length === 11) {
-                          // It's a Brazilian phone without country code
-                          value = `+55${digitsOnly}`;
-                        } else if (digitsOnly.length === 13 && digitsOnly.startsWith('55')) {
-                          // Already has 55, just add +
-                          value = `+${digitsOnly}`;
+                        
+                        // Format CPF as user types (###.###.###-##)
+                        if (digitsOnly.length > 0 && digitsOnly.length <= 11 && /^\d*$/.test(digitsOnly) && !value.includes('@')) {
+                          if (digitsOnly.length <= 3) {
+                            value = digitsOnly;
+                          } else if (digitsOnly.length <= 6) {
+                            value = `${digitsOnly.slice(0, 3)}.${digitsOnly.slice(3)}`;
+                          } else if (digitsOnly.length <= 9) {
+                            value = `${digitsOnly.slice(0, 3)}.${digitsOnly.slice(3, 6)}.${digitsOnly.slice(6)}`;
+                          } else if (digitsOnly.length === 10) {
+                            // Formato de telefone: (##) ####-####
+                            value = `(${digitsOnly.slice(0, 2)}) ${digitsOnly.slice(2, 6)}-${digitsOnly.slice(6, 10)}`;
+                          } else if (digitsOnly.length === 11) {
+                            // Pode ser CPF ou telefone celular
+                            // Verifica se começa com DDD válido (10-99) para ser telefone
+                            const ddd = parseInt(digitsOnly.slice(0, 2));
+                            if (ddd >= 11 && ddd <= 99) {
+                              // Formato de celular: (##) #####-####
+                              value = `(${digitsOnly.slice(0, 2)}) ${digitsOnly.slice(2, 7)}-${digitsOnly.slice(7, 11)}`;
+                            } else {
+                              // Formato de CPF: ###.###.###-##
+                              value = `${digitsOnly.slice(0, 3)}.${digitsOnly.slice(3, 6)}.${digitsOnly.slice(6, 9)}-${digitsOnly.slice(9, 11)}`;
+                            }
+                          }
+                        }
+                        // Format CNPJ as user types (##.###.###/####-##)
+                        else if (digitsOnly.length > 11 && digitsOnly.length <= 14) {
+                          if (digitsOnly.length <= 2) {
+                            value = digitsOnly;
+                          } else if (digitsOnly.length <= 5) {
+                            value = `${digitsOnly.slice(0, 2)}.${digitsOnly.slice(2)}`;
+                          } else if (digitsOnly.length <= 8) {
+                            value = `${digitsOnly.slice(0, 2)}.${digitsOnly.slice(2, 5)}.${digitsOnly.slice(5)}`;
+                          } else if (digitsOnly.length <= 12) {
+                            value = `${digitsOnly.slice(0, 2)}.${digitsOnly.slice(2, 5)}.${digitsOnly.slice(5, 8)}/${digitsOnly.slice(8)}`;
+                          } else {
+                            value = `${digitsOnly.slice(0, 2)}.${digitsOnly.slice(2, 5)}.${digitsOnly.slice(5, 8)}/${digitsOnly.slice(8, 12)}-${digitsOnly.slice(12, 14)}`;
+                          }
+                        }
+                        // Keep as is for email or random keys
+                        else {
+                          value = value.trim();
                         }
                         
                         setStoreForm({ ...storeForm, pix_key: value });
