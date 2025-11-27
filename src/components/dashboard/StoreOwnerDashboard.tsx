@@ -2169,6 +2169,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                             {storeStatusText}
                           </Badge>
                           {myStore?.id && <WhatsAppStatusIndicator storeId={myStore.id} />}
+                          <span className="text-xs text-muted-foreground">v 1.7</span>
                         </div>
                       </div>
                       <motion.p
@@ -2261,7 +2262,6 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
               <div>
                 <h2 className="text-xl md:text-2xl font-bold gradient-text">Estatísticas da Loja</h2>
                 <p className="text-sm md:text-base text-muted-foreground">Acompanhe o desempenho do seu negócio</p>
-                <span className="text-xs text-muted-foreground">v 1.7</span>
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <Select value={periodFilter} onValueChange={(value) => {
