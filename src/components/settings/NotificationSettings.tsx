@@ -3,21 +3,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { Button } from "@/components/ui/button";
-import { Bell, Volume2, BellOff, Loader2, AlertCircle, RefreshCw } from "lucide-react";
+import { Bell, Volume2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { NotificationHelpModal } from "@/components/dashboard/NotificationHelpModal";
-import { usePushSubscription } from "@/hooks/usePushSubscription";
-import { useAuth } from "@/hooks/useAuth";
 
-interface NotificationSettingsProps {
-  storeId?: string;
-}
-
-export const NotificationSettings = ({ storeId }: NotificationSettingsProps = {}) => {
-  const { user } = useAuth();
-  const { isSupported, isSubscribed, isLoading, subscribe, unsubscribe } = usePushSubscription();
-  
+export const NotificationSettings = () => {
   const [soundEnabled, setSoundEnabled] = useState(() => {
     const saved = localStorage.getItem('notification-sound-enabled');
     return saved !== null ? JSON.parse(saved) : true;
@@ -32,67 +21,6 @@ export const NotificationSettings = ({ storeId }: NotificationSettingsProps = {}
     const saved = localStorage.getItem('notification-volume');
     return saved !== null ? JSON.parse(saved) : 100;
   });
-
-  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
-  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
-
-  const checkPermission = () => {
-    if ('Notification' in window) {
-      const current = Notification.permission;
-      setNotificationPermission(current);
-      return current;
-    }
-    return 'default';
-  };
-
-  // Verificar permissão de notificações ao montar o componente
-  useEffect(() => {
-    if (!('Notification' in window)) {
-      console.warn('⚠️ Este navegador não suporta notificações');
-      return;
-    }
-
-    const checkPermissionAsync = async () => {
-      const currentPermission = checkPermission();
-      
-      console.log('🔔 Status da permissão de notificações:', currentPermission);
-
-      // Se a permissão ainda não foi concedida, solicitar automaticamente
-      if (currentPermission === 'default' && storeId) {
-        console.log('📢 Solicitando permissão de notificações automaticamente...');
-        
-        try {
-          const permission = await Notification.requestPermission();
-          setNotificationPermission(permission);
-          
-          if (permission === 'granted') {
-            toast({
-              title: "✅ Notificações permitidas",
-              description: "Você receberá alertas de novos pedidos!",
-            });
-          } else if (permission === 'denied') {
-            toast({
-              title: "❌ Notificações bloqueadas",
-              description: "Para receber alertas, permita notificações nas configurações do navegador.",
-              variant: "destructive",
-              duration: 7000,
-            });
-          }
-        } catch (error) {
-          console.error('Erro ao solicitar permissão:', error);
-        }
-      } else if (currentPermission === 'denied') {
-        toast({
-          title: "🔕 Notificações bloqueadas",
-          description: "Para receber alertas de pedidos, permita notificações nas configurações do seu navegador.",
-          variant: "destructive",
-          duration: 10000,
-        });
-      }
-    };
-
-    checkPermissionAsync();
-  }, [storeId]);
 
   useEffect(() => {
     localStorage.setItem('notification-sound-enabled', JSON.stringify(soundEnabled));
@@ -185,60 +113,6 @@ export const NotificationSettings = ({ storeId }: NotificationSettingsProps = {}
     });
   };
 
-  const handlePushToggle = async () => {
-    if (!user) {
-      toast({
-        title: "Login necessário",
-        description: "Você precisa estar logado para ativar notificações push.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (isSubscribed) {
-      await unsubscribe();
-      toast({
-        title: "🔕 Push desativado",
-        description: "Você não receberá mais notificações push.",
-      });
-    } else {
-      // Verifica se a permissão está bloqueada ANTES de tentar ativar
-      const currentPermission = Notification.permission;
-      
-      if (currentPermission === 'denied') {
-        setIsHelpModalOpen(true);
-        return;
-      }
-      
-      // Se ainda for 'default', tenta solicitar permissão
-      if (currentPermission === 'default') {
-        try {
-          const permission = await Notification.requestPermission();
-          setNotificationPermission(permission);
-          
-          if (permission === 'denied') {
-            setIsHelpModalOpen(true);
-            return;
-          }
-        } catch (error) {
-          console.error('Erro ao solicitar permissão:', error);
-        }
-      }
-      
-      // Passa o storeId se disponível (para lojistas)
-      const success = await subscribe(user.id, storeId);
-      
-      if (success) {
-        toast({
-          title: "🔔 Push ativado!",
-          description: "Você receberá notificações mesmo com o app fechado.",
-        });
-        
-        console.log('[Push] Subscription criada com sucesso:', { userId: user.id, storeId });
-      }
-    }
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -316,94 +190,6 @@ export const NotificationSettings = ({ storeId }: NotificationSettingsProps = {}
             className="w-full"
             disabled={!soundEnabled}
           />
-        </div>
-
-        {/* Alerta de permissão negada */}
-        {notificationPermission === 'denied' && (
-          <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/30 space-y-2">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-              <div className="space-y-1">
-                <p className="text-sm font-semibold text-destructive">
-                  Notificações bloqueadas
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Você bloqueou as notificações. Para receber alertas:
-                </p>
-                <ol className="text-sm text-muted-foreground list-decimal list-inside space-y-1 ml-2">
-                   <li>Clique no ícone <strong>🔒</strong> ou <strong>ⓘ</strong> na barra de endereço</li>
-                  <li>Encontre "Notificações" e mude para <strong>"Permitir"</strong></li>
-                  <li>Recarregue a página</li>
-                </ol>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsHelpModalOpen(true)}
-                  className="mt-3"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Ver instruções detalhadas
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Modal de ajuda */}
-        <NotificationHelpModal
-          isOpen={isHelpModalOpen}
-          onClose={() => setIsHelpModalOpen(false)}
-          onRecheck={checkPermission}
-        />
-
-        {/* Web Push Notifications */}
-        <div className="p-4 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 space-y-3">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1 flex-1">
-              <Label className="text-base font-semibold flex items-center gap-2">
-                <Bell className="w-4 h-4" />
-                Notificações Push (Web Push)
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Receba notificações mesmo com navegador <strong>fechado ou minimizado</strong>
-              </p>
-              {!isSupported && (
-                <p className="text-sm text-destructive mt-2">
-                  ⚠️ Seu navegador não suporta Web Push
-                </p>
-              )}
-            </div>
-            {isSupported && (
-              <Button
-                onClick={handlePushToggle}
-                disabled={isLoading}
-                variant={isSubscribed ? "destructive" : "default"}
-                size="sm"
-                className="shrink-0"
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : isSubscribed ? (
-                  <>
-                    <BellOff className="h-4 w-4 mr-2" />
-                    Desativar
-                  </>
-                ) : (
-                  <>
-                    <Bell className="h-4 w-4 mr-2" />
-                    Ativar Push
-                  </>
-                )}
-              </Button>
-            )}
-          </div>
-          {isSubscribed && (
-            <div className="bg-green-50 dark:bg-green-950/50 p-3 rounded-lg border border-green-200 dark:border-green-900">
-              <p className="text-sm text-green-700 dark:text-green-300 font-medium">
-                ✓ Web Push ativo - Você receberá alertas mesmo com o app fechado!
-              </p>
-            </div>
-          )}
         </div>
       </CardContent>
     </Card>
