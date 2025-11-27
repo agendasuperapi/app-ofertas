@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown, Menu } from "lucide-react";
 import { EmployeePermissions } from "@/hooks/useStoreEmployees";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ interface DashboardMobileSidebarProps {
   onSignOut?: () => void;
   isOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
+  openRelatoriosMenu?: boolean;
 }
 
 export const DashboardMobileSidebar = ({
@@ -30,6 +31,7 @@ export const DashboardMobileSidebar = ({
   onSignOut,
   isOpen: externalIsOpen,
   onOpenChange: externalOnOpenChange,
+  openRelatoriosMenu = false,
 }: DashboardMobileSidebarProps) => {
   const [internalOpen, setInternalOpen] = useState(false);
   const [cadastrosOpen, setCadastrosOpen] = useState(false);
@@ -38,6 +40,16 @@ export const DashboardMobileSidebar = ({
   // Use controlled ou uncontrolled state
   const open = externalIsOpen !== undefined ? externalIsOpen : internalOpen;
   const setOpen = externalOnOpenChange || setInternalOpen;
+  
+  // Abrir menu de relatórios quando solicitado
+  useEffect(() => {
+    if (openRelatoriosMenu && open) {
+      setRelatoriosOpen(true);
+    } else if (!open) {
+      // Resetar quando o sidebar fechar
+      setRelatoriosOpen(false);
+    }
+  }, [openRelatoriosMenu, open]);
 
   const hasPermission = (module: string, action: string = 'view'): boolean => {
     if (!isEmployee || !employeePermissions) return true;
