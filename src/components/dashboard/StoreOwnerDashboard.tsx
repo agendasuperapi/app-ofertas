@@ -55,6 +55,7 @@ import { MiniChart } from "./MiniChart";
 import { OrderStatusManager } from "./OrderStatusManager";
 import { useOrderStatusNotification } from "@/hooks/useOrderStatusNotification";
 import { useNewOrderNotification } from "@/hooks/useNewOrderNotification";
+import { useWhatsAppDisconnectNotification } from "@/hooks/useWhatsAppDisconnectNotification";
 import { useOrderStatuses } from "@/hooks/useOrderStatuses";
 import { cn } from "@/lib/utils";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
@@ -433,6 +434,13 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
   
   // Enable real-time new order notifications with sound (pausar quando modais estão abertos)
   useNewOrderNotification(myStore?.id, { pauseInvalidations: isAnyModalOpen });
+  
+  // Enable WhatsApp disconnect notifications
+  useWhatsAppDisconnectNotification(myStore?.id, {
+    enableBrowserNotification: true,
+    enableToast: true,
+    autoRequestPermission: true,
+  });
   
   // Gerenciar aba ativa via URL para persistir ao recarregar
   const tabFromUrl = searchParams.get('tab') || 'home';
