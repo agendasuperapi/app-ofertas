@@ -5504,6 +5504,7 @@ export const StoreOwnerDashboard = ({ onSignOut }: StoreOwnerDashboardProps) => 
                           <Card className="border-primary/20">
                             <CardHeader>
                               <CardTitle className="text-base">PIX Copia e Cola</CardTitle>
+                              <CardDescription>Configure as mensagens enviadas quando o cliente escolher PIX como forma de pagamento</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                               <div className="space-y-2">
