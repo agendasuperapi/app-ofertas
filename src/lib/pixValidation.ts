@@ -149,6 +149,25 @@ export const normalizePixKey = (key: string): string => {
 };
 
 /**
+ * Removes +55 prefix from phone PIX keys for display purposes
+ */
+export const displayPixKey = (key: string): string => {
+  if (!key) return '';
+  
+  const type = detectPixKeyType(key);
+  
+  if (type === 'phone') {
+    const digitsOnly = key.replace(/\D/g, '');
+    // Remove +55 prefix if present
+    if (digitsOnly.startsWith('55') && (digitsOnly.length === 13 || digitsOnly.length === 12)) {
+      return digitsOnly.substring(2);
+    }
+  }
+  
+  return key;
+};
+
+/**
  * Formats a PIX key for display based on its type
  */
 export const formatPixKey = (key: string): string => {
