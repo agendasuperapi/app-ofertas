@@ -64,7 +64,7 @@ export const NotesDialog = ({ open, onOpenChange, order, onUpdate }: NotesDialog
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl w-[96vw] sm:w-full max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl w-[96vw] sm:w-full max-h-[90vh] overflow-y-auto top-[15%] translate-y-0">
         <DialogHeader>
           <DialogTitle>Notas - #{order.order_number}</DialogTitle>
           <DialogDescription>
