@@ -65,8 +65,8 @@ export const NotesDialog = ({ open, onOpenChange, order, onUpdate }: NotesDialog
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl w-[96vw] sm:w-full h-[90vh] flex flex-col top-[5%] translate-y-0 p-0 gap-0">
-        <div className="px-6 pt-6 pb-4 shrink-0">
+      <DialogContent className="max-w-2xl w-[96vw] sm:w-full max-h-[90vh] flex flex-col top-[5%] translate-y-0 p-0">
+        <div className="px-6 pt-6">
           <DialogHeader>
             <DialogTitle>Notas - #{order.order_number}</DialogTitle>
             <DialogDescription>
@@ -75,8 +75,8 @@ export const NotesDialog = ({ open, onOpenChange, order, onUpdate }: NotesDialog
           </DialogHeader>
         </div>
 
-        <ScrollArea className="flex-1 overflow-y-auto px-6">
-          <div className="space-y-6 py-4 pb-6">
+        <ScrollArea className="flex-1 px-6">
+          <div className="space-y-6 py-4">
             <div>
               <Label htmlFor="customer-notes" className="text-sm sm:text-base">Notas do Cliente</Label>
               <Textarea
@@ -107,7 +107,7 @@ export const NotesDialog = ({ open, onOpenChange, order, onUpdate }: NotesDialog
           </div>
         </ScrollArea>
 
-        <div className="shrink-0 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 p-4 border-t bg-background shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        <div className="sticky bottom-0 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 p-4 border-t bg-background z-10">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
