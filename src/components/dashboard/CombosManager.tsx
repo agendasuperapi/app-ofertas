@@ -159,7 +159,7 @@ export const CombosManager = ({ storeId, products }: CombosManagerProps) => {
               <Plus className="w-4 h-4 mr-2" />
               Novo Combo
             </Button>
-            <ResponsiveDialogContent>
+            <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
               <ResponsiveDialogHeader>
                 <ResponsiveDialogTitle>{editingCombo ? 'Editar Combo' : 'Novo Combo'}</ResponsiveDialogTitle>
                 <ResponsiveDialogDescription>
