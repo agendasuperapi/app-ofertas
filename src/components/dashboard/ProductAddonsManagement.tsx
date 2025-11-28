@@ -1912,7 +1912,7 @@ export const TemplatesTab = ({ storeId }: { storeId: string }) => {
 
       {/* Dialog de Edição/Criação */}
       <ResponsiveDialog open={editFormOpen} onOpenChange={setEditFormOpen}>
-        <ResponsiveDialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>
               {editingTemplate ? 'Editar Template' : 'Novo Template Personalizado'}
@@ -2236,7 +2236,7 @@ export const TemplatesTab = ({ storeId }: { storeId: string }) => {
 
       {/* Dialog para Importar de Produto */}
       <ResponsiveDialog open={importFromProductOpen} onOpenChange={setImportFromProductOpen}>
-        <ResponsiveDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>Importar Template de Produto</ResponsiveDialogTitle>
             <ResponsiveDialogDescription>

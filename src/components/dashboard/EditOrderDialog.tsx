@@ -470,7 +470,7 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
   return (
     <>
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent className={isMobile ? "p-0" : "max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"}>
+      <ResponsiveDialogContent className={isMobile ? "p-0" : "w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50"}>
         <ResponsiveDialogHeader className="flex-shrink-0">
           <ResponsiveDialogTitle>Editar Pedido #{order.order_number}</ResponsiveDialogTitle>
         </ResponsiveDialogHeader>

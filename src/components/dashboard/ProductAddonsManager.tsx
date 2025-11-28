@@ -1334,7 +1334,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
         queryClient.invalidateQueries({ queryKey: ['store-addons', storeId] });
       }
     }}>
-      <ResponsiveDialogContent>
+      <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle className="flex items-center gap-2">
             <Store className="w-5 h-5" />
@@ -1514,7 +1514,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
         setSelectedAddonsToImport([]);
       }
     }}>
-      <ResponsiveDialogContent>
+      <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle className="flex items-center gap-2">
             <Package className="w-5 h-5" />
@@ -1693,7 +1693,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
 
     {/* Dialog: Importar de Produto */}
     <ResponsiveDialog open={importFromProductOpen} onOpenChange={setImportFromProductOpen}>
-      <ResponsiveDialogContent>
+      <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Importar Adicionais de Produto</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
@@ -1750,7 +1750,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
 
       {/* Modal separado para criar categoria */}
       <ResponsiveDialog open={isCategoryModalOpen} onOpenChange={setIsCategoryModalOpen}>
-        <ResponsiveDialogContent>
+        <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>Criar Nova Categoria</ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
@@ -1841,7 +1841,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
 
       {/* Dialog de Editar Categorias */}
       <ResponsiveDialog open={isEditCategoriesOpen} onOpenChange={setIsEditCategoriesOpen}>
-        <ResponsiveDialogContent>
+        <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>Gerenciar Categorias de Adicionais</ResponsiveDialogTitle>
           </ResponsiveDialogHeader>

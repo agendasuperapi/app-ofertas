@@ -314,7 +314,7 @@ export const FlavorsTab = ({ storeId }: { storeId: string }) => {
 
       {/* Dialog Novo Sabor */}
       <ResponsiveDialog open={isNewFlavorOpen} onOpenChange={setIsNewFlavorOpen}>
-        <ResponsiveDialogContent>
+        <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>Novo Sabor</ResponsiveDialogTitle>
           </ResponsiveDialogHeader>

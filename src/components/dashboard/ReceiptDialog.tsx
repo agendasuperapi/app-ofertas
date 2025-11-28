@@ -73,7 +73,7 @@ export const ReceiptDialog = ({ open, onOpenChange, order, onUpdate }: ReceiptDi
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent className={isMobile ? "p-0" : "max-w-2xl"}>
+      <ResponsiveDialogContent className={isMobile ? "p-0" : "w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50"}>
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Comprovante de Pagamento - #{order.order_number}</ResponsiveDialogTitle>
         </ResponsiveDialogHeader>

@@ -65,7 +65,7 @@ export const NewAddonCategoryDialog = ({
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent>
+      <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Nova Categoria de Adicional</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>

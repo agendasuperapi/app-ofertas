@@ -2266,7 +2266,7 @@ export const StoreOwnerDashboard = ({
 
             {/* Custom Date Range Dialog */}
             <ResponsiveDialog open={showCustomDatePicker} onOpenChange={setShowCustomDatePicker}>
-              <ResponsiveDialogContent className="sm:max-w-[600px]">
+              <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
                 <ResponsiveDialogHeader>
                   <ResponsiveDialogTitle>Selecionar Período Personalizado</ResponsiveDialogTitle>
                 </ResponsiveDialogHeader>
@@ -3312,7 +3312,7 @@ export const StoreOwnerDashboard = ({
                                 <Button variant="outline" size="icon" onClick={() => setIsCategoryDialogOpen(true)}>
                                   <Plus className="w-4 h-4" />
                                 </Button>
-                                <ResponsiveDialogContent>
+                                <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
                                   <ResponsiveDialogHeader>
                                     <ResponsiveDialogTitle>Nova Categoria</ResponsiveDialogTitle>
                                   </ResponsiveDialogHeader>
@@ -3832,7 +3832,7 @@ export const StoreOwnerDashboard = ({
                           <Plus className="w-4 h-4 mr-2" />
                           <span className="text-xs sm:text-sm">Nova Categoria</span>
                         </Button>
-                        <ResponsiveDialogContent>
+                        <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
                           <ResponsiveDialogHeader>
                             <ResponsiveDialogTitle>Nova Categoria</ResponsiveDialogTitle>
                           </ResponsiveDialogHeader>
@@ -3964,7 +3964,7 @@ export const StoreOwnerDashboard = ({
 
                 {/* Dialog de edição de categoria */}
                 <ResponsiveDialog open={isEditCategoryDialogOpen} onOpenChange={setIsEditCategoryDialogOpen}>
-                  <ResponsiveDialogContent>
+                  <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
                     <ResponsiveDialogHeader>
                       <ResponsiveDialogTitle>Editar Categoria</ResponsiveDialogTitle>
                     </ResponsiveDialogHeader>
@@ -4615,7 +4615,7 @@ export const StoreOwnerDashboard = ({
                     <Clock className="h-5 w-5" />
                     Gerenciar Horários de Funcionamento
                   </Button>
-                  <ResponsiveDialogContent className="max-w-3xl">
+                  <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
                     <ResponsiveDialogHeader>
                       <ResponsiveDialogTitle>Horários de Funcionamento</ResponsiveDialogTitle>
                     </ResponsiveDialogHeader>
@@ -5033,7 +5033,7 @@ export const StoreOwnerDashboard = ({
 
       {/* View Order Dialog */}
       <ResponsiveDialog open={isViewOrderDialogOpen} onOpenChange={setIsViewOrderDialogOpen}>
-        <ResponsiveDialogContent className="max-w-2xl">
+        <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>Detalhes do Pedido #{viewingOrder?.order_number}</ResponsiveDialogTitle>
           </ResponsiveDialogHeader>
@@ -5320,7 +5320,7 @@ export const StoreOwnerDashboard = ({
 
       {/* Bulk Change Category Dialog */}
       <ResponsiveDialog open={isBulkActionDialogOpen} onOpenChange={setIsBulkActionDialogOpen}>
-        <ResponsiveDialogContent>
+        <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>Alterar Categoria em Massa</ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
