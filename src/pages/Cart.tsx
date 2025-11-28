@@ -801,10 +801,10 @@ export default function Cart() {
                   authSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   setCurrentStep(1);
                   
-                  // Remove o destaque após 3 segundos
+                  // Remove o destaque após 1 segundo
                   setTimeout(() => {
                     setHighlightAuthSection(false);
-                  }, 3000);
+                  }, 1000);
                 } else {
                   // Se já estiver logado, rola para a seção de tipo de entrega
                   deliveryTypeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -965,7 +965,7 @@ export default function Cart() {
                     exit={{ opacity: 0, x: -20 }}
                     className={`space-y-6 rounded-lg transition-all duration-300 ${
                       highlightAuthSection 
-                        ? 'ring-4 ring-primary shadow-lg shadow-primary/50 p-4 animate-pulse' 
+                        ? 'ring-4 ring-orange-500 shadow-lg shadow-orange-500/50 p-4 animate-pulse' 
                         : ''
                     }`}
                   >
