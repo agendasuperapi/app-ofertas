@@ -74,6 +74,7 @@ export default function Cart() {
   const [storeData, setStoreData] = useState<any>(null);
   const [highlightPickupLocation, setHighlightPickupLocation] = useState(false);
   const [highlightPayment, setHighlightPayment] = useState(false);
+  const [highlightAuthSection, setHighlightAuthSection] = useState(false);
   const deliveryTypeRef = useRef<HTMLDivElement>(null);
   const cartItemsRef = useRef<HTMLDivElement>(null);
   const paymentSectionRef = useRef<HTMLDivElement>(null);
@@ -795,9 +796,15 @@ export default function Cart() {
               variant="outline"
               onClick={() => {
                 if (!user) {
-                  // Se não estiver logado, rola para a seção de criar conta
+                  // Se não estiver logado, rola para a seção de criar conta com destaque
+                  setHighlightAuthSection(true);
                   authSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                   setCurrentStep(1);
+                  
+                  // Remove o destaque após 3 segundos
+                  setTimeout(() => {
+                    setHighlightAuthSection(false);
+                  }, 3000);
                 } else {
                   // Se já estiver logado, rola para a seção de tipo de entrega
                   deliveryTypeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -956,7 +963,11 @@ export default function Cart() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
-                    className="space-y-6"
+                    className={`space-y-6 rounded-lg transition-all duration-300 ${
+                      highlightAuthSection 
+                        ? 'ring-4 ring-primary shadow-lg shadow-primary/50 p-4 animate-pulse' 
+                        : ''
+                    }`}
                   >
                     <div>
                       <h3 className="text-xl font-bold mb-4">
