@@ -787,7 +787,7 @@ export default function StoreDetails() {
                           >
                             {/* Product Image on Left */}
                             <div className="flex-shrink-0 relative">
-                              <div className="w-36 h-24 md:w-48 md:h-32 rounded-xl overflow-hidden bg-muted/50">
+                              <div className="w-36 h-24 md:w-48 md:h-32 rounded-xl overflow-hidden bg-muted/30">
                                 {product.image_url ? (
                                   <img 
                                     src={product.image_url} 
@@ -890,7 +890,7 @@ export default function StoreDetails() {
                           >
                             {/* Product Image on Left */}
                             <div className="flex-shrink-0 relative">
-                              <div className="w-36 h-24 md:w-48 md:h-32 rounded-xl overflow-hidden bg-muted/50">
+                              <div className="w-36 h-24 md:w-48 md:h-32 rounded-xl overflow-hidden bg-muted/30">
                                 {product.image_url ? (
                                   <img 
                                     src={product.image_url} 
@@ -1005,7 +1005,7 @@ export default function StoreDetails() {
                           onClick={() => setDetailsProduct(product)}
                         >
                           {product.image_url && (
-                            <div className="relative aspect-[4/3] overflow-hidden bg-muted/50">
+                            <div className="relative aspect-[4/3] overflow-hidden bg-muted/30">
                               <motion.img
                                 initial={{ scale: 0.95, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
@@ -1016,7 +1016,7 @@ export default function StoreDetails() {
                                 className="w-full h-full object-cover transition-transform duration-500 ease-out"
                               />
                               {/* Subtle gray-blue gradient overlay */}
-                              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/3 via-blue-900/2 to-transparent pointer-events-none" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/8 via-blue-900/5 to-transparent pointer-events-none" />
                               {isInCart && (
                                 <motion.div
                                   initial={{ scale: 0 }}
@@ -1141,7 +1141,7 @@ export default function StoreDetails() {
                           onClick={() => setDetailsProduct(product)}
                         >
                           {product.image_url && (
-                            <div className="relative h-56 md:h-44 overflow-hidden bg-muted/50">
+                            <div className="relative h-56 md:h-44 overflow-hidden bg-muted/30">
                               <motion.img
                                 initial={{ scale: 0.95, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
@@ -1152,7 +1152,7 @@ export default function StoreDetails() {
                                 className="w-full h-full object-cover transition-transform duration-500 ease-out"
                               />
                               {/* Subtle gray-blue gradient overlay */}
-                              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/3 via-blue-900/2 to-transparent pointer-events-none" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/8 via-blue-900/5 to-transparent pointer-events-none" />
                               {isInCart && (
                                 <motion.div
                                   initial={{ scale: 0, rotate: -180 }}
