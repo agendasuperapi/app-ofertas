@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -130,12 +130,37 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem(MULTI_CART_STORAGE_KEY, JSON.stringify(multiCart));
   }, [multiCart]);
 
-  const switchToStore = (storeId: string) => {
-    setMultiCart(prev => ({
-      ...prev,
-      activeStoreId: storeId
-    }));
-  };
+  const switchToStore = useCallback((storeId: string) => {
+    console.log('🔄 switchToStore called:', storeId);
+    setMultiCart(prev => {
+      console.log('📦 Previous multiCart state:', {
+        activeStoreId: prev.activeStoreId,
+        carts: Object.keys(prev.carts),
+        cartItems: Object.entries(prev.carts).map(([id, cart]) => ({
+          storeId: id,
+          itemCount: cart.items.length
+        }))
+      });
+      
+      // Ensure we're not creating a new cart, just switching
+      const newState = {
+        ...prev,
+        carts: prev.carts, // Preserve all existing carts
+        activeStoreId: storeId
+      };
+      
+      console.log('✅ New multiCart state after switch:', {
+        activeStoreId: newState.activeStoreId,
+        carts: Object.keys(newState.carts),
+        cartItems: Object.entries(newState.carts).map(([id, cart]) => ({
+          storeId: id,
+          itemCount: cart.items.length
+        }))
+      });
+      
+      return newState;
+    });
+  }, []);
 
   const getStoreCartCount = (storeId: string): number => {
     const storeCart = multiCart.carts[storeId];
@@ -161,6 +186,12 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     console.log('🛒 CartProvider addToCart:', { productName, quantity, size, storeId });
     
     setMultiCart((prev) => {
+      console.log('📥 Adding to cart - Previous state:', {
+        activeStoreId: prev.activeStoreId,
+        targetStoreId: storeId,
+        existingCarts: Object.keys(prev.carts)
+      });
+      
       // Switch to this store if not already active
       const newActiveStoreId = storeId;
       
@@ -211,13 +242,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         console.log('🛒 Updated cart (new item):', updatedStoreCart);
       }
 
-      return {
+      const newState = {
         carts: {
           ...prev.carts,
           [storeId]: updatedStoreCart
         },
         activeStoreId: newActiveStoreId
       };
+      
+      console.log('✅ addToCart final state:', {
+        activeStoreId: newState.activeStoreId,
+        allCarts: Object.keys(newState.carts),
+        targetCartItems: newState.carts[storeId].items.length
+      });
+
+      return newState;
     });
   };
 
