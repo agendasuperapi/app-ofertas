@@ -1241,7 +1241,7 @@ export default function StoreDetails() {
           </motion.div>
 
           {/* Cart Sidebar */}
-          <CartSidebar />
+          <CartSidebar storeId={store.id} />
         </div>
       </main>
 
