@@ -45,8 +45,17 @@ export interface Cart {
   couponDiscount: number;
 }
 
+export interface MultiStoreCart {
+  carts: Record<string, Cart>; // storeId -> Cart
+  activeStoreId: string | null;
+}
+
 interface CartContextType {
   cart: Cart;
+  allCarts: Record<string, Cart>;
+  activeStoreId: string | null;
+  switchToStore: (storeId: string) => void;
+  getStoreCartCount: (storeId: string) => number;
   addToCart: (
     productId: string,
     productName: string,
@@ -75,27 +84,64 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const CART_STORAGE_KEY = 'shopping_cart';
+const MULTI_CART_STORAGE_KEY = 'multi_store_cart';
+
+const emptyCart = (): Cart => ({
+  items: [],
+  storeId: null,
+  storeName: null,
+  storeSlug: null,
+  couponCode: null,
+  couponDiscount: 0
+});
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [cart, setCart] = useState<Cart>(() => {
-    const stored = localStorage.getItem(CART_STORAGE_KEY);
-    const initialCart = stored ? JSON.parse(stored) : { 
-      items: [], 
-      storeId: null, 
-      storeName: null, 
-      storeSlug: null,
-      couponCode: null,
-      couponDiscount: 0
-    };
-    console.log('🎬 CartProvider: initialized with', initialCart);
-    return initialCart;
+  const [multiCart, setMultiCart] = useState<MultiStoreCart>(() => {
+    const stored = localStorage.getItem(MULTI_CART_STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      console.log('🎬 CartProvider: initialized with multi-cart', parsed);
+      return parsed;
+    }
+    
+    // Migrar carrinho antigo se existir
+    const oldCart = localStorage.getItem('shopping_cart');
+    if (oldCart) {
+      const parsed = JSON.parse(oldCart);
+      if (parsed.storeId && parsed.items.length > 0) {
+        console.log('🔄 Migrating old cart to multi-cart system');
+        return {
+          carts: { [parsed.storeId]: parsed },
+          activeStoreId: parsed.storeId
+        };
+      }
+    }
+    
+    return { carts: {}, activeStoreId: null };
   });
 
+  // Computed current cart
+  const cart = multiCart.activeStoreId && multiCart.carts[multiCart.activeStoreId]
+    ? multiCart.carts[multiCart.activeStoreId]
+    : emptyCart();
+
   useEffect(() => {
-    console.log('💾 CartProvider: saving to localStorage', cart);
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-  }, [cart]);
+    console.log('💾 CartProvider: saving multi-cart to localStorage', multiCart);
+    localStorage.setItem(MULTI_CART_STORAGE_KEY, JSON.stringify(multiCart));
+  }, [multiCart]);
+
+  const switchToStore = (storeId: string) => {
+    setMultiCart(prev => ({
+      ...prev,
+      activeStoreId: storeId
+    }));
+  };
+
+  const getStoreCartCount = (storeId: string): number => {
+    const storeCart = multiCart.carts[storeId];
+    if (!storeCart) return 0;
+    return storeCart.items.reduce((sum, item) => sum + item.quantity, 0);
+  };
 
   const addToCart = (
     productId: string,
@@ -112,12 +158,41 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     flavors?: CartFlavor[],
     size?: CartSize
   ) => {
-    console.log('🛒 CartProvider addToCart:', { productName, quantity, size });
+    console.log('🛒 CartProvider addToCart:', { productName, quantity, size, storeId });
     
-    setCart((prev) => {
-      if (prev.storeId && prev.storeId !== storeId) {
-        const newCart = {
-          items: [{
+    setMultiCart((prev) => {
+      // Switch to this store if not already active
+      const newActiveStoreId = storeId;
+      
+      // Get or create cart for this store
+      const storeCart = prev.carts[storeId] || {
+        items: [],
+        storeId,
+        storeName,
+        storeSlug: storeSlug || null,
+        couponCode: null,
+        couponDiscount: 0
+      };
+
+      // Check if item already exists in this store's cart
+      const existingIndex = storeCart.items.findIndex(
+        item => item.productId === productId && 
+                item.observation === observation &&
+                JSON.stringify(item.addons) === JSON.stringify(addons) &&
+                JSON.stringify(item.flavors) === JSON.stringify(flavors) &&
+                JSON.stringify(item.size) === JSON.stringify(size)
+      );
+      
+      let updatedStoreCart: Cart;
+      if (existingIndex >= 0) {
+        const newItems = [...storeCart.items];
+        newItems[existingIndex].quantity += quantity;
+        updatedStoreCart = { ...storeCart, items: newItems };
+        console.log('🛒 Updated cart (existing item):', updatedStoreCart);
+      } else {
+        updatedStoreCart = {
+          ...storeCart,
+          items: [...storeCart.items, {
             id: `${productId}-${Date.now()}`,
             productId,
             productName,
@@ -132,69 +207,47 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             flavors,
             size,
           }],
-          storeId,
-          storeName,
-          storeSlug: storeSlug || null,
-          couponCode: null,
-          couponDiscount: 0,
         };
-        console.log('🛒 New cart (different store):', newCart);
-        return newCart;
+        console.log('🛒 Updated cart (new item):', updatedStoreCart);
       }
 
-      const existingIndex = prev.items.findIndex(
-        item => item.productId === productId && 
-                item.observation === observation &&
-                JSON.stringify(item.addons) === JSON.stringify(addons) &&
-                JSON.stringify(item.flavors) === JSON.stringify(flavors) &&
-                JSON.stringify(item.size) === JSON.stringify(size)
-      );
-      
-      if (existingIndex >= 0) {
-        const newItems = [...prev.items];
-        newItems[existingIndex].quantity += quantity;
-        const updatedCart = { ...prev, items: newItems };
-        console.log('🛒 Updated cart (existing):', updatedCart);
-        return updatedCart;
-      }
-
-      const updatedCart = {
-        items: [...prev.items, {
-          id: `${productId}-${Date.now()}`,
-          productId,
-          productName,
-          price,
-          promotionalPrice,
-          quantity,
-          imageUrl,
-          storeId,
-          storeName,
-          observation,
-          addons,
-          flavors,
-          size,
-        }],
-        storeId,
-        storeName,
-        storeSlug: prev.storeSlug || storeSlug || null,
-        couponCode: prev.couponCode,
-        couponDiscount: prev.couponDiscount,
+      return {
+        carts: {
+          ...prev.carts,
+          [storeId]: updatedStoreCart
+        },
+        activeStoreId: newActiveStoreId
       };
-      console.log('🛒 Updated cart (new item):', updatedCart);
-      return updatedCart;
     });
   };
 
   const removeFromCart = (itemId: string) => {
-    setCart((prev) => {
-      const newItems = prev.items.filter(item => item.id !== itemId);
+    if (!multiCart.activeStoreId) return;
+    
+    setMultiCart((prev) => {
+      const storeCart = prev.carts[prev.activeStoreId!];
+      if (!storeCart) return prev;
+      
+      const newItems = storeCart.items.filter(item => item.id !== itemId);
+      
+      if (newItems.length === 0) {
+        // Remove empty cart
+        const { [prev.activeStoreId!]: removed, ...remainingCarts } = prev.carts;
+        return {
+          carts: remainingCarts,
+          activeStoreId: Object.keys(remainingCarts)[0] || null
+        };
+      }
+      
       return {
-        items: newItems,
-        storeId: newItems.length > 0 ? prev.storeId : null,
-        storeName: newItems.length > 0 ? prev.storeName : null,
-        storeSlug: newItems.length > 0 ? prev.storeSlug : null,
-        couponCode: newItems.length > 0 ? prev.couponCode : null,
-        couponDiscount: newItems.length > 0 ? prev.couponDiscount : 0,
+        ...prev,
+        carts: {
+          ...prev.carts,
+          [prev.activeStoreId!]: {
+            ...storeCart,
+            items: newItems
+          }
+        }
       };
     });
   };
@@ -205,32 +258,59 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    setCart((prev) => ({
-      ...prev,
-      items: prev.items.map(item =>
-        item.id === itemId ? { ...item, quantity } : item
-      ),
-    }));
+    if (!multiCart.activeStoreId) return;
+
+    setMultiCart((prev) => {
+      const storeCart = prev.carts[prev.activeStoreId!];
+      if (!storeCart) return prev;
+
+      return {
+        ...prev,
+        carts: {
+          ...prev.carts,
+          [prev.activeStoreId!]: {
+            ...storeCart,
+            items: storeCart.items.map(item =>
+              item.id === itemId ? { ...item, quantity } : item
+            )
+          }
+        }
+      };
+    });
   };
 
   const updateCartItem = (itemId: string, observation: string, addons: CartAddon[], flavors?: CartFlavor[]) => {
-    setCart((prev) => ({
-      ...prev,
-      items: prev.items.map(item =>
-        item.id === itemId ? { ...item, observation, addons, flavors } : item
-      ),
-    }));
+    if (!multiCart.activeStoreId) return;
+
+    setMultiCart((prev) => {
+      const storeCart = prev.carts[prev.activeStoreId!];
+      if (!storeCart) return prev;
+
+      return {
+        ...prev,
+        carts: {
+          ...prev.carts,
+          [prev.activeStoreId!]: {
+            ...storeCart,
+            items: storeCart.items.map(item =>
+              item.id === itemId ? { ...item, observation, addons, flavors } : item
+            )
+          }
+        }
+      };
+    });
   };
 
   const clearCart = () => {
-    console.log('🗑️ CartProvider: clearing cart');
-    setCart({ 
-      items: [], 
-      storeId: null, 
-      storeName: null, 
-      storeSlug: null,
-      couponCode: null,
-      couponDiscount: 0
+    console.log('🗑️ CartProvider: clearing active cart');
+    if (!multiCart.activeStoreId) return;
+
+    setMultiCart((prev) => {
+      const { [prev.activeStoreId!]: removed, ...remainingCarts } = prev.carts;
+      return {
+        carts: remainingCarts,
+        activeStoreId: Object.keys(remainingCarts)[0] || null
+      };
     });
   };
 
@@ -251,23 +331,54 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const applyCoupon = (code: string, discount: number) => {
-    setCart(prev => ({
-      ...prev,
-      couponCode: code,
-      couponDiscount: discount
-    }));
+    if (!multiCart.activeStoreId) return;
+
+    setMultiCart(prev => {
+      const storeCart = prev.carts[prev.activeStoreId!];
+      if (!storeCart) return prev;
+
+      return {
+        ...prev,
+        carts: {
+          ...prev.carts,
+          [prev.activeStoreId!]: {
+            ...storeCart,
+            couponCode: code,
+            couponDiscount: discount
+          }
+        }
+      };
+    });
   };
 
   const removeCoupon = () => {
-    setCart(prev => ({
-      ...prev,
-      couponCode: null,
-      couponDiscount: 0
-    }));
+    if (!multiCart.activeStoreId) return;
+
+    setMultiCart(prev => {
+      const storeCart = prev.carts[prev.activeStoreId!];
+      if (!storeCart) return prev;
+
+      return {
+        ...prev,
+        carts: {
+          ...prev.carts,
+          [prev.activeStoreId!]: {
+            ...storeCart,
+            couponCode: null,
+            couponDiscount: 0
+          }
+        }
+      };
+    });
   };
 
   const validateAndSyncCart = async () => {
-    if (!cart.storeId || cart.items.length === 0) return;
+    if (!multiCart.activeStoreId) return;
+    
+    const activeCart = multiCart.carts[multiCart.activeStoreId];
+    if (!activeCart || activeCart.items.length === 0) return;
+    
+    const cart = activeCart;
 
     try {
       // Buscar produtos atuais da loja
@@ -283,7 +394,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const updatedItems: string[] = [];
       let hasChanges = false;
 
-      setCart(prev => {
+      setMultiCart(prevMulti => {
+        const prev = prevMulti.carts[prevMulti.activeStoreId!];
+        if (!prev) return prevMulti;
+        
         const newItems = prev.items.filter(item => {
           const product = products?.find(p => p.id === item.productId);
           
@@ -314,16 +428,26 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           return true;
         });
 
-        if (!hasChanges) return prev;
+        if (!hasChanges) return prevMulti;
+
+        if (newItems.length === 0) {
+          // Remove empty cart
+          const { [prevMulti.activeStoreId!]: removed, ...remainingCarts } = prevMulti.carts;
+          return {
+            carts: remainingCarts,
+            activeStoreId: Object.keys(remainingCarts)[0] || null
+          };
+        }
 
         return {
-          ...prev,
-          items: newItems.length > 0 ? newItems : [],
-          storeId: newItems.length > 0 ? prev.storeId : null,
-          storeName: newItems.length > 0 ? prev.storeName : null,
-          storeSlug: newItems.length > 0 ? prev.storeSlug : null,
-          couponCode: newItems.length > 0 ? prev.couponCode : null,
-          couponDiscount: newItems.length > 0 ? prev.couponDiscount : 0,
+          ...prevMulti,
+          carts: {
+            ...prevMulti.carts,
+            [prevMulti.activeStoreId!]: {
+              ...prev,
+              items: newItems
+            }
+          }
         };
       });
 
@@ -342,6 +466,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   return (
     <CartContext.Provider value={{
       cart,
+      allCarts: multiCart.carts,
+      activeStoreId: multiCart.activeStoreId,
+      switchToStore,
+      getStoreCartCount,
       addToCart,
       removeFromCart,
       updateQuantity,

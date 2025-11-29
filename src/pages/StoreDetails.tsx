@@ -35,7 +35,7 @@ export default function StoreDetails() {
   const { data: products, isLoading: productsLoading } = useProducts(store?.id || '');
   const { data: featuredProducts } = useFeaturedProducts(store?.id || '');
   const { categories: storeCategories } = useCategories(store?.id);
-  const { addToCart, cart, clearCart } = useCart();
+  const { addToCart, cart, switchToStore, allCarts, getStoreCartCount } = useCart();
   const { toast } = useToast();
   const [detailsProduct, setDetailsProduct] = useState<any>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
@@ -209,15 +209,25 @@ export default function StoreDetails() {
   const allowOrdersWhenClosed = (store as any)?.allow_orders_when_closed ?? false;
   const canAcceptOrders = storeIsOpen || allowOrdersWhenClosed;
 
-  // Save last visited store to localStorage and clear cart if different store
+  // Auto-switch to store cart when entering a store page
   useEffect(() => {
     if (store) {
-      // Check if there are items in cart from a different store
-      if (cart.items.length > 0 && cart.storeId && cart.storeId !== store.id) {
-        clearCart();
-        sonnerToast.info("Carrinho limpo", {
-          description: `O carrinho foi limpo porque você entrou em ${store.name}. Você tinha itens de ${cart.storeName}.`
-        });
+      // Switch to this store's cart
+      switchToStore(store.id);
+      
+      // Show notification about other carts if they exist
+      const otherCarts = Object.entries(allCarts).filter(([storeId]) => storeId !== store.id);
+      if (otherCarts.length > 0) {
+        const totalOtherItems = otherCarts.reduce((sum, [_, storeCart]) => 
+          sum + storeCart.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0
+        );
+        
+        if (totalOtherItems > 0) {
+          sonnerToast.info("Carrinhos de outras lojas salvos", {
+            description: `Você tem ${totalOtherItems} ${totalOtherItems === 1 ? 'item' : 'itens'} em ${otherCarts.length} ${otherCarts.length === 1 ? 'outra loja' : 'outras lojas'}. Eles serão mantidos.`,
+            duration: 4000
+          });
+        }
       }
       
       localStorage.setItem('lastVisitedStore', JSON.stringify({
@@ -225,7 +235,7 @@ export default function StoreDetails() {
         name: store.name
       }));
     }
-  }, [store, cart.storeId, cart.items.length, cart.storeName, clearCart]);
+  }, [store?.id]);
 
   // Open product from URL parameter and show dialog
   useEffect(() => {
