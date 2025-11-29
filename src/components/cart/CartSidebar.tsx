@@ -11,15 +11,23 @@ import { useState, useEffect } from "react";
 interface CartSidebarProps {
   inDrawer?: boolean;
   onClose?: () => void;
+  storeId?: string; // ID da loja atual para filtrar itens do carrinho
 }
 
-export const CartSidebar = ({ inDrawer = false, onClose }: CartSidebarProps) => {
+export const CartSidebar = ({ inDrawer = false, onClose, storeId }: CartSidebarProps) => {
   const navigate = useNavigate();
-  const { cart, updateQuantity, removeFromCart, getTotal, getItemCount, updateCartItem, validateAndSyncCart } = useCart();
+  const { cart, updateQuantity, removeFromCart, getTotal, getItemCount, updateCartItem, validateAndSyncCart, switchToStore } = useCart();
   const [editingItem, setEditingItem] = useState<any>(null);
   const itemCount = getItemCount();
   const deliveryFee = 5;
   const total = getTotal() + (itemCount > 0 ? deliveryFee : 0);
+
+  // Auto-switch to store cart when storeId is provided
+  useEffect(() => {
+    if (storeId) {
+      switchToStore(storeId);
+    }
+  }, [storeId, switchToStore]);
 
   useEffect(() => {
     validateAndSyncCart();
