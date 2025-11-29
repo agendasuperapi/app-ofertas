@@ -115,7 +115,7 @@ export const FeaturedProductsCarousel = ({
                     </div>
 
                     {/* Imagem do Produto */}
-                    <div className="relative w-full aspect-[4/3] overflow-hidden bg-muted/30">
+                    <div className="relative w-full aspect-[4/3] overflow-hidden bg-muted/50">
                       {product.image_url ? (
                         <img
                           src={product.image_url}
