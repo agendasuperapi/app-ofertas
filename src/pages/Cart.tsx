@@ -1259,7 +1259,7 @@ export default function Cart() {
                             ref={deliveryAddressRef}
                             className={`space-y-4 p-4 rounded-lg transition-all duration-300 ${
                               highlightDeliveryAddress 
-                                ? 'ring-4 ring-orange-500 border-2 border-orange-500 shadow-lg shadow-orange-500/50 animate-[pulse-ring_1s_ease-in-out_3]' 
+                                ? 'ring-4 ring-orange-500 border-2 border-orange-500 animate-[pulse-ring_1s_ease-in-out_3]' 
                                 : 'border-2 border-transparent'
                             }`}
                           >
