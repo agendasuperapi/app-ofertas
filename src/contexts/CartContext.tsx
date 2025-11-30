@@ -395,6 +395,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         targetCartItems: newState.carts[storeId].items.length
       });
 
+      // Salvar imediatamente no banco de dados se usuário estiver logado
+      if (user) {
+        setTimeout(() => {
+          saveCartToDatabase(newState.carts[storeId], storeId);
+        }, 0);
+      }
+
       return newState;
     });
   };
@@ -411,13 +418,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       if (newItems.length === 0) {
         // Remove empty cart
         const { [prev.activeStoreId!]: removed, ...remainingCarts } = prev.carts;
+        
+        // Deletar do banco de dados se usuário estiver logado
+        if (user) {
+          setTimeout(() => {
+            deleteCartFromDatabase(prev.activeStoreId!);
+          }, 0);
+        }
+        
         return {
           carts: remainingCarts,
           activeStoreId: null
         };
       }
       
-      return {
+      const newState = {
         ...prev,
         carts: {
           ...prev.carts,
@@ -427,6 +442,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           }
         }
       };
+
+      // Salvar imediatamente no banco de dados se usuário estiver logado
+      if (user) {
+        setTimeout(() => {
+          saveCartToDatabase(newState.carts[prev.activeStoreId!], prev.activeStoreId!);
+        }, 0);
+      }
+
+      return newState;
     });
   };
 
@@ -442,7 +466,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const storeCart = prev.carts[prev.activeStoreId!];
       if (!storeCart) return prev;
 
-      return {
+      const newState = {
         ...prev,
         carts: {
           ...prev.carts,
@@ -454,6 +478,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           }
         }
       };
+
+      // Salvar imediatamente no banco de dados se usuário estiver logado
+      if (user) {
+        setTimeout(() => {
+          saveCartToDatabase(newState.carts[prev.activeStoreId!], prev.activeStoreId!);
+        }, 0);
+      }
+
+      return newState;
     });
   };
 
@@ -464,7 +497,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       const storeCart = prev.carts[prev.activeStoreId!];
       if (!storeCart) return prev;
 
-      return {
+      const newState = {
         ...prev,
         carts: {
           ...prev.carts,
@@ -476,6 +509,15 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           }
         }
       };
+
+      // Salvar imediatamente no banco de dados se usuário estiver logado
+      if (user) {
+        setTimeout(() => {
+          saveCartToDatabase(newState.carts[prev.activeStoreId!], prev.activeStoreId!);
+        }, 0);
+      }
+
+      return newState;
     });
   };
 
