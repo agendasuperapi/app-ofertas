@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Pencil, Trash2, GripVertical, Search, Filter } from 'lucide-react';
+import { Plus, Pencil, Trash2, GripVertical, Search, Filter, FolderPlus } from 'lucide-react';
 import { useProductSizes, type ProductSize, type SizeFormData } from '@/hooks/useProductSizes';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogTitle } from '@/components/ui/responsive-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -14,8 +14,12 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { SizeCategoriesManager } from './SizeCategoriesManager';
+import { useSizeCategories } from '@/hooks/useSizeCategories';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 interface ProductSizesManagerProps {
   productId: string;
+  storeId: string;
 }
 interface SortableSizeItemProps {
   size: ProductSize;
@@ -58,6 +62,11 @@ function SortableSizeItem({
           <span className="text-sm sm:text-base font-bold text-primary whitespace-nowrap">
             R$ {size.price.toFixed(2)}
           </span>
+          {size.allow_quantity && (
+            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+              Quantidade
+            </span>
+          )}
         </div>
         {size.description && <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{size.description}</p>}
       </div>
@@ -77,7 +86,8 @@ function SortableSizeItem({
     </div>;
 }
 export function ProductSizesManager({
-  productId
+  productId,
+  storeId
 }: ProductSizesManagerProps) {
   const {
     sizes,
@@ -92,11 +102,15 @@ export function ProductSizesManager({
   const [editingSize, setEditingSize] = useState<ProductSize | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available' | 'unavailable'>('all');
+  const { categories } = useSizeCategories(storeId);
+  const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [formData, setFormData] = useState<SizeFormData>({
     name: '',
     price: 0,
     description: '',
-    is_available: true
+    is_available: true,
+    category_id: null,
+    allow_quantity: false
   });
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor, {
     coordinateGetter: sortableKeyboardCoordinates
@@ -124,7 +138,9 @@ export function ProductSizesManager({
         name: size.name,
         price: size.price,
         description: size.description || '',
-        is_available: size.is_available
+        is_available: size.is_available,
+        category_id: size.category_id,
+        allow_quantity: size.allow_quantity
       });
     } else {
       setEditingSize(null);
@@ -132,7 +148,9 @@ export function ProductSizesManager({
         name: '',
         price: 0,
         description: '',
-        is_available: true
+        is_available: true,
+        category_id: null,
+        allow_quantity: false
       });
     }
     setIsDialogOpen(true);
@@ -160,21 +178,34 @@ export function ProductSizesManager({
     return <div className="text-center py-8">Carregando tamanhos...</div>;
   }
   return <>
-      <Card className="md:min-h-[90vh]">
-      <CardHeader>
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex-1">
-            <CardTitle>Variações</CardTitle>
-            <CardDescription className="mt-1">
-              Gerencie os tamanhos disponíveis para este produto
-            </CardDescription>
-          </div>
-          <Button onClick={() => handleOpenDialog()} className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Variação
-          </Button>
-        </div>
-      </CardHeader>
+      <Tabs defaultValue="variations" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="variations">Variações</TabsTrigger>
+          <TabsTrigger value="categories">Categorias</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="variations">
+          <Card className="md:min-h-[90vh]">
+            <CardHeader>
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex-1">
+                  <CardTitle>Variações</CardTitle>
+                  <CardDescription className="mt-1">
+                    Gerencie os tamanhos disponíveis para este produto
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button onClick={() => setShowCategoryManager(true)} variant="outline" className="flex-1 sm:flex-initial">
+                    <FolderPlus className="h-4 w-4 mr-2" />
+                    Categorias
+                  </Button>
+                  <Button onClick={() => handleOpenDialog()} className="flex-1 sm:flex-initial">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nova Variação
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
 
       <CardContent className="space-y-4 md:min-h-[75vh]">
         <div className="flex flex-col sm:flex-row flex-1 gap-2">
@@ -204,8 +235,14 @@ export function ProductSizesManager({
               </div>
             </SortableContext>
           </DndContext>}
-        </CardContent>
-      </Card>
+          </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="categories">
+          <SizeCategoriesManager storeId={storeId} />
+        </TabsContent>
+      </Tabs>
 
       <ResponsiveDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
@@ -219,7 +256,7 @@ export function ProductSizesManager({
           <ScrollArea className="flex-1 px-4 md:px-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Nome do Tamanho *</Label>
+                <Label htmlFor="name">Nome da Variação *</Label>
                 <Input id="name" placeholder="Ex: Pequeno, Médio, Grande..." value={formData.name} onChange={e => setFormData({
                 ...formData,
                 name: e.target.value
@@ -235,11 +272,39 @@ export function ProductSizesManager({
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="category">Categoria (opcional)</Label>
+                <Select value={formData.category_id || 'none'} onValueChange={(value) => setFormData({
+                  ...formData,
+                  category_id: value === 'none' ? null : value
+                })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem categoria</SelectItem>
+                    {categories.map(category => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="description">Descrição (opcional)</Label>
-                <Textarea id="description" placeholder="Descrição do tamanho..." value={formData.description} onChange={e => setFormData({
+                <Textarea id="description" placeholder="Descrição da variação..." value={formData.description} onChange={e => setFormData({
                 ...formData,
                 description: e.target.value
               })} />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Switch id="allow_quantity" checked={formData.allow_quantity} onCheckedChange={checked => setFormData({
+                ...formData,
+                allow_quantity: checked
+              })} />
+                <Label htmlFor="allow_quantity">Permitir seleção de quantidade</Label>
               </div>
 
               <div className="flex items-center space-x-2">
