@@ -1005,7 +1005,7 @@ export function ProductSizesManager({
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
 
-          <ScrollArea className="max-h-[calc(90vh-200px)]">
+          <ScrollArea className="max-h-[90vh]">
             <div className="space-y-4 p-4">
               <div className="space-y-2">
                 <Label htmlFor="category-name">Nome da Categoria *</Label>
