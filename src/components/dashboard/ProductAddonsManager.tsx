@@ -1145,7 +1145,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
         )}
 
         {!addons || filteredAddons.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-muted-foreground min-h-[calc(90vh-350px)] flex items-center justify-center flex-col">
             <p>{categoryFilter !== 'all' ? 'Nenhum adicional nesta categoria' : 'Nenhum adicional cadastrado'}</p>
             <p className="text-sm">
               {categoryFilter !== 'all' 

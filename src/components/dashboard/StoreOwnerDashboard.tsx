@@ -3323,7 +3323,7 @@ export const StoreOwnerDashboard = ({
                           </TabsTrigger>
                         </TabsList>
                         
-                        <TabsContent value="info" className="space-y-4 mt-4">
+                        <TabsContent value="info" className="space-y-4 mt-4 min-h-[calc(90vh-250px)]">
                       
                           <ImageUpload bucket="product-images" folder="temp" productId={editingProduct?.id} currentImageUrl={productForm.image_url} onUploadComplete={url => setProductForm({
                                 ...productForm,
@@ -3456,15 +3456,15 @@ export const StoreOwnerDashboard = ({
                           </div>
                         </TabsContent>
 
-                        <TabsContent value="sizes" className="mt-4">
+                        <TabsContent value="sizes" className="mt-4 min-h-[calc(90vh-250px)]">
                           {editingProduct && myStore && <ProductSizesManager productId={editingProduct.id} storeId={myStore.id} />}
                         </TabsContent>
 
-                        <TabsContent value="addons" className="mt-4">
+                        <TabsContent value="addons" className="mt-4 min-h-[calc(90vh-250px)]">
                           {editingProduct && myStore && <ProductAddonsManager productId={editingProduct.id} storeId={myStore.id} />}
                         </TabsContent>
 
-                        <TabsContent value="flavors" className="mt-4">
+                        <TabsContent value="flavors" className="mt-4 min-h-[calc(90vh-250px)]">
                           {editingProduct && <>
                               <div className="space-y-4 p-4 border rounded-lg bg-muted/30 mb-4">
                                 <div className="flex items-center justify-between">

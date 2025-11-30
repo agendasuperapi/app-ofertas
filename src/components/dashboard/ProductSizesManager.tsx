@@ -473,7 +473,7 @@ export function ProductSizesManager({
           </div>
         )}
 
-        {!filteredSizes || filteredSizes.length === 0 ? <div className="text-center py-12 text-muted-foreground">
+        {!filteredSizes || filteredSizes.length === 0 ? <div className="text-center py-12 text-muted-foreground min-h-[calc(90vh-350px)] flex items-center justify-center">
             {searchTerm || availabilityFilter !== 'all' ? 'Nenhum tamanho encontrado com os filtros aplicados.' : 'Nenhum tamanho cadastrado. Clique em "Novo Tamanho" para adicionar.'}
           </div> : <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={filteredSizes.map(s => s.id)} strategy={verticalListSortingStrategy}>

@@ -687,13 +687,17 @@ export const ProductFlavorsManager = ({ productId, storeId }: ProductFlavorsMana
               </SortableContext>
             </DndContext>
           ) : flavors && flavors.length > 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Nenhum sabor encontrado com os filtros aplicados
-            </p>
+            <div className="min-h-[calc(90vh-350px)] flex items-center justify-center">
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Nenhum sabor encontrado com os filtros aplicados
+              </p>
+            </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Nenhum sabor cadastrado
-            </p>
+            <div className="min-h-[calc(90vh-350px)] flex items-center justify-center">
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Nenhum sabor cadastrado
+              </p>
+            </div>
           )}
         </div>
 
