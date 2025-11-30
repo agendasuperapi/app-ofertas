@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, GripVertical, Search, Filter, FolderPlus, X, Download, Package } from 'lucide-react';
+import { Plus, Pencil, Trash2, GripVertical, Search, Filter, FolderPlus, X, Download, Package, Store, Edit, FolderTree } from 'lucide-react';
 import { useProductSizes, type ProductSize, type SizeFormData } from '@/hooks/useProductSizes';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogTitle } from '@/components/ui/responsive-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,6 +20,7 @@ import { useSizeCategories } from '@/hooks/useSizeCategories';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useStoreSizes, type StoreSize } from '@/hooks/useStoreSizes';
 interface ProductSizesManagerProps {
   productId: string;
   storeId: string;
@@ -111,6 +112,11 @@ export function ProductSizesManager({
   const [products, setProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productSearchTerm, setProductSearchTerm] = useState('');
+  const [isStoreSizesOpen, setIsStoreSizesOpen] = useState(false);
+  const [storeSizesSearch, setStoreSizesSearch] = useState('');
+  const [isEditCategoriesOpen, setIsEditCategoriesOpen] = useState(false);
+  
+  const { sizes: storeSizes, isLoading: isLoadingStoreSizes } = useStoreSizes(storeId);
   const [formData, setFormData] = useState<SizeFormData>({
     name: '',
     price: 0,
@@ -266,6 +272,75 @@ export function ProductSizesManager({
     );
   }, [products, productSearchTerm]);
 
+  const filteredStoreSizes = useMemo(() => {
+    if (!storeSizes) return [];
+    if (!storeSizesSearch.trim()) return storeSizes;
+    
+    const term = storeSizesSearch.toLowerCase();
+    return storeSizes.filter(s => 
+      s.name.toLowerCase().includes(term) || 
+      (s.description && s.description.toLowerCase().includes(term))
+    );
+  }, [storeSizes, storeSizesSearch]);
+
+  const groupedStoreSizes = useMemo(() => {
+    const grouped: Record<string, StoreSize[]> = {
+      uncategorized: filteredStoreSizes.filter(s => !s.category_id)
+    };
+
+    categories.forEach(cat => {
+      const categorySizes = filteredStoreSizes.filter(s => s.category_id === cat.id);
+      if (categorySizes.length > 0) {
+        grouped[cat.id] = categorySizes;
+      }
+    });
+
+    return grouped;
+  }, [filteredStoreSizes, categories]);
+
+  const handleCopyStoreSize = async (storeSize: StoreSize) => {
+    const existingSize = sizes?.find(
+      s => s.name === storeSize.name && s.category_id === storeSize.category_id
+    );
+
+    if (existingSize) {
+      toggleSizeAvailability({
+        id: existingSize.id,
+        is_available: !existingSize.is_available
+      });
+    } else {
+      createSize({
+        product_id: productId,
+        name: storeSize.name,
+        price: storeSize.price,
+        description: storeSize.description,
+        is_available: true,
+        category_id: storeSize.category_id,
+        allow_quantity: storeSize.allow_quantity || false
+      });
+    }
+  };
+
+  const handleAddAllStoreSizes = () => {
+    filteredStoreSizes.forEach(storeSize => {
+      const existingSize = sizes?.find(
+        s => s.name === storeSize.name && s.category_id === storeSize.category_id
+      );
+      
+      if (!existingSize) {
+        createSize({
+          product_id: productId,
+          name: storeSize.name,
+          price: storeSize.price,
+          description: storeSize.description,
+          is_available: true,
+          category_id: storeSize.category_id,
+          allow_quantity: storeSize.allow_quantity || false
+        });
+      }
+    });
+  };
+
   const filteredSizes = sizes?.filter(size => {
     const matchesSearch = size.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesAvailability = availabilityFilter === 'all' || availabilityFilter === 'available' && size.is_available || availabilityFilter === 'unavailable' && !size.is_available;
@@ -299,6 +374,16 @@ export function ProductSizesManager({
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Nova Variação
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => setIsStoreSizesOpen(true)}
+                    className="w-full sm:w-auto shrink-0 justify-start sm:justify-center"
+                  >
+                    <Search className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Buscar variações</span>
+                    <span className="sm:hidden">Buscar</span>
                   </Button>
                   <Button 
                     size="sm" 
@@ -525,6 +610,256 @@ export function ProductSizesManager({
               {editingSize ? 'Salvar' : 'Criar'}
             </Button>
           </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
+
+      {/* Store Sizes Dialog */}
+      <ResponsiveDialog open={isStoreSizesOpen} onOpenChange={setIsStoreSizesOpen}>
+        <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[70vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="flex items-center gap-2">
+              <Store className="w-5 h-5" />
+              Variações da Loja
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              Adicione variações existentes na loja a este produto
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+
+          <div className="px-4 md:px-6 space-y-3 pb-3">
+            {/* Search and Actions */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar variações..."
+                  value={storeSizesSearch}
+                  onChange={(e) => setStoreSizesSearch(e.target.value)}
+                  className="pl-9 pr-9"
+                />
+                {storeSizesSearch && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                    onClick={() => setStoreSizesSearch('')}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                size="sm" 
+                onClick={handleNewAddon}
+                className="shrink-0"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Variação
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => {
+                  setIsStoreSizesOpen(false);
+                  setShowCategoryManager(true);
+                }}
+                className="shrink-0"
+              >
+                <FolderPlus className="w-4 h-4 mr-2" />
+                Nova Categoria
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => {
+                  setIsEditCategoriesOpen(true);
+                  setIsStoreSizesOpen(false);
+                  setShowCategoryManager(true);
+                }}
+                className="shrink-0"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Editar Categorias
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={handleAddAllStoreSizes}
+                disabled={filteredStoreSizes.length === 0}
+                className="shrink-0"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Adicionar Todos
+              </Button>
+            </div>
+          </div>
+
+          <ScrollArea className="flex-1 px-4 md:px-6">
+            {isLoadingStoreSizes ? (
+              <div className="text-center py-8 text-muted-foreground">
+                Carregando variações...
+              </div>
+            ) : filteredStoreSizes.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {storeSizesSearch ? 'Nenhuma variação encontrada' : 'Nenhuma variação disponível na loja'}
+              </div>
+            ) : (
+              <div className="space-y-6 pb-4">
+                {/* Variações com categorias */}
+                {categories && categories.length > 0 && categories
+                  .filter(cat => cat.is_active && groupedStoreSizes[cat.id]?.length > 0)
+                  .sort((a, b) => a.display_order - b.display_order)
+                  .map((category) => {
+                    const categorySizes = groupedStoreSizes[category.id] || [];
+                    
+                    return (
+                      <div key={category.id} className="space-y-2">
+                        <div className="flex items-center gap-2 px-2 py-2 bg-muted/50 rounded-lg sticky top-0 z-10">
+                          <FolderTree className="w-4 h-4 text-primary" />
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-foreground">
+                              {category.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {category.is_exclusive ? 'Exclusivo' : 'Não exclusivo'}
+                              {' • '}
+                              Mín: {category.min_items}
+                              {category.max_items !== null && ` • Máx: ${category.max_items}`}
+                            </p>
+                          </div>
+                          <Badge variant="secondary" className="text-xs">
+                            {categorySizes.length}
+                          </Badge>
+                        </div>
+                        <div className="space-y-2 pl-4 border-l-2 border-muted">
+                          {categorySizes.map((storeSize) => {
+                            const existingSize = sizes?.find(
+                              s => s.name === storeSize.name && s.category_id === storeSize.category_id
+                            );
+                            const isAlreadyAdded = !!existingSize;
+                            
+                            return (
+                              <div 
+                                key={storeSize.id} 
+                                className="flex items-center gap-3 p-3 bg-card border rounded-lg hover:border-primary/50 transition-colors"
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <h4 className="text-sm font-semibold truncate">{storeSize.name}</h4>
+                                    <span className="text-sm font-bold text-primary whitespace-nowrap">
+                                      R$ {storeSize.price.toFixed(2)}
+                                    </span>
+                                    {storeSize.allow_quantity && (
+                                      <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                                        Quantidade
+                                      </span>
+                                    )}
+                                    {isAlreadyAdded && (
+                                      <Badge variant="secondary" className="text-xs">
+                                        {existingSize.is_available ? 'Já adicionado' : 'Indisponível no produto'}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  {storeSize.description && (
+                                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                      {storeSize.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <Button
+                                  size="sm"
+                                  variant={isAlreadyAdded ? "outline" : "default"}
+                                  onClick={() => handleCopyStoreSize(storeSize)}
+                                  className="shrink-0"
+                                >
+                                  {isAlreadyAdded 
+                                    ? (existingSize.is_available ? 'Remover do produto' : 'Adicionar novamente')
+                                    : 'Adicionar'
+                                  }
+                                </Button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                {/* Variações sem categoria */}
+                {groupedStoreSizes.uncategorized.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 px-2 py-2 bg-muted/50 rounded-lg sticky top-0 z-10">
+                      <FolderTree className="w-4 h-4 text-muted-foreground" />
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-foreground">
+                          Sem Categoria
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Variações não categorizadas
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="text-xs">
+                        {groupedStoreSizes.uncategorized.length}
+                      </Badge>
+                    </div>
+                    <div className="space-y-2 pl-4 border-l-2 border-muted">
+                      {groupedStoreSizes.uncategorized.map((storeSize) => {
+                        const existingSize = sizes?.find(
+                          s => s.name === storeSize.name && s.category_id === storeSize.category_id
+                        );
+                        const isAlreadyAdded = !!existingSize;
+                        
+                        return (
+                          <div 
+                            key={storeSize.id} 
+                            className="flex items-center gap-3 p-3 bg-card border rounded-lg hover:border-primary/50 transition-colors"
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="text-sm font-semibold truncate">{storeSize.name}</h4>
+                                <span className="text-sm font-bold text-primary whitespace-nowrap">
+                                  R$ {storeSize.price.toFixed(2)}
+                                </span>
+                                {storeSize.allow_quantity && (
+                                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">
+                                    Quantidade
+                                  </span>
+                                )}
+                                {isAlreadyAdded && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {existingSize.is_available ? 'Já adicionado' : 'Indisponível no produto'}
+                                  </Badge>
+                                )}
+                              </div>
+                              {storeSize.description && (
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                                  {storeSize.description}
+                                </p>
+                              )}
+                            </div>
+                            <Button
+                              size="sm"
+                              variant={isAlreadyAdded ? "outline" : "default"}
+                              onClick={() => handleCopyStoreSize(storeSize)}
+                              className="shrink-0"
+                            >
+                              {isAlreadyAdded 
+                                ? (existingSize.is_available ? 'Remover do produto' : 'Adicionar novamente')
+                                : 'Adicionar'
+                              }
+                            </Button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </ScrollArea>
         </ResponsiveDialogContent>
       </ResponsiveDialog>
 
