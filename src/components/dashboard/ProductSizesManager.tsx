@@ -583,22 +583,40 @@ export function ProductSizesManager({
 
               <div className="space-y-2">
                 <Label htmlFor="category">Categoria (opcional)</Label>
-                <Select value={formData.category_id || 'none'} onValueChange={(value) => setFormData({
-                  ...formData,
-                  category_id: value === 'none' ? null : value
-                })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione uma categoria" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sem categoria</SelectItem>
-                    {categories.map(category => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select value={formData.category_id || 'none'} onValueChange={(value) => setFormData({
+                    ...formData,
+                    category_id: value === 'none' ? null : value
+                  })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione uma categoria" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sem categoria</SelectItem>
+                      {categories.map(category => (
+                        <SelectItem key={category.id} value={category.id}>
+                          {category.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    size="icon"
+                    variant="outline"
+                    onClick={() => {
+                      setNewCategoryForm({
+                        name: '',
+                        is_exclusive: false,
+                        min_items: 1,
+                        max_items: null
+                      });
+                      setIsNewCategoryDialogOpen(true);
+                    }}
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
 
               <div className="space-y-2">
