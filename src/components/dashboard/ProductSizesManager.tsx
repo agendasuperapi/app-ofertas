@@ -138,6 +138,19 @@ export function ProductSizesManager({
       reorderSizes(updates);
     }
   };
+  const handleNewAddon = () => {
+    setEditingSize(null);
+    setFormData({
+      name: '',
+      price: 0,
+      description: '',
+      is_available: true,
+      category_id: null,
+      allow_quantity: false
+    });
+    setIsDialogOpen(true);
+  };
+
   const handleOpenDialog = (size?: ProductSize) => {
     if (size) {
       setEditingSize(size);
@@ -271,68 +284,78 @@ export function ProductSizesManager({
         <TabsContent value="variations">
           <Card className="md:min-h-[90vh]">
             <CardHeader>
-              <CardTitle>Variações</CardTitle>
-              <CardDescription className="mt-1">
-                Gerencie os tamanhos disponíveis para este produto
-              </CardDescription>
+              <div className="flex flex-col gap-4">
+                <div className="flex-1">
+                  <CardTitle>Variações</CardTitle>
+                  <CardDescription className="mt-1">
+                    Gerencie os tamanhos disponíveis para este produto
+                  </CardDescription>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 w-full">
+                  <Button 
+                    size="sm" 
+                    onClick={handleNewAddon}
+                    className="w-full sm:w-auto shrink-0"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nova Variação
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => {
+                      loadProducts();
+                      setImportFromProductOpen(true);
+                    }}
+                    className="w-full sm:w-auto shrink-0 justify-start sm:justify-center"
+                  >
+                    <Package className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Importar de Produtos</span>
+                    <span className="sm:hidden">Produtos</span>
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    onClick={() => setShowCategoryManager(true)}
+                    className="w-full sm:w-auto shrink-0 justify-start sm:justify-center"
+                  >
+                    <FolderPlus className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Gerenciar Categorias</span>
+                    <span className="sm:hidden">Categorias</span>
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
 
       <CardContent className="space-y-4 md:min-h-[75vh]">
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 flex-wrap">
-          {/* Campo de busca */}
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              value={searchTerm} 
-              onChange={e => setSearchTerm(e.target.value)} 
-              className="pl-9" 
-              placeholder="Buscar variações..." 
-            />
-            {searchTerm && (
-              <Button
-                size="sm"
-                variant="ghost"
-                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
-                onClick={() => setSearchTerm('')}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
+        {/* Search and Filters */}
+        {sizes && sizes.length > 0 && (
+          <div className="space-y-3">
+            {/* Search and Availability filters */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar variações..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select value={availabilityFilter} onValueChange={(value: any) => setAvailabilityFilter(value)}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="z-50 bg-popover">
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="available">Disponíveis</SelectItem>
+                  <SelectItem value="unavailable">Indisponíveis</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          
-          {/* Botões de ação */}
-          <Button onClick={() => handleOpenDialog()} size="sm" className="whitespace-nowrap">
-            <Plus className="h-4 w-4 mr-2" />
-            Nova Variação
-          </Button>
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={() => {
-              loadProducts();
-              setImportFromProductOpen(true);
-            }}
-            className="whitespace-nowrap"
-          >
-            <Package className="h-4 w-4 mr-2" />
-            Importar de Produtos
-          </Button>
-          <Button onClick={() => setShowCategoryManager(true)} variant="secondary" size="sm" className="whitespace-nowrap">
-            <FolderPlus className="h-4 w-4 mr-2" />
-            Nova Categoria
-          </Button>
-          <Select value={availabilityFilter} onValueChange={(value: any) => setAvailabilityFilter(value)}>
-            <SelectTrigger className="w-full sm:w-[160px]">
-              <Filter className="h-4 w-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="available">Disponíveis</SelectItem>
-              <SelectItem value="unavailable">Indisponíveis</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        )}
 
         {!filteredSizes || filteredSizes.length === 0 ? <div className="text-center py-12 text-muted-foreground">
             {searchTerm || availabilityFilter !== 'all' ? 'Nenhum tamanho encontrado com os filtros aplicados.' : 'Nenhum tamanho cadastrado. Clique em "Novo Tamanho" para adicionar.'}
