@@ -10,6 +10,8 @@ export interface ProductSize {
   description?: string;
   display_order: number;
   is_available: boolean;
+  category_id?: string | null;
+  allow_quantity?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -19,6 +21,8 @@ export interface SizeFormData {
   price: number;
   description?: string;
   is_available: boolean;
+  category_id?: string | null;
+  allow_quantity?: boolean;
 }
 
 export const useProductSizes = (productId?: string) => {

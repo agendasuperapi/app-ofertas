@@ -3452,7 +3452,7 @@ export const StoreOwnerDashboard = ({
                         </TabsContent>
 
                         <TabsContent value="sizes" className="mt-4">
-                          {editingProduct && <ProductSizesManager productId={editingProduct.id} />}
+                          {editingProduct && myStore && <ProductSizesManager productId={editingProduct.id} storeId={myStore.id} />}
                         </TabsContent>
 
                         <TabsContent value="addons" className="mt-4">
