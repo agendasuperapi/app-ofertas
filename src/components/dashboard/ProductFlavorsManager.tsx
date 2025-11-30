@@ -571,7 +571,7 @@ export const ProductFlavorsManager = ({ productId, storeId }: ProductFlavorsMana
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 md:min-h-[calc(90vh-200px)]">
         {isAdding && (
           <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
             <div className="space-y-2">
