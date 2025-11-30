@@ -658,7 +658,7 @@ export function ProductSizesManager({
 
       {/* Store Sizes Dialog */}
       <ResponsiveDialog open={isStoreSizesOpen} onOpenChange={setIsStoreSizesOpen}>
-        <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[70vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
+        <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle className="flex items-center gap-2">
               <Store className="w-5 h-5" />
@@ -978,7 +978,7 @@ export function ProductSizesManager({
 
       {/* Editar Categorias Modal */}
       <ResponsiveDialog open={showCategoryManager} onOpenChange={setShowCategoryManager}>
-        <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[60vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
+        <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle className="flex items-center gap-2">
               <FolderTree className="w-5 h-5" />
