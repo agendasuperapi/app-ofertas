@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Pencil, Trash2, GripVertical, Search, Filter, FolderPlus, X, Download, Package, Store, Edit, FolderTree, Power, PowerOff } from 'lucide-react';
+import { Plus, Pencil, Trash2, GripVertical, Search, Filter, FolderPlus, X, Download, Package, Store, Edit, FolderTree, Power, PowerOff, ChevronDown, ChevronUp } from 'lucide-react';
 import { useProductSizes, type ProductSize, type SizeFormData } from '@/hooks/useProductSizes';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogTitle } from '@/components/ui/responsive-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -51,6 +51,8 @@ interface SortableCategoryGroupProps {
   onDeleteSize: (id: string) => void;
   onToggleAvailability: (args: { id: string; is_available: boolean }) => void;
   hideDeleteButton?: boolean;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
 }
 function SortableSizeItem({
   size,
@@ -135,7 +137,9 @@ function SortableCategoryGroup({
   onEditSize,
   onDeleteSize,
   onToggleAvailability,
-  hideDeleteButton
+  hideDeleteButton,
+  isExpanded,
+  onToggleExpand
 }: SortableCategoryGroupProps) {
   const {
     attributes,
@@ -156,12 +160,27 @@ function SortableCategoryGroup({
 
   return (
     <div ref={setNodeRef} style={style} className="space-y-2">
-      <div className="flex items-center justify-between px-2 py-2 bg-muted/50 rounded-lg">
+      <div className="flex items-center justify-between px-2 py-2 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors" onClick={onToggleExpand}>
         <div className="flex items-center gap-2 flex-1">
-          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing flex-shrink-0">
+          <div {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing flex-shrink-0" onClick={(e) => e.stopPropagation()}>
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </div>
-          <div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 flex-shrink-0"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleExpand();
+            }}
+          >
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </Button>
+          <div className="flex-1">
             <p className="text-sm font-bold text-foreground">
               {category.name}
             </p>
@@ -177,18 +196,20 @@ function SortableCategoryGroup({
           {categorySizes.length} {categorySizes.length === 1 ? 'variação' : 'variações'}
         </Badge>
       </div>
-      <div className="space-y-2 pl-4 border-l-2 border-muted">
-        {categorySizes.map(size => (
-          <SortableSizeItem 
-            key={size.id} 
-            size={size} 
-            onEdit={onEditSize} 
-            onDelete={onDeleteSize} 
-            onToggleAvailability={onToggleAvailability}
-            hideDeleteButton={hideDeleteButton}
-          />
-        ))}
-      </div>
+      {isExpanded && (
+        <div className="space-y-2 pl-4 border-l-2 border-muted animate-accordion-down">
+          {categorySizes.map(size => (
+            <SortableSizeItem 
+              key={size.id} 
+              size={size} 
+              onEdit={onEditSize} 
+              onDelete={onDeleteSize} 
+              onToggleAvailability={onToggleAvailability}
+              hideDeleteButton={hideDeleteButton}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -226,6 +247,11 @@ export function ProductSizesManager({
     min_items: 1,
     max_items: null as number | null
   });
+  
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [uncategorizedExpanded, setUncategorizedExpanded] = useState(true);
+  const [expandedStoreSizeCategories, setExpandedStoreSizeCategories] = useState<Set<string>>(new Set());
+  const [uncategorizedStoreSizesExpanded, setUncategorizedStoreSizesExpanded] = useState(true);
   
   const { sizes: storeSizes, isLoading: isLoadingStoreSizes } = useStoreSizes(storeId);
   const [formData, setFormData] = useState<SizeFormData>({
@@ -276,6 +302,31 @@ export function ProductSizesManager({
       reorderCategories(updates);
     }
   };
+
+  const toggleCategoryExpansion = (categoryId: string) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleStoreSizeCategoryExpansion = (categoryId: string) => {
+    setExpandedStoreSizeCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
+  };
+
   const handleNewAddon = () => {
     setEditingSize(null);
     setFormData({
@@ -633,7 +684,7 @@ export function ProductSizesManager({
                           const categorySizes = filteredSizes.filter(size => size.category_id === category.id);
                           if (categorySizes.length === 0) return null;
 
-                          return (
+                           return (
                             <SortableCategoryGroup
                               key={category.id}
                               category={category}
@@ -642,6 +693,8 @@ export function ProductSizesManager({
                               onDeleteSize={deleteSize}
                               onToggleAvailability={toggleSizeAvailability}
                               hideDeleteButton={hideDeleteButton}
+                              isExpanded={expandedCategories.has(category.id)}
+                              onToggleExpand={() => toggleCategoryExpansion(category.id)}
                             />
                           );
                         })}
@@ -653,35 +706,53 @@ export function ProductSizesManager({
                  {/* Variações sem categoria */}
                 {filteredSizes.filter(size => !size.category_id).length > 0 && (
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between px-2 py-2 bg-muted/50 rounded-lg">
-                      <div>
-                        <p className="text-sm font-bold text-foreground">
-                          Sem Categoria
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Variações não categorizadas
-                        </p>
+                    <div 
+                      className="flex items-center justify-between px-2 py-2 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors"
+                      onClick={() => setUncategorizedExpanded(!uncategorizedExpanded)}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 flex-shrink-0"
+                        >
+                          {uncategorizedExpanded ? (
+                            <ChevronUp className="h-4 w-4" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <div>
+                          <p className="text-sm font-bold text-foreground">
+                            Sem Categoria
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Variações não categorizadas
+                          </p>
+                        </div>
                       </div>
                       <Badge variant="secondary" className="text-xs">
                         {filteredSizes.filter(size => !size.category_id).length} {filteredSizes.filter(size => !size.category_id).length === 1 ? 'variação' : 'variações'}
                       </Badge>
                     </div>
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                      <SortableContext items={filteredSizes.filter(size => !size.category_id).map(s => s.id)} strategy={verticalListSortingStrategy}>
-                        <div className="space-y-2 pl-4 border-l-2 border-muted">
-                          {filteredSizes.filter(size => !size.category_id).map(size => (
-                            <SortableSizeItem 
-                              key={size.id} 
-                              size={size} 
-                              onEdit={handleOpenDialog} 
-                              onDelete={deleteSize} 
-                              onToggleAvailability={toggleSizeAvailability}
-                              hideDeleteButton={hideDeleteButton}
-                            />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    </DndContext>
+                    {uncategorizedExpanded && (
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                        <SortableContext items={filteredSizes.filter(size => !size.category_id).map(s => s.id)} strategy={verticalListSortingStrategy}>
+                          <div className="space-y-2 pl-4 border-l-2 border-muted animate-accordion-down">
+                            {filteredSizes.filter(size => !size.category_id).map(size => (
+                              <SortableSizeItem 
+                                key={size.id} 
+                                size={size} 
+                                onEdit={handleOpenDialog} 
+                                onDelete={deleteSize} 
+                                onToggleAvailability={toggleSizeAvailability}
+                                hideDeleteButton={hideDeleteButton}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
+                    )}
                   </div>
                 )}
               </div>}
@@ -896,10 +967,24 @@ export function ProductSizesManager({
                   .map((category) => {
                     const categorySizes = groupedStoreSizes[category.id] || [];
                     
-                    return (
+                     return (
                       <div key={category.id} className="space-y-2">
-                        <div className="flex items-center gap-2 px-2 py-2 bg-muted/50 rounded-lg sticky top-0 z-10">
-                          <FolderTree className="w-4 h-4 text-primary" />
+                        <div 
+                          className="flex items-center gap-2 px-2 py-2 bg-muted/50 rounded-lg sticky top-0 z-10 cursor-pointer hover:bg-muted/70 transition-colors"
+                          onClick={() => toggleStoreSizeCategoryExpansion(category.id)}
+                        >
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 flex-shrink-0"
+                          >
+                            {expandedStoreSizeCategories.has(category.id) ? (
+                              <ChevronUp className="h-4 w-4" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <FolderTree className="w-4 h-4 text-primary flex-shrink-0" />
                           <div className="flex-1">
                             <p className="text-sm font-bold text-foreground">
                               {category.name}
@@ -915,8 +1000,9 @@ export function ProductSizesManager({
                             {categorySizes.length}
                           </Badge>
                         </div>
-                        <div className="space-y-2 pl-4 border-l-2 border-muted">
-                          {categorySizes.map((storeSize) => {
+                        {expandedStoreSizeCategories.has(category.id) && (
+                          <div className="space-y-2 pl-4 border-l-2 border-muted animate-accordion-down">
+                            {categorySizes.map((storeSize) => {
                             const existingSize = sizes?.find(
                               s => s.name === storeSize.name && s.category_id === storeSize.category_id
                             );
@@ -959,9 +1045,10 @@ export function ProductSizesManager({
                                   }
                                 </Button>
                               </div>
-                            );
+                             );
                           })}
                         </div>
+                        )}
                       </div>
                     );
                   })}
@@ -969,8 +1056,22 @@ export function ProductSizesManager({
                 {/* Variações sem categoria */}
                 {groupedStoreSizes.uncategorized.length > 0 && (
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 px-2 py-2 bg-muted/50 rounded-lg sticky top-0 z-10">
-                      <FolderTree className="w-4 h-4 text-muted-foreground" />
+                    <div 
+                      className="flex items-center gap-2 px-2 py-2 bg-muted/50 rounded-lg sticky top-0 z-10 cursor-pointer hover:bg-muted/70 transition-colors"
+                      onClick={() => setUncategorizedStoreSizesExpanded(!uncategorizedStoreSizesExpanded)}
+                    >
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 flex-shrink-0"
+                      >
+                        {uncategorizedStoreSizesExpanded ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <FolderTree className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                       <div className="flex-1">
                         <p className="text-sm font-bold text-foreground">
                           Sem Categoria
@@ -983,8 +1084,9 @@ export function ProductSizesManager({
                         {groupedStoreSizes.uncategorized.length}
                       </Badge>
                     </div>
-                    <div className="space-y-2 pl-4 border-l-2 border-muted">
-                      {groupedStoreSizes.uncategorized.map((storeSize) => {
+                    {uncategorizedStoreSizesExpanded && (
+                      <div className="space-y-2 pl-4 border-l-2 border-muted animate-accordion-down">
+                        {groupedStoreSizes.uncategorized.map((storeSize) => {
                         const existingSize = sizes?.find(
                           s => s.name === storeSize.name && s.category_id === storeSize.category_id
                         );
@@ -1030,6 +1132,7 @@ export function ProductSizesManager({
                         );
                       })}
                     </div>
+                    )}
                   </div>
                 )}
               </div>
