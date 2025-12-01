@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProductFlavors } from "@/hooks/useProductFlavors";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription } from "@/components/ui/responsive-dialog";
 import { useStoreAddonsAndFlavors } from "@/hooks/useStoreAddonsAndFlavors";
 import { supabase } from "@/integrations/supabase/client";
@@ -930,7 +931,8 @@ export const ProductFlavorsManager = ({ productId, storeId, hideDeleteButton }: 
             </div>
 
             {/* Store Flavors List */}
-            <div className="overflow-y-auto max-h-[calc(90vh-300px)] space-y-2">
+            <ScrollArea className="h-[500px]">
+              <div className="space-y-2 pr-4">
               {filteredStoreFlavors && filteredStoreFlavors.length > 0 ? (
                 filteredStoreFlavors.map((flavor) => {
                   const isInProduct = flavors?.some(f => f.name === flavor.name && f.is_available);
@@ -980,7 +982,8 @@ export const ProductFlavorsManager = ({ productId, storeId, hideDeleteButton }: 
                   )}
                 </div>
               )}
-            </div>
+              </div>
+            </ScrollArea>
           </ResponsiveDialogContent>
         </ResponsiveDialog>
       </CardContent>
