@@ -58,6 +58,7 @@ import { AddonCategoriesManager } from "./AddonCategoriesManager";
 interface ProductAddonsManagerProps {
   productId: string;
   storeId: string;
+  hideDeleteButton?: boolean;
 }
 
 interface SortableAddonProps {
@@ -66,6 +67,7 @@ interface SortableAddonProps {
   onDelete: (id: string, name: string) => void;
   onToggleAvailability: (addon: any) => void;
   isDeleting: boolean;
+  hideDeleteButton?: boolean;
 }
 
 interface SortableCategoryProps {
@@ -75,9 +77,10 @@ interface SortableCategoryProps {
   onDelete: (id: string, name: string) => void;
   onToggleAvailability: (addon: any) => void;
   isDeleting: boolean;
+  hideDeleteButton?: boolean;
 }
 
-const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleting }: SortableAddonProps) => {
+const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleting, hideDeleteButton }: SortableAddonProps) => {
   const {
     attributes,
     listeners,
@@ -144,27 +147,29 @@ const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleti
           >
             <Edit className="w-3 h-3 sm:w-4 sm:h-4" />
           </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              console.log(`[SortableAddon] 🔴 BOTÃO CLICADO!`, { id: addon.id, name: addon.name });
-              console.log(`[SortableAddon] onDelete função tipo:`, typeof onDelete);
-              onDelete(addon.id, addon.name);
-            }}
-            disabled={isDeleting}
-            title="Excluir"
-            className="text-destructive hover:text-destructive h-8 w-8 sm:h-9 sm:w-9"
-          >
-            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-          </Button>
+          {!hideDeleteButton && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                console.log(`[SortableAddon] 🔴 BOTÃO CLICADO!`, { id: addon.id, name: addon.name });
+                console.log(`[SortableAddon] onDelete função tipo:`, typeof onDelete);
+                onDelete(addon.id, addon.name);
+              }}
+              disabled={isDeleting}
+              title="Excluir"
+              className="text-destructive hover:text-destructive h-8 w-8 sm:h-9 sm:w-9"
+            >
+              <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+            </Button>
+          )}
         </div>
       </div>
     </div>
   );
 };
 
-const SortableCategory = ({ category, addons, onEdit, onDelete, onToggleAvailability, isDeleting }: SortableCategoryProps) => {
+const SortableCategory = ({ category, addons, onEdit, onDelete, onToggleAvailability, isDeleting, hideDeleteButton }: SortableCategoryProps) => {
   const {
     attributes,
     listeners,
@@ -206,6 +211,7 @@ const SortableCategory = ({ category, addons, onEdit, onDelete, onToggleAvailabi
             onDelete={onDelete}
             onToggleAvailability={onToggleAvailability}
             isDeleting={isDeleting}
+            hideDeleteButton={hideDeleteButton}
           />
         ))}
       </SortableContext>
@@ -213,7 +219,7 @@ const SortableCategory = ({ category, addons, onEdit, onDelete, onToggleAvailabi
   );
 };
 
-export default function ProductAddonsManager({ productId, storeId }: ProductAddonsManagerProps) {
+export default function ProductAddonsManager({ productId, storeId, hideDeleteButton }: ProductAddonsManagerProps) {
   console.log(`[ProductAddonsManager] 🎨 Renderizado - productId: ${productId}, storeId: ${storeId}`);
   const queryClient = useQueryClient();
   const { addons, createAddon, updateAddon, deleteAddon, reorderAddons, isCreating, isDeleting } = useProductAddons(productId);
@@ -1180,6 +1186,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
                         onDelete={handleDeleteClick}
                         onToggleAvailability={handleToggleAvailability}
                         isDeleting={isDeleting}
+                        hideDeleteButton={hideDeleteButton}
                       />
                     );
                   })}
@@ -1198,6 +1205,7 @@ export default function ProductAddonsManager({ productId, storeId }: ProductAddo
                       onDelete={handleDeleteClick}
                       onToggleAvailability={handleToggleAvailability}
                       isDeleting={isDeleting}
+                      hideDeleteButton={hideDeleteButton}
                     />
                   ))}
                 </SortableContext>
