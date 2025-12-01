@@ -92,6 +92,11 @@ export const CartSidebar = ({ inDrawer = false, onClose, storeId }: CartSidebarP
                         <h4 className="font-semibold text-sm truncate">
                           {item.productName}
                         </h4>
+                        {item.size && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            <span className="font-medium">Variação:</span> {item.size.quantity && item.size.quantity > 1 ? `${item.size.quantity}x ` : ''}{item.size.name}
+                          </div>
+                        )}
                         {item.flavors && item.flavors.length > 0 && (
                           <div className="text-xs text-muted-foreground mt-1">
                             <span className="font-medium">Sabores:</span>
@@ -115,9 +120,11 @@ export const CartSidebar = ({ inDrawer = false, onClose, storeId }: CartSidebarP
                           </p>
                         )}
                         <p className="text-sm font-bold text-primary mt-1">
-                          R$ {((item.promotionalPrice || item.price) + 
+                          R$ {(
+                            (item.size ? (item.size.price * (item.size.quantity || 1)) : (item.promotionalPrice || item.price)) + 
                             (item.addons?.reduce((sum, addon) => sum + (addon.price * (addon.quantity || 1)), 0) || 0) +
-                            (item.flavors?.reduce((sum, flavor) => sum + (flavor.price * (flavor.quantity || 1)), 0) || 0)).toFixed(2)}
+                            (item.flavors?.reduce((sum, flavor) => sum + (flavor.price * (flavor.quantity || 1)), 0) || 0)
+                          ).toFixed(2)}
                         </p>
                         
                         <div className="flex items-center justify-between mt-2">
@@ -252,6 +259,11 @@ export const CartSidebar = ({ inDrawer = false, onClose, storeId }: CartSidebarP
                         <h4 className="font-semibold text-sm truncate">
                           {item.productName}
                         </h4>
+                        {item.size && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            <span className="font-medium">Variação:</span> {item.size.quantity && item.size.quantity > 1 ? `${item.size.quantity}x ` : ''}{item.size.name}
+                          </div>
+                        )}
                         {item.flavors && item.flavors.length > 0 && (
                           <div className="text-xs text-muted-foreground mt-1">
                             <span className="font-medium">Sabores:</span>
@@ -275,9 +287,11 @@ export const CartSidebar = ({ inDrawer = false, onClose, storeId }: CartSidebarP
                           </p>
                         )}
                         <p className="text-sm font-bold text-primary mt-1">
-                          R$ {((item.promotionalPrice || item.price) + 
+                          R$ {(
+                            (item.size ? (item.size.price * (item.size.quantity || 1)) : (item.promotionalPrice || item.price)) + 
                             (item.addons?.reduce((sum, addon) => sum + (addon.price * (addon.quantity || 1)), 0) || 0) +
-                            (item.flavors?.reduce((sum, flavor) => sum + (flavor.price * (flavor.quantity || 1)), 0) || 0)).toFixed(2)}
+                            (item.flavors?.reduce((sum, flavor) => sum + (flavor.price * (flavor.quantity || 1)), 0) || 0)
+                          ).toFixed(2)}
                         </p>
                         
                         <div className="flex items-center justify-between mt-2">

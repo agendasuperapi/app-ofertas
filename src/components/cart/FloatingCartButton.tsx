@@ -21,7 +21,8 @@ export const FloatingCartButton = ({ storeId }: { storeId?: string }) => {
   
   const itemCount = filteredItems.reduce((sum, item) => sum + item.quantity, 0);
   const total = filteredItems.reduce((sum, item) => {
-    const basePrice = item.size ? item.size.price : (item.promotionalPrice || item.price);
+    const sizePrice = item.size ? (item.size.price * (item.size.quantity || 1)) : 0;
+    const basePrice = item.size ? sizePrice : (item.promotionalPrice || item.price);
     const addonsPrice = item.addons?.reduce((addonSum, addon) => addonSum + (addon.price * (addon.quantity || 1)), 0) || 0;
     const flavorsPrice = item.flavors?.reduce((flavorSum, flavor) => flavorSum + (flavor.price * (flavor.quantity || 1)), 0) || 0;
     return sum + ((basePrice + addonsPrice + flavorsPrice) * item.quantity);

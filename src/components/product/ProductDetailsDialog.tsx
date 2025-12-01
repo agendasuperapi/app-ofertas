@@ -101,7 +101,19 @@ export function ProductDetailsDialog({
   // Calculate current price considering size
   const selectedSizeData = availableSizes.find(s => s.id === selectedSize);
   const basePrice = selectedSizeData ? selectedSizeData.price : (product.promotional_price || product.price || 0);
-  const currentPrice = basePrice;
+  
+  // Calculate sizes total considering quantities
+  const sizesTotal = Object.entries(selectedSizesByCategory).reduce((total, [categoryId, sizeIds]) => {
+    return total + Array.from(sizeIds).reduce((categoryTotal, sizeId) => {
+      const size = availableSizes.find(s => s.id === sizeId);
+      if (!size) return categoryTotal;
+      const qty = sizeQuantities.get(sizeId) || 1;
+      return categoryTotal + (size.price * qty);
+    }, 0);
+  }, 0);
+  
+  // If there are sizes selected with quantities, use sizesTotal, otherwise use basePrice
+  const currentPrice = sizesTotal > 0 ? sizesTotal : basePrice;
   const hasDiscount = !selectedSizeData && product.promotional_price && product.promotional_price < product.price;
   const handleAddonToggle = (addonId: string, categoryId?: string, allowQuantity?: boolean) => {
     const newSelected = new Set(selectedAddons);
@@ -277,7 +289,8 @@ export function ProductDetailsDialog({
     const sizeToAdd = selectedSizeData ? {
       id: selectedSizeData.id,
       name: selectedSizeData.name,
-      price: selectedSizeData.price
+      price: selectedSizeData.price,
+      quantity: sizeQuantities.get(selectedSizeData.id) || 1
     } : undefined;
     
     addToCart(product.id, product.name, product.price, store.id, store.name, quantity, product.promotional_price, product.image_url, observation, store.slug, addonsToAdd, flavorsToAdd, sizeToAdd);

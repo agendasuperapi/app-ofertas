@@ -45,6 +45,7 @@ export interface CartSize {
   id: string;
   name: string;
   price: number;
+  quantity?: number;
 }
 
 export interface CartItem {
@@ -545,8 +546,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const getTotal = () => {
     const total = cart.items.reduce((sum, item) => {
-      // If size is selected, use size price instead of base price
-      const basePrice = item.size ? item.size.price : (item.promotionalPrice || item.price);
+      // If size is selected, use size price multiplied by size quantity instead of base price
+      const sizePrice = item.size ? (item.size.price * (item.size.quantity || 1)) : 0;
+      const basePrice = item.size ? sizePrice : (item.promotionalPrice || item.price);
       const addonsPrice = item.addons?.reduce((addonSum, addon) => addonSum + (addon.price * (addon.quantity || 1)), 0) || 0;
       const flavorsPrice = item.flavors?.reduce((flavorSum, flavor) => flavorSum + (flavor.price * (flavor.quantity || 1)), 0) || 0;
       return sum + ((basePrice + addonsPrice + flavorsPrice) * item.quantity);
