@@ -28,6 +28,7 @@ import ProductAddonsManager from "./ProductAddonsManager";
 import { ProductFlavorsManager } from "./ProductFlavorsManager";
 import { ProductSizesManager } from "./ProductSizesManager";
 import { ProductColorsManager } from "./ProductColorsManager";
+import { ColorSizeVariantsManager } from "./ColorSizeVariantsManager";
 import { ProductAddonsManagement, CategoriesTab, AddonsTab } from "./ProductAddonsManagement";
 import { ProductFlavorsManagement } from "./ProductFlavorsManagement";
 import { SizeCategoriesManager } from "./SizeCategoriesManager";
@@ -3311,6 +3312,9 @@ export const StoreOwnerDashboard = ({
                             <SelectItem value="colors" disabled={!editingProduct}>
                               Cores {!editingProduct && "(salve primeiro)"}
                             </SelectItem>
+                            <SelectItem value="variants" disabled={!editingProduct}>
+                              Matriz Cor/Tamanho {!editingProduct && "(salve primeiro)"}
+                            </SelectItem>
                             <SelectItem value="addons" disabled={!editingProduct}>
                               Adicionais {!editingProduct && "(salve primeiro)"}
                             </SelectItem>
@@ -3323,13 +3327,16 @@ export const StoreOwnerDashboard = ({
 
                       <Tabs value={activeProductTab} onValueChange={setActiveProductTab} className="w-full">
                         {/* Desktop: Tabs visuais */}
-                        <TabsList className="hidden md:grid md:grid-cols-5 w-full gap-1">
+                        <TabsList className="hidden md:grid md:grid-cols-6 w-full gap-1">
                           <TabsTrigger value="info">Informações</TabsTrigger>
                           <TabsTrigger value="sizes" disabled={!editingProduct}>
                             Variações {!editingProduct && <span className="text-xs ml-1">(salve primeiro)</span>}
                           </TabsTrigger>
                           <TabsTrigger value="colors" disabled={!editingProduct}>
                             Cores {!editingProduct && <span className="text-xs ml-1">(salve primeiro)</span>}
+                          </TabsTrigger>
+                          <TabsTrigger value="variants" disabled={!editingProduct}>
+                            Matriz {!editingProduct && <span className="text-xs ml-1">(salve primeiro)</span>}
                           </TabsTrigger>
                           <TabsTrigger value="addons" disabled={!editingProduct}>
                             Adicionais {!editingProduct && <span className="text-xs ml-1">(salve primeiro)</span>}
@@ -3497,6 +3504,15 @@ export const StoreOwnerDashboard = ({
                               productId={editingProduct.id} 
                               storeId={myStore.id}
                               productImages={productImages}
+                            />
+                          )}
+                        </TabsContent>
+
+                        <TabsContent value="variants" className="mt-4 min-h-[calc(90vh-250px)]">
+                          {editingProduct && myStore && (
+                            <ColorSizeVariantsManager 
+                              productId={editingProduct.id} 
+                              storeId={myStore.id}
                             />
                           )}
                         </TabsContent>
