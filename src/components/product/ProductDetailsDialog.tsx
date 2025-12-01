@@ -16,10 +16,12 @@ import { useProductFlavors } from "@/hooks/useProductFlavors";
 import { useProductSizes } from "@/hooks/useProductSizes";
 import { useAddonCategories } from "@/hooks/useAddonCategories";
 import { useSizeCategories } from "@/hooks/useSizeCategories";
+import { useProductImages } from "@/hooks/useProductImages";
 import { useState, useEffect, useRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { motion } from "framer-motion";
 import { DialogFooter } from "@/components/ui/dialog";
+import { ProductImageGallery } from "./ProductImageGallery";
 interface ProductDetailsDialogProps {
   product: any;
   store: any;
@@ -59,6 +61,9 @@ export function ProductDetailsDialog({
   const {
     categories
   } = useAddonCategories(store?.id);
+  const {
+    images: productImages
+  } = useProductImages(product?.id);
   const observationRef = useRef<HTMLTextAreaElement>(null);
   const drawerContentRef = useRef<HTMLDivElement>(null);
   const [isObservationModalOpen, setIsObservationModalOpen] = useState(false);
@@ -293,7 +298,10 @@ export function ProductDetailsDialog({
       quantity: sizeQuantities.get(selectedSizeData.id) || 1
     } : undefined;
     
-    addToCart(product.id, product.name, product.price, store.id, store.name, quantity, product.promotional_price, product.image_url, observation, store.slug, addonsToAdd, flavorsToAdd, sizeToAdd);
+    // Use primary image from gallery if available, otherwise fallback to product.image_url
+    const primaryImage = productImages.find(img => img.is_primary)?.image_url || product.image_url;
+    
+    addToCart(product.id, product.name, product.price, store.id, store.name, quantity, product.promotional_price, primaryImage, observation, store.slug, addonsToAdd, flavorsToAdd, sizeToAdd);
     onOpenChange(false);
     toast({
       title: "Adicionado ao carrinho!",
@@ -325,35 +333,18 @@ export function ProductDetailsDialog({
     }
   };
   const productContent = <>
-      {/* Imagem do Produto */}
-      <div className="relative w-full overflow-hidden group md:rounded-t-lg rounded-t-3xl">
-        <motion.img initial={{
-        scale: 1.15,
-        opacity: 0
-      }} animate={{
-        scale: 1,
-        opacity: 1
-      }} transition={{
-        duration: 1.2,
-        ease: [0.25, 0.1, 0.25, 1]
-      }} src={product.image_url || '/placeholder.svg'} alt={product.name} className="w-full h-56 md:h-64 object-cover group-hover:scale-110 transition-transform duration-1000 ease-out" />
-        {/* Animated shine effect */}
-        <motion.div initial={{
-        x: '-100%'
-      }} animate={{
-        x: '200%'
-      }} transition={{
-        duration: 3,
-        ease: "easeInOut",
-        repeat: Infinity,
-        repeatDelay: 5
-      }} className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none" style={{
-        width: '50%'
-      }} />
-        {hasDiscount && <Badge className="absolute top-16 right-4 bg-destructive text-destructive-foreground text-base px-3 py-1">
-            {Math.round((product.price - product.promotional_price) / product.price * 100)}% OFF
-          </Badge>}
-      </div>
+      {/* Galeria de Imagens do Produto */}
+      <ProductImageGallery
+        images={productImages.length > 0 ? productImages : (product.image_url ? [{ 
+          id: 'fallback', 
+          image_url: product.image_url, 
+          display_order: 0, 
+          is_primary: true 
+        }] : [])}
+        productName={product.name}
+        hasDiscount={hasDiscount}
+        discountPercentage={hasDiscount ? Math.round((product.price - product.promotional_price) / product.price * 100) : undefined}
+      />
 
       <div className="md:px-5 md:pt-4">
       {/* Info da Loja */}
