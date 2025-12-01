@@ -27,7 +27,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import ProductAddonsManager from "./ProductAddonsManager";
 import { ProductFlavorsManager } from "./ProductFlavorsManager";
 import { ProductSizesManager } from "./ProductSizesManager";
-import { ProductAddonsManagement, TemplatesTab, CategoriesTab, AddonsTab } from "./ProductAddonsManagement";
+import { ProductAddonsManagement, CategoriesTab, AddonsTab } from "./ProductAddonsManagement";
 import { ProductFlavorsManagement } from "./ProductFlavorsManagement";
 import { CombosManager } from "./CombosManager";
 import { EditOrderDialog } from "./EditOrderDialog";
@@ -4045,7 +4045,7 @@ export const StoreOwnerDashboard = ({
               <TabsContent value="edit">
                 <div className="space-y-6">
                   <Tabs defaultValue="adicionais" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3 mb-6">
+                    <TabsList className="grid w-full grid-cols-2 mb-6">
                       <TabsTrigger value="adicionais" className="flex items-center gap-2">
                         <Plus className="w-4 h-4" />
                         Adicionais
@@ -4053,10 +4053,6 @@ export const StoreOwnerDashboard = ({
                       <TabsTrigger value="sabores" className="flex items-center gap-2">
                         <Pizza className="w-4 h-4" />
                         Sabores
-                      </TabsTrigger>
-                      <TabsTrigger value="templates" className="flex items-center gap-2">
-                        <Sparkles className="w-4 h-4" />
-                        Templates
                       </TabsTrigger>
                     </TabsList>
 
@@ -4087,10 +4083,6 @@ export const StoreOwnerDashboard = ({
 
                     <TabsContent value="sabores">
                       <ProductFlavorsManagement storeId={myStore.id} />
-                    </TabsContent>
-
-                    <TabsContent value="templates">
-                      <TemplatesTab storeId={myStore.id} />
                     </TabsContent>
                   </Tabs>
                 </div>
