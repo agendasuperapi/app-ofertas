@@ -856,6 +856,11 @@ export default function Cart() {
                       )}
                       <div className="flex-1">
                         <h3 className="font-semibold mb-1">{item.productName}</h3>
+                        {item.size && (
+                          <div className="text-sm text-muted-foreground mb-2">
+                            <span className="font-medium">Variação:</span> {item.size.quantity && item.size.quantity > 1 ? `${item.size.quantity}x ` : ''}{item.size.name}
+                          </div>
+                        )}
                         {item.flavors && item.flavors.length > 0 && (
                           <div className="text-sm text-muted-foreground mb-2">
                             <span className="font-medium">Sabores:</span>
@@ -885,7 +890,7 @@ export default function Cart() {
                           </p>
                         )}
                         <p className="text-lg font-bold text-primary mb-2">
-                          R$ {(item.promotionalPrice || item.price).toFixed(2)}
+                          R$ {(item.size ? (item.size.price * (item.size.quantity || 1)) : (item.promotionalPrice || item.price)).toFixed(2)}
                           {(item.addons && item.addons.length > 0) || (item.flavors && item.flavors.length > 0) ? (
                             <span className="text-sm text-muted-foreground ml-2">
                               + R$ {(
