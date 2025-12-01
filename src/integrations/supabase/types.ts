@@ -413,6 +413,41 @@ export type Database = {
           },
         ]
       }
+      order_item_colors: {
+        Row: {
+          color_hex_code: string
+          color_name: string
+          color_price: number
+          created_at: string
+          id: string
+          order_item_id: string
+        }
+        Insert: {
+          color_hex_code: string
+          color_name: string
+          color_price?: number
+          created_at?: string
+          id?: string
+          order_item_id: string
+        }
+        Update: {
+          color_hex_code?: string
+          color_name?: string
+          color_price?: number
+          created_at?: string
+          id?: string
+          order_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_item_colors_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_item_flavors: {
         Row: {
           created_at: string
@@ -787,6 +822,60 @@ export type Database = {
           },
         ]
       }
+      product_colors: {
+        Row: {
+          created_at: string
+          display_order: number
+          hex_code: string
+          id: string
+          image_id: string | null
+          is_available: boolean
+          name: string
+          price_adjustment: number
+          product_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          hex_code: string
+          id?: string
+          image_id?: string | null
+          is_available?: boolean
+          name: string
+          price_adjustment?: number
+          product_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          hex_code?: string
+          id?: string
+          image_id?: string | null
+          is_available?: boolean
+          name?: string
+          price_adjustment?: number
+          product_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_colors_image_id_fkey"
+            columns: ["image_id"]
+            isOneToOne: false
+            referencedRelation: "product_images"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_colors_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_combos: {
         Row: {
           combo_price: number
@@ -980,6 +1069,7 @@ export type Database = {
           description: string | null
           display_order: number | null
           external_code: string | null
+          has_colors: boolean | null
           has_sizes: boolean | null
           id: string
           image_url: string | null
@@ -1001,6 +1091,7 @@ export type Database = {
           description?: string | null
           display_order?: number | null
           external_code?: string | null
+          has_colors?: boolean | null
           has_sizes?: boolean | null
           id?: string
           image_url?: string | null
@@ -1022,6 +1113,7 @@ export type Database = {
           description?: string | null
           display_order?: number | null
           external_code?: string | null
+          has_colors?: boolean | null
           has_sizes?: boolean | null
           id?: string
           image_url?: string | null
