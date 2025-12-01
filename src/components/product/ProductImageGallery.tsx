@@ -18,13 +18,15 @@ interface ProductImageGalleryProps {
   productName: string;
   hasDiscount?: boolean;
   discountPercentage?: number;
+  onImageChange?: (imageId: string) => void;
 }
 
 export function ProductImageGallery({ 
   images, 
   productName,
   hasDiscount,
-  discountPercentage 
+  discountPercentage,
+  onImageChange 
 }: ProductImageGalleryProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
@@ -39,15 +41,19 @@ export function ProductImageGallery({
   const currentImage = sortedImages[selectedImageIndex] || sortedImages[0];
 
   const handlePrevious = () => {
-    setSelectedImageIndex((prev) => 
-      prev === 0 ? sortedImages.length - 1 : prev - 1
-    );
+    setSelectedImageIndex((prev) => {
+      const newIndex = prev === 0 ? sortedImages.length - 1 : prev - 1;
+      onImageChange?.(sortedImages[newIndex]?.id);
+      return newIndex;
+    });
   };
 
   const handleNext = () => {
-    setSelectedImageIndex((prev) => 
-      prev === sortedImages.length - 1 ? 0 : prev + 1
-    );
+    setSelectedImageIndex((prev) => {
+      const newIndex = prev === sortedImages.length - 1 ? 0 : prev + 1;
+      onImageChange?.(sortedImages[newIndex]?.id);
+      return newIndex;
+    });
   };
 
   if (!sortedImages.length) {
@@ -210,7 +216,10 @@ export function ProductImageGallery({
             {sortedImages.map((image, index) => (
               <button
                 key={image.id}
-                onClick={() => setSelectedImageIndex(index)}
+                onClick={() => {
+                  setSelectedImageIndex(index);
+                  onImageChange?.(image.id);
+                }}
                 className={cn(
                   "flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all",
                   selectedImageIndex === index

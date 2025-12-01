@@ -367,6 +367,18 @@ export function ProductDetailsDialog({
           is_primary: true 
         }] : []);
 
+  // Handle image change - find and select the color that matches the image
+  const handleImageChange = (imageId: string) => {
+    // Skip if it's a color-specific image ID
+    if (imageId.startsWith('color-')) return;
+    
+    // Find color that has this image linked
+    const colorWithImage = availableColors.find(color => color.image_id === imageId);
+    if (colorWithImage) {
+      setSelectedColor(colorWithImage.id);
+    }
+  };
+
   const productContent = <>
       {/* Galeria de Imagens do Produto */}
       <ProductImageGallery
@@ -374,6 +386,7 @@ export function ProductDetailsDialog({
         productName={product.name}
         hasDiscount={hasDiscount}
         discountPercentage={hasDiscount ? Math.round((product.price - product.promotional_price) / product.price * 100) : undefined}
+        onImageChange={handleImageChange}
       />
 
       <div className="md:px-5 md:pt-4">
