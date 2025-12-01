@@ -5,7 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+
 import { Grid3x3, Check, X, DollarSign } from 'lucide-react';
 import { useColorSizeVariants } from '@/hooks/useColorSizeVariants';
 import { useProductColors } from '@/hooks/useProductColors';
@@ -147,7 +147,7 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
 
       {/* Matrix Grid */}
       <Card className="p-4">
-        <ScrollArea className="w-full">
+        <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
           <div className="min-w-max pb-4">
           {/* Header Row - Sizes */}
           <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: `200px repeat(${sizes.length}, 120px)` }}>
@@ -240,8 +240,7 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
             </div>
           ))}
           </div>
-          <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+        </div>
 
         <div className="mt-4 p-3 bg-muted/50 rounded text-xs text-muted-foreground">
           <strong>Dica:</strong> Clique em uma célula para ativar/desativar a combinação. 
