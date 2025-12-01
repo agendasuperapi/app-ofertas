@@ -829,7 +829,9 @@ export function ProductSizesManager({
                                   onClick={() => handleCopyStoreSize(storeSize)}
                                   className="w-full sm:w-auto"
                                 >
-                                  <Plus className="w-4 h-4 mr-2" />
+                                  {!isAlreadyAdded || !existingSize.is_available ? (
+                                    <Plus className="w-4 h-4 mr-2" />
+                                  ) : null}
                                   {isAlreadyAdded 
                                     ? (existingSize.is_available ? 'Remover do produto' : 'Adicionar novamente')
                                     : 'Adicionar'
@@ -901,7 +903,9 @@ export function ProductSizesManager({
                               onClick={() => handleCopyStoreSize(storeSize)}
                               className="w-full sm:w-auto"
                             >
-                              <Plus className="w-4 h-4 mr-2" />
+                              {!isAlreadyAdded || !existingSize.is_available ? (
+                                <Plus className="w-4 h-4 mr-2" />
+                              ) : null}
                               {isAlreadyAdded 
                                 ? (existingSize.is_available ? 'Remover do produto' : 'Adicionar novamente')
                                 : 'Adicionar'
