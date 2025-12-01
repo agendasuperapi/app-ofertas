@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Edit, DollarSign, FolderTree, X, GripVertical, Search, Store, Lightbulb, Download, Package, Filter, Power, PowerOff } from "lucide-react";
+import { Plus, Trash2, Edit, DollarSign, FolderTree, X, GripVertical, Search, Store, Lightbulb, Download, Package, Filter, Power, PowerOff, ChevronDown, ChevronUp } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProductAddons } from "@/hooks/useProductAddons";
 import { useAddonCategories } from "@/hooks/useAddonCategories";
@@ -78,6 +78,8 @@ interface SortableCategoryProps {
   onToggleAvailability: (addon: any) => void;
   isDeleting: boolean;
   hideDeleteButton?: boolean;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
 }
 
 const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleting, hideDeleteButton }: SortableAddonProps) => {
@@ -169,7 +171,7 @@ const SortableAddon = ({ addon, onEdit, onDelete, onToggleAvailability, isDeleti
   );
 };
 
-const SortableCategory = ({ category, addons, onEdit, onDelete, onToggleAvailability, isDeleting, hideDeleteButton }: SortableCategoryProps) => {
+const SortableCategory = ({ category, addons, onEdit, onDelete, onToggleAvailability, isDeleting, hideDeleteButton, isExpanded, onToggleExpand }: SortableCategoryProps) => {
   const {
     attributes,
     listeners,
@@ -188,33 +190,46 @@ const SortableCategory = ({ category, addons, onEdit, onDelete, onToggleAvailabi
   return (
     <div ref={setNodeRef} style={style} className="space-y-2">
       <Separator className="my-4" />
-      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-2">
+      <div 
+        className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-2 cursor-pointer hover:text-foreground transition-colors"
+        onClick={onToggleExpand}
+      >
         <button
           className="cursor-grab active:cursor-grabbing touch-none"
           {...attributes}
           {...listeners}
+          onClick={(e) => e.stopPropagation()}
         >
           <GripVertical className="w-4 h-4" />
         </button>
         <FolderTree className="w-4 h-4" />
-        {category.name}
+        <span className="flex-1">{category.name}</span>
+        {isExpanded ? (
+          <ChevronUp className="w-4 h-4" />
+        ) : (
+          <ChevronDown className="w-4 h-4" />
+        )}
       </div>
-      <SortableContext
-        items={addons.map((a) => a.id)}
-        strategy={verticalListSortingStrategy}
-      >
-        {addons.map((addon) => (
-          <SortableAddon
-            key={addon.id}
-            addon={addon}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onToggleAvailability={onToggleAvailability}
-            isDeleting={isDeleting}
-            hideDeleteButton={hideDeleteButton}
-          />
-        ))}
-      </SortableContext>
+      {isExpanded && (
+        <div className="animate-accordion-down">
+          <SortableContext
+            items={addons.map((a) => a.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {addons.map((addon) => (
+              <SortableAddon
+                key={addon.id}
+                addon={addon}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onToggleAvailability={onToggleAvailability}
+                isDeleting={isDeleting}
+                hideDeleteButton={hideDeleteButton}
+              />
+            ))}
+          </SortableContext>
+        </div>
+      )}
     </div>
   );
 };
@@ -318,6 +333,10 @@ export default function ProductAddonsManager({ productId, storeId, hideDeleteBut
   });
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const formRef = useRef<HTMLDivElement>(null);
+  
+  // Expand/collapse state for categories
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [expandedStoreAddonCategories, setExpandedStoreAddonCategories] = useState<Set<string>>(new Set());
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -325,6 +344,30 @@ export default function ProductAddonsManager({ productId, storeId, hideDeleteBut
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  const toggleCategoryExpansion = (categoryId: string) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleStoreAddonCategoryExpansion = (categoryId: string) => {
+    setExpandedStoreAddonCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(categoryId)) {
+        newSet.delete(categoryId);
+      } else {
+        newSet.add(categoryId);
+      }
+      return newSet;
+    });
+  };
 
   const activeCategories = categories.filter(cat => cat.is_active);
 
@@ -1174,6 +1217,8 @@ export default function ProductAddonsManager({ productId, storeId, hideDeleteBut
                         onToggleAvailability={handleToggleAvailability}
                         isDeleting={isDeleting}
                         hideDeleteButton={hideDeleteButton}
+                        isExpanded={expandedCategories.has(category.id)}
+                        onToggleExpand={() => toggleCategoryExpansion(category.id)}
                       />
                     );
                   })}
@@ -1412,40 +1457,52 @@ export default function ProductAddonsManager({ productId, storeId, hideDeleteBut
                 {/* Uncategorized */}
                 {groupedStoreAddons.uncategorized && groupedStoreAddons.uncategorized.length > 0 && (
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-2">
+                    <div 
+                      className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-2 cursor-pointer hover:text-foreground transition-colors"
+                      onClick={() => toggleStoreAddonCategoryExpansion('uncategorized')}
+                    >
                       <FolderTree className="w-4 h-4" />
-                      Sem categoria
+                      <span className="flex-1">Sem categoria</span>
+                      {expandedStoreAddonCategories.has('uncategorized') ? (
+                        <ChevronUp className="w-4 h-4" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
                     </div>
-                    {groupedStoreAddons.uncategorized.map((addon) => {
-                       const isInProduct = addons?.some(a => a.name === addon.name && a.is_available);
-                       return (
-                        <div key={addon.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border rounded-lg">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-medium truncate">{addon.name}</span>
-                              {isInProduct && (
-                                <Badge variant="outline" className="text-xs flex-shrink-0">
-                                  Já adicionado
-                                </Badge>
-                              )}
+                    {expandedStoreAddonCategories.has('uncategorized') && (
+                      <div className="animate-accordion-down">
+                        {groupedStoreAddons.uncategorized.map((addon) => {
+                          const isInProduct = addons?.some(a => a.name === addon.name && a.is_available);
+                          return (
+                            <div key={addon.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border rounded-lg">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-medium truncate">{addon.name}</span>
+                                  {isInProduct && (
+                                    <Badge variant="outline" className="text-xs flex-shrink-0">
+                                      Já adicionado
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-muted-foreground">
+                                  R$ {addon.price.toFixed(2)}
+                                </p>
+                              </div>
+                              <Button
+                                size="sm"
+                                onClick={() => handleCopyStoreAddon(addon)}
+                                className="w-full sm:w-auto"
+                              >
+                                <Plus className="w-4 h-4 mr-2" />
+                                {addons?.some(a => a.name === addon.name && a.category_id === addon.category_id && a.is_available)
+                                  ? 'Remover do produto'
+                                  : 'Adicionar'}
+                              </Button>
                             </div>
-                            <p className="text-sm text-muted-foreground">
-                              R$ {addon.price.toFixed(2)}
-                            </p>
-                          </div>
-                          <Button
-                             size="sm"
-                             onClick={() => handleCopyStoreAddon(addon)}
-                             className="w-full sm:w-auto"
-                           >
-                             <Plus className="w-4 h-4 mr-2" />
-                             {addons?.some(a => a.name === addon.name && a.category_id === addon.category_id && a.is_available)
-                               ? 'Remover do produto'
-                               : 'Adicionar'}
-                           </Button>
-                        </div>
-                      );
-                    })}
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -1457,40 +1514,52 @@ export default function ProductAddonsManager({ productId, storeId, hideDeleteBut
                   return (
                     <div key={category.id} className="space-y-2">
                       <Separator />
-                      <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-2">
+                      <div 
+                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground py-2 cursor-pointer hover:text-foreground transition-colors"
+                        onClick={() => toggleStoreAddonCategoryExpansion(category.id)}
+                      >
                         <FolderTree className="w-4 h-4" />
-                        {category.name}
+                        <span className="flex-1">{category.name}</span>
+                        {expandedStoreAddonCategories.has(category.id) ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
                       </div>
-                      {categoryAddons.map((addon) => {
-                         const isInProduct = addons?.some(a => a.name === addon.name && a.is_available);
-                         return (
-                          <div key={addon.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border rounded-lg">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-medium truncate">{addon.name}</span>
-                                {isInProduct && (
-                                  <Badge variant="outline" className="text-xs flex-shrink-0">
-                                    Já adicionado
-                                  </Badge>
-                                )}
+                      {expandedStoreAddonCategories.has(category.id) && (
+                        <div className="animate-accordion-down">
+                          {categoryAddons.map((addon) => {
+                            const isInProduct = addons?.some(a => a.name === addon.name && a.is_available);
+                            return (
+                              <div key={addon.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 border rounded-lg">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-medium truncate">{addon.name}</span>
+                                    {isInProduct && (
+                                      <Badge variant="outline" className="text-xs flex-shrink-0">
+                                        Já adicionado
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <p className="text-sm text-muted-foreground">
+                                    R$ {addon.price.toFixed(2)}
+                                  </p>
+                                </div>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleCopyStoreAddon(addon)}
+                                  className="w-full sm:w-auto"
+                                >
+                                  <Plus className="w-4 h-4 mr-2" />
+                                  {addons?.some(a => a.name === addon.name && a.category_id === addon.category_id && a.is_available)
+                                    ? 'Remover do produto'
+                                    : 'Adicionar'}
+                                </Button>
                               </div>
-                              <p className="text-sm text-muted-foreground">
-                                R$ {addon.price.toFixed(2)}
-                              </p>
-                            </div>
-                             <Button
-                               size="sm"
-                               onClick={() => handleCopyStoreAddon(addon)}
-                               className="w-full sm:w-auto"
-                             >
-                               <Plus className="w-4 h-4 mr-2" />
-                               {addons?.some(a => a.name === addon.name && a.category_id === addon.category_id && a.is_available)
-                                 ? 'Remover do produto'
-                                 : 'Adicionar'}
-                             </Button>
-                          </div>
-                        );
-                      })}
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
