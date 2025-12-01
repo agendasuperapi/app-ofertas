@@ -360,12 +360,19 @@ export function ProductSizesManager({
     }
 
     try {
-      await addCategory({
+      const newCategory = await addCategory({
         name: newCategoryForm.name.trim(),
         is_exclusive: newCategoryForm.is_exclusive,
         min_items: newCategoryForm.min_items,
         max_items: newCategoryForm.max_items
       });
+      
+      if (newCategory) {
+        setFormData({
+          ...formData,
+          category_id: newCategory.id
+        });
+      }
       
       setIsNewCategoryDialogOpen(false);
       setNewCategoryForm({
