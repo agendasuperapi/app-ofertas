@@ -3461,7 +3461,7 @@ export const StoreOwnerDashboard = ({
                         </TabsContent>
 
                         <TabsContent value="addons" className="mt-4 min-h-[calc(90vh-250px)]">
-                          {editingProduct && myStore && <ProductAddonsManager productId={editingProduct.id} storeId={myStore.id} />}
+                          {editingProduct && myStore && <ProductAddonsManager productId={editingProduct.id} storeId={myStore.id} hideDeleteButton={true} />}
                         </TabsContent>
 
                         <TabsContent value="flavors" className="mt-4 min-h-[calc(90vh-250px)]">
