@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useStoreAddonsAndFlavors } from "@/hooks/useStoreAddonsAndFlavors";
 import { useProductFlavors } from "@/hooks/useProductFlavors";
+import { useProducts } from "@/hooks/useProducts";
 import { Package, Sparkles, Edit, Save, X, Plus, Trash2, Power, PowerOff } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProductFlavorsManagementProps {
   storeId: string;
@@ -49,7 +51,8 @@ export const ProductFlavorsManagement = ({ storeId }: ProductFlavorsManagementPr
 // Aba de Sabores Globais
 export const FlavorsTab = ({ storeId }: { storeId: string }) => {
   const { flavors, isLoading, refetch } = useStoreAddonsAndFlavors(storeId);
-  const { updateFlavor, deleteFlavor, createFlavor, isUpdating, isDeleting } = useProductFlavors();
+  const { updateFlavor, deleteFlavor, createFlavor, isUpdating, isDeleting, isCreating } = useProductFlavors();
+  const { data: products } = useProducts(storeId);
   const [editingFlavorId, setEditingFlavorId] = useState<string | null>(null);
   const [editedValues, setEditedValues] = useState<{
     name: string;
@@ -64,6 +67,41 @@ export const FlavorsTab = ({ storeId }: { storeId: string }) => {
     price: '',
     is_available: true,
   });
+  const [manageProductsModal, setManageProductsModal] = useState<{
+    flavor: any;
+    selectedProducts: Set<string>;
+  } | null>(null);
+  const [allFlavorsWithProducts, setAllFlavorsWithProducts] = useState<any[]>([]);
+
+  // Buscar todos os sabores com product_id para gerenciamento
+  useEffect(() => {
+    const fetchAllFlavors = async () => {
+      if (!storeId) return;
+      
+      const { data, error } = await supabase
+        .from('product_flavors')
+        .select(`
+          id,
+          name,
+          description,
+          price,
+          is_available,
+          product_id,
+          product:products!inner(
+            name,
+            store_id,
+            id
+          )
+        `)
+        .eq('product.store_id', storeId);
+
+      if (!error && data) {
+        setAllFlavorsWithProducts(data);
+      }
+    };
+
+    fetchAllFlavors();
+  }, [storeId, isLoading]);
 
   if (isLoading) {
     return <div className="text-center py-8 text-muted-foreground">Carregando sabores...</div>;
@@ -154,6 +192,96 @@ export const FlavorsTab = ({ storeId }: { storeId: string }) => {
       description: 'Adicione sabores diretamente em produtos específicos',
       variant: 'destructive',
     });
+  };
+
+  const handleManageProducts = (flavor: any) => {
+    // Encontrar todos os produtos que já têm este sabor (mesmo nome)
+    const productsWithFlavor = allFlavorsWithProducts
+      .filter(f => f.name === flavor.name)
+      .map(f => f.product_id);
+    
+    setManageProductsModal({
+      flavor,
+      selectedProducts: new Set(productsWithFlavor),
+    });
+  };
+
+  const handleToggleProduct = (productId: string) => {
+    if (!manageProductsModal) return;
+    
+    const newSelected = new Set(manageProductsModal.selectedProducts);
+    if (newSelected.has(productId)) {
+      newSelected.delete(productId);
+    } else {
+      newSelected.add(productId);
+    }
+    
+    setManageProductsModal({
+      ...manageProductsModal,
+      selectedProducts: newSelected,
+    });
+  };
+
+  const handleSaveProductSelection = async () => {
+    if (!manageProductsModal) return;
+
+    const { flavor, selectedProducts } = manageProductsModal;
+    const currentProducts = allFlavorsWithProducts
+      .filter(f => f.name === flavor.name)
+      .map(f => f.product_id);
+
+    // Produtos a adicionar (estão selecionados mas não existem)
+    const toAdd = Array.from(selectedProducts).filter(id => !currentProducts.includes(id));
+    
+    // Produtos a remover (existem mas não estão selecionados)
+    const toRemove = currentProducts.filter(id => !selectedProducts.has(id));
+
+    try {
+      // Adicionar sabor aos novos produtos
+      for (const productId of toAdd) {
+        await new Promise((resolve, reject) => {
+          createFlavor({
+            product_id: productId,
+            name: flavor.name,
+            description: flavor.description || '',
+            price: flavor.price,
+            is_available: flavor.is_available ?? true,
+          }, {
+            onSuccess: resolve,
+            onError: reject,
+          });
+        });
+      }
+
+      // Remover sabor dos produtos desmarcados
+      for (const productId of toRemove) {
+        const flavorToDelete = allFlavorsWithProducts.find(
+          f => f.name === flavor.name && f.product_id === productId
+        );
+        if (flavorToDelete) {
+          await new Promise((resolve, reject) => {
+            deleteFlavor(flavorToDelete.id, {
+              onSuccess: resolve,
+              onError: reject,
+            });
+          });
+        }
+      }
+
+      toast({
+        title: 'Sucesso!',
+        description: 'Disponibilidade do sabor atualizada nos produtos.',
+      });
+
+      setManageProductsModal(null);
+      refetch();
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Erro ao atualizar disponibilidade do sabor.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -266,6 +394,15 @@ export const FlavorsTab = ({ storeId }: { storeId: string }) => {
                               </div>
                             </div>
                             <div className="flex gap-1 justify-end sm:justify-start shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleManageProducts(flavor)}
+                                title="Gerenciar produtos"
+                                className="h-8 w-8 p-0 sm:h-9 sm:w-9"
+                              >
+                                <Package className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -387,6 +524,66 @@ export const FlavorsTab = ({ storeId }: { storeId: string }) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal para gerenciar produtos */}
+      <ResponsiveDialog 
+        open={!!manageProductsModal} 
+        onOpenChange={(open) => !open && setManageProductsModal(null)}
+      >
+        <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>
+              Gerenciar disponibilidade: {manageProductsModal?.flavor.name}
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              Selecione em quais produtos este sabor deve estar disponível
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <div className="flex-1 overflow-y-auto px-4 sm:px-0">
+            <div className="space-y-2">
+              {products?.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Package className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Nenhum produto cadastrado</p>
+                </div>
+              ) : (
+                products?.map((product) => (
+                  <div
+                    key={product.id}
+                    className="flex items-center gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                    onClick={() => handleToggleProduct(product.id)}
+                  >
+                    <Switch
+                      checked={manageProductsModal?.selectedProducts.has(product.id)}
+                      onCheckedChange={() => handleToggleProduct(product.id)}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium text-sm truncate">{product.name}</div>
+                      <div className="text-xs text-muted-foreground">{product.category}</div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+          <ResponsiveDialogFooter className="px-4 sm:px-0">
+            <Button
+              variant="outline"
+              onClick={() => setManageProductsModal(null)}
+              className="w-full sm:w-auto text-sm"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSaveProductSelection}
+              disabled={isCreating || isDeleting}
+              className="w-full sm:w-auto text-sm"
+            >
+              Salvar
+            </Button>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </>
   );
 };
