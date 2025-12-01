@@ -617,16 +617,6 @@ export function ProductSizesManager({
                     <span className="hidden sm:inline">Importar de Produtos</span>
                     <span className="sm:hidden">Produtos</span>
                   </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => setShowCategoryManager(true)}
-                    className="w-full sm:w-auto shrink-0 justify-start sm:justify-center"
-                  >
-                    <FolderPlus className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Gerenciar Categorias</span>
-                    <span className="sm:hidden">Categorias</span>
-                  </Button>
                 </div>
               </div>
             </CardHeader>
