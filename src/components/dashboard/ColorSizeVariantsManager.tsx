@@ -147,9 +147,9 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
       </div>
 
       {/* Matrix Grid */}
-      <Card className="p-4">
+      <Card className="p-2 sm:p-4">
         <div 
-          className="max-h-[500px] w-full overflow-auto nested-scroll scrollbar-thin"
+          className="max-h-[400px] sm:max-h-[500px] w-full overflow-auto nested-scroll scrollbar-thin"
           data-scroll-visible="true"
           style={{
             overscrollBehavior: 'contain',
@@ -159,17 +159,17 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
           <div className="min-w-max pb-2 pr-2">
             {/* Header Row - Sizes */}
             <div
-              className="grid gap-2 mb-2"
-              style={{ gridTemplateColumns: `200px repeat(${sizes.length}, 120px)` }}
+              className="grid gap-1 sm:gap-2 mb-2"
+              style={{ gridTemplateColumns: `140px repeat(${sizes.length}, 100px)` }}
             >
-              <div className="font-semibold text-sm p-2">Cor / Tamanho</div>
+              <div className="font-semibold text-xs sm:text-sm p-1 sm:p-2">Cor / Tamanho</div>
               {sizes.map((size) => (
                 <div
                   key={size.id}
-                  className="font-semibold text-sm p-2 text-center bg-muted rounded"
+                  className="font-semibold text-xs sm:text-sm p-1 sm:p-2 text-center bg-muted rounded"
                 >
-                  {size.name}
-                  <div className="text-xs text-muted-foreground font-normal">
+                  <div className="truncate">{size.name}</div>
+                  <div className="text-[10px] sm:text-xs text-muted-foreground font-normal">
                     +R$ {size.price.toFixed(2)}
                   </div>
                 </div>
@@ -180,19 +180,19 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
             {colors.map((color) => (
               <div
                 key={color.id}
-                className="grid gap-2 mb-2"
-                style={{ gridTemplateColumns: `200px repeat(${sizes.length}, 120px)` }}
+                className="grid gap-1 sm:gap-2 mb-2"
+                style={{ gridTemplateColumns: `140px repeat(${sizes.length}, 100px)` }}
               >
                 {/* Color Label */}
-                <div className="flex items-center gap-2 p-2 bg-muted rounded">
+                <div className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2 bg-muted rounded">
                   <div
-                    className="w-6 h-6 rounded border-2 border-border flex-shrink-0"
+                    className="w-5 h-5 sm:w-6 sm:h-6 rounded border-2 border-border flex-shrink-0"
                     style={{ backgroundColor: color.hex_code }}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">{color.name}</div>
+                    <div className="text-xs sm:text-sm font-medium truncate">{color.name}</div>
                     {color.price_adjustment !== 0 && (
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-[10px] sm:text-xs text-muted-foreground">
                         {color.price_adjustment > 0 ? '+' : ''}R$ {color.price_adjustment.toFixed(2)}
                       </div>
                     )}
@@ -209,28 +209,28 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
                     <div
                       key={size.id}
                       className={`
-                        border-2 rounded p-2 flex flex-col items-center justify-center gap-1 cursor-pointer
+                        border-2 rounded p-1 sm:p-2 flex flex-col items-center justify-center gap-0.5 sm:gap-1 cursor-pointer
                         transition-all hover:border-primary/50
                         ${isAvailable ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}
                       `}
                       onClick={() => handleToggleVariant(color.id, size.id)}
                     >
                       {isAvailable ? (
-                        <Check className="w-5 h-5 text-green-600" />
+                        <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                       ) : (
-                        <X className="w-5 h-5 text-red-600" />
+                        <X className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
                       )}
 
                       {variant && (
                         <>
                           {variant.stock_quantity !== null && (
-                            <Badge variant="secondary" className="text-xs">
-                              Estoque: {variant.stock_quantity}
+                            <Badge variant="secondary" className="text-[10px] sm:text-xs">
+                              {variant.stock_quantity}
                             </Badge>
                           )}
                           {variant.price_adjustment !== 0 && (
-                            <Badge variant="outline" className="text-xs">
-                              <DollarSign className="w-3 h-3" />
+                            <Badge variant="outline" className="text-[10px] sm:text-xs hidden sm:flex items-center gap-0.5">
+                              <DollarSign className="w-2 h-2 sm:w-3 sm:h-3" />
                               {variant.price_adjustment > 0 ? '+' : ''}
                               {variant.price_adjustment.toFixed(2)}
                             </Badge>
@@ -238,7 +238,7 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-6 text-xs mt-1"
+                            className="h-5 sm:h-6 text-[10px] sm:text-xs mt-0.5 sm:mt-1 px-1 sm:px-2"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleOpenEdit(color.id, size.id);
