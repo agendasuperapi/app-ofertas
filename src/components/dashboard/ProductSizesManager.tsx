@@ -106,7 +106,7 @@ export function ProductSizesManager({
   const [editingSize, setEditingSize] = useState<ProductSize | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available' | 'unavailable'>('all');
-  const { categories } = useSizeCategories(storeId);
+  const { categories, addCategory } = useSizeCategories(storeId);
   const [showCategoryManager, setShowCategoryManager] = useState(false);
   const [importFromProductOpen, setImportFromProductOpen] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
@@ -124,7 +124,6 @@ export function ProductSizesManager({
   });
   
   const { sizes: storeSizes, isLoading: isLoadingStoreSizes } = useStoreSizes(storeId);
-  const { addCategory } = useSizeCategories(storeId);
   const [formData, setFormData] = useState<SizeFormData>({
     name: '',
     price: 0,
