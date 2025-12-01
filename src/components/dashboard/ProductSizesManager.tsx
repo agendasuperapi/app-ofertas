@@ -835,8 +835,8 @@ export function ProductSizesManager({
                                   <div className="flex items-center gap-2 flex-wrap">
                                     <h4 className="text-sm font-semibold truncate">{storeSize.name}</h4>
                                     {isAlreadyAdded && (
-                                      <Badge variant="secondary" className="text-xs">
-                                        {existingSize?.is_available ? 'Já adicionado' : 'Indisponível'}
+                                      <Badge variant="secondary" className="text-xs bg-black text-white hover:bg-black/80">
+                                        Já adicionado
                                       </Badge>
                                     )}
                                   </div>
@@ -903,8 +903,8 @@ export function ProductSizesManager({
                               <div className="flex items-center gap-2 flex-wrap">
                                 <h4 className="text-sm font-semibold truncate">{storeSize.name}</h4>
                                 {isAlreadyAdded && (
-                                  <Badge variant="secondary" className="text-xs">
-                                    {existingSize?.is_available ? 'Já adicionado' : 'Indisponível'}
+                                  <Badge variant="secondary" className="text-xs bg-black text-white hover:bg-black/80">
+                                    Já adicionado
                                   </Badge>
                                 )}
                               </div>
