@@ -148,8 +148,8 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
 
       {/* Matrix Grid */}
       <Card className="p-4">
-        <ScrollArea className="max-h-[500px] w-full">
-          <div className="min-w-max pb-4 pr-4">
+        <ScrollArea className="h-[500px] w-full">
+          <div className="min-w-max">
           {/* Header Row - Sizes */}
           <div className="grid gap-2 mb-2" style={{ gridTemplateColumns: `200px repeat(${sizes.length}, 120px)` }}>
             <div className="font-semibold text-sm p-2">Cor / Tamanho</div>
