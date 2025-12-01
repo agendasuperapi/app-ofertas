@@ -681,44 +681,45 @@ export function ProductDetailsDialog({
                         </span>}
                     </Label>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {isSelected && (
-                      <div className="flex items-center gap-1">
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
-                          className="h-6 w-6"
-                          onClick={() => {
-                            const newQuantities = new Map(flavorQuantities);
-                            if (currentQuantity > 1) {
-                              newQuantities.set(flavor.id, currentQuantity - 1);
-                            }
-                            setFlavorQuantities(newQuantities);
-                          }}
-                        >
-                          <Minus className="w-3 h-3" />
-                        </Button>
-                        <span className="text-xs font-semibold min-w-[1.5rem] text-center">
-                          {currentQuantity}
-                        </span>
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
-                          className="h-6 w-6"
-                          onClick={() => {
-                            const newQuantities = new Map(flavorQuantities);
-                            newQuantities.set(flavor.id, currentQuantity + 1);
-                            setFlavorQuantities(newQuantities);
-                          }}
-                        >
-                          <Plus className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    )}
-                    {flavor.price > 0 && <span className="text-sm font-semibold text-primary">
-                        + R$ {flavor.price.toFixed(2)}
-                      </span>}
-                    {isSelected && <Check className="h-5 w-5 text-primary" />}
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      {flavor.price > 0 && <span className="text-sm font-semibold text-primary">
+                          + R$ {flavor.price.toFixed(2)}
+                        </span>}
+                      {isSelected && (
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            className="h-6 w-6"
+                            onClick={() => {
+                              const newQuantities = new Map(flavorQuantities);
+                              if (currentQuantity > 1) {
+                                newQuantities.set(flavor.id, currentQuantity - 1);
+                              }
+                              setFlavorQuantities(newQuantities);
+                            }}
+                          >
+                            <Minus className="w-3 h-3" />
+                          </Button>
+                          <span className="text-xs font-semibold min-w-[1.5rem] text-center">
+                            {currentQuantity}
+                          </span>
+                          <Button 
+                            variant="outline" 
+                            size="icon" 
+                            className="h-6 w-6"
+                            onClick={() => {
+                              const newQuantities = new Map(flavorQuantities);
+                              newQuantities.set(flavor.id, currentQuantity + 1);
+                              setFlavorQuantities(newQuantities);
+                            }}
+                          >
+                            <Plus className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>;
           })}
