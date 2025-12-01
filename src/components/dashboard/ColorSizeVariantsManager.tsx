@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -6,8 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
-import { Grid3x3, Check, X, DollarSign } from 'lucide-react';
+import { Grid3x3, Check, X, DollarSign, MoveHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useColorSizeVariants } from '@/hooks/useColorSizeVariants';
 import { useProductColors } from '@/hooks/useProductColors';
 import { useProductSizes } from '@/hooks/useProductSizes';
@@ -39,6 +41,15 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
   const [editingVariant, setEditingVariant] = useState<{ colorId: string; sizeId: string } | null>(null);
   const [stockValue, setStockValue] = useState<number | null>(null);
   const [priceAdjustment, setPriceAdjustment] = useState<number>(0);
+  
+  // Scroll control refs and states
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showLeftShadow, setShowLeftShadow] = useState(false);
+  const [showRightShadow, setShowRightShadow] = useState(false);
+  const [showSwipeIndicator, setShowSwipeIndicator] = useState(true);
+  const [isAutoScrolling, setIsAutoScrolling] = useState<'left' | 'right' | null>(null);
+  const scrollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const isMobile = useIsMobile();
 
   // Create a map for quick variant lookup
   const variantMap = useMemo(() => {
@@ -48,6 +59,79 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
     });
     return map;
   }, [variants]);
+
+  // Check scroll position and update shadows
+  const checkScroll = useCallback(() => {
+    const element = scrollContainerRef.current;
+    if (!element) return;
+    
+    const { scrollLeft, scrollWidth, clientWidth } = element;
+    setShowLeftShadow(scrollLeft > 5);
+    setShowRightShadow(scrollLeft < scrollWidth - clientWidth - 5);
+  }, []);
+
+  // Auto-scroll on mouse hover near edges (desktop only)
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (isMobile) return;
+    
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    
+    const rect = container.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const edgeThreshold = 60;
+    const scrollSpeed = 8;
+    
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current);
+      scrollIntervalRef.current = null;
+    }
+    
+    if (mouseX < edgeThreshold && showLeftShadow) {
+      setIsAutoScrolling('left');
+      scrollIntervalRef.current = setInterval(() => {
+        container.scrollLeft -= scrollSpeed;
+        checkScroll();
+      }, 16);
+    } else if (mouseX > rect.width - edgeThreshold && showRightShadow) {
+      setIsAutoScrolling('right');
+      scrollIntervalRef.current = setInterval(() => {
+        container.scrollLeft += scrollSpeed;
+        checkScroll();
+      }, 16);
+    } else {
+      setIsAutoScrolling(null);
+    }
+  }, [isMobile, showLeftShadow, showRightShadow, checkScroll]);
+
+  const handleMouseLeave = useCallback(() => {
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current);
+      scrollIntervalRef.current = null;
+    }
+    setIsAutoScrolling(null);
+  }, []);
+
+  // Setup scroll listeners and cleanup
+  useEffect(() => {
+    const element = scrollContainerRef.current;
+    if (!element) return;
+    
+    checkScroll();
+    
+    const resizeObserver = new ResizeObserver(checkScroll);
+    resizeObserver.observe(element);
+    element.addEventListener('scroll', checkScroll);
+    
+    const timer = setTimeout(() => setShowSwipeIndicator(false), 4000);
+    
+    return () => {
+      resizeObserver.disconnect();
+      element.removeEventListener('scroll', checkScroll);
+      clearTimeout(timer);
+      if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
+    };
+  }, [checkScroll]);
 
   const handleGenerateAll = () => {
     if (colors.length === 0 || sizes.length === 0) {
@@ -147,13 +231,59 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
       </div>
 
       {/* Matrix Grid */}
-      <Card className="p-2 sm:p-4">
+      <Card className="p-2 sm:p-4 relative">
+        {/* Left Shadow Indicator */}
+        <div className={cn(
+          "absolute left-0 top-0 bottom-0 w-8 pointer-events-none z-10 transition-opacity duration-300 bg-gradient-to-r from-card to-transparent rounded-l-lg",
+          showLeftShadow ? "opacity-100" : "opacity-0"
+        )} />
+        
+        {/* Right Shadow Indicator */}
+        <div className={cn(
+          "absolute right-0 top-0 bottom-0 w-8 pointer-events-none z-10 transition-opacity duration-300 bg-gradient-to-l from-card to-transparent rounded-r-lg",
+          showRightShadow ? "opacity-100" : "opacity-0"
+        )} />
+        
+        {/* Left Navigation Button (Desktop) */}
+        {!isMobile && showLeftShadow && (
+          <button
+            className="absolute left-1 top-1/2 -translate-y-1/2 z-20 bg-primary/90 hover:bg-primary text-primary-foreground rounded-full p-1.5 shadow-lg transition-all"
+            onClick={() => scrollContainerRef.current?.scrollBy({ left: -200, behavior: 'smooth' })}
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+        )}
+        
+        {/* Right Navigation Button (Desktop) */}
+        {!isMobile && showRightShadow && (
+          <button
+            className="absolute right-1 top-1/2 -translate-y-1/2 z-20 bg-primary/90 hover:bg-primary text-primary-foreground rounded-full p-1.5 shadow-lg transition-all"
+            onClick={() => scrollContainerRef.current?.scrollBy({ left: 200, behavior: 'smooth' })}
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        )}
+        
+        {/* Swipe Indicator (Mobile) */}
+        {isMobile && showSwipeIndicator && showRightShadow && (
+          <div className="absolute bottom-2 right-2 z-20 pointer-events-none animate-fade-in">
+            <div className="bg-primary text-primary-foreground px-2 py-1 rounded-full shadow-lg flex items-center gap-1.5 animate-pulse">
+              <MoveHorizontal className="h-3 w-3" />
+              <span className="text-xs font-medium">Deslize →</span>
+            </div>
+          </div>
+        )}
+        
         <div 
+          ref={scrollContainerRef}
           className="max-h-[60vh] w-full overflow-y-auto overflow-x-auto nested-scroll scrollbar-thin force-scrollbar"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
           data-scroll-visible="true"
           style={{
             overscrollBehavior: 'contain',
-            WebkitOverflowScrolling: 'touch'
+            WebkitOverflowScrolling: 'touch',
+            scrollBehavior: isAutoScrolling ? 'auto' : 'smooth'
           }}
         >
           <div className="min-w-max pb-2 pr-2">
