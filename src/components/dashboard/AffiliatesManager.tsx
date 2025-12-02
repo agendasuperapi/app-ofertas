@@ -81,6 +81,9 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
     max_uses: null as number | null,
     valid_from: new Date().toISOString().split('T')[0],
     valid_until: '',
+    applies_to: 'all' as 'all' | 'category' | 'product',
+    category_names: [] as string[],
+    product_ids: [] as string[],
   });
 
   // Form states
@@ -353,6 +356,9 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
           max_uses: null,
           valid_from: new Date().toISOString().split('T')[0],
           valid_until: '',
+          applies_to: 'all',
+          category_names: [],
+          product_ids: [],
         });
       }
     } catch (error) {
@@ -1095,6 +1101,132 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
                             />
                           </div>
                         </div>
+                        <div>
+                          <Label>Cupom aplica-se a</Label>
+                          <Select
+                            value={newCouponData.applies_to}
+                            onValueChange={(value: 'all' | 'category' | 'product') => setNewCouponData({ 
+                              ...newCouponData, 
+                              applies_to: value,
+                              category_names: [],
+                              product_ids: []
+                            })}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">Todos os produtos</SelectItem>
+                              <SelectItem value="category">Por Categoria</SelectItem>
+                              <SelectItem value="product">Por Produto</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        {newCouponData.applies_to === 'category' && (
+                          <div className="space-y-2">
+                            <Label>Categorias ({newCouponData.category_names.length} selecionadas)</Label>
+                            {newCouponData.category_names.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {newCouponData.category_names.map((categoryName) => (
+                                  <Badge key={categoryName} variant="secondary" className="flex items-center gap-1">
+                                    {categoryName}
+                                    <XCircle 
+                                      className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                                      onClick={() => setNewCouponData({
+                                        ...newCouponData,
+                                        category_names: newCouponData.category_names.filter(c => c !== categoryName)
+                                      })}
+                                    />
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                            <ScrollArea className="h-32 border rounded-md p-2">
+                              <div className="space-y-2">
+                                {categories.map((category) => (
+                                  <div key={category.id} className="flex items-center space-x-2">
+                                    <input
+                                      type="checkbox"
+                                      id={`coupon-cat-${category.id}`}
+                                      checked={newCouponData.category_names.includes(category.name)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setNewCouponData({
+                                            ...newCouponData,
+                                            category_names: [...newCouponData.category_names, category.name]
+                                          });
+                                        } else {
+                                          setNewCouponData({
+                                            ...newCouponData,
+                                            category_names: newCouponData.category_names.filter(c => c !== category.name)
+                                          });
+                                        }
+                                      }}
+                                      className="rounded border-input"
+                                    />
+                                    <Label htmlFor={`coupon-cat-${category.id}`} className="text-sm font-normal cursor-pointer">
+                                      {category.name}
+                                    </Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </ScrollArea>
+                          </div>
+                        )}
+                        {newCouponData.applies_to === 'product' && (
+                          <div className="space-y-2">
+                            <Label>Produtos ({newCouponData.product_ids.length} selecionados)</Label>
+                            {newCouponData.product_ids.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {newCouponData.product_ids.map((productId) => {
+                                  const product = products.find(p => p.id === productId);
+                                  return (
+                                    <Badge key={productId} variant="secondary" className="flex items-center gap-1">
+                                      {product?.name || productId}
+                                      <XCircle 
+                                        className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                                        onClick={() => setNewCouponData({
+                                          ...newCouponData,
+                                          product_ids: newCouponData.product_ids.filter(p => p !== productId)
+                                        })}
+                                      />
+                                    </Badge>
+                                  );
+                                })}
+                              </div>
+                            )}
+                            <ScrollArea className="h-32 border rounded-md p-2">
+                              <div className="space-y-2">
+                                {products.map((product) => (
+                                  <div key={product.id} className="flex items-center space-x-2">
+                                    <input
+                                      type="checkbox"
+                                      id={`coupon-prod-${product.id}`}
+                                      checked={newCouponData.product_ids.includes(product.id)}
+                                      onChange={(e) => {
+                                        if (e.target.checked) {
+                                          setNewCouponData({
+                                            ...newCouponData,
+                                            product_ids: [...newCouponData.product_ids, product.id]
+                                          });
+                                        } else {
+                                          setNewCouponData({
+                                            ...newCouponData,
+                                            product_ids: newCouponData.product_ids.filter(p => p !== product.id)
+                                          });
+                                        }
+                                      }}
+                                      className="rounded border-input"
+                                    />
+                                    <Label htmlFor={`coupon-prod-${product.id}`} className="text-sm font-normal cursor-pointer">
+                                      {product.name}
+                                    </Label>
+                                  </div>
+                                ))}
+                              </div>
+                            </ScrollArea>
+                          </div>
+                        )}
                       </div>
                       <DialogFooter>
                         <Button variant="outline" onClick={() => setNewCouponDialogOpen(false)}>
