@@ -261,7 +261,7 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
       </div>
 
       {/* Matrix Grid */}
-      <Card className="p-0 sm:p-4 relative overflow-hidden">
+      <Card className="p-0 sm:p-4 relative">
         {/* Left Shadow Indicator (Desktop only) */}
         {!isMobile && (
           <div className={cn(
@@ -310,14 +310,12 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
         
         <div 
           ref={scrollContainerRef}
-          className="w-full overflow-y-auto overflow-x-auto p-2 sm:p-0 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar]:w-3 [&::-webkit-scrollbar-track]:bg-muted [&::-webkit-scrollbar-thumb]:bg-primary [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-muted"
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
+          className="w-full overflow-x-auto overflow-y-auto p-2 sm:p-0 [&::-webkit-scrollbar]:h-3 [&::-webkit-scrollbar]:w-3 [&::-webkit-scrollbar-track]:bg-muted [&::-webkit-scrollbar-thumb]:bg-primary [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:border-2 [&::-webkit-scrollbar-thumb]:border-muted"
           style={{
             maxHeight: '60vh',
             overscrollBehavior: 'contain',
             WebkitOverflowScrolling: 'touch',
-            scrollBehavior: isAutoScrolling ? 'auto' : 'smooth',
+            scrollBehavior: 'smooth',
             touchAction: 'pan-x pan-y',
             scrollbarWidth: 'thin',
             scrollbarColor: 'hsl(var(--primary)) hsl(var(--muted))',
@@ -329,7 +327,7 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
               className="grid gap-2 mb-2"
               style={{ gridTemplateColumns: `minmax(120px, 140px) repeat(${sizes?.length || 0}, minmax(90px, 100px))` }}
             >
-              <div className="font-semibold text-xs sm:text-sm p-2 sticky left-0 bg-card z-[5]">
+              <div className="font-semibold text-xs sm:text-sm p-2 bg-card">
                 Cor / Tamanho
               </div>
               {sizes.map((size) => (
@@ -353,7 +351,7 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
                 style={{ gridTemplateColumns: `minmax(120px, 140px) repeat(${sizes?.length || 0}, minmax(90px, 100px))` }}
               >
                 {/* Color Label */}
-                <div className="flex items-center gap-2 p-2 bg-muted rounded sticky left-0 z-[5]">
+                <div className="flex items-center gap-2 p-2 bg-muted rounded">
                   <div
                     className="w-5 h-5 sm:w-6 sm:h-6 rounded border-2 border-border flex-shrink-0"
                     style={{ backgroundColor: color.hex_code }}
