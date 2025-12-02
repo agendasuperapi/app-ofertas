@@ -3313,7 +3313,7 @@ export const StoreOwnerDashboard = ({
                               Cores {!editingProduct && "(salve primeiro)"}
                             </SelectItem>
                             <SelectItem value="variants" disabled={!editingProduct}>
-                              Matriz Cor/Tamanho {!editingProduct && "(salve primeiro)"}
+                              Disponibilidade {!editingProduct && "(salve primeiro)"}
                             </SelectItem>
                             <SelectItem value="addons" disabled={!editingProduct}>
                               Adicionais {!editingProduct && "(salve primeiro)"}
@@ -3336,7 +3336,7 @@ export const StoreOwnerDashboard = ({
                             Cores {!editingProduct && <span className="text-xs ml-1">(salve primeiro)</span>}
                           </TabsTrigger>
                           <TabsTrigger value="variants" disabled={!editingProduct}>
-                            Matriz {!editingProduct && <span className="text-xs ml-1">(salve primeiro)</span>}
+                            Disponibilidade {!editingProduct && <span className="text-xs ml-1">(salve primeiro)</span>}
                           </TabsTrigger>
                           <TabsTrigger value="addons" disabled={!editingProduct}>
                             Adicionais {!editingProduct && <span className="text-xs ml-1">(salve primeiro)</span>}
