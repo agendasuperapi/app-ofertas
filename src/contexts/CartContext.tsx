@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -137,6 +138,7 @@ const emptyCart = (): Cart => ({
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
+  const location = useLocation();
   const { 
     saveCartToDatabase, 
     loadCartsFromDatabase, 
@@ -222,7 +224,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           carts: mergedCarts
         }));
         
-        if (totalRecovered > 0) {
+        // Não mostrar toast de recuperação no dashboard-lojista
+        if (totalRecovered > 0 && !location.pathname.includes('/dashboard-lojista')) {
           toast.success(`Recuperamos ${totalRecovered} ${totalRecovered === 1 ? 'item' : 'itens'} do seu carrinho!`);
         }
       }
