@@ -119,6 +119,8 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
   // Product search states
   const [productSearch, setProductSearch] = useState('');
   const [ruleProductSearch, setRuleProductSearch] = useState('');
+  const [couponProductSearch, setCouponProductSearch] = useState('');
+  const [couponCategorySearch, setCouponCategorySearch] = useState('');
 
   // Filter products by search term
   const filteredProducts = products.filter((product) => {
@@ -141,6 +143,22 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
       product.short_id?.toLowerCase().includes(search) ||
       product.external_code?.toLowerCase().includes(search)
     );
+  });
+
+  const filteredCouponProducts = products.filter((product) => {
+    if (!couponProductSearch.trim()) return true;
+    const search = couponProductSearch.toLowerCase().trim();
+    return (
+      product.name?.toLowerCase().includes(search) ||
+      product.id?.toLowerCase().includes(search) ||
+      product.short_id?.toLowerCase().includes(search) ||
+      product.external_code?.toLowerCase().includes(search)
+    );
+  });
+
+  const filteredCouponCategories = categories.filter((category) => {
+    if (!couponCategorySearch.trim()) return true;
+    return category.name?.toLowerCase().includes(couponCategorySearch.toLowerCase().trim());
   });
 
   // Load all earnings for reports tab
@@ -1141,9 +1159,18 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
                                 ))}
                               </div>
                             )}
+                            <div className="relative">
+                              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                              <Input
+                                placeholder="Buscar categoria..."
+                                value={couponCategorySearch}
+                                onChange={(e) => setCouponCategorySearch(e.target.value)}
+                                className="pl-8"
+                              />
+                            </div>
                             <ScrollArea className="h-32 border rounded-md p-2">
                               <div className="space-y-2">
-                                {categories.map((category) => (
+                                {filteredCouponCategories.map((category) => (
                                   <div key={category.id} className="flex items-center space-x-2">
                                     <input
                                       type="checkbox"
@@ -1195,9 +1222,18 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
                                 })}
                               </div>
                             )}
+                            <div className="relative">
+                              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                              <Input
+                                placeholder="Buscar produto..."
+                                value={couponProductSearch}
+                                onChange={(e) => setCouponProductSearch(e.target.value)}
+                                className="pl-8"
+                              />
+                            </div>
                             <ScrollArea className="h-32 border rounded-md p-2">
                               <div className="space-y-2">
-                                {products.map((product) => (
+                                {filteredCouponProducts.map((product) => (
                                   <div key={product.id} className="flex items-center space-x-2">
                                     <input
                                       type="checkbox"
