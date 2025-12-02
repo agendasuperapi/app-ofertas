@@ -390,13 +390,19 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     try {
       const { data, error } = await supabase.functions.invoke('affiliate-invite', {
         body: {
-          action: 'send',
+          action: 'get-invite-link',
           store_id: storeId,
-          store_name: storeName,
-          email: affiliate.email,
-          name: affiliate.name,
+          affiliate_email: affiliate.email,
         }
       });
+
+      if (data?.already_verified) {
+        toast({ 
+          title: 'Afiliado já cadastrado', 
+          description: 'Este afiliado já completou o cadastro e não precisa de link de convite.',
+        });
+        return;
+      }
 
       if (data?.success && data?.invite_token) {
         const link = `${window.location.origin}/afiliado/cadastro?token=${data.invite_token}`;
@@ -404,7 +410,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
         setCreatedAffiliateName(affiliate.name);
         setInviteLinkDialogOpen(true);
       } else {
-        toast({ title: 'Erro ao gerar link', description: 'Tente novamente.', variant: 'destructive' });
+        toast({ title: 'Erro ao gerar link', description: data?.error || 'Tente novamente.', variant: 'destructive' });
       }
     } catch (err) {
       console.error('Error generating invite link:', err);

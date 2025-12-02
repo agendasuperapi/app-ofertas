@@ -209,6 +209,127 @@ serve(async (req) => {
         );
       }
 
+      case "get-invite-link": {
+        // Buscar ou regenerar link de convite para afiliado existente
+        const { store_id, affiliate_email } = body;
+
+        // Validar autorização
+        const authHeader = req.headers.get("Authorization");
+        if (!authHeader) {
+          return new Response(
+            JSON.stringify({ error: "Não autorizado" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const token = authHeader.replace("Bearer ", "");
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+        if (authError || !user) {
+          return new Response(
+            JSON.stringify({ error: "Não autorizado" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Verificar se é dono da loja
+        const { data: store } = await supabase
+          .from("stores")
+          .select("id, owner_id")
+          .eq("id", store_id)
+          .single();
+
+        if (!store || store.owner_id !== user.id) {
+          return new Response(
+            JSON.stringify({ error: "Sem permissão para esta loja" }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const normalizedEmail = affiliate_email.toLowerCase().trim();
+
+        // Buscar conta do afiliado
+        const { data: affiliateAccount } = await supabase
+          .from("affiliate_accounts")
+          .select("id, is_verified")
+          .eq("email", normalizedEmail)
+          .single();
+
+        if (!affiliateAccount) {
+          return new Response(
+            JSON.stringify({ error: "Afiliado não encontrado" }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Buscar afiliação com a loja
+        const { data: storeAffiliate } = await supabase
+          .from("store_affiliates")
+          .select("*")
+          .eq("affiliate_account_id", affiliateAccount.id)
+          .eq("store_id", store_id)
+          .single();
+
+        if (!storeAffiliate) {
+          return new Response(
+            JSON.stringify({ error: "Afiliação não encontrada" }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Se afiliado já verificou a conta, não precisa de link de convite
+        if (affiliateAccount.is_verified) {
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              already_verified: true,
+              message: "Este afiliado já está cadastrado e verificado"
+            }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Se já tem token válido, retornar
+        if (storeAffiliate.invite_token && storeAffiliate.invite_expires) {
+          const expiresAt = new Date(storeAffiliate.invite_expires);
+          if (expiresAt > new Date()) {
+            return new Response(
+              JSON.stringify({ 
+                success: true, 
+                invite_token: storeAffiliate.invite_token,
+                expires_at: storeAffiliate.invite_expires
+              }),
+              { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+        }
+
+        // Gerar novo token
+        const inviteToken = generateToken();
+        const inviteExpires = new Date();
+        inviteExpires.setDate(inviteExpires.getDate() + 7); // 7 dias
+
+        await supabase
+          .from("store_affiliates")
+          .update({
+            invite_token: inviteToken,
+            invite_expires: inviteExpires.toISOString(),
+            status: "pending",
+          })
+          .eq("id", storeAffiliate.id);
+
+        console.log(`[affiliate-invite] Generated new invite token for: ${normalizedEmail}`);
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            invite_token: inviteToken,
+            expires_at: inviteExpires.toISOString()
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       case "verify": {
         // Verificar se token de convite é válido
         const { token } = body;
@@ -224,17 +345,44 @@ serve(async (req) => {
           .from("store_affiliates")
           .select(`
             *,
-            affiliate_accounts!inner(id, email, name),
+            affiliate_accounts!inner(id, email, name, is_verified),
             stores!inner(id, name, logo_url)
           `)
           .eq("invite_token", token)
-          .gt("invite_expires", new Date().toISOString())
-          .eq("status", "pending")
           .single();
 
         if (error || !storeAffiliate) {
+          console.log(`[affiliate-invite] Token not found: ${token}`);
           return new Response(
-            JSON.stringify({ valid: false, error: "Convite inválido ou expirado" }),
+            JSON.stringify({ valid: false, error: "Convite não encontrado" }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Verificar se já está verificado
+        if (storeAffiliate.affiliate_accounts.is_verified) {
+          return new Response(
+            JSON.stringify({ valid: false, error: "Este convite já foi utilizado. Faça login na sua conta de afiliado." }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Verificar se expirou
+        if (storeAffiliate.invite_expires) {
+          const expiresAt = new Date(storeAffiliate.invite_expires);
+          if (expiresAt < new Date()) {
+            console.log(`[affiliate-invite] Token expired: ${token}, expires: ${storeAffiliate.invite_expires}`);
+            return new Response(
+              JSON.stringify({ valid: false, error: "Convite expirado. Solicite um novo link ao lojista." }),
+              { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+        }
+
+        // Verificar status
+        if (storeAffiliate.status === "active") {
+          return new Response(
+            JSON.stringify({ valid: false, error: "Este convite já foi aceito. Faça login na sua conta." }),
             { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
