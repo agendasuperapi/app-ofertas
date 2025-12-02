@@ -65,12 +65,12 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
 
   // Filter coupons: only show coupons not linked to other affiliates
   const availableCoupons = coupons.filter((coupon) => {
-    // Check if coupon is linked via legacy field (coupon_id)
-    const linkedViaLegacy = affiliates.find(a => a.coupon_id === coupon.id);
+    // Check if coupon is linked via legacy field (coupon_id) - only if coupon exists
+    const linkedViaLegacy = affiliates.find(a => a.coupon_id === coupon.id && a.coupon !== null);
     
-    // Check if coupon is linked via junction table (affiliate_coupons)
+    // Check if coupon is linked via junction table (affiliate_coupons) - only if coupon exists
     const linkedViaJunction = affiliates.find(a => 
-      a.affiliate_coupons?.some(ac => ac.coupon_id === coupon.id)
+      a.affiliate_coupons?.some(ac => ac.coupon_id === coupon.id && ac.coupon !== null)
     );
     
     const linkedAffiliate = linkedViaLegacy || linkedViaJunction;
@@ -207,9 +207,11 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const handleOpenDialog = async (affiliate?: Affiliate) => {
     if (affiliate) {
       setEditingAffiliate(affiliate);
-      // Get coupon IDs from junction table or legacy field
-      const couponIds = affiliate.affiliate_coupons?.map(ac => ac.coupon_id) || 
-        (affiliate.coupon_id ? [affiliate.coupon_id] : []);
+      // Get coupon IDs from junction table or legacy field - filter out deleted coupons
+      const couponIds = affiliate.affiliate_coupons
+        ?.filter(ac => ac.coupon !== null && ac.coupon !== undefined)
+        .map(ac => ac.coupon_id) || 
+        (affiliate.coupon_id && affiliate.coupon ? [affiliate.coupon_id] : []);
       
       // Load existing commission rules
       const existingRules = await getCommissionRules(affiliate.id);
@@ -714,8 +716,14 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                           </div>
                           <p className="text-sm text-muted-foreground truncate">{affiliate.email}</p>
                           {(() => {
-                            const affiliateCoupons = affiliate.affiliate_coupons?.map(ac => ac.coupon) || 
-                              (affiliate.coupon ? [affiliate.coupon] : []);
+                            // Filter out deleted coupons (null references)
+                            const affiliateCoupons = (affiliate.affiliate_coupons
+                              ?.map(ac => ac.coupon)
+                              .filter(coupon => coupon !== null && coupon !== undefined) || [])
+                              .concat(affiliate.coupon && !affiliate.affiliate_coupons?.some(ac => ac.coupon?.id === affiliate.coupon?.id) 
+                                ? [affiliate.coupon] 
+                                : [])
+                              .filter(coupon => coupon !== null && coupon !== undefined);
                             if (affiliateCoupons.length === 0) return null;
                             return (
                               <div className="flex flex-wrap items-center gap-2 mt-1">
