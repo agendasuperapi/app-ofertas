@@ -63,7 +63,7 @@ export function InviteAffiliateDialog({
           onOpenChange(false);
           onSuccess?.();
         } else {
-          const link = `${window.location.origin}/cadastro-afiliado/${data.invite_token}`;
+          const link = `${window.location.origin}/afiliado/cadastro?token=${data.invite_token}`;
           setInviteLink(link);
           toast.success('Convite criado com sucesso!');
         }

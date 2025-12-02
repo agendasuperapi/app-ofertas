@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAffiliateAuth } from '@/hooks/useAffiliateAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,8 @@ import { Loader2, Users, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 
 export default function AffiliateRegister() {
   const navigate = useNavigate();
-  const { token } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
   const { affiliateRegister } = useAffiliateAuth();
   
   const [isVerifying, setIsVerifying] = useState(true);
@@ -84,7 +85,7 @@ export default function AffiliateRegister() {
 
     if (result.success) {
       toast.success('Cadastro realizado com sucesso!');
-      navigate('/painel-afiliado');
+      navigate('/afiliado/dashboard');
     } else {
       toast.error(result.error || 'Erro ao completar cadastro');
     }
@@ -116,7 +117,7 @@ export default function AffiliateRegister() {
           </CardHeader>
           <CardFooter className="flex flex-col gap-4">
             <Button asChild className="w-full">
-              <Link to="/login-afiliado">Ir para Login</Link>
+              <Link to="/afiliado/login">Ir para Login</Link>
             </Button>
             <Button asChild variant="outline" className="w-full">
               <Link to="/">Voltar ao Início</Link>
@@ -230,7 +231,7 @@ export default function AffiliateRegister() {
 
               <p className="text-sm text-center text-muted-foreground">
                 Já tem uma conta?{' '}
-                <Link to="/login-afiliado" className="text-primary hover:underline">
+                <Link to="/afiliado/login" className="text-primary hover:underline">
                   Faça login
                 </Link>
               </p>

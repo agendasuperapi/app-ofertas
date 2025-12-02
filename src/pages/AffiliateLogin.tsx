@@ -29,7 +29,7 @@ export default function AffiliateLogin() {
 
     if (result.success) {
       toast.success('Login realizado com sucesso!');
-      navigate('/painel-afiliado');
+      navigate('/afiliado/dashboard');
     } else {
       toast.error(result.error || 'Erro ao fazer login');
     }
@@ -93,7 +93,7 @@ export default function AffiliateLogin() {
 
               <div className="text-right">
                 <Link 
-                  to="/recuperar-senha-afiliado" 
+                  to="/afiliado/esqueci-senha" 
                   className="text-sm text-primary hover:underline"
                 >
                   Esqueci minha senha

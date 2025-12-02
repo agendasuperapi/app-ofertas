@@ -57,12 +57,12 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 
                 {/* Affiliate routes - independent authentication */}
-                <Route path="/login-afiliado" element={<AffiliateLogin />} />
-                <Route path="/cadastro-afiliado/:token" element={<AffiliateRegister />} />
-                <Route path="/recuperar-senha-afiliado" element={<AffiliateForgotPassword />} />
-                <Route path="/redefinir-senha-afiliado/:token" element={<AffiliateResetPassword />} />
+                <Route path="/afiliado/login" element={<AffiliateLogin />} />
+                <Route path="/afiliado/cadastro" element={<AffiliateRegister />} />
+                <Route path="/afiliado/esqueci-senha" element={<AffiliateForgotPassword />} />
+                <Route path="/afiliado/redefinir-senha" element={<AffiliateResetPassword />} />
                 <Route 
-                  path="/painel-afiliado" 
+                  path="/afiliado/dashboard" 
                   element={
                     <AffiliateProtectedRoute>
                       <AffiliateDashboardNew />
