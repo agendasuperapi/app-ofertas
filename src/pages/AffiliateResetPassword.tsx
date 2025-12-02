@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,8 @@ import { Loader2, KeyRound, XCircle, CheckCircle } from 'lucide-react';
 
 export default function AffiliateResetPassword() {
   const navigate = useNavigate();
-  const { token } = useParams<{ token: string }>();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
   
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -71,7 +72,7 @@ export default function AffiliateResetPassword() {
           </CardHeader>
           <CardFooter>
             <Button asChild className="w-full">
-              <Link to="/recuperar-senha-afiliado">Solicitar novo link</Link>
+              <Link to="/afiliado/esqueci-senha">Solicitar novo link</Link>
             </Button>
           </CardFooter>
         </Card>
@@ -94,7 +95,7 @@ export default function AffiliateResetPassword() {
           </CardHeader>
           <CardFooter>
             <Button asChild className="w-full">
-              <Link to="/login-afiliado">Ir para Login</Link>
+              <Link to="/afiliado/login">Ir para Login</Link>
             </Button>
           </CardFooter>
         </Card>

@@ -21,7 +21,7 @@ export function AffiliateProtectedRoute({ children }: AffiliateProtectedRoutePro
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login-afiliado" replace />;
+    return <Navigate to="/afiliado/login" replace />;
   }
 
   return <>{children}</>;

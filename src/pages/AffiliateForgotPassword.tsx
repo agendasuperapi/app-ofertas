@@ -59,7 +59,7 @@ export default function AffiliateForgotPassword() {
           </CardHeader>
           <CardFooter className="flex flex-col gap-4">
             <Button asChild className="w-full">
-              <Link to="/login-afiliado">Voltar ao Login</Link>
+              <Link to="/afiliado/login">Voltar ao Login</Link>
             </Button>
             <Button 
               variant="outline" 
@@ -78,7 +78,7 @@ export default function AffiliateForgotPassword() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <div className="w-full max-w-md">
         <Link 
-          to="/login-afiliado" 
+          to="/afiliado/login" 
           className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />

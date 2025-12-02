@@ -353,16 +353,18 @@ serve(async (req) => {
       }
 
       case "reset-password": {
-        const { token, password } = body;
+        const { reset_token, token: tokenAlt, new_password, password: passwordAlt } = body;
+        const resetToken = reset_token || tokenAlt;
+        const newPassword = new_password || passwordAlt;
 
-        if (!token || !password) {
+        if (!resetToken || !newPassword) {
           return new Response(
             JSON.stringify({ error: "Token e nova senha são obrigatórios" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        if (password.length < 6) {
+        if (newPassword.length < 6) {
           return new Response(
             JSON.stringify({ error: "Senha deve ter pelo menos 6 caracteres" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -372,7 +374,7 @@ serve(async (req) => {
         const { data: account, error: accountError } = await supabase
           .from("affiliate_accounts")
           .select("id")
-          .eq("reset_token", token)
+          .eq("reset_token", resetToken)
           .gt("reset_token_expires", new Date().toISOString())
           .single();
 
@@ -383,7 +385,7 @@ serve(async (req) => {
           );
         }
 
-        const passwordHash = await hashPassword(password);
+        const passwordHash = await hashPassword(newPassword);
 
         await supabase
           .from("affiliate_accounts")
