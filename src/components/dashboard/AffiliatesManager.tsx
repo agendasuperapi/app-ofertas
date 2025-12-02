@@ -1570,32 +1570,36 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
                       </ScrollArea>
                     </div>
                   )}
-                  <div>
-                    <Label>Tipo de Comissão</Label>
-                    <Select
-                      value={formData.default_commission_type}
-                      onValueChange={(value: 'percentage' | 'fixed') => setFormData({ ...formData, default_commission_type: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="percentage">Percentual (%)</SelectItem>
-                        <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>Valor da Comissão</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={formData.default_commission_value}
-                      onChange={(e) => setFormData({ ...formData, default_commission_value: Number(e.target.value) })}
-                      placeholder={formData.default_commission_type === 'percentage' ? '5' : '10.00'}
-                    />
-                  </div>
+                  {formData.commission_scope === 'all' && (
+                    <>
+                      <div>
+                        <Label>Tipo de Comissão</Label>
+                        <Select
+                          value={formData.default_commission_type}
+                          onValueChange={(value: 'percentage' | 'fixed') => setFormData({ ...formData, default_commission_type: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="percentage">Percentual (%)</SelectItem>
+                            <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Valor da Comissão</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={formData.default_commission_value}
+                          onChange={(e) => setFormData({ ...formData, default_commission_value: Number(e.target.value) })}
+                          placeholder={formData.default_commission_type === 'percentage' ? '5' : '10.00'}
+                        />
+                      </div>
+                    </>
+                  )}
                 </>
               )}
             </div>
