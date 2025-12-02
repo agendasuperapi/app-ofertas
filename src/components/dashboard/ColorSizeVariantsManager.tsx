@@ -261,16 +261,16 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
       </div>
 
       {/* Matrix Grid */}
-      <Card className="p-2 sm:p-4 relative">
+      <Card className="p-0 sm:p-4 relative overflow-hidden">
         {/* Left Shadow Indicator */}
         <div className={cn(
-          "absolute left-0 top-0 bottom-0 w-8 pointer-events-none z-10 transition-opacity duration-300 bg-gradient-to-r from-card to-transparent rounded-l-lg",
+          "absolute left-0 top-0 bottom-0 w-12 sm:w-8 pointer-events-none z-10 transition-opacity duration-300 bg-gradient-to-r from-card to-transparent",
           showLeftShadow ? "opacity-100" : "opacity-0"
         )} />
         
         {/* Right Shadow Indicator */}
         <div className={cn(
-          "absolute right-0 top-0 bottom-0 w-8 pointer-events-none z-10 transition-opacity duration-300 bg-gradient-to-l from-card to-transparent rounded-r-lg",
+          "absolute right-0 top-0 bottom-0 w-12 sm:w-8 pointer-events-none z-10 transition-opacity duration-300 bg-gradient-to-l from-card to-transparent",
           showRightShadow ? "opacity-100" : "opacity-0"
         )} />
         
@@ -296,38 +296,43 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
         
         {/* Swipe Indicator (Mobile) */}
         {isMobile && showSwipeIndicator && showRightShadow && (
-          <div className="absolute bottom-2 right-2 z-20 pointer-events-none animate-fade-in">
-            <div className="bg-primary text-primary-foreground px-2 py-1 rounded-full shadow-lg flex items-center gap-1.5 animate-pulse">
-              <MoveHorizontal className="h-3 w-3" />
-              <span className="text-xs font-medium">Deslize →</span>
+          <div className="absolute bottom-4 right-4 z-20 pointer-events-none animate-fade-in">
+            <div className="bg-primary text-primary-foreground px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2 animate-pulse">
+              <MoveHorizontal className="h-4 w-4" />
+              <span className="text-xs font-semibold">Arraste →</span>
             </div>
           </div>
         )}
         
         <div 
           ref={scrollContainerRef}
-          className="max-h-[60vh] w-full overflow-y-auto overflow-x-auto nested-scroll scrollbar-thin force-scrollbar"
+          className="w-full overflow-y-auto overflow-x-auto p-2 sm:p-0"
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          data-scroll-visible="true"
           style={{
+            maxHeight: '60vh',
             overscrollBehavior: 'contain',
             WebkitOverflowScrolling: 'touch',
             scrollBehavior: isAutoScrolling ? 'auto' : 'smooth',
+            touchAction: 'pan-x pan-y',
+            // Force scrollbar visibility in mobile
             scrollbarWidth: 'thin',
+            scrollbarColor: 'hsl(var(--primary)) transparent',
           }}
         >
-          <div className="min-w-max pb-2 pr-2">
+          <div className="min-w-max pb-2">
             {/* Header Row - Sizes */}
             <div
-              className="grid gap-1 sm:gap-2 mb-2"
-              style={{ gridTemplateColumns: `140px repeat(${sizes?.length || 0}, 100px)` }}
+              className="grid gap-2 mb-2"
+              style={{ gridTemplateColumns: `minmax(120px, 140px) repeat(${sizes?.length || 0}, minmax(90px, 100px))` }}
             >
-              <div className="font-semibold text-xs sm:text-sm p-1 sm:p-2">Cor / Tamanho</div>
+              <div className="font-semibold text-xs sm:text-sm p-2 sticky left-0 bg-card z-[5]">
+                Cor / Tamanho
+              </div>
               {sizes.map((size) => (
                 <div
                   key={size.id}
-                  className="font-semibold text-xs sm:text-sm p-1 sm:p-2 text-center bg-muted rounded"
+                  className="font-semibold text-xs sm:text-sm p-2 text-center bg-muted rounded"
                 >
                   <div className="truncate">{size.name}</div>
                   <div className="text-[10px] sm:text-xs text-muted-foreground font-normal">
@@ -341,11 +346,11 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
             {colors.map((color) => (
               <div
                 key={color.id}
-                className="grid gap-1 sm:gap-2 mb-2"
-                style={{ gridTemplateColumns: `140px repeat(${sizes?.length || 0}, 100px)` }}
+                className="grid gap-2 mb-2"
+                style={{ gridTemplateColumns: `minmax(120px, 140px) repeat(${sizes?.length || 0}, minmax(90px, 100px))` }}
               >
                 {/* Color Label */}
-                <div className="flex items-center gap-1 sm:gap-2 p-1 sm:p-2 bg-muted rounded">
+                <div className="flex items-center gap-2 p-2 bg-muted rounded sticky left-0 z-[5]">
                   <div
                     className="w-5 h-5 sm:w-6 sm:h-6 rounded border-2 border-border flex-shrink-0"
                     style={{ backgroundColor: color.hex_code }}
@@ -369,17 +374,16 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
                   return (
                     <div
                       key={size.id}
-                      className={`
-                        border-2 rounded p-1 sm:p-2 flex flex-col items-center justify-center gap-0.5 sm:gap-1 cursor-pointer
-                        transition-all hover:border-primary/50
-                        ${isAvailable ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}
-                      `}
+                      className={cn(
+                        "border-2 rounded p-2 flex flex-col items-center justify-center gap-1 cursor-pointer transition-all hover:border-primary/50 min-h-[80px]",
+                        isAvailable ? 'bg-green-50 border-green-300 dark:bg-green-950 dark:border-green-700' : 'bg-red-50 border-red-300 dark:bg-red-950 dark:border-red-700'
+                      )}
                       onClick={() => handleToggleVariant(color.id, size.id)}
                     >
                       {isAvailable ? (
-                        <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                        <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
                       ) : (
-                        <X className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
+                        <X className="w-5 h-5 text-red-600 dark:text-red-400" />
                       )}
 
                       {variant && (
@@ -391,7 +395,7 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
                           )}
                           {variant.price_adjustment !== 0 && (
                             <Badge variant="outline" className="text-[10px] sm:text-xs hidden sm:flex items-center gap-0.5">
-                              <DollarSign className="w-2 h-2 sm:w-3 sm:h-3" />
+                              <DollarSign className="w-3 h-3" />
                               {variant.price_adjustment > 0 ? '+' : ''}
                               {variant.price_adjustment.toFixed(2)}
                             </Badge>
@@ -399,7 +403,7 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="h-5 sm:h-6 text-[10px] sm:text-xs mt-0.5 sm:mt-1 px-1 sm:px-2"
+                            className="h-6 text-[10px] sm:text-xs mt-1 px-2"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleOpenEdit(color.id, size.id);
