@@ -570,6 +570,7 @@ serve(async (req) => {
           .from("store_affiliates")
           .update({
             status: "active",
+            is_active: true,
             accepted_at: new Date().toISOString(),
             invite_token: null,
             invite_expires: null,
@@ -592,7 +593,10 @@ serve(async (req) => {
         // Lista lojas vinculadas ao afiliado
         const { affiliate_token } = body;
 
+        console.log(`[affiliate-invite] list-stores: affiliate_token=${affiliate_token ? 'presente' : 'ausente'}`);
+
         if (!affiliate_token) {
+          console.log(`[affiliate-invite] list-stores: Token não fornecido`);
           return new Response(
             JSON.stringify({ error: "Token não fornecido" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -604,7 +608,10 @@ serve(async (req) => {
           session_token: affiliate_token,
         });
 
+        console.log(`[affiliate-invite] list-stores: validation result:`, JSON.stringify(validation));
+
         if (!validation || validation.length === 0 || !validation[0].is_valid) {
+          console.log(`[affiliate-invite] list-stores: Sessão inválida`);
           return new Response(
             JSON.stringify({ error: "Sessão inválida" }),
             { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -612,11 +619,14 @@ serve(async (req) => {
         }
 
         const affiliateAccountId = validation[0].affiliate_id;
+        console.log(`[affiliate-invite] list-stores: affiliateAccountId=${affiliateAccountId}`);
 
         // Buscar lojas usando a função do banco
         const { data: stores, error: storesError } = await supabase.rpc("get_affiliate_stores", {
           p_affiliate_account_id: affiliateAccountId,
         });
+
+        console.log(`[affiliate-invite] list-stores: stores found=${stores?.length || 0}, error=${storesError?.message || 'none'}`);
 
         if (storesError) {
           console.error("[affiliate-invite] Error fetching stores:", storesError);
