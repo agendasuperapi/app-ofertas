@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.migrate-product-images]
 verify_jwt = true
+
+[functions.affiliate-auth]
+verify_jwt = false
+
+[functions.affiliate-invite]
+verify_jwt = false
