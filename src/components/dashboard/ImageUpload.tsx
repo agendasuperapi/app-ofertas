@@ -344,7 +344,7 @@ export const ImageUpload = ({
         
         {previewUrl ? (
           <div className="relative">
-            <div className={`${aspectRatio} ${sizeClasses[size]} w-full sm:w-auto min-h-[120px] rounded-lg overflow-hidden border border-border bg-muted/30 relative`}>
+            <div className={`${aspectRatio} ${sizeClasses[size]} w-full sm:w-auto max-w-[180px] sm:max-w-none min-h-[100px] md:min-h-[120px] rounded-lg overflow-hidden border border-border bg-muted/30 relative`}>
               {!imageLoaded && !imageError && (
                 <div className="absolute inset-0 flex items-center justify-center bg-muted/50 z-10">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -388,13 +388,13 @@ export const ImageUpload = ({
             </Button>
           </div>
         ) : (
-          <div className={`${aspectRatio} ${sizeClasses[size]} rounded-lg border-2 border-dashed border-border flex items-center justify-center`}>
+          <div className={`${aspectRatio} ${sizeClasses[size]} max-w-[180px] sm:max-w-none rounded-lg border-2 border-dashed border-border flex items-center justify-center`}>
             <Label
               htmlFor={`upload-${bucket}-${folder}`}
-              className="cursor-pointer flex flex-col items-center justify-center p-4 text-center"
+              className="cursor-pointer flex flex-col items-center justify-center p-2 md:p-4 text-center"
             >
-              <Upload className="h-8 w-8 mb-2 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
+              <Upload className="h-6 w-6 md:h-8 md:w-8 mb-1 md:mb-2 text-muted-foreground" />
+              <span className="text-xs md:text-sm text-muted-foreground">
                 Clique para selecionar uma imagem
               </span>
             </Label>
