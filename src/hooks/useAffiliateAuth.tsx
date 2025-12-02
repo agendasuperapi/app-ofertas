@@ -80,7 +80,7 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
         setAffiliateStats(null);
       } else {
         setAffiliateUser(data.affiliate);
-        await fetchAffiliateData(data.affiliate.id);
+        await fetchAffiliateData();
       }
     } catch (err) {
       console.error('Session validation error:', err);
@@ -90,11 +90,14 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const fetchAffiliateData = async (affiliateId: string) => {
+  const fetchAffiliateData = async () => {
+    const token = getStoredToken();
+    if (!token) return;
+
     try {
       // Fetch stores
       const { data: storesData } = await supabase.functions.invoke('affiliate-invite', {
-        body: { action: 'list-stores', affiliate_account_id: affiliateId }
+        body: { action: 'list-stores', token }
       });
       
       if (storesData?.stores) {
@@ -103,7 +106,7 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
 
       // Fetch stats
       const { data: statsData } = await supabase.functions.invoke('affiliate-invite', {
-        body: { action: 'stats', affiliate_account_id: affiliateId }
+        body: { action: 'stats', token }
       });
       
       if (statsData?.stats) {
@@ -130,7 +133,7 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
 
       setStoredToken(data.token);
       setAffiliateUser(data.affiliate);
-      await fetchAffiliateData(data.affiliate.id);
+      await fetchAffiliateData();
       
       return { success: true };
     } catch (err: any) {
@@ -168,7 +171,7 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
       // Auto login after registration
       setStoredToken(data.token);
       setAffiliateUser(data.affiliate);
-      await fetchAffiliateData(data.affiliate.id);
+      await fetchAffiliateData();
       
       return { success: true };
     } catch (err: any) {
@@ -178,7 +181,7 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
 
   const refreshData = async () => {
     if (affiliateUser) {
-      await fetchAffiliateData(affiliateUser.id);
+      await fetchAffiliateData();
     }
   };
 
