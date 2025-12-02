@@ -18,7 +18,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { 
   Users, Plus, Edit, Trash2, DollarSign, TrendingUp, 
   Copy, Check, Tag, Percent, Settings, Eye, 
-  Clock, CheckCircle, XCircle, CreditCard, Loader2, AlertCircle
+  Clock, CheckCircle, XCircle, CreditCard, Loader2, AlertCircle, Search
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -93,6 +93,33 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
     amount: 0,
     payment_method: 'pix',
     notes: '',
+  });
+
+  // Product search states
+  const [productSearch, setProductSearch] = useState('');
+  const [ruleProductSearch, setRuleProductSearch] = useState('');
+
+  // Filter products by search term
+  const filteredProducts = products.filter((product) => {
+    if (!productSearch.trim()) return true;
+    const search = productSearch.toLowerCase().trim();
+    return (
+      product.name?.toLowerCase().includes(search) ||
+      product.id?.toLowerCase().includes(search) ||
+      product.short_id?.toLowerCase().includes(search) ||
+      product.external_code?.toLowerCase().includes(search)
+    );
+  });
+
+  const filteredRuleProducts = products.filter((product) => {
+    if (!ruleProductSearch.trim()) return true;
+    const search = ruleProductSearch.toLowerCase().trim();
+    return (
+      product.name?.toLowerCase().includes(search) ||
+      product.id?.toLowerCase().includes(search) ||
+      product.short_id?.toLowerCase().includes(search) ||
+      product.external_code?.toLowerCase().includes(search)
+    );
   });
 
   // Load all earnings for reports tab
@@ -939,8 +966,17 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
                     </div>
                   )}
                   {formData.commission_scope === 'product' && (
-                    <div className="col-span-2">
+                    <div className="col-span-2 space-y-2">
                       <Label>Produto</Label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          value={productSearch}
+                          onChange={(e) => setProductSearch(e.target.value)}
+                          placeholder="Buscar por nome, código interno ou externo..."
+                          className="pl-9"
+                        />
+                      </div>
                       <Select
                         value={formData.commission_product_id || 'select'}
                         onValueChange={(value) => setFormData({ ...formData, commission_product_id: value === 'select' ? '' : value })}
@@ -948,13 +984,26 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o produto" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="max-h-[300px]">
                           <SelectItem value="select" disabled>Selecione o produto</SelectItem>
-                          {products.map((product) => (
-                            <SelectItem key={product.id} value={product.id}>
-                              {product.name}
-                            </SelectItem>
-                          ))}
+                          {filteredProducts.length === 0 ? (
+                            <div className="py-2 px-3 text-sm text-muted-foreground text-center">
+                              Nenhum produto encontrado
+                            </div>
+                          ) : (
+                            filteredProducts.map((product) => (
+                              <SelectItem key={product.id} value={product.id}>
+                                <div className="flex flex-col">
+                                  <span>{product.name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {product.external_code && `Cód: ${product.external_code}`}
+                                    {product.external_code && product.short_id && ' • '}
+                                    {product.short_id && `ID: ${product.short_id}`}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
                         </SelectContent>
                       </Select>
                     </div>
@@ -1043,8 +1092,17 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
               </div>
             )}
             {ruleFormData.applies_to === 'product' && (
-              <div>
+              <div className="space-y-2">
                 <Label>Produto</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    value={ruleProductSearch}
+                    onChange={(e) => setRuleProductSearch(e.target.value)}
+                    placeholder="Buscar por nome, código interno ou externo..."
+                    className="pl-9"
+                  />
+                </div>
                 <Select
                   value={ruleFormData.product_id}
                   onValueChange={(value) => setRuleFormData({ ...ruleFormData, product_id: value })}
@@ -1052,12 +1110,25 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione o produto" />
                   </SelectTrigger>
-                  <SelectContent>
-                    {products.map((product) => (
-                      <SelectItem key={product.id} value={product.id}>
-                        {product.name}
-                      </SelectItem>
-                    ))}
+                  <SelectContent className="max-h-[300px]">
+                    {filteredRuleProducts.length === 0 ? (
+                      <div className="py-2 px-3 text-sm text-muted-foreground text-center">
+                        Nenhum produto encontrado
+                      </div>
+                    ) : (
+                      filteredRuleProducts.map((product) => (
+                        <SelectItem key={product.id} value={product.id}>
+                          <div className="flex flex-col">
+                            <span>{product.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {product.external_code && `Cód: ${product.external_code}`}
+                              {product.external_code && product.short_id && ' • '}
+                              {product.short_id && `ID: ${product.short_id}`}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
