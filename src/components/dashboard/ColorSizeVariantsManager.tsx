@@ -262,17 +262,21 @@ export const ColorSizeVariantsManager = ({ productId, storeId }: ColorSizeVarian
 
       {/* Matrix Grid */}
       <Card className="p-0 sm:p-4 relative overflow-hidden">
-        {/* Left Shadow Indicator */}
-        <div className={cn(
-          "absolute left-0 top-0 bottom-0 w-12 sm:w-8 pointer-events-none z-10 transition-opacity duration-300 bg-gradient-to-r from-card to-transparent",
-          showLeftShadow ? "opacity-100" : "opacity-0"
-        )} />
+        {/* Left Shadow Indicator (Desktop only) */}
+        {!isMobile && (
+          <div className={cn(
+            "absolute left-0 top-0 bottom-0 w-8 pointer-events-none z-10 transition-opacity duration-300 bg-gradient-to-r from-card to-transparent",
+            showLeftShadow ? "opacity-100" : "opacity-0"
+          )} />
+        )}
         
-        {/* Right Shadow Indicator */}
-        <div className={cn(
-          "absolute right-0 top-0 bottom-0 w-12 sm:w-8 pointer-events-none z-10 transition-opacity duration-300 bg-gradient-to-l from-card to-transparent",
-          showRightShadow ? "opacity-100" : "opacity-0"
-        )} />
+        {/* Right Shadow Indicator (Desktop only) */}
+        {!isMobile && (
+          <div className={cn(
+            "absolute right-0 top-0 bottom-0 w-8 pointer-events-none z-10 transition-opacity duration-300 bg-gradient-to-l from-card to-transparent",
+            showRightShadow ? "opacity-100" : "opacity-0"
+          )} />
+        )}
         
         {/* Left Navigation Button (Desktop) */}
         {!isMobile && showLeftShadow && (
