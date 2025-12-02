@@ -745,14 +745,14 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
               <div className="col-span-2">
                 <Label>Cupom Vinculado</Label>
                 <Select
-                  value={formData.coupon_id}
-                  onValueChange={(value) => setFormData({ ...formData, coupon_id: value })}
+                  value={formData.coupon_id || 'none'}
+                  onValueChange={(value) => setFormData({ ...formData, coupon_id: value === 'none' ? '' : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um cupom" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="none">Nenhum</SelectItem>
                     {coupons.map((coupon) => (
                       <SelectItem key={coupon.id} value={coupon.id}>
                         {coupon.code} ({coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : formatCurrency(coupon.discount_value)})
