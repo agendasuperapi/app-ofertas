@@ -76,6 +76,9 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
     commission_enabled: true,
     default_commission_type: 'percentage' as 'percentage' | 'fixed',
     default_commission_value: 0,
+    commission_scope: 'all' as 'all' | 'category' | 'product',
+    commission_category_name: '',
+    commission_product_id: '',
   });
 
   const [ruleFormData, setRuleFormData] = useState({
@@ -110,6 +113,9 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
       commission_enabled: true,
       default_commission_type: 'percentage',
       default_commission_value: 0,
+      commission_scope: 'all',
+      commission_category_name: '',
+      commission_product_id: '',
     });
     setEditingAffiliate(null);
   };
@@ -127,6 +133,9 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
         commission_enabled: affiliate.commission_enabled,
         default_commission_type: affiliate.default_commission_type,
         default_commission_value: affiliate.default_commission_value,
+        commission_scope: 'all',
+        commission_category_name: '',
+        commission_product_id: '',
       });
     } else {
       resetForm();
@@ -144,15 +153,54 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
       return;
     }
 
-    const data = {
-      ...formData,
+    // Validação de escopo
+    if (formData.commission_enabled && formData.commission_scope === 'category' && !formData.commission_category_name) {
+      toast({
+        title: 'Selecione uma categoria',
+        description: 'Para comissão por categoria, selecione uma categoria.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (formData.commission_enabled && formData.commission_scope === 'product' && !formData.commission_product_id) {
+      toast({
+        title: 'Selecione um produto',
+        description: 'Para comissão por produto, selecione um produto.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const affiliateData = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      cpf_cnpj: formData.cpf_cnpj,
+      pix_key: formData.pix_key,
       coupon_id: formData.coupon_id || null,
+      commission_enabled: formData.commission_enabled,
+      default_commission_type: formData.default_commission_type,
+      default_commission_value: formData.commission_scope === 'all' ? formData.default_commission_value : 0,
     };
 
+    let result;
     if (editingAffiliate) {
-      await updateAffiliate(editingAffiliate.id, data);
+      result = await updateAffiliate(editingAffiliate.id, affiliateData);
     } else {
-      await createAffiliate(data);
+      result = await createAffiliate(affiliateData);
+    }
+
+    // Se a comissão é por categoria ou produto, criar regra específica
+    if (result && formData.commission_enabled && formData.commission_scope !== 'all') {
+      await createCommissionRule({
+        affiliate_id: result.id,
+        commission_type: formData.default_commission_type,
+        commission_value: formData.default_commission_value,
+        applies_to: formData.commission_scope,
+        category_name: formData.commission_scope === 'category' ? formData.commission_category_name : null,
+        product_id: formData.commission_scope === 'product' ? formData.commission_product_id : null,
+      });
     }
 
     setDialogOpen(false);
@@ -848,6 +896,69 @@ export const AffiliatesManager = ({ storeId }: AffiliatesManagerProps) => {
               </div>
               {formData.commission_enabled && (
                 <>
+                  <div className="col-span-2">
+                    <Label>Comissão aplica-se a</Label>
+                    <Select
+                      value={formData.commission_scope}
+                      onValueChange={(value: 'all' | 'category' | 'product') => setFormData({ 
+                        ...formData, 
+                        commission_scope: value,
+                        commission_category_name: '',
+                        commission_product_id: ''
+                      })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todas as vendas (Geral)</SelectItem>
+                        <SelectItem value="category">Por Categoria</SelectItem>
+                        <SelectItem value="product">Por Produto</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {formData.commission_scope === 'category' && (
+                    <div className="col-span-2">
+                      <Label>Categoria</Label>
+                      <Select
+                        value={formData.commission_category_name || 'select'}
+                        onValueChange={(value) => setFormData({ ...formData, commission_category_name: value === 'select' ? '' : value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione a categoria" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="select" disabled>Selecione a categoria</SelectItem>
+                          {categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.name}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                  {formData.commission_scope === 'product' && (
+                    <div className="col-span-2">
+                      <Label>Produto</Label>
+                      <Select
+                        value={formData.commission_product_id || 'select'}
+                        onValueChange={(value) => setFormData({ ...formData, commission_product_id: value === 'select' ? '' : value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o produto" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="select" disabled>Selecione o produto</SelectItem>
+                          {products.map((product) => (
+                            <SelectItem key={product.id} value={product.id}>
+                              {product.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <div>
                     <Label>Tipo de Comissão</Label>
                     <Select
