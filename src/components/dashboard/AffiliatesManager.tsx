@@ -35,8 +35,7 @@ interface AffiliatesManagerProps {
 export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesManagerProps) => {
   const { 
     affiliates, 
-    isLoading,
-    fetchAffiliates,
+    isLoading, 
     createAffiliate, 
     updateAffiliate, 
     deleteAffiliate, 
@@ -520,10 +519,16 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
             Gerencie seus afiliados e comissões
           </p>
         </div>
-        <Button onClick={() => setInviteDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Cadastrar
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setInviteDialogOpen(true)}>
+            <Mail className="h-4 w-4 mr-2" />
+            Convidar Afiliado
+          </Button>
+          <Button onClick={() => handleOpenDialog()}>
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Afiliado
+          </Button>
+        </div>
       </div>
       
       {/* Invite Dialog */}
@@ -532,7 +537,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
         storeName={storeName}
         open={inviteDialogOpen}
         onOpenChange={setInviteDialogOpen}
-        onSuccess={fetchAffiliates}
       />
 
       {/* Summary Cards */}
