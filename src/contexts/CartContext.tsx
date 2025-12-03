@@ -225,10 +225,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
           carts: mergedCarts
         }));
         
-        // Não mostrar toast de recuperação no dashboard-lojista
-        if (totalRecovered > 0 && !location.pathname.includes('/dashboard-lojista')) {
-          toast.success(`Recuperamos ${totalRecovered} ${totalRecovered === 1 ? 'item' : 'itens'} do seu carrinho!`);
-        }
+        // Toast de recuperação removido a pedido do usuário
       }
       
       setIsInitialized(true);
