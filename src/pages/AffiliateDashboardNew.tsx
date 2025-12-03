@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ScrollableTable } from '@/components/ui/scrollable-table';
 import { toast } from 'sonner';
 import {
   Users,
@@ -23,7 +25,8 @@ import {
   BarChart3,
   User,
   Link,
-  Ticket
+  Ticket,
+  ShoppingBag
 } from 'lucide-react';
 
 export default function AffiliateDashboardNew() {
@@ -31,6 +34,7 @@ export default function AffiliateDashboardNew() {
     affiliateUser,
     affiliateStores,
     affiliateStats,
+    affiliateOrders,
     isLoading,
     affiliateLogout,
     refreshData
@@ -64,6 +68,16 @@ export default function AffiliateDashboardNew() {
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast.success(`${label} copiado!`);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const handleLogout = async () => {
@@ -167,10 +181,14 @@ export default function AffiliateDashboardNew() {
 
         {/* Main Content */}
         <Tabs defaultValue="stores" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="stores" className="flex items-center gap-2">
               <Store className="h-4 w-4" />
-              Minhas Lojas
+              <span className="hidden sm:inline">Minhas</span> Lojas
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4" />
+              Pedidos
             </TabsTrigger>
             <TabsTrigger value="commissions" className="flex items-center gap-2">
               <BarChart3 className="h-4 w-4" />
@@ -360,6 +378,84 @@ export default function AffiliateDashboardNew() {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          {/* Orders Tab */}
+          <TabsContent value="orders" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Meus Pedidos</CardTitle>
+                <CardDescription>
+                  Pedidos realizados com seus cupons e comissões ganhas
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {affiliateOrders.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">Nenhum pedido ainda</h3>
+                    <p className="text-muted-foreground">
+                      Quando clientes usarem seus cupons, os pedidos aparecerão aqui.
+                    </p>
+                  </div>
+                ) : (
+                  <ScrollableTable>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Pedido</TableHead>
+                          <TableHead>Data</TableHead>
+                          <TableHead>Loja</TableHead>
+                          <TableHead>Cliente</TableHead>
+                          <TableHead className="text-right">Valor</TableHead>
+                          <TableHead className="text-right">Comissão</TableHead>
+                          <TableHead>Status</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {affiliateOrders.map((order) => (
+                          <TableRow key={order.earning_id}>
+                            <TableCell className="font-mono font-medium">
+                              #{order.order_number}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                              {formatDate(order.order_date)}
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {order.store_name}
+                            </TableCell>
+                            <TableCell>
+                              {order.customer_name}
+                            </TableCell>
+                            <TableCell className="text-right whitespace-nowrap">
+                              {formatCurrency(order.order_total)}
+                            </TableCell>
+                            <TableCell className="text-right font-semibold text-green-600 whitespace-nowrap">
+                              {formatCurrency(order.commission_amount)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant={order.commission_status === 'paid' ? 'default' : 'secondary'}
+                                className={order.commission_status === 'paid' 
+                                  ? 'bg-green-500/10 text-green-600 border-green-500/20' 
+                                  : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
+                                }
+                              >
+                                {order.commission_status === 'paid' ? (
+                                  <><CheckCircle className="h-3 w-3 mr-1" /> Pago</>
+                                ) : (
+                                  <><Clock className="h-3 w-3 mr-1" /> Pendente</>
+                                )}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </ScrollableTable>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Commissions Tab */}

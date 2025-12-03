@@ -686,6 +686,56 @@ serve(async (req) => {
         );
       }
 
+      case "orders": {
+        // Buscar pedidos com comissões do afiliado
+        const { affiliate_token } = body;
+
+        console.log(`[affiliate-invite] orders: affiliate_token=${affiliate_token ? 'presente' : 'ausente'}`);
+
+        if (!affiliate_token) {
+          return new Response(
+            JSON.stringify({ error: "Token não fornecido" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Validar sessão
+        const { data: validation } = await supabase.rpc("validate_affiliate_session", {
+          session_token: affiliate_token,
+        });
+
+        if (!validation || validation.length === 0 || !validation[0].is_valid) {
+          console.log(`[affiliate-invite] orders: Sessão inválida`);
+          return new Response(
+            JSON.stringify({ error: "Sessão inválida" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const affiliateAccountId = validation[0].affiliate_id;
+        console.log(`[affiliate-invite] orders: affiliateAccountId=${affiliateAccountId}`);
+
+        // Buscar pedidos usando a função do banco
+        const { data: orders, error: ordersError } = await supabase.rpc("get_affiliate_orders", {
+          p_affiliate_account_id: affiliateAccountId,
+        });
+
+        console.log(`[affiliate-invite] orders: found=${orders?.length || 0}, error=${ordersError?.message || 'none'}`);
+
+        if (ordersError) {
+          console.error("[affiliate-invite] Error fetching orders:", ordersError);
+          return new Response(
+            JSON.stringify({ error: "Erro ao buscar pedidos" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        return new Response(
+          JSON.stringify({ orders: orders || [] }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       default:
         return new Response(
           JSON.stringify({ error: "Ação não reconhecida" }),
