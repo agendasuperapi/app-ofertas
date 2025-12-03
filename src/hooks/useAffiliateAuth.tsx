@@ -49,16 +49,32 @@ interface AffiliateStats {
   total_orders: number;
 }
 
+export interface AffiliateOrder {
+  earning_id: string;
+  order_id: string;
+  order_number: string;
+  customer_name: string;
+  order_date: string;
+  store_id: string;
+  store_name: string;
+  order_total: number;
+  commission_amount: number;
+  commission_status: string;
+  coupon_code?: string;
+}
+
 interface AffiliateAuthContextType {
   affiliateUser: AffiliateUser | null;
   affiliateStores: AffiliateStore[];
   affiliateStats: AffiliateStats | null;
+  affiliateOrders: AffiliateOrder[];
   isAuthenticated: boolean;
   isLoading: boolean;
   affiliateLogin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   affiliateLogout: () => Promise<void>;
   affiliateRegister: (token: string, password: string, name: string, phone?: string) => Promise<{ success: boolean; error?: string }>;
   refreshData: () => Promise<void>;
+  fetchAffiliateOrders: () => Promise<void>;
 }
 
 const AffiliateAuthContext = createContext<AffiliateAuthContextType | undefined>(undefined);
@@ -69,6 +85,7 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
   const [affiliateUser, setAffiliateUser] = useState<AffiliateUser | null>(null);
   const [affiliateStores, setAffiliateStores] = useState<AffiliateStore[]>([]);
   const [affiliateStats, setAffiliateStats] = useState<AffiliateStats | null>(null);
+  const [affiliateOrders, setAffiliateOrders] = useState<AffiliateOrder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const getStoredToken = () => localStorage.getItem(AFFILIATE_TOKEN_KEY);
@@ -92,6 +109,7 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
         setAffiliateUser(null);
         setAffiliateStores([]);
         setAffiliateStats(null);
+        setAffiliateOrders([]);
       } else {
         setAffiliateUser(data.affiliate);
         await fetchAffiliateData();
@@ -101,6 +119,23 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
       removeStoredToken();
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchAffiliateOrders = async () => {
+    const token = getStoredToken();
+    if (!token) return;
+
+    try {
+      const { data: ordersData } = await supabase.functions.invoke('affiliate-invite', {
+        body: { action: 'orders', affiliate_token: token }
+      });
+      
+      if (ordersData?.orders) {
+        setAffiliateOrders(ordersData.orders);
+      }
+    } catch (err) {
+      console.error('Error fetching affiliate orders:', err);
     }
   };
 
@@ -126,6 +161,9 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
       if (statsData?.stats) {
         setAffiliateStats(statsData.stats);
       }
+
+      // Fetch orders
+      await fetchAffiliateOrders();
     } catch (err) {
       console.error('Error fetching affiliate data:', err);
     }
@@ -170,6 +208,7 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
     setAffiliateUser(null);
     setAffiliateStores([]);
     setAffiliateStats(null);
+    setAffiliateOrders([]);
   };
 
   const affiliateRegister = async (token: string, password: string, name: string, phone?: string) => {
@@ -205,12 +244,14 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
         affiliateUser,
         affiliateStores,
         affiliateStats,
+        affiliateOrders,
         isAuthenticated: !!affiliateUser,
         isLoading,
         affiliateLogin,
         affiliateLogout,
         affiliateRegister,
-        refreshData
+        refreshData,
+        fetchAffiliateOrders
       }}
     >
       {children}
