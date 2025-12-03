@@ -1,5 +1,6 @@
 -- Função para buscar itens de um pedido com detalhes de comissão do afiliado
 -- Suporta tanto sistema novo (store_affiliate_id) quanto legado (affiliate_id via affiliate_earnings)
+-- CORRIGIDO: Usa orders.subtotal para distribuição proporcional (antes do desconto)
 CREATE OR REPLACE FUNCTION public.get_affiliate_order_items(
   p_order_id UUID,
   p_store_affiliate_id UUID DEFAULT NULL
@@ -25,8 +26,13 @@ DECLARE
   v_commission_type TEXT;
   v_commission_value NUMERIC;
   v_total_commission NUMERIC;
-  v_order_total NUMERIC;
+  v_order_subtotal NUMERIC;
 BEGIN
+  -- Buscar subtotal do pedido da tabela orders (antes do desconto e sem taxa de entrega)
+  SELECT o.subtotal INTO v_order_subtotal
+  FROM orders o
+  WHERE o.id = p_order_id;
+
   -- Buscar comissão do momento do pedido
   -- Primeiro tenta pelo store_affiliate_id (sistema novo)
   -- Se não encontrar e store_affiliate_id for NULL, busca pelo order_id apenas
@@ -34,9 +40,8 @@ BEGIN
     SELECT 
       ae.commission_type,
       ae.commission_value,
-      ae.commission_amount,
-      ae.order_total
-    INTO v_commission_type, v_commission_value, v_total_commission, v_order_total
+      ae.commission_amount
+    INTO v_commission_type, v_commission_value, v_total_commission
     FROM affiliate_earnings ae
     WHERE ae.order_id = p_order_id
     AND ae.store_affiliate_id = p_store_affiliate_id;
@@ -45,9 +50,8 @@ BEGIN
     SELECT 
       ae.commission_type,
       ae.commission_value,
-      ae.commission_amount,
-      ae.order_total
-    INTO v_commission_type, v_commission_value, v_total_commission, v_order_total
+      ae.commission_amount
+    INTO v_commission_type, v_commission_value, v_total_commission
     FROM affiliate_earnings ae
     WHERE ae.order_id = p_order_id
     AND ae.store_affiliate_id IS NULL
@@ -59,7 +63,11 @@ BEGIN
     v_commission_type := 'percentage';
     v_commission_value := 0;
     v_total_commission := 0;
-    v_order_total := 0;
+  END IF;
+
+  -- Se não encontrou subtotal, usar 0
+  IF v_order_subtotal IS NULL OR v_order_subtotal = 0 THEN
+    v_order_subtotal := 1; -- Evitar divisão por zero
   END IF;
 
   RETURN QUERY
@@ -75,9 +83,10 @@ BEGIN
     'pedido'::TEXT as commission_source,
     v_commission_value as commission_value,
     -- Distribuir a comissão total proporcionalmente ao subtotal do item
+    -- Usa orders.subtotal (antes do desconto) para cálculo correto
     CASE 
-      WHEN v_order_total > 0 THEN 
-        ROUND((oi.subtotal / v_order_total) * v_total_commission, 2)
+      WHEN v_order_subtotal > 0 THEN 
+        ROUND((oi.subtotal / v_order_subtotal) * v_total_commission, 2)
       ELSE 
         0
     END as item_commission
