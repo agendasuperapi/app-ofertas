@@ -224,6 +224,7 @@ BEGIN
   END IF;
 
   -- Inserir comissão
+  -- CORRIGIDO: Usa NEW.subtotal ao invés de NEW.total para armazenar o valor base correto
   INSERT INTO affiliate_earnings (
     affiliate_id,
     store_affiliate_id,
@@ -237,7 +238,7 @@ BEGIN
     v_affiliate_id,
     v_store_affiliate_id,
     NEW.id,
-    NEW.total,
+    NEW.subtotal,  -- Subtotal antes do desconto (valor base correto para comissão)
     v_commission_type,
     v_commission_value,
     v_commission_amount,
