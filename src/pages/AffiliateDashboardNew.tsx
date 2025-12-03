@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, Fragment } from 'react';
 import { useAffiliateAuth, AffiliateOrderItem } from '@/hooks/useAffiliateAuth';
 import { useAffiliateEarningsNotification } from '@/hooks/useAffiliateEarningsNotification';
 import { Button } from '@/components/ui/button';
@@ -93,6 +93,8 @@ export default function AffiliateDashboardNew() {
   };
 
   const toggleOrderExpansion = async (orderId: string, storeAffiliateId: string | undefined) => {
+    console.log('[toggleOrderExpansion] orderId:', orderId, 'storeAffiliateId:', storeAffiliateId);
+    
     const isExpanded = expandedOrders[orderId];
     
     if (isExpanded) {
@@ -107,7 +109,11 @@ export default function AffiliateDashboardNew() {
     }
 
     // Carregar itens do pedido
-    if (!storeAffiliateId) return;
+    if (!storeAffiliateId) {
+      console.warn('[toggleOrderExpansion] storeAffiliateId is undefined, cannot load items');
+      toast.error('Não foi possível carregar os itens: ID do afiliado não encontrado');
+      return;
+    }
     
     setLoadingItems(prev => ({ ...prev, [orderId]: true }));
     try {
@@ -451,10 +457,9 @@ export default function AffiliateDashboardNew() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {affiliateOrders.map((order) => (
-                          <>
+                      {affiliateOrders.map((order) => (
+                          <Fragment key={order.earning_id}>
                             <TableRow 
-                              key={order.earning_id}
                               className="cursor-pointer hover:bg-muted/50"
                               onClick={() => toggleOrderExpansion(order.order_id, order.store_affiliate_id)}
                             >
@@ -547,7 +552,7 @@ export default function AffiliateDashboardNew() {
                                 </TableCell>
                               </TableRow>
                             )}
-                          </>
+                          </Fragment>
                         ))}
                       </TableBody>
                     </Table>
