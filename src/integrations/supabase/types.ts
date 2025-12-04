@@ -2524,7 +2524,9 @@ export type Database = {
           commission_type: string
           commission_value: number
           item_commission: number
+          item_discount: number
           item_id: string
+          item_value_with_discount: number
           product_category: string
           product_id: string
           product_name: string
