@@ -4,7 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { EmployeePermissions } from '@/hooks/useStoreEmployees';
 import { useDynamicPermissions } from '@/hooks/useDynamicPermissions';
-import { Shield, AlertCircle } from 'lucide-react';
+import { Shield, AlertCircle, XCircle } from 'lucide-react';
 import { PermissionModule } from '@/config/permissions';
 
 interface DynamicPermissionsFormProps {
@@ -22,6 +22,25 @@ export const DynamicPermissionsForm = ({
 
   const getPermissionValue = (module: string, action: string): boolean => {
     return ((permissions as any)[module]?.[action]) ?? false;
+  };
+
+  const handleModuleToggle = (module: PermissionModule, enabled: boolean) => {
+    // Primeiro, atualiza o estado 'enabled'
+    onPermissionChange(module.key, 'enabled', enabled);
+    
+    // Se desativando, desabilita todas as outras permissões
+    if (!enabled) {
+      module.permissions.forEach(perm => {
+        if (perm.key !== 'enabled') {
+          onPermissionChange(module.key, perm.key, false);
+        }
+      });
+      module.subgroups?.forEach(subgroup => {
+        subgroup.permissions.forEach(perm => {
+          onPermissionChange(module.key, perm.key, false);
+        });
+      });
+    }
   };
 
   const renderPermissionSwitch = (
@@ -48,71 +67,100 @@ export const DynamicPermissionsForm = ({
 
   const renderModule = (module: PermissionModule) => {
     const hasSubgroups = module.subgroups && module.subgroups.length > 0;
+    const isModuleEnabled = getPermissionValue(module.key, 'enabled');
+    
+    // Filtra permissões excluindo 'enabled' (que será renderizado separadamente)
+    const otherPermissions = module.permissions.filter(p => p.key !== 'enabled');
 
     return (
       <div key={module.key} className="space-y-3">
-        <div className="flex items-center justify-between">
+        {/* Header com Toggle Principal do Módulo */}
+        <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-primary" />
             <h4 className="font-medium">{module.label}</h4>
+            <Badge variant="outline" className="text-xs">
+              {module.description || 'Gerenciamento'}
+            </Badge>
           </div>
-          <Badge variant="outline">
-            {module.description || 'Gerenciamento'}
-          </Badge>
+          
+          {/* Toggle Principal do Módulo */}
+          <div className="flex items-center gap-2">
+            <Label className={`text-sm ${isModuleEnabled ? 'text-primary' : 'text-muted-foreground'}`}>
+              {isModuleEnabled ? 'Ativo' : 'Inativo'}
+            </Label>
+            <Switch
+              checked={isModuleEnabled}
+              onCheckedChange={(checked) => handleModuleToggle(module, checked)}
+            />
+          </div>
         </div>
 
-        {/* Permissões diretas do módulo */}
-        {module.permissions.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-muted/30 rounded-lg">
-            {module.permissions.map((perm) =>
-              renderPermissionSwitch(
-                module.key,
-                perm.key,
-                perm.label,
-                perm.description
-              )
-            )}
-          </div>
-        )}
-
-        {/* Subgrupos de permissões */}
-        {hasSubgroups && (
-          <div className="space-y-4 mt-4">
-            {module.subgroups!.map((subgroup) => (
-              <div key={subgroup.key} className="space-y-3">
-                <div className="flex items-start gap-2 ml-2">
-                  <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <div>
-                    <h5 className="text-sm font-medium text-muted-foreground">
-                      {subgroup.label}
-                    </h5>
-                    {subgroup.description && (
-                      <p className="text-xs text-muted-foreground">
-                        {subgroup.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 bg-muted/20 rounded-lg ml-4">
-                  {subgroup.permissions.map((perm) => {
-                    // Verifica se esta permissão depende de outra
-                    const isDisabled =
-                      perm.dependsOn?.some(
-                        (dep) => !getPermissionValue(module.key, dep)
-                      ) ?? false;
-
-                    return renderPermissionSwitch(
-                      module.key,
-                      perm.key,
-                      perm.label,
-                      perm.description,
-                      isDisabled
-                    );
-                  })}
-                </div>
+        {/* Conteúdo do Módulo - só aparece se estiver ativo */}
+        {isModuleEnabled ? (
+          <>
+            {/* Permissões diretas do módulo (exceto 'enabled') */}
+            {otherPermissions.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 p-4 bg-muted/30 rounded-lg">
+                {otherPermissions.map((perm) =>
+                  renderPermissionSwitch(
+                    module.key,
+                    perm.key,
+                    perm.label,
+                    perm.description
+                  )
+                )}
               </div>
-            ))}
+            )}
+
+            {/* Subgrupos de permissões */}
+            {hasSubgroups && (
+              <div className="space-y-4 mt-4">
+                {module.subgroups!.map((subgroup) => (
+                  <div key={subgroup.key} className="space-y-3">
+                    <div className="flex items-start gap-2 ml-2">
+                      <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <div>
+                        <h5 className="text-sm font-medium text-muted-foreground">
+                          {subgroup.label}
+                        </h5>
+                        {subgroup.description && (
+                          <p className="text-xs text-muted-foreground">
+                            {subgroup.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 bg-muted/20 rounded-lg ml-4">
+                      {subgroup.permissions.map((perm) => {
+                        // Verifica se esta permissão depende de outra
+                        const isDisabled =
+                          perm.dependsOn?.some(
+                            (dep) => !getPermissionValue(module.key, dep)
+                          ) ?? false;
+
+                        return renderPermissionSwitch(
+                          module.key,
+                          perm.key,
+                          perm.label,
+                          perm.description,
+                          isDisabled
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          /* Mensagem quando módulo está inativo */
+          <div className="p-4 bg-muted/20 rounded-lg text-center border border-dashed">
+            <XCircle className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
+              Este menu está desativado para o funcionário
+            </p>
           </div>
         )}
       </div>
@@ -126,7 +174,7 @@ export const DynamicPermissionsForm = ({
         <div>
           <h3 className="font-semibold text-sm">Sistema de Permissões Dinâmico</h3>
           <p className="text-xs text-muted-foreground">
-            Novos módulos e filtros aparecem automaticamente aqui
+            Ative ou desative menus inteiros usando o toggle principal de cada módulo
           </p>
         </div>
       </div>
