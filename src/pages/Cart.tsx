@@ -322,6 +322,72 @@ export default function Cart() {
     return () => clearTimeout(timer);
   }, [cart.storeId, cart.couponCode, cart.items.length, getTotal, validateCouponWithScope, applyCoupon]);
 
+  // Recalcular desconto do cupom automaticamente quando os itens do carrinho mudam
+  const prevItemsRef = useRef<string>("");
+  
+  useEffect(() => {
+    const recalculateCouponDiscount = async () => {
+      // Se não há cupom aplicado, não fazer nada
+      if (!cart.couponCode) return;
+      
+      // Se carrinho está vazio, remover cupom
+      if (cart.items.length === 0) {
+        removeCoupon();
+        return;
+      }
+      
+      // Criar hash dos itens para detectar mudanças reais
+      const itemsHash = JSON.stringify(cart.items.map(i => ({ 
+        id: i.productId, 
+        qty: i.quantity,
+        price: i.price,
+        addons: i.addons?.length || 0,
+        flavors: i.flavors?.length || 0,
+        size: i.size || null
+      })));
+      
+      // Evitar recálculo se os itens não mudaram
+      if (itemsHash === prevItemsRef.current) return;
+      prevItemsRef.current = itemsHash;
+      
+      console.log('🔄 Recalculando desconto do cupom:', cart.couponCode);
+      
+      try {
+        const result = await validateCouponWithScope(cart.couponCode, cart.items);
+        
+        if (result.is_valid && result.discount_amount > 0) {
+          // Só atualizar se o desconto mudou
+          if (Math.abs(result.discount_amount - (cart.couponDiscount || 0)) > 0.01) {
+            console.log('✅ Desconto atualizado:', {
+              antigo: cart.couponDiscount,
+              novo: result.discount_amount
+            });
+            applyCoupon(cart.couponCode, result.discount_amount);
+            toast({
+              title: "Desconto atualizado",
+              description: `Novo desconto: R$ ${result.discount_amount.toFixed(2)}`,
+            });
+          }
+        } else {
+          // Cupom não é mais válido
+          console.log('⚠️ Cupom não é mais válido, removendo...');
+          removeCoupon();
+          toast({
+            title: "Cupom removido",
+            description: result.error_message || "O cupom não se aplica mais aos itens do carrinho",
+            variant: "destructive"
+          });
+        }
+      } catch (error) {
+        console.error('❌ Erro ao recalcular cupom:', error);
+      }
+    };
+    
+    // Usar debounce para evitar múltiplas chamadas
+    const timer = setTimeout(recalculateCouponDiscount, 500);
+    return () => clearTimeout(timer);
+  }, [cart.items, cart.couponCode, cart.couponDiscount, validateCouponWithScope, applyCoupon, removeCoupon]);
+
   const handleApplyCoupon = async () => {
     if (!couponInput.trim()) {
       toast({
