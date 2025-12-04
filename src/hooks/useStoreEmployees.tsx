@@ -238,7 +238,13 @@ export const useStoreEmployees = (storeId?: string) => {
       });
 
       if (response.error) throw response.error;
-      if (!response.data?.success) throw new Error(response.data?.error || 'Erro ao criar funcionário');
+      if (!response.data?.success) {
+        // Tratar erro de email já existente
+        if (response.data?.error === 'EMAIL_EXISTS') {
+          throw new Error('Este email já está cadastrado no sistema. Use outro email ou edite o funcionário existente.');
+        }
+        throw new Error(response.data?.error || 'Erro ao criar funcionário');
+      }
 
       toast({
         title: 'Funcionário cadastrado',
@@ -249,9 +255,15 @@ export const useStoreEmployees = (storeId?: string) => {
       return response.data.employee;
     } catch (error: any) {
       console.error('Error creating employee with account:', error);
+      
+      // Mensagem amigável para email duplicado
+      const errorMessage = error.message?.includes('EMAIL_EXISTS') || error.message?.includes('já está cadastrado')
+        ? 'Este email já está cadastrado no sistema. Use outro email ou edite o funcionário existente.'
+        : error.message || 'Erro ao criar conta do funcionário';
+      
       toast({
         title: 'Erro ao criar funcionário',
-        description: error.message || 'Erro ao criar conta do funcionário',
+        description: errorMessage,
         variant: 'destructive',
       });
       throw error;

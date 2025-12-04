@@ -84,6 +84,12 @@ serve(async (req) => {
 
     if (createError || !newUser.user) {
       console.error('Erro ao criar usuário:', createError);
+      
+      // Tratar erro de email já existente
+      if (createError?.code === 'email_exists' || createError?.message?.includes('already been registered')) {
+        throw new Error('EMAIL_EXISTS');
+      }
+      
       throw new Error(`Erro ao criar conta: ${createError?.message || 'Erro desconhecido'}`);
     }
 
