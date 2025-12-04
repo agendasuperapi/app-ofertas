@@ -42,6 +42,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: 'Pedidos',
     description: 'Gerenciamento completo de pedidos',
     permissions: [
+      { key: 'enabled', label: 'Menu Ativo', description: 'Acesso ao menu de pedidos', defaultValue: true },
       { key: 'view', label: 'Visualizar', description: 'Ver lista de pedidos', defaultValue: true },
       { key: 'create', label: 'Criar', description: 'Criar novos pedidos', defaultValue: true },
     ],
@@ -94,6 +95,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: 'Produtos',
     description: 'Gerenciamento do catálogo de produtos',
     permissions: [
+      { key: 'enabled', label: 'Menu Ativo', description: 'Acesso ao menu de produtos', defaultValue: true },
       { key: 'view', label: 'Visualizar', description: 'Ver produtos cadastrados', defaultValue: true },
       { key: 'create', label: 'Criar', description: 'Cadastrar novos produtos', defaultValue: false },
       { key: 'update', label: 'Editar', description: 'Editar produtos existentes', defaultValue: false },
@@ -107,6 +109,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: 'Categorias',
     description: 'Gerenciamento de categorias de produtos',
     permissions: [
+      { key: 'enabled', label: 'Menu Ativo', description: 'Acesso ao menu de categorias', defaultValue: true },
       { key: 'view', label: 'Visualizar', description: 'Ver categorias', defaultValue: true },
       { key: 'create', label: 'Criar', description: 'Criar novas categorias', defaultValue: false },
       { key: 'update', label: 'Editar', description: 'Editar categorias', defaultValue: false },
@@ -119,6 +122,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: 'Entregas',
     description: 'Gerenciamento de zonas de entrega e taxas',
     permissions: [
+      { key: 'enabled', label: 'Menu Ativo', description: 'Acesso ao menu de entregas', defaultValue: true },
       { key: 'view', label: 'Visualizar', description: 'Ver zonas de entrega', defaultValue: true },
       { key: 'create', label: 'Criar', description: 'Criar novas zonas', defaultValue: false },
       { key: 'update', label: 'Editar', description: 'Editar zonas existentes', defaultValue: false },
@@ -130,6 +134,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: 'Cupons de Desconto',
     description: 'Gerenciamento de cupons promocionais',
     permissions: [
+      { key: 'enabled', label: 'Menu Ativo', description: 'Acesso ao menu de cupons', defaultValue: true },
       { key: 'view', label: 'Visualizar', description: 'Ver cupons cadastrados', defaultValue: true },
       { key: 'create', label: 'Criar', description: 'Criar novos cupons', defaultValue: false },
       { key: 'update', label: 'Editar', description: 'Editar cupons existentes', defaultValue: false },
@@ -142,6 +147,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: 'Relatórios',
     description: 'Acesso a métricas e relatórios',
     permissions: [
+      { key: 'enabled', label: 'Menu Ativo', description: 'Acesso ao menu de relatórios', defaultValue: false },
       { key: 'view', label: 'Visualizar', description: 'Ver relatórios e métricas', defaultValue: false },
       { key: 'export', label: 'Exportar', description: 'Exportar relatórios', defaultValue: false },
     ],
@@ -151,6 +157,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: 'Configurações',
     description: 'Configurações gerais da loja',
     permissions: [
+      { key: 'enabled', label: 'Menu Ativo', description: 'Acesso ao menu de configurações', defaultValue: true },
       { key: 'view', label: 'Visualizar', description: 'Ver configurações', defaultValue: true },
       { key: 'update_store_info', label: 'Informações da Loja', description: 'Editar dados da loja', defaultValue: false },
       { key: 'update_delivery_settings', label: 'Configurações de Entrega', description: 'Editar opções de entrega', defaultValue: false },
@@ -162,6 +169,7 @@ export const PERMISSION_MODULES: PermissionModule[] = [
     label: 'Integração WhatsApp',
     description: 'Controle de acesso ao WhatsApp Business',
     permissions: [
+      { key: 'enabled', label: 'Menu Ativo', description: 'Acesso ao menu de WhatsApp', defaultValue: false },
       { key: 'edit', label: 'Editar', description: 'Conectar e desconectar WhatsApp', defaultValue: false },
     ],
   },
