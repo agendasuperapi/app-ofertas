@@ -45,12 +45,13 @@ export const useWhatsAppStatus = (
 
   const [status, setStatus] = useState<ConnectionStatus>('loading');
   const [hasPermission, setHasPermission] = useState<boolean>(false);
+  const [permissionChecked, setPermissionChecked] = useState<boolean>(false);
   const checkingRef = useRef(false);
   const intervalRef = useRef<NodeJS.Timeout>();
 
   const checkConnectionStatus = useCallback(async (forceCheck = false) => {
-    // Não fazer requisições se não tiver storeId, permissão ou já estiver verificando
-    if (!storeId || !hasPermission || checkingRef.current) return;
+    // Não fazer requisições se não tiver storeId, permissão verificada e confirmada, ou já estiver verificando
+    if (!storeId || !permissionChecked || !hasPermission || checkingRef.current) return;
 
     // Verificar visibilidade da página antes de fazer requisições
     if (typeof document !== 'undefined' && document.visibilityState === 'hidden' && !forceCheck) {
@@ -155,19 +156,21 @@ export const useWhatsAppStatus = (
     } finally {
       checkingRef.current = false;
     }
-  }, [storeId, cacheTime, hasPermission]);
+  }, [storeId, cacheTime, hasPermission, permissionChecked]);
 
   // Verificar permissões apenas uma vez
   useEffect(() => {
     const checkPermissions = async () => {
       if (!storeId) {
         setHasPermission(false);
+        setPermissionChecked(true);
         return;
       }
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setHasPermission(false);
+        setPermissionChecked(true);
         return;
       }
 
@@ -196,19 +199,26 @@ export const useWhatsAppStatus = (
 
       const isOwner = !!storeCheck.data;
       const isAdmin = !!rolesCheck.data;
+      
+      // Verificar permissão de WhatsApp para funcionários
+      // Precisa ter whatsapp.enabled = true E (whatsapp.view = true OU whatsapp.view não definido)
+      const whatsappPerms = (employeeCheck.data as any)?.permissions?.whatsapp;
       const hasWhatsAppPerm = employeeCheck.data && 
-        (employeeCheck.data as any).permissions?.whatsapp?.view === true;
+        whatsappPerms?.enabled === true && 
+        whatsappPerms?.view !== false;
 
       setHasPermission(isOwner || isAdmin || hasWhatsAppPerm);
+      setPermissionChecked(true);
     };
 
+    setPermissionChecked(false);
     checkPermissions();
   }, [storeId]);
 
   // Configurar polling se habilitado
   useEffect(() => {
-    // Não fazer nada se não tiver storeId
-    if (!storeId) return;
+    // Não fazer nada se não tiver storeId ou permissão ainda não verificada
+    if (!storeId || !permissionChecked) return;
     
     // Se não tem permissão, definir status apropriado
     if (!hasPermission) {
@@ -236,7 +246,7 @@ export const useWhatsAppStatus = (
         clearInterval(intervalRef.current);
       }
     };
-  }, [storeId, hasPermission, checkInterval, checkConnectionStatus, disablePolling]);
+  }, [storeId, hasPermission, permissionChecked, checkInterval, checkConnectionStatus, disablePolling]);
 
   // Cleanup do cache quando o componente desmontar (opcional)
   useEffect(() => {
