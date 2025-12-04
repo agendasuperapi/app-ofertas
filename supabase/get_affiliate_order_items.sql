@@ -1,6 +1,10 @@
 -- Função para buscar itens de um pedido com detalhes de comissão do afiliado
 -- ATUALIZADO: Calcula comissão sobre o valor COM DESCONTO do cupom
 -- Distribui o desconto proporcionalmente entre os itens
+
+-- Dropar função existente para alterar tipo de retorno
+DROP FUNCTION IF EXISTS public.get_affiliate_order_items(UUID, UUID);
+
 CREATE OR REPLACE FUNCTION public.get_affiliate_order_items(
   p_order_id UUID,
   p_store_affiliate_id UUID DEFAULT NULL
