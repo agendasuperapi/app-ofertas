@@ -28,6 +28,7 @@ export const useProductManagement = (storeId?: string) => {
         .from('products')
         .select('*')
         .eq('store_id', storeId!)
+        .is('deleted_at', null) // Filter out soft-deleted products
         .order('category', { ascending: true })
         .order('display_order', { ascending: true, nullsFirst: false })
         .order('created_at', { ascending: false });
@@ -157,9 +158,10 @@ export const useProductManagement = (storeId?: string) => {
 
   const deleteProductMutation = useMutation({
     mutationFn: async (productId: string) => {
+      // Soft delete - set deleted_at instead of actually deleting
       const { error } = await supabase
         .from('products')
-        .delete()
+        .update({ deleted_at: new Date().toISOString(), is_available: false })
         .eq('id', productId);
 
       if (error) throw error;
@@ -167,18 +169,66 @@ export const useProductManagement = (storeId?: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-products'] });
       toast({
-        title: 'Produto removido!',
-        description: 'O produto foi removido permanentemente.',
+        title: 'Produto ocultado!',
+        description: 'O produto foi ocultado do cardápio mas mantém seu histórico.',
       });
     },
     onError: (error: Error) => {
       toast({
-        title: 'Erro ao remover produto',
+        title: 'Erro ao ocultar produto',
         description: error.message,
         variant: 'destructive',
       });
     },
   });
+
+  // Restore a soft-deleted product
+  const restoreProductMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      const { data, error } = await supabase
+        .from('products')
+        .update({ deleted_at: null, is_available: false })
+        .eq('id', productId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-products'] });
+      toast({
+        title: 'Produto restaurado!',
+        description: 'O produto foi restaurado e está desativado. Ative-o quando desejar.',
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Erro ao restaurar produto',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Check for soft-deleted product with same external code
+  const checkDeletedProductByExternalCode = async (externalCode: string, storeId: string) => {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('store_id', storeId)
+      .eq('external_code', externalCode.trim())
+      .not('deleted_at', 'is', null)
+      .limit(1)
+      .single();
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking deleted product:', error);
+      return null;
+    }
+    
+    return data;
+  };
 
   const toggleProductFeaturedMutation = useMutation({
     mutationFn: async ({ id, is_featured }: { id: string; is_featured: boolean }) => {
@@ -220,11 +270,14 @@ export const useProductManagement = (storeId?: string) => {
     toggleProductFeatured: toggleProductFeaturedMutation.mutate,
     reorderProducts: reorderProductsMutation.mutate,
     deleteProduct: deleteProductMutation.mutate,
+    restoreProduct: restoreProductMutation.mutate,
+    checkDeletedProductByExternalCode,
     isCreating: createProductMutation.isPending,
     isUpdating: updateProductMutation.isPending,
     isTogglingAvailability: toggleProductAvailabilityMutation.isPending,
     isTogglingFeatured: toggleProductFeaturedMutation.isPending,
     isReordering: reorderProductsMutation.isPending,
     isDeleting: deleteProductMutation.isPending,
+    isRestoring: restoreProductMutation.isPending,
   };
 };
