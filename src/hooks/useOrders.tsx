@@ -47,6 +47,7 @@ export const useOrders = () => {
           *,
           order_items!inner (
             *,
+            products (id, category),
             order_item_addons (*),
             order_item_flavors (*)
           ),
