@@ -11,7 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useOrders } from "@/hooks/useOrders";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, Clock, CheckCircle, XCircle, Calendar as CalendarIcon, Store, Copy, Check, CreditCard, Mail, Phone, Key } from "lucide-react";
+import { Package, Clock, CheckCircle, XCircle, Calendar as CalendarIcon, Store, Copy, Check, CreditCard, Mail, Phone, Key, Tag } from "lucide-react";
 import { formatPixKey, validatePixKey } from "@/lib/pixValidation";
 import { toast } from "@/hooks/use-toast";
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
@@ -20,6 +20,87 @@ import { cn } from "@/lib/utils";
 import { isStoreOpen, getStoreStatusText } from "@/lib/storeUtils";
 import { QRCodeCanvas } from "qrcode.react";
 import { generatePixQrCode } from "@/lib/pixQrCode";
+import { supabase } from "@/integrations/supabase/client";
+
+// Interface para cupom
+interface CouponData {
+  id: string;
+  code: string;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+  applies_to: 'all' | 'category' | 'product';
+  category_names: string[] | null;
+  product_ids: string[] | null;
+}
+
+// Interface para desconto por item
+interface ItemDiscount {
+  isEligible: boolean;
+  discountAmount: number;
+}
+
+// Função para calcular desconto de cada item
+const calculateItemDiscount = (
+  item: any,
+  order: any,
+  couponData: CouponData | null
+): ItemDiscount => {
+  // Se não há cupom ou desconto, não há desconto
+  if (!order.coupon_code || !order.coupon_discount || order.coupon_discount <= 0 || !couponData) {
+    return { isEligible: false, discountAmount: 0 };
+  }
+
+  // Determinar se o item é elegível baseado no escopo
+  let isEligible = false;
+  
+  if (couponData.applies_to === 'all') {
+    isEligible = true;
+  } else if (couponData.applies_to === 'product') {
+    isEligible = (couponData.product_ids || []).includes(item.product_id);
+  } else if (couponData.applies_to === 'category') {
+    const productCategory = item.products?.category || '';
+    isEligible = (couponData.category_names || []).some(
+      cat => cat.toLowerCase() === productCategory.toLowerCase()
+    );
+  }
+
+  if (!isEligible) {
+    return { isEligible: false, discountAmount: 0 };
+  }
+
+  // Calcular todos os itens elegíveis do pedido para distribuição proporcional
+  const allItems = order.order_items || [];
+  const eligibleItems = allItems.filter((i: any) => {
+    if (couponData.applies_to === 'all') return true;
+    if (couponData.applies_to === 'product') {
+      return (couponData.product_ids || []).includes(i.product_id);
+    }
+    if (couponData.applies_to === 'category') {
+      const cat = i.products?.category || '';
+      return (couponData.category_names || []).some(
+        (c: string) => c.toLowerCase() === cat.toLowerCase()
+      );
+    }
+    return false;
+  });
+
+  // Calcular subtotal elegível
+  const eligibleSubtotal = eligibleItems.reduce((sum: number, i: any) => sum + Number(i.subtotal), 0);
+
+  if (eligibleSubtotal <= 0) {
+    return { isEligible: true, discountAmount: 0 };
+  }
+
+  // Distribuir desconto proporcionalmente
+  const itemSubtotal = Number(item.subtotal);
+  const proportion = itemSubtotal / eligibleSubtotal;
+  const discountAmount = Number(order.coupon_discount) * proportion;
+
+  return {
+    isEligible: true,
+    discountAmount: Math.min(discountAmount, itemSubtotal)
+  };
+};
 
 const statusConfig = {
   pending: { label: 'Pendente', icon: Clock, color: 'bg-yellow-500' },
@@ -44,6 +125,7 @@ export default function Orders() {
   const [lastStore, setLastStore] = useState<{ slug: string; name: string } | null>(null);
   const [copiedPixKey, setCopiedPixKey] = useState<string | null>(null);
   const [copiedPixPayload, setCopiedPixPayload] = useState<string | null>(null);
+  const [couponDataMap, setCouponDataMap] = useState<Record<string, CouponData>>({});
   const paymentSectionRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -121,6 +203,42 @@ export default function Orders() {
       return dateMatch && paymentMatch;
     });
   }, [orders, filterType, customDate, paymentFilter]);
+
+  // Buscar dados dos cupons usados nos pedidos
+  useEffect(() => {
+    const fetchCoupons = async () => {
+      if (!filteredOrders || filteredOrders.length === 0) return;
+
+      const ordersWithCoupons = filteredOrders.filter(o => o.coupon_code && o.coupon_discount && o.coupon_discount > 0);
+      
+      for (const order of ordersWithCoupons) {
+        const couponKey = `${order.store_id}_${order.coupon_code}`;
+        
+        // Não buscar se já temos os dados
+        if (couponDataMap[couponKey]) continue;
+
+        try {
+          const { data } = await supabase
+            .from('coupons')
+            .select('id, code, discount_type, discount_value, applies_to, category_names, product_ids')
+            .eq('store_id', order.store_id)
+            .ilike('code', order.coupon_code)
+            .maybeSingle();
+
+          if (data) {
+            setCouponDataMap(prev => ({
+              ...prev,
+              [couponKey]: data as CouponData
+            }));
+          }
+        } catch (error) {
+          console.error('Erro ao buscar cupom:', error);
+        }
+      }
+    };
+
+    fetchCoupons();
+  }, [filteredOrders]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -338,47 +456,76 @@ export default function Orders() {
                       <Separator className="my-4" />
 
                       <div className="space-y-3">
-                        {order.order_items?.map((item: any) => (
-                          <div key={item.id} className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <p className="font-medium">{item.product_name}</p>
-                              {item.order_item_flavors && item.order_item_flavors.length > 0 && (
-                                <div className="text-sm text-muted-foreground pl-4 mt-1">
-                                  <span className="font-medium">Sabores:</span>
-                                  {item.order_item_flavors.map((flavor: any, idx: number) => (
-                                    <div key={flavor.id} className="flex justify-between ml-2">
-                                      <span>• {flavor.flavor_name}</span>
-                                      {Number(flavor.flavor_price) > 0 && (
-                                        <span>R$ {Number(flavor.flavor_price).toFixed(2)}</span>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                              {item.order_item_addons && item.order_item_addons.length > 0 && (
-                                <div className="text-sm text-muted-foreground pl-4 mt-1">
-                                  {item.order_item_addons.map((addon: any, idx: number) => (
-                                    <div key={addon.id} className="flex justify-between">
-                                      <span>+ {addon.addon_name}</span>
-                                      <span>R$ {Number(addon.addon_price).toFixed(2)}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                              {item.observation && (
-                                <p className="text-sm text-muted-foreground italic">
-                                  Obs: {item.observation}
+                        {order.order_items?.map((item: any) => {
+                          const couponKey = `${order.store_id}_${order.coupon_code}`;
+                          const couponData = order.coupon_code ? couponDataMap[couponKey] : null;
+                          const itemDiscount = calculateItemDiscount(item, order, couponData);
+                          
+                          return (
+                            <div key={item.id} className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <p className="font-medium">{item.product_name}</p>
+                                {item.order_item_flavors && item.order_item_flavors.length > 0 && (
+                                  <div className="text-sm text-muted-foreground pl-4 mt-1">
+                                    <span className="font-medium">Sabores:</span>
+                                    {item.order_item_flavors.map((flavor: any, idx: number) => (
+                                      <div key={flavor.id} className="flex justify-between ml-2">
+                                        <span>• {flavor.flavor_name}</span>
+                                        {Number(flavor.flavor_price) > 0 && (
+                                          <span>R$ {Number(flavor.flavor_price).toFixed(2)}</span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {item.order_item_addons && item.order_item_addons.length > 0 && (
+                                  <div className="text-sm text-muted-foreground pl-4 mt-1">
+                                    {item.order_item_addons.map((addon: any, idx: number) => (
+                                      <div key={addon.id} className="flex justify-between">
+                                        <span>+ {addon.addon_name}</span>
+                                        <span>R$ {Number(addon.addon_price).toFixed(2)}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {item.observation && (
+                                  <p className="text-sm text-muted-foreground italic">
+                                    Obs: {item.observation}
+                                  </p>
+                                )}
+                                <p className="text-sm text-muted-foreground">
+                                  Quantidade: {item.quantity}
                                 </p>
-                              )}
-                              <p className="text-sm text-muted-foreground">
-                                Quantidade: {item.quantity}
-                              </p>
+                                
+                                {/* Mostrar desconto aplicado ao item */}
+                                {itemDiscount.isEligible && itemDiscount.discountAmount > 0 && (
+                                  <div className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400 mt-1">
+                                    <Tag className="w-3 h-3" />
+                                    <span>Desconto: -R$ {itemDiscount.discountAmount.toFixed(2)}</span>
+                                  </div>
+                                )}
+                                
+                                {/* Mostrar se o item NÃO é elegível quando há cupom */}
+                                {order.coupon_code && order.coupon_discount > 0 && !itemDiscount.isEligible && couponData && (
+                                  <p className="text-xs text-muted-foreground italic mt-1">
+                                    Sem desconto (fora do escopo do cupom)
+                                  </p>
+                                )}
+                              </div>
+                              <div className="text-right ml-4">
+                                <p className="font-semibold whitespace-nowrap">
+                                  R$ {Number(item.subtotal).toFixed(2)}
+                                </p>
+                                {/* Valor com desconto */}
+                                {itemDiscount.discountAmount > 0 && (
+                                  <p className="text-sm text-green-600 dark:text-green-400 whitespace-nowrap">
+                                    R$ {(Number(item.subtotal) - itemDiscount.discountAmount).toFixed(2)}
+                                  </p>
+                                )}
+                              </div>
                             </div>
-                            <p className="font-semibold whitespace-nowrap ml-4">
-                              R$ {Number(item.subtotal).toFixed(2)}
-                            </p>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       <Separator className="my-4" />
@@ -388,6 +535,18 @@ export default function Orders() {
                           <span>Subtotal</span>
                           <span>R$ {Number(order.subtotal).toFixed(2)}</span>
                         </div>
+                        
+                        {/* Mostrar desconto do cupom */}
+                        {order.coupon_discount && Number(order.coupon_discount) > 0 && (
+                          <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+                            <span className="flex items-center gap-1">
+                              <Tag className="w-3 h-3" />
+                              Desconto ({order.coupon_code})
+                            </span>
+                            <span>-R$ {Number(order.coupon_discount).toFixed(2)}</span>
+                          </div>
+                        )}
+                        
                         <div className="flex justify-between text-sm">
                           <span>{order.delivery_type === 'pickup' ? 'Retirada' : 'Taxa de entrega'}</span>
                           <span>{order.delivery_type === 'pickup' ? 'Grátis' : `R$ ${Number(order.delivery_fee).toFixed(2)}`}</span>
