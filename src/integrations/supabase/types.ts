@@ -289,6 +289,75 @@ export type Database = {
           },
         ]
       }
+      affiliate_item_earnings: {
+        Row: {
+          commission_amount: number
+          commission_type: string
+          commission_value: number
+          coupon_scope: string | null
+          created_at: string | null
+          earning_id: string
+          id: string
+          is_coupon_eligible: boolean | null
+          item_discount: number | null
+          item_subtotal: number
+          item_value_with_discount: number
+          order_item_id: string
+          product_category: string | null
+          product_id: string | null
+          product_name: string
+        }
+        Insert: {
+          commission_amount?: number
+          commission_type?: string
+          commission_value?: number
+          coupon_scope?: string | null
+          created_at?: string | null
+          earning_id: string
+          id?: string
+          is_coupon_eligible?: boolean | null
+          item_discount?: number | null
+          item_subtotal: number
+          item_value_with_discount: number
+          order_item_id: string
+          product_category?: string | null
+          product_id?: string | null
+          product_name: string
+        }
+        Update: {
+          commission_amount?: number
+          commission_type?: string
+          commission_value?: number
+          coupon_scope?: string | null
+          created_at?: string | null
+          earning_id?: string
+          id?: string
+          is_coupon_eligible?: boolean | null
+          item_discount?: number | null
+          item_subtotal?: number
+          item_value_with_discount?: number
+          order_item_id?: string
+          product_category?: string | null
+          product_id?: string | null
+          product_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_item_earnings_earning_id_fkey"
+            columns: ["earning_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_earnings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_item_earnings_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_payments: {
         Row: {
           affiliate_id: string
@@ -2523,6 +2592,8 @@ export type Database = {
           commission_source: string
           commission_type: string
           commission_value: number
+          coupon_scope: string
+          is_coupon_eligible: boolean
           item_commission: number
           item_discount: number
           item_id: string
