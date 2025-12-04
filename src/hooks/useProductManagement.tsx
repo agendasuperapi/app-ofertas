@@ -51,7 +51,7 @@ export const useProductManagement = (storeId?: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-products'] });
+      queryClient.invalidateQueries({ queryKey: ['my-products', storeId] });
       toast({
         title: 'Produto criado!',
         description: 'O produto foi adicionado ao seu cardápio.',
@@ -79,7 +79,7 @@ export const useProductManagement = (storeId?: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-products'] });
+      queryClient.invalidateQueries({ queryKey: ['my-products', storeId] });
       toast({
         title: 'Produto atualizado!',
         description: 'As informações do produto foram atualizadas.',
@@ -107,7 +107,7 @@ export const useProductManagement = (storeId?: string) => {
       return data;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['my-products'] });
+      queryClient.invalidateQueries({ queryKey: ['my-products', storeId] });
       toast({
         title: data.is_available ? 'Produto ativado!' : 'Produto desativado!',
         description: data.is_available 
@@ -141,7 +141,7 @@ export const useProductManagement = (storeId?: string) => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-products'] });
+      queryClient.invalidateQueries({ queryKey: ['my-products', storeId] });
       toast({
         title: 'Ordem atualizada!',
         description: 'A ordem dos produtos foi salva.',
@@ -167,7 +167,7 @@ export const useProductManagement = (storeId?: string) => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-products'] });
+      queryClient.invalidateQueries({ queryKey: ['my-products', storeId] });
       toast({
         title: 'Produto ocultado!',
         description: 'O produto foi ocultado do cardápio mas mantém seu histórico.',
@@ -196,7 +196,7 @@ export const useProductManagement = (storeId?: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['my-products'] });
+      queryClient.invalidateQueries({ queryKey: ['my-products', storeId] });
       toast({
         title: 'Produto restaurado!',
         description: 'O produto foi restaurado e está desativado. Ative-o quando desejar.',
@@ -243,7 +243,7 @@ export const useProductManagement = (storeId?: string) => {
       return data;
     },
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['my-products'] });
+      queryClient.invalidateQueries({ queryKey: ['my-products', storeId] });
       queryClient.invalidateQueries({ queryKey: ['featured-products'] });
       toast({
         title: data.is_featured ? 'Adicionado aos destaques!' : 'Removido dos destaques!',
