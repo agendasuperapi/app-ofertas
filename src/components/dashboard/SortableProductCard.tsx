@@ -141,13 +141,12 @@ export const SortableProductCard = ({
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            setShowDuplicateDialog(true);
-                          }}
+                          onClick={() => setShowDuplicateDialog(true)}
+                          onPointerDown={(e) => e.stopPropagation()}
+                          onMouseDown={(e) => e.stopPropagation()}
                           className="hover-scale"
                           title="Duplicar produto"
+                          data-no-dnd="true"
                         >
                           <Copy className="w-4 h-4" />
                         </Button>
