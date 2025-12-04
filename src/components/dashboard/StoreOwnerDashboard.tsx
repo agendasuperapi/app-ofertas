@@ -128,7 +128,9 @@ export const StoreOwnerDashboard = ({
     toggleProductAvailability,
     toggleProductFeatured,
     reorderProducts,
-    deleteProduct
+    deleteProduct,
+    restoreProduct,
+    checkDeletedProductByExternalCode
   } = useProductManagement(myStore?.id);
   const {
     orders,
@@ -446,6 +448,8 @@ export const StoreOwnerDashboard = ({
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [isBulkActionDialogOpen, setIsBulkActionDialogOpen] = useState(false);
   const [bulkCategoryChange, setBulkCategoryChange] = useState('');
+  const [isRestoreDialogOpen, setIsRestoreDialogOpen] = useState(false);
+  const [deletedProductToRestore, setDeletedProductToRestore] = useState<any>(null);
   const [sortConfig, setSortConfig] = useState<{
     key: 'name' | 'category' | 'price' | 'promotional_price' | 'external_code' | null;
     direction: 'asc' | 'desc';
@@ -465,8 +469,8 @@ export const StoreOwnerDashboard = ({
 
   // Rastrear se algum modal está aberto para pausar invalidações
   const isAnyModalOpen = useMemo(() => {
-    return isProductDialogOpen || isCategoryDialogOpen || isEditCategoryDialogOpen || isHoursDialogOpen || isDuplicateDialogOpen;
-  }, [isProductDialogOpen, isCategoryDialogOpen, isEditCategoryDialogOpen, isHoursDialogOpen, isDuplicateDialogOpen]);
+    return isProductDialogOpen || isCategoryDialogOpen || isEditCategoryDialogOpen || isHoursDialogOpen || isDuplicateDialogOpen || isRestoreDialogOpen;
+  }, [isProductDialogOpen, isCategoryDialogOpen, isEditCategoryDialogOpen, isHoursDialogOpen, isDuplicateDialogOpen, isRestoreDialogOpen]);
 
   // Enable automatic WhatsApp notifications (pausar quando modais estão abertos)
   useOrderStatusNotification(myStore?.id, {
@@ -1433,10 +1437,29 @@ export const StoreOwnerDashboard = ({
     // Validar código externo único dentro da loja
     if (productForm.external_code && productForm.external_code.trim()) {
       try {
+        // Primeiro verificar se existe um produto DELETADO com este código
+        const deletedProduct = await checkDeletedProductByExternalCode(
+          productForm.external_code.trim(),
+          myStore.id
+        );
+        
+        if (deletedProduct) {
+          // Produto deletado encontrado - perguntar se deseja restaurar
+          setDeletedProductToRestore(deletedProduct);
+          setIsRestoreDialogOpen(true);
+          return;
+        }
+        
+        // Depois verificar se existe um produto ATIVO com este código
         const {
           data,
           error
-        } = await (supabase.from('products').select('id') as any).eq('store_id', myStore.id).eq('external_code', productForm.external_code.trim()).limit(1).single();
+        } = await (supabase.from('products').select('id') as any)
+          .eq('store_id', myStore.id)
+          .eq('external_code', productForm.external_code.trim())
+          .is('deleted_at', null)
+          .limit(1)
+          .single();
         if (data && !error) {
           toast({
             title: 'Código externo já existe',
@@ -5681,6 +5704,54 @@ export const StoreOwnerDashboard = ({
             </AlertDialogCancel>
             <AlertDialogAction onClick={confirmDuplicate}>
               Duplicar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Dialog de confirmação para restaurar produto deletado */}
+      <AlertDialog open={isRestoreDialogOpen} onOpenChange={setIsRestoreDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Produto encontrado</AlertDialogTitle>
+            <AlertDialogDescription>
+              Já existe um produto cadastrado com o código externo "{deletedProductToRestore?.external_code}" que foi ocultado anteriormente.
+              <br /><br />
+              <strong>Produto encontrado:</strong> {deletedProductToRestore?.name}
+              <br /><br />
+              Deseja restaurar este produto ao invés de criar um novo?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+                setIsRestoreDialogOpen(false);
+                setDeletedProductToRestore(null);
+              }}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+                if (deletedProductToRestore) {
+                  restoreProduct(deletedProductToRestore.id);
+                  setIsRestoreDialogOpen(false);
+                  setDeletedProductToRestore(null);
+                  setIsProductDialogOpen(false);
+                  // Reset form
+                  setProductForm({
+                    name: '',
+                    description: '',
+                    category: '',
+                    price: 0,
+                    promotional_price: 0,
+                    is_available: true,
+                    image_url: '',
+                    is_pizza: false,
+                    max_flavors: 2,
+                    external_code: '',
+                    is_featured: false
+                  });
+                }
+              }}>
+              Restaurar Produto
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
