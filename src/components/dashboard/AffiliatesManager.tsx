@@ -750,14 +750,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                               </div>
                             );
                           })()}
-                          <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                            <Percent className="h-3 w-3" />
-                            <span>
-                              Comissão por produto: {affiliate.default_commission_type === 'percentage' 
-                                ? `${affiliate.default_commission_value}%` 
-                                : formatCurrency(affiliate.default_commission_value)}
-                            </span>
-                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
