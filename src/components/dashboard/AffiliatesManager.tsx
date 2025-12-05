@@ -114,8 +114,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     commission_enabled: true,
     default_commission_type: 'percentage' as 'percentage' | 'fixed',
     default_commission_value: 0,
-    commission_scope: 'product' as 'category' | 'product',
-    commission_categories: [] as { name: string; type: 'percentage' | 'fixed'; value: number }[],
     commission_products: [] as { id: string; type: 'percentage' | 'fixed'; value: number }[],
   });
 
@@ -196,8 +194,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
       commission_enabled: true,
       default_commission_type: 'percentage',
       default_commission_value: 0,
-      commission_scope: 'product',
-      commission_categories: [],
       commission_products: [],
     });
     setProductSearch('');
@@ -231,11 +227,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
           value: r.commission_value,
         }));
       
-      // Determine scope based on existing rules
-      let scope: 'category' | 'product' = 'product';
-      if (categoryRules.length > 0) scope = 'category';
-      else if (productRules.length > 0) scope = 'product';
-      
       setFormData({
         name: affiliate.name,
         email: affiliate.email,
@@ -246,8 +237,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
         commission_enabled: affiliate.commission_enabled,
         default_commission_type: affiliate.default_commission_type,
         default_commission_value: affiliate.default_commission_value,
-        commission_scope: scope,
-        commission_categories: categoryRules,
         commission_products: productRules,
       });
     } else {
@@ -277,16 +266,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     }
 
     // Validação de escopo
-    if (formData.commission_enabled && formData.commission_scope === 'category' && formData.commission_categories.length === 0) {
-      toast({
-        title: 'Selecione pelo menos uma categoria',
-        description: 'Para comissão por categoria, selecione pelo menos uma categoria.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    if (formData.commission_enabled && formData.commission_scope === 'product' && formData.commission_products.length === 0) {
+    if (formData.commission_enabled && formData.commission_products.length === 0) {
       toast({
         title: 'Selecione pelo menos um produto',
         description: 'Para comissão por produto, selecione pelo menos um produto.',
@@ -325,30 +305,16 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
         }
       }
       
-      if (formData.commission_scope === 'category') {
-        // Criar regra para cada categoria com sua comissão específica
-        for (const category of formData.commission_categories) {
-          await createCommissionRule({
-            affiliate_id: result.id,
-            commission_type: category.type,
-            commission_value: category.value,
-            applies_to: 'category',
-            category_name: category.name,
-            product_id: null,
-          });
-        }
-      } else if (formData.commission_scope === 'product') {
-        // Criar regra para cada produto com sua comissão específica
-        for (const product of formData.commission_products) {
-          await createCommissionRule({
-            affiliate_id: result.id,
-            commission_type: product.type,
-            commission_value: product.value,
-            applies_to: 'product',
-            category_name: null,
-            product_id: product.id,
-          });
-        }
+      // Criar regra para cada produto com sua comissão específica
+      for (const product of formData.commission_products) {
+        await createCommissionRule({
+          affiliate_id: result.id,
+          commission_type: product.type,
+          commission_value: product.value,
+          applies_to: 'product',
+          category_name: null,
+          product_id: product.id,
+        });
       }
     }
 
@@ -507,8 +473,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
         setFormData({ 
           ...formData, 
           coupon_ids: [...formData.coupon_ids, couponResult.id],
-          commission_scope: newCouponData.applies_to === 'category' ? 'category' : 'product',
-          commission_categories: categoryConfigs,
           commission_products: productConfigs,
         });
         setNewCouponDialogOpen(false);
@@ -1451,118 +1415,16 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               </div>
               {formData.commission_enabled && (
                 <>
-                  <div className="col-span-2">
-                    <Label>Comissão aplica-se a</Label>
-                    <Select
-                      value={formData.commission_scope}
-                      onValueChange={(value: 'category' | 'product') => setFormData({ 
-                        ...formData, 
-                        commission_scope: value,
-                        commission_categories: [],
-                        commission_products: []
-                      })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="category">Por Categoria</SelectItem>
-                        <SelectItem value="product">Por Produto</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {formData.commission_scope === 'category' && (
-                    <div className="col-span-2 space-y-3">
-                      <Label>Categorias e Comissões ({formData.commission_categories.length} selecionadas)</Label>
-                      <ScrollArea className="h-[250px] border rounded-md p-2">
-                        <div className="space-y-2">
-                          {categories.map((cat) => {
-                            const categoryConfig = formData.commission_categories.find(c => c.name === cat.name);
-                            const isSelected = !!categoryConfig;
-                            return (
-                              <div
-                                key={cat.id}
-                                className={`p-3 rounded-md border ${isSelected ? 'bg-primary/5 border-primary/30' : 'border-border hover:bg-muted/50'}`}
-                              >
-                                <div className="flex items-center gap-3">
-                                  <Checkbox
-                                    checked={isSelected}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        setFormData({
-                                          ...formData,
-                                          commission_categories: [
-                                            ...formData.commission_categories,
-                                            { name: cat.name, type: 'percentage', value: 10 }
-                                          ]
-                                        });
-                                      } else {
-                                        setFormData({
-                                          ...formData,
-                                          commission_categories: formData.commission_categories.filter(c => c.name !== cat.name)
-                                        });
-                                      }
-                                    }}
-                                  />
-                                  <span className="text-sm font-medium flex-1">{cat.name}</span>
-                                </div>
-                                {isSelected && (
-                                  <div className="mt-3 ml-7 flex items-center gap-2">
-                                    <Select
-                                      value={categoryConfig.type}
-                                      onValueChange={(value: 'percentage' | 'fixed') => {
-                                        setFormData({
-                                          ...formData,
-                                          commission_categories: formData.commission_categories.map(c =>
-                                            c.name === cat.name ? { ...c, type: value } : c
-                                          )
-                                        });
-                                      }}
-                                    >
-                                      <SelectTrigger className="w-[120px] h-8">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="percentage">%</SelectItem>
-                                        <SelectItem value="fixed">R$</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      step="0.01"
-                                      value={categoryConfig.value}
-                                      onChange={(e) => {
-                                        setFormData({
-                                          ...formData,
-                                          commission_categories: formData.commission_categories.map(c =>
-                                            c.name === cat.name ? { ...c, value: Number(e.target.value) } : c
-                                          )
-                                        });
-                                      }}
-                                      className="w-[100px] h-8"
-                                      placeholder="Valor"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </ScrollArea>
-                    </div>
-                  )}
-                  {formData.commission_scope === 'product' && (
-                    <div className="col-span-2 space-y-3">
-                      <Label>Produtos e Comissões ({formData.commission_products.length} selecionados)</Label>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          value={productSearch}
-                          onChange={(e) => setProductSearch(e.target.value)}
-                          placeholder="Buscar por nome, código interno ou externo..."
-                          className="pl-9"
-                        />
+                  <div className="col-span-2 space-y-3">
+                    <Label>Produtos e Comissões ({formData.commission_products.length} selecionados)</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        value={productSearch}
+                        onChange={(e) => setProductSearch(e.target.value)}
+                        placeholder="Buscar por nome, código interno ou externo..."
+                        className="pl-9"
+                      />
                       </div>
                       <ScrollArea className="h-[250px] border rounded-md p-2">
                         {filteredProducts.length === 0 ? (
@@ -1654,7 +1516,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                         )}
                       </ScrollArea>
                     </div>
-                  )}
                 </>
               )}
             </div>
