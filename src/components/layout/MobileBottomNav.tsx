@@ -107,8 +107,8 @@ export const MobileBottomNav = () => {
     }
   };
 
-  // Hide on cart page and on store owner dashboard
-  if (location.pathname === '/cart' || location.pathname.startsWith('/dashboard-lojista')) {
+  // Hide on cart page, store owner dashboard, and affiliate pages
+  if (location.pathname === '/cart' || location.pathname.startsWith('/dashboard-lojista') || location.pathname.startsWith('/afiliado')) {
     return null;
   }
 
