@@ -2220,11 +2220,12 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                             </Select>
                                             <Button
                                               variant="ghost"
-                                              size="icon"
-                                              className="h-8 w-8 text-green-600"
+                                              size="sm"
+                                              className="h-8 text-green-600"
                                               onClick={() => handleSaveRuleEdit(rule.id)}
                                             >
-                                              <Save className="h-4 w-4" />
+                                              <Save className="h-4 w-4 mr-1" />
+                                              Salvar
                                             </Button>
                                             <Button
                                               variant="ghost"
