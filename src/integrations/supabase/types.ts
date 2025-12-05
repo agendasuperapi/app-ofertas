@@ -292,6 +292,7 @@ export type Database = {
       affiliate_item_earnings: {
         Row: {
           commission_amount: number
+          commission_source: string | null
           commission_type: string
           commission_value: number
           coupon_scope: string | null
@@ -309,6 +310,7 @@ export type Database = {
         }
         Insert: {
           commission_amount?: number
+          commission_source?: string | null
           commission_type?: string
           commission_value?: number
           coupon_scope?: string | null
@@ -326,6 +328,7 @@ export type Database = {
         }
         Update: {
           commission_amount?: number
+          commission_source?: string | null
           commission_type?: string
           commission_value?: number
           coupon_scope?: string | null
