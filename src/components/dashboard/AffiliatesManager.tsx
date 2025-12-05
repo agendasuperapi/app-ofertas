@@ -2097,65 +2097,116 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               </span>
             </div>
 
-            {/* Products List */}
+            {/* Products List by Category */}
             <ScrollArea className="flex-1 border rounded-md">
-              <div className="p-2 space-y-1">
+              <div className="p-2 space-y-3">
                 {filteredRuleProducts.length === 0 ? (
                   <div className="py-8 text-center text-muted-foreground">
                     <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">Nenhum produto encontrado</p>
                   </div>
                 ) : (
-                  filteredRuleProducts.map((product) => {
-                    const isSelected = ruleFormData.product_ids.includes(product.id);
-                    const hasExistingRule = commissionRules.some(r => r.product_id === product.id);
-                    
-                    return (
-                      <label
-                        key={product.id}
-                        className={`flex items-center gap-3 p-2.5 rounded-md cursor-pointer transition-colors ${
-                          isSelected 
-                            ? 'bg-primary/10 border border-primary/30' 
-                            : 'hover:bg-muted/50 border border-transparent'
-                        } ${hasExistingRule ? 'opacity-50' : ''}`}
-                      >
-                        <Checkbox
-                          checked={isSelected}
-                          disabled={hasExistingRule}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setRuleFormData({
-                                ...ruleFormData,
-                                product_ids: [...ruleFormData.product_ids, product.id]
-                              });
-                            } else {
-                              setRuleFormData({
-                                ...ruleFormData,
-                                product_ids: ruleFormData.product_ids.filter(id => id !== product.id)
-                              });
-                            }
-                          }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm truncate">{product.name}</span>
-                            {hasExistingRule && (
-                              <Badge variant="outline" className="text-xs">Já tem regra</Badge>
-                            )}
+                  // Group products by category
+                  (() => {
+                    const productsByCategory = filteredRuleProducts.reduce((acc, product) => {
+                      const category = product.category || 'Sem Categoria';
+                      if (!acc[category]) {
+                        acc[category] = [];
+                      }
+                      acc[category].push(product);
+                      return acc;
+                    }, {} as Record<string, typeof filteredRuleProducts>);
+
+                    return Object.entries(productsByCategory).map(([category, categoryProducts]) => {
+                      const selectableProducts = categoryProducts.filter(p => !commissionRules.some(r => r.product_id === p.id));
+                      const selectedInCategory = categoryProducts.filter(p => ruleFormData.product_ids.includes(p.id)).length;
+                      const allSelectableSelected = selectableProducts.length > 0 && selectableProducts.every(p => ruleFormData.product_ids.includes(p.id));
+
+                      return (
+                        <div key={category} className="border rounded-lg overflow-hidden">
+                          {/* Category Header */}
+                          <div className="flex items-center gap-3 p-3 bg-muted/50 border-b">
+                            <Checkbox
+                              checked={allSelectableSelected}
+                              disabled={selectableProducts.length === 0}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  const newIds = [...new Set([...ruleFormData.product_ids, ...selectableProducts.map(p => p.id)])];
+                                  setRuleFormData({ ...ruleFormData, product_ids: newIds });
+                                } else {
+                                  const categoryIds = categoryProducts.map(p => p.id);
+                                  setRuleFormData({
+                                    ...ruleFormData,
+                                    product_ids: ruleFormData.product_ids.filter(id => !categoryIds.includes(id))
+                                  });
+                                }
+                              }}
+                            />
+                            <div className="flex-1 flex items-center justify-between">
+                              <span className="font-semibold text-sm">{category}</span>
+                              <Badge variant="secondary" className="text-xs">
+                                {selectedInCategory}/{categoryProducts.length} selecionados
+                              </Badge>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            {product.external_code && <span>Cód: {product.external_code}</span>}
-                            {product.external_code && product.short_id && <span>•</span>}
-                            {product.short_id && <span>ID: {product.short_id}</span>}
-                            <span>•</span>
-                            <span className="font-medium text-foreground">
-                              R$ {(product.promotional_price || product.price).toFixed(2)}
-                            </span>
+                          
+                          {/* Category Products */}
+                          <div className="p-1.5 space-y-0.5">
+                            {categoryProducts.map((product) => {
+                              const isSelected = ruleFormData.product_ids.includes(product.id);
+                              const hasExistingRule = commissionRules.some(r => r.product_id === product.id);
+                              
+                              return (
+                                <label
+                                  key={product.id}
+                                  className={`flex items-center gap-3 p-2 rounded-md cursor-pointer transition-colors ${
+                                    isSelected 
+                                      ? 'bg-primary/10 border border-primary/30' 
+                                      : 'hover:bg-muted/50 border border-transparent'
+                                  } ${hasExistingRule ? 'opacity-50' : ''}`}
+                                >
+                                  <Checkbox
+                                    checked={isSelected}
+                                    disabled={hasExistingRule}
+                                    onCheckedChange={(checked) => {
+                                      if (checked) {
+                                        setRuleFormData({
+                                          ...ruleFormData,
+                                          product_ids: [...ruleFormData.product_ids, product.id]
+                                        });
+                                      } else {
+                                        setRuleFormData({
+                                          ...ruleFormData,
+                                          product_ids: ruleFormData.product_ids.filter(id => id !== product.id)
+                                        });
+                                      }
+                                    }}
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium text-sm truncate">{product.name}</span>
+                                      {hasExistingRule && (
+                                        <Badge variant="outline" className="text-xs">Já tem regra</Badge>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                      {product.external_code && <span>Cód: {product.external_code}</span>}
+                                      {product.external_code && product.short_id && <span>•</span>}
+                                      {product.short_id && <span>ID: {product.short_id}</span>}
+                                      <span>•</span>
+                                      <span className="font-medium text-foreground">
+                                        R$ {(product.promotional_price || product.price).toFixed(2)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </label>
+                              );
+                            })}
                           </div>
                         </div>
-                      </label>
-                    );
-                  })
+                      );
+                    });
+                  })()
                 )}
               </div>
             </ScrollArea>
