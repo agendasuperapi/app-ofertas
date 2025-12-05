@@ -87,6 +87,9 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
   const [ruleProductsModalOpen, setRuleProductsModalOpen] = useState(false);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [collapsedRuleCategories, setCollapsedRuleCategories] = useState<Set<string>>(new Set());
+  const [selectedRuleIds, setSelectedRuleIds] = useState<Set<string>>(new Set());
+  const [rulesSearchTerm, setRulesSearchTerm] = useState('');
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [inviteLinkDialogOpen, setInviteLinkDialogOpen] = useState(false);
   const [productsModalOpen, setProductsModalOpen] = useState(false);
@@ -1777,7 +1780,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               {/* Aba Regras de Comissão */}
               <TabsContent value="regras" className="flex-1 overflow-auto mt-4">
                 <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <div>
                       <CardTitle className="text-base">Regras de Comissão</CardTitle>
                       <CardDescription>Comissões específicas por categoria ou produto</CardDescription>
@@ -1788,40 +1791,221 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                     </Button>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      {commissionRules.map((rule) => (
-                        <div key={rule.id} className="p-3 bg-muted/50 rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Badge>Produto</Badge>
-                              <span className="text-sm">
-                                {rule.product?.name || 'Produto'}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold">
-                                {rule.commission_type === 'percentage'
-                                  ? `${rule.commission_value}%`
-                                  : formatCurrency(rule.commission_value)}
-                              </span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive"
-                                onClick={() => handleDeleteRule(rule.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
+                    {/* Search and Actions Bar */}
+                    <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Buscar por produto..."
+                          value={rulesSearchTerm}
+                          onChange={(e) => setRulesSearchTerm(e.target.value)}
+                          className="pl-9"
+                        />
+                      </div>
+                      {selectedRuleIds.size > 0 && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-muted-foreground whitespace-nowrap">
+                            {selectedRuleIds.size} selecionado(s)
+                          </span>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={async () => {
+                              const idsToDelete = Array.from(selectedRuleIds);
+                              for (const id of idsToDelete) {
+                                await handleDeleteRule(id);
+                              }
+                              setSelectedRuleIds(new Set());
+                              toast({
+                                title: "Regras excluídas",
+                                description: `${idsToDelete.length} regra(s) excluída(s) com sucesso.`,
+                              });
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Excluir Selecionados
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedRuleIds(new Set())}
+                          >
+                            Limpar Seleção
+                          </Button>
                         </div>
-                      ))}
-                      {commissionRules.length === 0 && (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          Nenhuma regra de comissão específica configurada
-                        </p>
                       )}
                     </div>
+
+                    {/* Grouped Rules by Category */}
+                    {(() => {
+                      // Create product map to get category
+                      const productMap = new Map(products.map(p => [p.id, p]));
+                      
+                      // Helper to get category for a rule
+                      const getRuleCategory = (rule: typeof commissionRules[0]) => {
+                        if (rule.product_id) {
+                          const product = productMap.get(rule.product_id);
+                          return product?.category || 'Sem Categoria';
+                        }
+                        return 'Sem Categoria';
+                      };
+                      
+                      // Filter rules by search term
+                      const filteredRules = commissionRules.filter(rule => {
+                        const productCategory = getRuleCategory(rule);
+                        return rule.product?.name?.toLowerCase().includes(rulesSearchTerm.toLowerCase()) ||
+                          productCategory.toLowerCase().includes(rulesSearchTerm.toLowerCase());
+                      });
+
+                      // Group by category
+                      const groupedRules = filteredRules.reduce((acc, rule) => {
+                        const category = getRuleCategory(rule);
+                        if (!acc[category]) acc[category] = [];
+                        acc[category].push(rule);
+                        return acc;
+                      }, {} as Record<string, typeof commissionRules>);
+
+                      const categoryNames = Object.keys(groupedRules).sort();
+
+                      if (categoryNames.length === 0) {
+                        return (
+                          <p className="text-sm text-muted-foreground text-center py-8">
+                            {rulesSearchTerm 
+                              ? 'Nenhuma regra encontrada para a busca'
+                              : 'Nenhuma regra de comissão específica configurada'}
+                          </p>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-3">
+                          {/* Select All */}
+                          <div className="flex items-center gap-2 pb-2 border-b">
+                            <Checkbox
+                              checked={filteredRules.length > 0 && filteredRules.every(r => selectedRuleIds.has(r.id))}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedRuleIds(new Set(filteredRules.map(r => r.id)));
+                                } else {
+                                  setSelectedRuleIds(new Set());
+                                }
+                              }}
+                            />
+                            <span className="text-sm font-medium">Selecionar todos ({filteredRules.length})</span>
+                          </div>
+
+                          {categoryNames.map((category) => {
+                            const categoryRules = groupedRules[category];
+                            const isCollapsed = collapsedRuleCategories.has(category);
+                            const allSelected = categoryRules.every(r => selectedRuleIds.has(r.id));
+                            const someSelected = categoryRules.some(r => selectedRuleIds.has(r.id));
+
+                            return (
+                              <div key={category} className="border rounded-lg overflow-hidden">
+                                {/* Category Header */}
+                                <div
+                                  className="flex items-center gap-2 p-3 bg-muted/50 cursor-pointer hover:bg-muted/70 transition-colors"
+                                  onClick={(e) => {
+                                    if ((e.target as HTMLElement).closest('[data-checkbox]')) return;
+                                    setCollapsedRuleCategories(prev => {
+                                      const next = new Set(prev);
+                                      if (next.has(category)) {
+                                        next.delete(category);
+                                      } else {
+                                        next.add(category);
+                                      }
+                                      return next;
+                                    });
+                                  }}
+                                >
+                                  <div data-checkbox onClick={(e) => e.stopPropagation()}>
+                                    <Checkbox
+                                      checked={allSelected}
+                                      onCheckedChange={(checked) => {
+                                        setSelectedRuleIds(prev => {
+                                          const next = new Set(prev);
+                                          categoryRules.forEach(r => {
+                                            if (checked) {
+                                              next.add(r.id);
+                                            } else {
+                                              next.delete(r.id);
+                                            }
+                                          });
+                                          return next;
+                                        });
+                                      }}
+                                      className={someSelected && !allSelected ? 'data-[state=checked]:bg-primary/50' : ''}
+                                    />
+                                  </div>
+                                  {isCollapsed ? (
+                                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                  ) : (
+                                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                  <Package className="h-4 w-4 text-muted-foreground" />
+                                  <span className="font-medium flex-1">{category}</span>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {categoryRules.length} {categoryRules.length === 1 ? 'regra' : 'regras'}
+                                  </Badge>
+                                  {someSelected && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {categoryRules.filter(r => selectedRuleIds.has(r.id)).length} selecionado(s)
+                                    </Badge>
+                                  )}
+                                </div>
+
+                                {/* Category Rules */}
+                                {!isCollapsed && (
+                                  <div className="divide-y">
+                                    {categoryRules.map((rule) => (
+                                      <div
+                                        key={rule.id}
+                                        className={`flex items-center gap-3 p-3 hover:bg-muted/30 transition-colors ${
+                                          selectedRuleIds.has(rule.id) ? 'bg-primary/5' : ''
+                                        }`}
+                                      >
+                                        <Checkbox
+                                          checked={selectedRuleIds.has(rule.id)}
+                                          onCheckedChange={(checked) => {
+                                            setSelectedRuleIds(prev => {
+                                              const next = new Set(prev);
+                                              if (checked) {
+                                                next.add(rule.id);
+                                              } else {
+                                                next.delete(rule.id);
+                                              }
+                                              return next;
+                                            });
+                                          }}
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                          <span className="text-sm truncate block">
+                                            {rule.product?.name || 'Produto'}
+                                          </span>
+                                        </div>
+                                        <Badge variant="outline" className="shrink-0">
+                                          {rule.commission_type === 'percentage'
+                                            ? `${rule.commission_value}%`
+                                            : formatCurrency(rule.commission_value)}
+                                        </Badge>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          className="h-8 w-8 text-destructive shrink-0"
+                                          onClick={() => handleDeleteRule(rule.id)}
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </CardContent>
                 </Card>
               </TabsContent>
