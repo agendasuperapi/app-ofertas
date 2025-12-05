@@ -1004,10 +1004,9 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
             </DialogTitle>
           </DialogHeader>
           <Tabs defaultValue="dados" className="flex-1 overflow-hidden flex flex-col">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="dados">Dados</TabsTrigger>
               <TabsTrigger value="cupons">Cupons</TabsTrigger>
-              <TabsTrigger value="comissoes">Comissões</TabsTrigger>
             </TabsList>
             
             {/* Aba Dados Básicos */}
@@ -1417,55 +1416,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                     </Dialog>
                   </div>
                 </div>
-              </div>
-            </TabsContent>
-            
-            {/* Aba Comissões */}
-            <TabsContent value="comissoes" className="flex-1 overflow-auto mt-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div>
-                    <Label>Comissão Ativa</Label>
-                    <p className="text-xs text-muted-foreground">O afiliado receberá comissão das vendas</p>
-                  </div>
-                  <Switch
-                    checked={formData.commission_enabled}
-                    onCheckedChange={(checked) => setFormData({ ...formData, commission_enabled: checked })}
-                  />
-                </div>
-                {formData.commission_enabled && (
-                  <div>
-                    <Label>Produtos e Comissões</Label>
-                    <div className="mt-2 flex items-center gap-3">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => setProductsModalOpen(true)}
-                        className="w-full justify-start"
-                      >
-                        <Package className="h-4 w-4 mr-2" />
-                        Selecionar Produtos ({formData.commission_products.length} selecionados)
-                      </Button>
-                    </div>
-                    {formData.commission_products.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {formData.commission_products.slice(0, 5).map((p) => {
-                          const product = products.find(pr => pr.id === p.id);
-                          return (
-                            <Badge key={p.id} variant="secondary" className="text-xs">
-                              {product?.name || 'Produto'} - {p.type === 'percentage' ? `${p.value}%` : `R$ ${p.value}`}
-                            </Badge>
-                          );
-                        })}
-                        {formData.commission_products.length > 5 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{formData.commission_products.length - 5} mais
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
             </TabsContent>
           </Tabs>
