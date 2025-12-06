@@ -1414,7 +1414,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                 <TabsTrigger value="resumo">Resumo</TabsTrigger>
                 <TabsTrigger value="cupons">Cupons</TabsTrigger>
                 <TabsTrigger value="regras">Comissão Padrão</TabsTrigger>
-                <TabsTrigger value="regras-especificas">Regras Específicas</TabsTrigger>
+                <TabsTrigger value="regras-especificas">Regras Específicas Comissão</TabsTrigger>
                 <TabsTrigger value="historico">Histórico</TabsTrigger>
               </TabsList>
               
