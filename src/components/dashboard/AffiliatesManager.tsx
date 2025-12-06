@@ -1583,122 +1583,135 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                           <DialogHeader>
                             <DialogTitle>{editingCouponId ? 'Editar Cupom' : 'Novo Cupom'}</DialogTitle>
                           </DialogHeader>
-                          <ScrollArea className="flex-1 pr-4">
-                          <div className="space-y-4">
-                            <div>
-                              <Label>Código do Cupom</Label>
-                              <Input
-                                value={newCouponData.code}
-                                onChange={(e) => setNewCouponData({ ...newCouponData, code: e.target.value.toUpperCase() })}
-                                placeholder="Ex: AFILIADO10"
-                              />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label>Tipo de Desconto</Label>
-                                <Select
-                                  value={newCouponData.discount_type}
-                                  onValueChange={(value: 'percentage' | 'fixed') => setNewCouponData({ ...newCouponData, discount_type: value })}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="percentage">Porcentagem (%)</SelectItem>
-                                    <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div>
-                                <Label>Valor do Desconto</Label>
-                                <Input
-                                  type="number"
-                                  value={newCouponData.discount_value}
-                                  onChange={(e) => setNewCouponData({ ...newCouponData, discount_value: Number(e.target.value) })}
-                                  min={0}
-                                />
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label>Pedido Mínimo (R$)</Label>
-                                <Input
-                                  type="number"
-                                  value={newCouponData.min_order_value}
-                                  onChange={(e) => setNewCouponData({ ...newCouponData, min_order_value: Number(e.target.value) })}
-                                  min={0}
-                                />
-                              </div>
-                              <div>
-                                <Label>Máximo de Usos</Label>
-                                <Input
-                                  type="number"
-                                  value={newCouponData.max_uses || ''}
-                                  onChange={(e) => setNewCouponData({ ...newCouponData, max_uses: e.target.value ? Number(e.target.value) : null })}
-                                  placeholder="Ilimitado"
-                                  min={1}
-                                />
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label>Válido a partir de</Label>
-                                <Input
-                                  type="date"
-                                  value={newCouponData.valid_from}
-                                  onChange={(e) => setNewCouponData({ ...newCouponData, valid_from: e.target.value })}
-                                />
-                              </div>
-                              <div>
-                                <Label>Válido até</Label>
-                                <Input
-                                  type="date"
-                                  value={newCouponData.valid_until}
-                                  onChange={(e) => setNewCouponData({ ...newCouponData, valid_until: e.target.value })}
-                                  placeholder="Sem limite"
-                                />
-                              </div>
-                            </div>
-
-
-                            {/* Seção de Regras Específicas de Desconto */}
-                            <div className="border-t pt-4 mt-4">
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-2">
-                                  <Settings className="h-4 w-4 text-primary" />
-                                  <Label className="font-medium">Regras Específicas de Desconto</Label>
+                          <Tabs defaultValue="geral" className="flex-1 flex flex-col overflow-hidden">
+                            <TabsList className="grid w-full grid-cols-2">
+                              <TabsTrigger value="geral">Geral</TabsTrigger>
+                              <TabsTrigger value="regras">Regras Específicas</TabsTrigger>
+                            </TabsList>
+                            
+                            <TabsContent value="geral" className="flex-1 overflow-hidden mt-4">
+                              <ScrollArea className="h-[calc(60vh-80px)] pr-4">
+                                <div className="space-y-4">
+                                  <div>
+                                    <Label>Código do Cupom</Label>
+                                    <Input
+                                      value={newCouponData.code}
+                                      onChange={(e) => setNewCouponData({ ...newCouponData, code: e.target.value.toUpperCase() })}
+                                      placeholder="Ex: AFILIADO10"
+                                    />
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <Label>Tipo de Desconto Padrão</Label>
+                                      <Select
+                                        value={newCouponData.discount_type}
+                                        onValueChange={(value: 'percentage' | 'fixed') => setNewCouponData({ ...newCouponData, discount_type: value })}
+                                      >
+                                        <SelectTrigger>
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="percentage">Porcentagem (%)</SelectItem>
+                                          <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div>
+                                      <Label>Valor do Desconto Padrão</Label>
+                                      <Input
+                                        type="number"
+                                        value={newCouponData.discount_value}
+                                        onChange={(e) => setNewCouponData({ ...newCouponData, discount_value: Number(e.target.value) })}
+                                        min={0}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <Label>Pedido Mínimo (R$)</Label>
+                                      <Input
+                                        type="number"
+                                        value={newCouponData.min_order_value}
+                                        onChange={(e) => setNewCouponData({ ...newCouponData, min_order_value: Number(e.target.value) })}
+                                        min={0}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label>Máximo de Usos</Label>
+                                      <Input
+                                        type="number"
+                                        value={newCouponData.max_uses || ''}
+                                        onChange={(e) => setNewCouponData({ ...newCouponData, max_uses: e.target.value ? Number(e.target.value) : null })}
+                                        placeholder="Ilimitado"
+                                        min={1}
+                                      />
+                                    </div>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                      <Label>Válido a partir de</Label>
+                                      <Input
+                                        type="date"
+                                        value={newCouponData.valid_from}
+                                        onChange={(e) => setNewCouponData({ ...newCouponData, valid_from: e.target.value })}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label>Válido até</Label>
+                                      <Input
+                                        type="date"
+                                        value={newCouponData.valid_until}
+                                        onChange={(e) => setNewCouponData({ ...newCouponData, valid_until: e.target.value })}
+                                        placeholder="Sem limite"
+                                      />
+                                    </div>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-md">
+                                    O desconto padrão será aplicado a todos os produtos que não tiverem regras específicas configuradas na aba "Regras Específicas".
+                                  </p>
                                 </div>
-                                <div className="flex gap-2">
-                                  <Button 
-                                    type="button" 
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => setCouponCategoryRulesModalOpen(true)}
-                                  >
-                                    <Plus className="h-4 w-4 mr-1" />
-                                    Por Categoria
-                                  </Button>
-                                  <Button 
-                                    type="button" 
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => setCouponRulesModalOpen(true)}
-                                  >
-                                    <Plus className="h-4 w-4 mr-1" />
-                                    Por Produto
-                                  </Button>
-                                </div>
-                              </div>
-                              <p className="text-xs text-muted-foreground mb-3">
-                                Defina descontos por categoria (novos produtos herdam automaticamente) ou por produto específico.
-                              </p>
-                              
-                              {couponCategoryRules.length === 0 && couponDiscountRules.length === 0 ? (
-                                <div className="text-center py-4 text-muted-foreground text-sm border rounded-md bg-muted/30">
-                                  Nenhuma regra específica. O desconto padrão será aplicado.
-                                </div>
-                              ) : (
-                                <ScrollArea className="max-h-52 border rounded-md">
+                              </ScrollArea>
+                            </TabsContent>
+                            
+                            <TabsContent value="regras" className="flex-1 overflow-hidden mt-4">
+                              <ScrollArea className="h-[calc(60vh-80px)] pr-4">
+                                <div className="space-y-4">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                      <Settings className="h-4 w-4 text-primary" />
+                                      <Label className="font-medium">Regras Específicas de Desconto</Label>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <Button 
+                                        type="button" 
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => setCouponCategoryRulesModalOpen(true)}
+                                      >
+                                        <Plus className="h-4 w-4 mr-1" />
+                                        Por Categoria
+                                      </Button>
+                                      <Button 
+                                        type="button" 
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => setCouponRulesModalOpen(true)}
+                                      >
+                                        <Plus className="h-4 w-4 mr-1" />
+                                        Por Produto
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  <p className="text-xs text-muted-foreground">
+                                    Defina descontos por categoria (novos produtos herdam automaticamente) ou por produto específico.
+                                  </p>
+                                  
+                                  {couponCategoryRules.length === 0 && couponDiscountRules.length === 0 ? (
+                                    <div className="text-center py-8 text-muted-foreground text-sm border rounded-md bg-muted/30">
+                                      Nenhuma regra específica. O desconto padrão será aplicado a todos os produtos.
+                                    </div>
+                                  ) : (
+                                    <ScrollArea className="max-h-64 border rounded-md">
                                   <div className="divide-y">
                                     {/* Regras por Categoria */}
                                     {couponCategoryRules.map((rule) => {
@@ -1903,12 +1916,11 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                       );
                                     })}
                                   </div>
-                                </ScrollArea>
-                              )}
-                            </div>
+                                    </ScrollArea>
+                                  )}
 
-                            {/* Modal para adicionar regras por Categoria */}
-                            <Dialog open={couponCategoryRulesModalOpen} onOpenChange={(open) => {
+                                  {/* Modal para adicionar regras por Categoria */}
+                                  <Dialog open={couponCategoryRulesModalOpen} onOpenChange={(open) => {
                               setCouponCategoryRulesModalOpen(open);
                               if (open) {
                                 setEditingCouponRuleType(newCouponData.discount_type);
@@ -2265,9 +2277,11 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                   </Button>
                                 </DialogFooter>
                               </DialogContent>
-                            </Dialog>
-                          </div>
-                          </ScrollArea>
+                                  </Dialog>
+                                </div>
+                              </ScrollArea>
+                            </TabsContent>
+                          </Tabs>
                           <DialogFooter>
                             <Button variant="outline" onClick={() => {
                               setNewCouponDialogOpen(false);
