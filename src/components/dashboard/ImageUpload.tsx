@@ -238,14 +238,19 @@ export const ImageUpload = ({
       const resizedBlob = await resizeImage(file, settings.width, settings.height, settings.maxSize);
 
       // Remover imagem antiga antes de fazer upload da nova
-      if (currentImageUrl && bucket === 'product-images' && productId) {
+      // Só remover se for pasta temp/ OU se o productId existir E o path corresponder ao productId
+      if (currentImageUrl && bucket === 'product-images') {
         try {
           // Limpar URL primeiro (remover query strings) e então extrair o path
           const cleanUrl = currentImageUrl.split('?')[0];
           const oldPath = cleanUrl.split(`${bucket}/`)[1];
-          if (oldPath) {
+          
+          // Só remover se for pasta temp/ OU se o productId existir E o path corresponder
+          if (oldPath && (oldPath.startsWith('temp/') || (productId && oldPath.startsWith(productId)))) {
             console.log('🗑️ Removendo imagem antiga:', oldPath);
             await supabase.storage.from(bucket).remove([oldPath]);
+          } else {
+            console.log('⏭️ Não removendo imagem (pertence a outro produto):', oldPath);
           }
         } catch (error) {
           console.error('Erro ao remover imagem antiga:', error);
