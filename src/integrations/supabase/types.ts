@@ -1719,6 +1719,7 @@ export type Database = {
         Row: {
           category: string
           created_at: string
+          deleted_at: string | null
           description: string | null
           display_order: number | null
           external_code: string | null
@@ -1741,6 +1742,7 @@ export type Database = {
         Insert: {
           category: string
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           display_order?: number | null
           external_code?: string | null
@@ -1763,6 +1765,7 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string
+          deleted_at?: string | null
           description?: string | null
           display_order?: number | null
           external_code?: string | null
