@@ -94,6 +94,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const [selectedRuleIds, setSelectedRuleIds] = useState<Set<string>>(new Set());
   const [rulesSearchTerm, setRulesSearchTerm] = useState('');
   const [commissionValueError, setCommissionValueError] = useState(false);
+  const [defaultCommissionValueError, setDefaultCommissionValueError] = useState(false);
   
   // Estados para edição de regra inline
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
@@ -426,6 +427,18 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
 
   const handleSaveDefaultCommission = async () => {
     if (!selectedAffiliate) return;
+    
+    // Validar valor da comissão quando ativada
+    if (defaultCommissionEnabled && (!defaultCommissionValue || defaultCommissionValue <= 0)) {
+      toast({
+        title: 'Digite o valor da comissão',
+        description: 'O valor da comissão padrão é obrigatório quando está ativada.',
+        variant: 'destructive',
+      });
+      setDefaultCommissionValueError(true);
+      setTimeout(() => setDefaultCommissionValueError(false), 2000);
+      return;
+    }
     
     setSavingDefaultCommission(true);
     try {
@@ -1823,10 +1836,20 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                             step={defaultCommissionType === 'percentage' ? '0.5' : '0.01'}
                             max={defaultCommissionType === 'percentage' ? '100' : undefined}
                             value={defaultCommissionValue}
-                            onChange={(e) => setDefaultCommissionValue(Number(e.target.value))}
-                            className="mt-1.5"
+                            onChange={(e) => {
+                              setDefaultCommissionValue(Number(e.target.value));
+                              setDefaultCommissionValueError(false);
+                            }}
+                            className={`mt-1.5 transition-all ${
+                              defaultCommissionValueError 
+                                ? 'border-destructive ring-2 ring-destructive/50 animate-pulse' 
+                                : ''
+                            }`}
                             placeholder={defaultCommissionType === 'percentage' ? '10' : '5.00'}
                           />
+                          {defaultCommissionValueError && (
+                            <p className="text-xs text-destructive animate-pulse mt-1">Digite o valor da comissão</p>
+                          )}
                         </div>
                       </div>
                       
