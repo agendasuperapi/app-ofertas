@@ -1474,6 +1474,45 @@ export const StoreOwnerDashboard = ({
       external_code: productForm.external_code?.trim() || undefined
     }, {
       onSuccess: async newProduct => {
+        // MOVER IMAGEM DE temp/ PARA CAMINHO PERMANENTE
+        if (productForm.image_url && productForm.image_url.includes('/temp/')) {
+          try {
+            // Extrair o nome do arquivo temporário (ex: temp/123456789.jpg)
+            const urlParts = productForm.image_url.split('product-images/');
+            if (urlParts[1]) {
+              const tempPath = urlParts[1].split('?')[0]; // Remove query params
+              const fileExtension = tempPath.split('.').pop() || 'jpg';
+              const newPath = `${newProduct.id}.${fileExtension}`;
+              
+              // Mover arquivo de temp/ para raiz com ID do produto
+              const { error: moveError } = await supabase.storage
+                .from('product-images')
+                .move(tempPath, newPath);
+              
+              if (!moveError) {
+                // Obter nova URL pública
+                const { data: publicUrlData } = supabase.storage
+                  .from('product-images')
+                  .getPublicUrl(newPath);
+                
+                const newUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
+                
+                // Atualizar URL no banco de dados
+                await supabase
+                  .from('products')
+                  .update({ image_url: newUrl })
+                  .eq('id', newProduct.id);
+                
+                console.log('[ImageUpload] ✅ Imagem movida de', tempPath, 'para', newPath);
+              } else {
+                console.error('[ImageUpload] ❌ Erro ao mover imagem:', moveError);
+              }
+            }
+          } catch (error) {
+            console.error('[ImageUpload] Erro ao mover imagem de temp/:', error);
+          }
+        }
+
         // If duplicating, copy addons and flavors
         if (isDuplicating && duplicatingFromProductId) {
           try {
