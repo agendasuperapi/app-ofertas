@@ -1817,9 +1817,9 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                       return (
                                         <div key={rule.product_id} className="flex items-center gap-2 p-2">
                                           <div className="flex-1 min-w-0">
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-2 flex-wrap">
                                               <Badge variant="outline" className="text-xs shrink-0">Produto</Badge>
-                                              <span className="text-sm truncate">{product?.name || 'Produto'}</span>
+                                              <span className="text-sm break-words">{product?.name || 'Produto'}</span>
                                             </div>
                                             {(product?.short_id || product?.external_code) && (
                                               <div className="flex items-center gap-2 mt-0.5">
