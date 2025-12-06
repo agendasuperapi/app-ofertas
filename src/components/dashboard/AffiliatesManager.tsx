@@ -1021,15 +1021,8 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               {editingAffiliate ? 'Editar Afiliado' : 'Novo Afiliado'}
             </DialogTitle>
           </DialogHeader>
-          <Tabs defaultValue="dados" className="flex-1 overflow-hidden flex flex-col">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="dados">Dados</TabsTrigger>
-              <TabsTrigger value="comissoes">Comissões</TabsTrigger>
-            </TabsList>
-            
-            {/* Aba Dados Básicos */}
-            <TabsContent value="dados" className="flex-1 overflow-auto mt-4">
-              <div className="space-y-4">
+          <div className="flex-1 overflow-auto mt-4">
+            <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2">
                     <Label>Nome *</Label>
@@ -1143,48 +1136,8 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                     })()}
                   </div>
                 </div>
-              </div>
-            </TabsContent>
-            
-            {/* Aba Comissões */}
-            <TabsContent value="comissoes" className="flex-1 overflow-auto mt-4">
-              <div className="space-y-4">
-                {formData.commission_enabled && (
-                  <div>
-                    <Label>Produtos e Comissões</Label>
-                    <div className="mt-2 flex items-center gap-3">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => setProductsModalOpen(true)}
-                        className="w-full justify-start"
-                      >
-                        <Package className="h-4 w-4 mr-2" />
-                        Selecionar Produtos ({formData.commission_products.length} selecionados)
-                      </Button>
-                    </div>
-                    {formData.commission_products.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {formData.commission_products.slice(0, 5).map((p) => {
-                          const product = products.find(pr => pr.id === p.id);
-                          return (
-                            <Badge key={p.id} variant="secondary" className="text-xs">
-                              {product?.name || 'Produto'} - {p.type === 'percentage' ? `${p.value}%` : `R$ ${p.value}`}
-                            </Badge>
-                          );
-                        })}
-                        {formData.commission_products.length > 5 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{formData.commission_products.length - 5} mais
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
+            </div>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
@@ -1459,6 +1412,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
             <Tabs defaultValue="resumo" className="flex-1 flex flex-col overflow-hidden">
               <TabsList className="w-full justify-start flex-wrap">
                 <TabsTrigger value="resumo">Resumo</TabsTrigger>
+                <TabsTrigger value="dados">Dados</TabsTrigger>
                 <TabsTrigger value="cupons">Cupons</TabsTrigger>
                 <TabsTrigger value="regras">Comissão Padrão</TabsTrigger>
                 <TabsTrigger value="regras-especificas">Regras Específicas Comissão</TabsTrigger>
@@ -1585,6 +1539,151 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(142 76% 36%)' }} />
                         <span className="text-muted-foreground">Comissão</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {/* Aba Dados */}
+              <TabsContent value="dados" className="flex-1 overflow-auto mt-4 space-y-4">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base">Dados do Afiliado</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2">
+                        <Label>Nome *</Label>
+                        <Input
+                          value={selectedAffiliate.name}
+                          onChange={async (e) => {
+                            const newName = e.target.value;
+                            setSelectedAffiliate({ ...selectedAffiliate, name: newName });
+                          }}
+                          onBlur={async () => {
+                            await updateAffiliate(selectedAffiliate.id, { name: selectedAffiliate.name });
+                          }}
+                          placeholder="Nome completo"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <Label>Email *</Label>
+                        <Input
+                          type="email"
+                          value={selectedAffiliate.email}
+                          onChange={async (e) => {
+                            const newEmail = e.target.value;
+                            setSelectedAffiliate({ ...selectedAffiliate, email: newEmail });
+                          }}
+                          onBlur={async () => {
+                            await updateAffiliate(selectedAffiliate.id, { email: selectedAffiliate.email });
+                          }}
+                          placeholder="email@exemplo.com"
+                        />
+                      </div>
+                      <div>
+                        <Label>Telefone</Label>
+                        <Input
+                          value={selectedAffiliate.phone || ''}
+                          onChange={(e) => {
+                            let value = e.target.value.replace(/\D/g, '');
+                            if (value.length > 11) value = value.slice(0, 11);
+                            if (value.length > 0) {
+                              value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
+                              value = value.replace(/(\d{5})(\d)/, '$1-$2');
+                            }
+                            setSelectedAffiliate({ ...selectedAffiliate, phone: value });
+                          }}
+                          onBlur={async () => {
+                            await updateAffiliate(selectedAffiliate.id, { phone: selectedAffiliate.phone });
+                          }}
+                          placeholder="(00) 00000-0000"
+                          maxLength={15}
+                        />
+                        {selectedAffiliate.phone && selectedAffiliate.phone.replace(/\D/g, '').length > 0 && selectedAffiliate.phone.replace(/\D/g, '').length < 10 && (
+                          <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />
+                            Telefone incompleto
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>CPF/CNPJ</Label>
+                        <Input
+                          value={selectedAffiliate.cpf_cnpj || ''}
+                          onChange={(e) => {
+                            let value = e.target.value.replace(/\D/g, '');
+                            if (value.length > 14) value = value.slice(0, 14);
+                            if (value.length <= 11) {
+                              value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                              value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                              value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                            } else {
+                              value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+                              value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+                              value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+                              value = value.replace(/(\d{4})(\d)/, '$1-$2');
+                            }
+                            setSelectedAffiliate({ ...selectedAffiliate, cpf_cnpj: value });
+                          }}
+                          onBlur={async () => {
+                            await updateAffiliate(selectedAffiliate.id, { cpf_cnpj: selectedAffiliate.cpf_cnpj });
+                          }}
+                          placeholder="000.000.000-00"
+                          maxLength={18}
+                        />
+                        {selectedAffiliate.cpf_cnpj && (() => {
+                          const digits = selectedAffiliate.cpf_cnpj.replace(/\D/g, '');
+                          if (digits.length > 0 && digits.length < 11) {
+                            return (
+                              <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                                <AlertCircle className="h-3 w-3" />
+                                CPF incompleto
+                              </p>
+                            );
+                          }
+                          if (digits.length > 11 && digits.length < 14) {
+                            return (
+                              <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                                <AlertCircle className="h-3 w-3" />
+                                CNPJ incompleto
+                              </p>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                      <div className="col-span-2">
+                        <Label>Chave PIX</Label>
+                        <Input
+                          value={selectedAffiliate.pix_key || ''}
+                          onChange={(e) => setSelectedAffiliate({ ...selectedAffiliate, pix_key: e.target.value })}
+                          onBlur={async () => {
+                            await updateAffiliate(selectedAffiliate.id, { pix_key: selectedAffiliate.pix_key });
+                          }}
+                          placeholder="CPF, CNPJ, Email, Telefone ou Chave Aleatória"
+                        />
+                        {selectedAffiliate.pix_key && (() => {
+                          const validation = validatePixKey(selectedAffiliate.pix_key);
+                          if (validation.type === 'invalid') {
+                            return (
+                              <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                                <XCircle className="h-3 w-3" />
+                                {validation.message}
+                              </p>
+                            );
+                          }
+                          if (validation.type !== 'empty') {
+                            return (
+                              <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                                <CheckCircle className="h-3 w-3" />
+                                {validation.message}
+                              </p>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </div>
                   </CardContent>
