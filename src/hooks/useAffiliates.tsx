@@ -311,8 +311,9 @@ export const useAffiliates = (storeId?: string) => {
     try {
       const { data, error } = await (supabase as any)
         .from('affiliate_commission_rules')
-        .select(`*, product:products(id, name, short_id, external_code)`)
+        .select(`*, product:products!inner(id, name, short_id, external_code, deleted_at)`)
         .eq('affiliate_id', affiliateId)
+        .is('product.deleted_at', null)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data || [];
