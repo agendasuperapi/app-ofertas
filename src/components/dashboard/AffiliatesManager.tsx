@@ -54,7 +54,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     createPayment,
   } = useAffiliates(storeId);
   
-  const { coupons, createCoupon } = useCoupons(storeId);
+  const { coupons, createCoupon, updateCoupon } = useCoupons(storeId);
   const { categories } = useCategories(storeId);
   const productsQuery = useProducts(storeId);
   const products = productsQuery.data || [];
@@ -113,6 +113,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const [generatedInviteLink, setGeneratedInviteLink] = useState<string | null>(null);
   const [createdAffiliateName, setCreatedAffiliateName] = useState<string>('');
   const [newCouponDialogOpen, setNewCouponDialogOpen] = useState(false);
+  const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
   const [newCouponData, setNewCouponData] = useState({
     code: '',
     discount_type: 'percentage' as 'percentage' | 'fixed',
@@ -592,7 +593,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     }
   };
 
-  const handleCreateNewCoupon = async () => {
+  const handleSaveCoupon = async () => {
     if (!newCouponData.code.trim()) {
       toast({
         title: 'Código obrigatório',
@@ -603,54 +604,78 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     }
 
     try {
-      const couponResult = await createCoupon({
-        store_id: storeId,
-        code: newCouponData.code.toUpperCase(),
-        discount_type: newCouponData.discount_type,
-        discount_value: newCouponData.discount_value,
-        min_order_value: newCouponData.min_order_value,
-        max_uses: newCouponData.max_uses,
-        valid_from: newCouponData.valid_from,
-        valid_until: newCouponData.valid_until || null,
-        is_active: true,
-        applies_to: newCouponData.applies_to,
-        category_names: newCouponData.category_names,
-        product_ids: newCouponData.product_ids,
-      }) as any;
+      if (editingCouponId) {
+        // Atualizar cupom existente
+        await updateCoupon(editingCouponId, {
+          code: newCouponData.code.toUpperCase(),
+          discount_type: newCouponData.discount_type,
+          discount_value: newCouponData.discount_value,
+          min_order_value: newCouponData.min_order_value,
+          max_uses: newCouponData.max_uses,
+          valid_from: newCouponData.valid_from,
+          valid_until: newCouponData.valid_until || null,
+          applies_to: newCouponData.applies_to,
+          category_names: newCouponData.category_names,
+          product_ids: newCouponData.product_ids,
+        });
+        
+        toast({
+          title: 'Cupom atualizado',
+          description: `O cupom ${newCouponData.code} foi atualizado com sucesso.`,
+        });
+      } else {
+        // Criar novo cupom
+        const couponResult = await createCoupon({
+          store_id: storeId,
+          code: newCouponData.code.toUpperCase(),
+          discount_type: newCouponData.discount_type,
+          discount_value: newCouponData.discount_value,
+          min_order_value: newCouponData.min_order_value,
+          max_uses: newCouponData.max_uses,
+          valid_from: newCouponData.valid_from,
+          valid_until: newCouponData.valid_until || null,
+          is_active: true,
+          applies_to: newCouponData.applies_to,
+          category_names: newCouponData.category_names,
+          product_ids: newCouponData.product_ids,
+        }) as any;
 
-      if (couponResult?.id) {
-        // Aplicar automaticamente as configurações de escopo do cupom à comissão do afiliado
-        const categoryConfigs = newCouponData.category_names.map(name => ({
-          name,
-          type: 'percentage' as const,
-          value: 10,
-        }));
-        const productConfigs = newCouponData.product_ids.map(id => ({
-          id,
-          type: 'percentage' as const,
-          value: 10,
-        }));
-        setFormData({ 
-          ...formData, 
-          coupon_ids: [...formData.coupon_ids, couponResult.id],
-          commission_products: productConfigs,
-        });
-        setNewCouponDialogOpen(false);
-        setNewCouponData({
-          code: '',
-          discount_type: 'percentage',
-          discount_value: 10,
-          min_order_value: 0,
-          max_uses: null,
-          valid_from: new Date().toISOString().split('T')[0],
-          valid_until: '',
-          applies_to: 'all',
-          category_names: [],
-          product_ids: [],
-        });
+        if (couponResult?.id) {
+          // Aplicar automaticamente as configurações de escopo do cupom à comissão do afiliado
+          const categoryConfigs = newCouponData.category_names.map(name => ({
+            name,
+            type: 'percentage' as const,
+            value: 10,
+          }));
+          const productConfigs = newCouponData.product_ids.map(id => ({
+            id,
+            type: 'percentage' as const,
+            value: 10,
+          }));
+          setFormData({ 
+            ...formData, 
+            coupon_ids: [...formData.coupon_ids, couponResult.id],
+            commission_products: productConfigs,
+          });
+        }
       }
+      
+      setNewCouponDialogOpen(false);
+      setEditingCouponId(null);
+      setNewCouponData({
+        code: '',
+        discount_type: 'percentage',
+        discount_value: 10,
+        min_order_value: 0,
+        max_uses: null,
+        valid_from: new Date().toISOString().split('T')[0],
+        valid_until: '',
+        applies_to: 'all',
+        category_names: [],
+        product_ids: [],
+      });
     } catch (error) {
-      console.error('Error creating coupon:', error);
+      console.error('Error saving coupon:', error);
     }
   };
 
@@ -1493,16 +1518,33 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                         <Tag className="h-5 w-5 text-primary" />
                         <CardTitle className="text-base">Cupons Vinculados</CardTitle>
                       </div>
-                      <Dialog open={newCouponDialogOpen} onOpenChange={setNewCouponDialogOpen}>
+                      <Dialog open={newCouponDialogOpen} onOpenChange={(open) => {
+                        setNewCouponDialogOpen(open);
+                        if (!open) {
+                          setEditingCouponId(null);
+                          setNewCouponData({
+                            code: '',
+                            discount_type: 'percentage',
+                            discount_value: 10,
+                            min_order_value: 0,
+                            max_uses: null,
+                            valid_from: new Date().toISOString().split('T')[0],
+                            valid_until: '',
+                            applies_to: 'all',
+                            category_names: [],
+                            product_ids: [],
+                          });
+                        }
+                      }}>
                         <DialogTrigger asChild>
-                          <Button size="sm" variant="outline">
+                          <Button size="sm" variant="outline" onClick={() => setEditingCouponId(null)}>
                             <Plus className="h-4 w-4 mr-1" />
                             Novo Cupom
                           </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
-                            <DialogTitle>Novo Cupom</DialogTitle>
+                            <DialogTitle>{editingCouponId ? 'Editar Cupom' : 'Novo Cupom'}</DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4">
                             <div>
@@ -1725,11 +1767,26 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                             )}
                           </div>
                           <DialogFooter>
-                            <Button variant="outline" onClick={() => setNewCouponDialogOpen(false)}>
+                            <Button variant="outline" onClick={() => {
+                              setNewCouponDialogOpen(false);
+                              setEditingCouponId(null);
+                              setNewCouponData({
+                                code: '',
+                                discount_type: 'percentage',
+                                discount_value: 10,
+                                min_order_value: 0,
+                                max_uses: null,
+                                valid_from: new Date().toISOString().split('T')[0],
+                                valid_until: '',
+                                applies_to: 'all',
+                                category_names: [],
+                                product_ids: [],
+                              });
+                            }}>
                               Cancelar
                             </Button>
-                            <Button onClick={handleCreateNewCoupon}>
-                              Criar Cupom
+                            <Button onClick={handleSaveCoupon}>
+                              {editingCouponId ? 'Salvar' : 'Criar Cupom'}
                             </Button>
                           </DialogFooter>
                         </DialogContent>
@@ -1802,9 +1859,34 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                     </p>
                                   </div>
                                 </div>
-                                <Badge variant={isLinked ? 'default' : 'outline'}>
-                                  {isLinked ? 'Vinculado' : 'Não vinculado'}
-                                </Badge>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="h-8 w-8"
+                                    onClick={() => {
+                                      setEditingCouponId(coupon.id);
+                                      setNewCouponData({
+                                        code: coupon.code,
+                                        discount_type: coupon.discount_type as 'percentage' | 'fixed',
+                                        discount_value: coupon.discount_value,
+                                        min_order_value: coupon.min_order_value || 0,
+                                        max_uses: coupon.max_uses || null,
+                                        valid_from: coupon.valid_from ? new Date(coupon.valid_from).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                                        valid_until: coupon.valid_until ? new Date(coupon.valid_until).toISOString().split('T')[0] : '',
+                                        applies_to: (coupon as any).applies_to || 'all',
+                                        category_names: (coupon as any).category_names || [],
+                                        product_ids: (coupon as any).product_ids || [],
+                                      });
+                                      setNewCouponDialogOpen(true);
+                                    }}
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                  <Badge variant={isLinked ? 'default' : 'outline'}>
+                                    {isLinked ? 'Vinculado' : 'Não vinculado'}
+                                  </Badge>
+                                </div>
                               </div>
                             );
                           })}
