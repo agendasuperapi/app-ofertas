@@ -134,13 +134,22 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     discount_type: 'percentage' | 'fixed';
     discount_value: number;
   }[]>([]);
+  // Estados para regras de desconto por categoria
+  const [couponCategoryRules, setCouponCategoryRules] = useState<{
+    category_name: string;
+    discount_type: 'percentage' | 'fixed';
+    discount_value: number;
+  }[]>([]);
   const [couponRulesModalOpen, setCouponRulesModalOpen] = useState(false);
+  const [couponCategoryRulesModalOpen, setCouponCategoryRulesModalOpen] = useState(false);
   const [couponRuleProductSearch, setCouponRuleProductSearch] = useState('');
   const [collapsedCouponRuleCategories, setCollapsedCouponRuleCategories] = useState<Set<string>>(new Set());
   const [editingCouponRuleProductId, setEditingCouponRuleProductId] = useState<string | null>(null);
+  const [editingCouponRuleCategoryName, setEditingCouponRuleCategoryName] = useState<string | null>(null);
   const [editingCouponRuleValue, setEditingCouponRuleValue] = useState<number>(0);
   const [editingCouponRuleType, setEditingCouponRuleType] = useState<'percentage' | 'fixed'>('percentage');
   const [selectedCouponRuleProductIds, setSelectedCouponRuleProductIds] = useState<Set<string>>(new Set());
+  const [selectedCouponRuleCategoryNames, setSelectedCouponRuleCategoryNames] = useState<Set<string>>(new Set());
 
   // Form states
   const [formData, setFormData] = useState({
@@ -1561,6 +1570,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                             product_ids: [],
                           });
                           setCouponDiscountRules([]);
+                          setCouponCategoryRules([]);
                         }
                       }}>
                         <DialogTrigger asChild>
@@ -1872,27 +1882,135 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                   <Settings className="h-4 w-4 text-primary" />
                                   <Label className="font-medium">Regras Específicas de Desconto</Label>
                                 </div>
-                                <Button 
-                                  type="button" 
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setCouponRulesModalOpen(true)}
-                                >
-                                  <Plus className="h-4 w-4 mr-1" />
-                                  Adicionar Regra
-                                </Button>
+                                <div className="flex gap-2">
+                                  <Button 
+                                    type="button" 
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setCouponCategoryRulesModalOpen(true)}
+                                  >
+                                    <Plus className="h-4 w-4 mr-1" />
+                                    Por Categoria
+                                  </Button>
+                                  <Button 
+                                    type="button" 
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setCouponRulesModalOpen(true)}
+                                  >
+                                    <Plus className="h-4 w-4 mr-1" />
+                                    Por Produto
+                                  </Button>
+                                </div>
                               </div>
                               <p className="text-xs text-muted-foreground mb-3">
-                                Defina descontos diferentes para produtos específicos. Sobrescreve o desconto padrão.
+                                Defina descontos por categoria (novos produtos herdam automaticamente) ou por produto específico.
                               </p>
                               
-                              {couponDiscountRules.length === 0 ? (
+                              {couponCategoryRules.length === 0 && couponDiscountRules.length === 0 ? (
                                 <div className="text-center py-4 text-muted-foreground text-sm border rounded-md bg-muted/30">
                                   Nenhuma regra específica. O desconto padrão será aplicado.
                                 </div>
                               ) : (
-                                <ScrollArea className="max-h-40 border rounded-md">
+                                <ScrollArea className="max-h-52 border rounded-md">
                                   <div className="divide-y">
+                                    {/* Regras por Categoria */}
+                                    {couponCategoryRules.map((rule) => {
+                                      const isEditing = editingCouponRuleCategoryName === rule.category_name;
+                                      const productsInCategory = products.filter(p => p.category === rule.category_name);
+                                      
+                                      return (
+                                        <div key={`cat-${rule.category_name}`} className="flex items-center gap-2 p-2 bg-primary/5">
+                                          <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-2">
+                                              <Badge variant="secondary" className="text-xs shrink-0">Categoria</Badge>
+                                              <span className="text-sm font-medium truncate">{rule.category_name}</span>
+                                            </div>
+                                            <span className="text-[10px] text-muted-foreground">
+                                              {productsInCategory.length} produto(s) • Novos produtos herdam automaticamente
+                                            </span>
+                                          </div>
+                                          
+                                          {isEditing ? (
+                                            <div className="flex items-center gap-2">
+                                              <Input
+                                                type="number"
+                                                value={editingCouponRuleValue}
+                                                onChange={(e) => setEditingCouponRuleValue(Number(e.target.value))}
+                                                className="w-16 h-7 text-sm"
+                                                min={0}
+                                              />
+                                              <Select
+                                                value={editingCouponRuleType}
+                                                onValueChange={(v) => setEditingCouponRuleType(v as 'percentage' | 'fixed')}
+                                              >
+                                                <SelectTrigger className="w-14 h-7">
+                                                  <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  <SelectItem value="percentage">%</SelectItem>
+                                                  <SelectItem value="fixed">R$</SelectItem>
+                                                </SelectContent>
+                                              </Select>
+                                              <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-7 w-7 text-green-600"
+                                                onClick={() => {
+                                                  setCouponCategoryRules(rules => 
+                                                    rules.map(r => r.category_name === rule.category_name 
+                                                      ? { ...r, discount_type: editingCouponRuleType, discount_value: editingCouponRuleValue }
+                                                      : r
+                                                    )
+                                                  );
+                                                  setEditingCouponRuleCategoryName(null);
+                                                }}
+                                              >
+                                                <Save className="h-4 w-4" />
+                                              </Button>
+                                              <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-7 w-7"
+                                                onClick={() => setEditingCouponRuleCategoryName(null)}
+                                              >
+                                                <X className="h-4 w-4" />
+                                              </Button>
+                                            </div>
+                                          ) : (
+                                            <>
+                                              <Badge variant="outline" className="shrink-0">
+                                                {rule.discount_type === 'percentage' 
+                                                  ? `${rule.discount_value}%` 
+                                                  : `R$ ${rule.discount_value.toFixed(2)}`}
+                                              </Badge>
+                                              <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                                onClick={() => {
+                                                  setEditingCouponRuleCategoryName(rule.category_name);
+                                                  setEditingCouponRuleValue(rule.discount_value);
+                                                  setEditingCouponRuleType(rule.discount_type);
+                                                }}
+                                              >
+                                                <Pencil className="h-3 w-3" />
+                                              </Button>
+                                              <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-7 w-7 text-destructive"
+                                                onClick={() => setCouponCategoryRules(rules => rules.filter(r => r.category_name !== rule.category_name))}
+                                              >
+                                                <Trash2 className="h-3 w-3" />
+                                              </Button>
+                                            </>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+
+                                    {/* Regras por Produto */}
                                     {couponDiscountRules.map((rule) => {
                                       const product = products.find(p => p.id === rule.product_id);
                                       const isEditing = editingCouponRuleProductId === rule.product_id;
@@ -1900,7 +2018,10 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                       return (
                                         <div key={rule.product_id} className="flex items-center gap-2 p-2">
                                           <div className="flex-1 min-w-0">
-                                            <span className="text-sm truncate block">{product?.name || 'Produto'}</span>
+                                            <div className="flex items-center gap-2">
+                                              <Badge variant="outline" className="text-xs shrink-0">Produto</Badge>
+                                              <span className="text-sm truncate">{product?.name || 'Produto'}</span>
+                                            </div>
                                             {(product?.short_id || product?.external_code) && (
                                               <div className="flex items-center gap-2 mt-0.5">
                                                 {product?.short_id && (
@@ -1999,6 +2120,154 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                 </ScrollArea>
                               )}
                             </div>
+
+                            {/* Modal para adicionar regras por Categoria */}
+                            <Dialog open={couponCategoryRulesModalOpen} onOpenChange={(open) => {
+                              setCouponCategoryRulesModalOpen(open);
+                              if (open) {
+                                setEditingCouponRuleType(newCouponData.discount_type);
+                                setEditingCouponRuleValue(newCouponData.discount_value);
+                              }
+                              if (!open) {
+                                setSelectedCouponRuleCategoryNames(new Set());
+                              }
+                            }}>
+                              <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
+                                <DialogHeader>
+                                  <DialogTitle>Adicionar Regra por Categoria</DialogTitle>
+                                  <DialogDescription>
+                                    Todos os produtos da categoria terão o mesmo desconto. Novos produtos adicionados herdam automaticamente.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  {/* Configuração de desconto */}
+                                  <div className="grid grid-cols-2 gap-4 p-3 bg-muted/50 rounded-lg">
+                                    <div>
+                                      <Label className="text-sm">Tipo de Desconto</Label>
+                                      <Select
+                                        value={editingCouponRuleType}
+                                        onValueChange={(v) => setEditingCouponRuleType(v as 'percentage' | 'fixed')}
+                                      >
+                                        <SelectTrigger className="mt-1">
+                                          <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="percentage">Porcentagem (%)</SelectItem>
+                                          <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                    </div>
+                                    <div>
+                                      <Label className="text-sm">Valor do Desconto</Label>
+                                      <Input
+                                        type="number"
+                                        value={editingCouponRuleValue}
+                                        onChange={(e) => setEditingCouponRuleValue(Number(e.target.value))}
+                                        className="mt-1"
+                                        min={0}
+                                      />
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-muted-foreground">{selectedCouponRuleCategoryNames.size} categoria(s) selecionada(s)</span>
+                                    <div className="flex gap-2">
+                                      <Button variant="ghost" size="sm" onClick={() => {
+                                        const existingNames = new Set(couponCategoryRules.map(r => r.category_name));
+                                        setSelectedCouponRuleCategoryNames(new Set(
+                                          categories.filter(c => !existingNames.has(c.name)).map(c => c.name)
+                                        ));
+                                      }}>
+                                        Selecionar Todas
+                                      </Button>
+                                      <Button variant="ghost" size="sm" onClick={() => setSelectedCouponRuleCategoryNames(new Set())}>
+                                        Limpar
+                                      </Button>
+                                    </div>
+                                  </div>
+
+                                  <ScrollArea className="h-[250px] border rounded-md">
+                                    {(() => {
+                                      const existingNames = new Set(couponCategoryRules.map(r => r.category_name));
+                                      const availableCategories = categories.filter(c => !existingNames.has(c.name));
+
+                                      if (availableCategories.length === 0) {
+                                        return (
+                                          <p className="text-center text-muted-foreground py-8">
+                                            Todas as categorias já têm regra
+                                          </p>
+                                        );
+                                      }
+
+                                      return (
+                                        <div className="p-2 space-y-1">
+                                          {availableCategories.map((category) => {
+                                            const productsInCategory = products.filter(p => p.category === category.name);
+                                            const isSelected = selectedCouponRuleCategoryNames.has(category.name);
+                                            
+                                            return (
+                                              <div
+                                                key={category.id}
+                                                className={`flex items-center gap-3 p-3 rounded-md cursor-pointer transition-colors ${
+                                                  isSelected ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/50 border border-transparent'
+                                                }`}
+                                                onClick={() => {
+                                                  setSelectedCouponRuleCategoryNames(prev => {
+                                                    const next = new Set(prev);
+                                                    if (next.has(category.name)) next.delete(category.name);
+                                                    else next.add(category.name);
+                                                    return next;
+                                                  });
+                                                }}
+                                              >
+                                                <Checkbox checked={isSelected} />
+                                                <div className="flex-1">
+                                                  <p className="font-medium text-sm">{category.name}</p>
+                                                  <p className="text-xs text-muted-foreground">
+                                                    {productsInCategory.length} produto(s)
+                                                  </p>
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                      );
+                                    })()}
+                                  </ScrollArea>
+                                </div>
+                                <DialogFooter className="mt-4">
+                                  <Button variant="outline" onClick={() => setCouponCategoryRulesModalOpen(false)}>
+                                    Cancelar
+                                  </Button>
+                                  <Button 
+                                    onClick={() => {
+                                      if (selectedCouponRuleCategoryNames.size === 0 || editingCouponRuleValue <= 0) {
+                                        toast({
+                                          title: 'Selecione categorias e defina o valor',
+                                          variant: 'destructive',
+                                        });
+                                        return;
+                                      }
+                                      const newRules = Array.from(selectedCouponRuleCategoryNames).map(categoryName => ({
+                                        category_name: categoryName,
+                                        discount_type: editingCouponRuleType,
+                                        discount_value: editingCouponRuleValue,
+                                      }));
+                                      setCouponCategoryRules([...couponCategoryRules, ...newRules]);
+                                      setCouponCategoryRulesModalOpen(false);
+                                      setSelectedCouponRuleCategoryNames(new Set());
+                                      toast({
+                                        title: 'Regras adicionadas',
+                                        description: `${newRules.length} regra(s) por categoria adicionada(s)`,
+                                      });
+                                    }}
+                                    disabled={selectedCouponRuleCategoryNames.size === 0}
+                                  >
+                                    Adicionar ({selectedCouponRuleCategoryNames.size})
+                                  </Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
 
                             {/* Modal para adicionar regras de desconto */}
                             <Dialog open={couponRulesModalOpen} onOpenChange={(open) => {
@@ -2230,6 +2499,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                 product_ids: [],
                               });
                               setCouponDiscountRules([]);
+                              setCouponCategoryRules([]);
                             }}>
                               Cancelar
                             </Button>
