@@ -1995,8 +1995,11 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                       // Filter rules by search term
                       const filteredRules = commissionRules.filter(rule => {
                         const productCategory = getRuleCategory(rule);
-                        return rule.product?.name?.toLowerCase().includes(rulesSearchTerm.toLowerCase()) ||
-                          productCategory.toLowerCase().includes(rulesSearchTerm.toLowerCase());
+                        const searchLower = rulesSearchTerm.toLowerCase();
+                        return rule.product?.name?.toLowerCase().includes(searchLower) ||
+                          rule.product?.short_id?.toLowerCase().includes(searchLower) ||
+                          rule.product?.external_code?.toLowerCase().includes(searchLower) ||
+                          productCategory.toLowerCase().includes(searchLower);
                       });
 
                       // Group by category
