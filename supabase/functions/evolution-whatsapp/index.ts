@@ -259,46 +259,84 @@ serve(async (req) => {
               
               // Tentar deletar a instância fantasma
               try {
-                await fetch(`${EVOLUTION_API_URL}/instance/delete/${instanceName}`, {
+                const deleteResponse = await fetch(`${EVOLUTION_API_URL}/instance/delete/${instanceName}`, {
                   method: 'DELETE',
                   headers: {
                     'apikey': EVOLUTION_API_KEY,
                   },
                 });
-                console.log('Stale instance deleted');
+                console.log('Stale instance delete response status:', deleteResponse.status);
+                if (deleteResponse.ok) {
+                  console.log('Stale instance deleted successfully');
+                } else {
+                  const deleteErr = await deleteResponse.text();
+                  console.log('Stale instance delete failed:', deleteErr);
+                }
               } catch (deleteError) {
                 console.log('Could not delete stale instance:', deleteError);
               }
               
-              // Esperar um pouco antes de recriar
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              // Implementar retry com múltiplas tentativas e backoff exponencial
+              const maxRetries = 3;
+              let retryAttempt = 0;
+              let retrySuccess = false;
+              let retryCreateData: any = null;
+              let lastRetryError = '';
               
-              // Tentar criar novamente
-              const retryCreateResponse = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'apikey': EVOLUTION_API_KEY,
-                },
-                body: JSON.stringify({
-                  instanceName: instanceName,
-                  token: EVOLUTION_API_KEY,
-                  qrcode: true,
-                  integration: 'WHATSAPP-BAILEYS'
-                }),
-              });
-              
-              if (retryCreateResponse.ok) {
-                const retryCreateData = await retryCreateResponse.json();
-                console.log('Instance recreated after cleanup:', retryCreateData);
+              while (retryAttempt < maxRetries && !retrySuccess) {
+                const waitTime = 2000 * (retryAttempt + 1); // 2s, 4s, 6s
+                console.log(`Retry attempt ${retryAttempt + 1}/${maxRetries}, waiting ${waitTime}ms before creating instance...`);
                 
+                await new Promise(resolve => setTimeout(resolve, waitTime));
+                
+                try {
+                  const retryCreateResponse = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'apikey': EVOLUTION_API_KEY,
+                    },
+                    body: JSON.stringify({
+                      instanceName: instanceName,
+                      token: EVOLUTION_API_KEY,
+                      qrcode: true,
+                      integration: 'WHATSAPP-BAILEYS'
+                    }),
+                  });
+                  
+                  console.log(`Retry create response status: ${retryCreateResponse.status}`);
+                  
+                  if (retryCreateResponse.ok) {
+                    retryCreateData = await retryCreateResponse.json();
+                    console.log('Instance recreated after cleanup:', retryCreateData);
+                    retrySuccess = true;
+                  } else {
+                    lastRetryError = await retryCreateResponse.text();
+                    console.log(`Retry attempt ${retryAttempt + 1} failed:`, lastRetryError);
+                    retryAttempt++;
+                  }
+                } catch (fetchError) {
+                  console.error(`Retry attempt ${retryAttempt + 1} fetch error:`, fetchError);
+                  lastRetryError = fetchError instanceof Error ? fetchError.message : 'Fetch error';
+                  retryAttempt++;
+                }
+              }
+              
+              if (retrySuccess && retryCreateData) {
                 // Conectar para obter QR code
+                console.log('Instance created successfully, now connecting for QR code...');
+                
+                // Aguardar um pouco antes de conectar
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
                 const retryConnectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
                   method: 'GET',
                   headers: {
                     'apikey': EVOLUTION_API_KEY,
                   },
                 });
+                
+                console.log('Connect response status:', retryConnectResponse.status);
                 
                 if (retryConnectResponse.ok) {
                   const retryConnectData = await retryConnectResponse.json();
@@ -312,12 +350,29 @@ serve(async (req) => {
                     }),
                     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
                   );
+                } else {
+                  const connectError = await retryConnectResponse.text();
+                  console.error('Failed to connect after recreation:', connectError);
+                  return new Response(
+                    JSON.stringify({ 
+                      success: false, 
+                      error: 'Instância criada, mas falha ao obter QR Code. Tente novamente.', 
+                      details: connectError 
+                    }),
+                    { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                  );
                 }
               }
               
-              // Se ainda falhar, retornar erro
+              // Se ainda falhar após todas as tentativas, retornar erro detalhado
+              console.error('All retry attempts failed. Last error:', lastRetryError);
               return new Response(
-                JSON.stringify({ success: false, error: 'Falha ao recriar instância. Tente novamente em alguns minutos.', details: connectErr }),
+                JSON.stringify({ 
+                  success: false, 
+                  error: `Falha ao recriar instância após ${maxRetries} tentativas. Tente novamente em alguns minutos.`, 
+                  details: lastRetryError,
+                  attempts: retryAttempt
+                }),
                 { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
               );
             }
