@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Edit, GripVertical, Copy, Star, Trash2 } from 'lucide-react';
+import { Edit, GripVertical, Copy, Star, Trash2, ImageOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -35,6 +35,7 @@ export const SortableProductCard = ({
 }: SortableProductCardProps) => {
   const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [imageError, setImageError] = useState(false);
   
   const {
     attributes,
@@ -73,12 +74,13 @@ export const SortableProductCard = ({
             )}
 
             <div className="flex-1 flex flex-col min-w-0">
-              {product.image_url && (
+              {product.image_url && !imageError ? (
                 <div className="aspect-video w-full rounded-lg overflow-hidden mb-3 bg-muted relative">
                   <img
                     src={product.image_url}
                     alt={product.name}
                     className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                    onError={() => setImageError(true)}
                   />
                   {product.is_featured && (
                     <div className="absolute top-2 right-2">
@@ -89,7 +91,20 @@ export const SortableProductCard = ({
                     </div>
                   )}
                 </div>
-              )}
+              ) : product.image_url && imageError ? (
+                <div className="aspect-video w-full rounded-lg overflow-hidden mb-3 bg-muted relative flex flex-col items-center justify-center">
+                  <ImageOff className="h-8 w-8 text-muted-foreground mb-2" />
+                  <span className="text-xs text-muted-foreground">Imagem não encontrada</span>
+                  {product.is_featured && (
+                    <div className="absolute top-2 right-2">
+                      <Badge className="bg-yellow-500 text-white border-none shadow-lg">
+                        <Star className="h-3 w-3 mr-1 fill-white" />
+                        Destaque
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+              ) : null}
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <h4 className="font-semibold">{product.name}</h4>
