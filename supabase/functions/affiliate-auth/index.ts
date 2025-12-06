@@ -1,23 +1,39 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Simple password hashing using Web Crypto API
+// Bcrypt cost factor (12 is recommended for production)
+const BCRYPT_ROUNDS = 12;
+
+// Secure password hashing using bcrypt
 async function hashPassword(password: string): Promise<string> {
+  const salt = await bcrypt.genSalt(BCRYPT_ROUNDS);
+  return await bcrypt.hash(password, salt);
+}
+
+// Verify password against bcrypt hash
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  // Handle legacy SHA-256 hashes (64 hex chars) for backward compatibility
+  if (hash.length === 64 && /^[a-f0-9]+$/.test(hash)) {
+    const legacyHash = await legacyHashPassword(password);
+    return legacyHash === hash;
+  }
+  // bcrypt hash verification
+  return await bcrypt.compare(password, hash);
+}
+
+// Legacy SHA-256 hash for backward compatibility with existing passwords
+async function legacyHashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password + (Deno.env.get("AFFILIATE_SALT") || "affiliate_secret_salt"));
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const passwordHash = await hashPassword(password);
-  return passwordHash === hash;
 }
 
 function generateToken(): string {
@@ -258,7 +274,7 @@ serve(async (req) => {
           );
         }
 
-        // Verificar senha
+        // Verificar senha (supports both legacy SHA-256 and new bcrypt)
         const isValidPassword = await verifyPassword(password, account.password_hash);
         if (!isValidPassword) {
           console.log("[affiliate-auth] Invalid password for:", email);
@@ -266,6 +282,16 @@ serve(async (req) => {
             JSON.stringify({ error: "Email ou senha incorretos" }),
             { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
+        }
+
+        // If using legacy hash, upgrade to bcrypt
+        if (account.password_hash.length === 64 && /^[a-f0-9]+$/.test(account.password_hash)) {
+          const newHash = await hashPassword(password);
+          await supabase
+            .from("affiliate_accounts")
+            .update({ password_hash: newHash, updated_at: new Date().toISOString() })
+            .eq("id", account.id);
+          console.log(`[affiliate-auth] Upgraded password hash for: ${email}`);
         }
 
         // Criar nova sessão
@@ -472,17 +498,17 @@ serve(async (req) => {
         console.log(`[affiliate-auth] Password reset completed for account: ${account.id}`);
 
         return new Response(
-          JSON.stringify({ success: true, message: "Senha redefinida com sucesso" }),
+          JSON.stringify({ success: true, message: "Senha alterada com sucesso" }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
       case "update-profile": {
-        const { token, name, phone, cpf_cnpj, pix_key } = body;
+        const { token, name, phone, cpf_cnpj, pix_key, avatar_url } = body;
 
         if (!token) {
           return new Response(
-            JSON.stringify({ error: "Não autorizado" }),
+            JSON.stringify({ error: "Token não fornecido" }),
             { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
@@ -501,40 +527,48 @@ serve(async (req) => {
 
         const affiliateId = validation[0].affiliate_id;
 
+        // Atualizar perfil
+        const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
+        if (name !== undefined) updateData.name = name;
+        if (phone !== undefined) updateData.phone = phone;
+        if (cpf_cnpj !== undefined) updateData.cpf_cnpj = cpf_cnpj;
+        if (pix_key !== undefined) updateData.pix_key = pix_key;
+        if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
+
         const { error: updateError } = await supabase
           .from("affiliate_accounts")
-          .update({
-            name: name || undefined,
-            phone: phone || undefined,
-            cpf_cnpj: cpf_cnpj || undefined,
-            pix_key: pix_key || undefined,
-            updated_at: new Date().toISOString(),
-          })
+          .update(updateData)
           .eq("id", affiliateId);
 
         if (updateError) {
+          console.error("[affiliate-auth] Update profile error:", updateError);
           return new Response(
             JSON.stringify({ error: "Erro ao atualizar perfil" }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
+        // Buscar dados atualizados
         const { data: updatedAccount } = await supabase
           .from("affiliate_accounts")
           .select("*")
           .eq("id", affiliateId)
           .single();
 
+        console.log(`[affiliate-auth] Profile updated for: ${affiliateId}`);
+
         return new Response(
-          JSON.stringify({ 
-            success: true, 
+          JSON.stringify({
+            success: true,
             affiliate: {
               id: updatedAccount?.id,
               email: updatedAccount?.email,
               name: updatedAccount?.name,
               phone: updatedAccount?.phone,
+              cpf_cnpj: updatedAccount?.cpf_cnpj,
               pix_key: updatedAccount?.pix_key,
-            }
+              avatar_url: updatedAccount?.avatar_url,
+            },
           }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -545,7 +579,7 @@ serve(async (req) => {
 
         if (!token || !current_password || !new_password) {
           return new Response(
-            JSON.stringify({ error: "Dados incompletos" }),
+            JSON.stringify({ error: "Token, senha atual e nova senha são obrigatórios" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
@@ -571,7 +605,7 @@ serve(async (req) => {
 
         const affiliateId = validation[0].affiliate_id;
 
-        // Buscar conta e verificar senha atual
+        // Buscar conta
         const { data: account } = await supabase
           .from("affiliate_accounts")
           .select("password_hash")
@@ -585,16 +619,17 @@ serve(async (req) => {
           );
         }
 
+        // Verificar senha atual (supports both legacy and bcrypt)
         const isValidPassword = await verifyPassword(current_password, account.password_hash);
         if (!isValidPassword) {
           return new Response(
             JSON.stringify({ error: "Senha atual incorreta" }),
-            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
+        // Atualizar senha com bcrypt
         const newPasswordHash = await hashPassword(new_password);
-
         await supabase
           .from("affiliate_accounts")
           .update({
@@ -603,7 +638,7 @@ serve(async (req) => {
           })
           .eq("id", affiliateId);
 
-        console.log(`[affiliate-auth] Password changed for account: ${affiliateId}`);
+        console.log(`[affiliate-auth] Password changed for: ${affiliateId}`);
 
         return new Response(
           JSON.stringify({ success: true, message: "Senha alterada com sucesso" }),
@@ -613,7 +648,7 @@ serve(async (req) => {
 
       default:
         return new Response(
-          JSON.stringify({ error: "Ação não reconhecida" }),
+          JSON.stringify({ error: `Ação desconhecida: ${action}` }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
     }
