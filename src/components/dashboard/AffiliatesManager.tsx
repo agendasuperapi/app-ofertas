@@ -114,6 +114,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const [createdAffiliateName, setCreatedAffiliateName] = useState<string>('');
   const [newCouponDialogOpen, setNewCouponDialogOpen] = useState(false);
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
+  const [couponProductsModalOpen, setCouponProductsModalOpen] = useState(false);
   const [newCouponData, setNewCouponData] = useState({
     code: '',
     discount_type: 'percentage' as 'percentage' | 'fixed',
@@ -1706,8 +1707,8 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                               <div className="space-y-2">
                                 <Label>Produtos ({newCouponData.product_ids.length} selecionados)</Label>
                                 {newCouponData.product_ids.length > 0 && (
-                                  <div className="flex flex-wrap gap-1">
-                                    {newCouponData.product_ids.map((productId) => {
+                                  <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                                    {newCouponData.product_ids.slice(0, 5).map((productId) => {
                                       const product = products.find(p => p.id === productId);
                                       return (
                                         <Badge key={productId} variant="secondary" className="flex items-center gap-1">
@@ -1722,49 +1723,120 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                         </Badge>
                                       );
                                     })}
+                                    {newCouponData.product_ids.length > 5 && (
+                                      <Badge variant="outline">+{newCouponData.product_ids.length - 5} mais</Badge>
+                                    )}
                                   </div>
                                 )}
-                                <div className="relative">
-                                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                                  <Input
-                                    placeholder="Buscar produto..."
-                                    value={couponProductSearch}
-                                    onChange={(e) => setCouponProductSearch(e.target.value)}
-                                    className="pl-8"
-                                  />
-                                </div>
-                                <ScrollArea className="h-32 border rounded-md p-2">
-                                  <div className="space-y-2">
-                                    {filteredCouponProducts.map((product) => (
-                                      <div key={product.id} className="flex items-center space-x-2">
-                                        <input
-                                          type="checkbox"
-                                          id={`coupon-prod-detail-${product.id}`}
-                                          checked={newCouponData.product_ids.includes(product.id)}
-                                          onChange={(e) => {
-                                            if (e.target.checked) {
-                                              setNewCouponData({
-                                                ...newCouponData,
-                                                product_ids: [...newCouponData.product_ids, product.id]
-                                              });
-                                            } else {
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  className="w-full"
+                                  onClick={() => setCouponProductsModalOpen(true)}
+                                >
+                                  <Package className="h-4 w-4 mr-2" />
+                                  Selecionar Produtos
+                                </Button>
+                              </div>
+                            )}
+                            
+                            {/* Modal de seleção de produtos para cupom */}
+                            <Dialog open={couponProductsModalOpen} onOpenChange={setCouponProductsModalOpen}>
+                              <DialogContent className="max-w-2xl max-h-[80vh]">
+                                <DialogHeader>
+                                  <DialogTitle>Selecionar Produtos</DialogTitle>
+                                  <DialogDescription>
+                                    Selecione os produtos que este cupom será aplicado
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4">
+                                  <div className="relative">
+                                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                      placeholder="Buscar produto por nome, código interno ou externo..."
+                                      value={couponProductSearch}
+                                      onChange={(e) => setCouponProductSearch(e.target.value)}
+                                      className="pl-8"
+                                    />
+                                  </div>
+                                  <div className="flex items-center justify-between text-sm text-muted-foreground">
+                                    <span>{newCouponData.product_ids.length} produto(s) selecionado(s)</span>
+                                    <div className="flex gap-2">
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        onClick={() => setNewCouponData({ ...newCouponData, product_ids: filteredCouponProducts.map(p => p.id) })}
+                                      >
+                                        Selecionar Todos
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        onClick={() => setNewCouponData({ ...newCouponData, product_ids: [] })}
+                                      >
+                                        Limpar Seleção
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  <ScrollArea className="h-[400px] border rounded-md p-3">
+                                    <div className="space-y-2">
+                                      {filteredCouponProducts.map((product) => (
+                                        <div 
+                                          key={product.id} 
+                                          className={`flex items-center justify-between p-2 rounded-md border cursor-pointer hover:bg-accent/50 ${
+                                            newCouponData.product_ids.includes(product.id) ? 'bg-accent border-primary' : ''
+                                          }`}
+                                          onClick={() => {
+                                            if (newCouponData.product_ids.includes(product.id)) {
                                               setNewCouponData({
                                                 ...newCouponData,
                                                 product_ids: newCouponData.product_ids.filter(p => p !== product.id)
                                               });
+                                            } else {
+                                              setNewCouponData({
+                                                ...newCouponData,
+                                                product_ids: [...newCouponData.product_ids, product.id]
+                                              });
                                             }
                                           }}
-                                          className="rounded border-input"
-                                        />
-                                        <Label htmlFor={`coupon-prod-detail-${product.id}`} className="text-sm font-normal cursor-pointer">
-                                          {product.name}
-                                        </Label>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </ScrollArea>
-                              </div>
-                            )}
+                                        >
+                                          <div className="flex items-center gap-3">
+                                            <input
+                                              type="checkbox"
+                                              checked={newCouponData.product_ids.includes(product.id)}
+                                              onChange={() => {}}
+                                              className="rounded border-input"
+                                            />
+                                            <div>
+                                              <p className="font-medium text-sm">{product.name}</p>
+                                              <div className="flex gap-2 text-xs text-muted-foreground">
+                                                {product.short_id && <span>#{product.short_id}</span>}
+                                                {product.external_code && <span>Ext: {product.external_code}</span>}
+                                                <span className="text-primary">R$ {product.price?.toFixed(2)}</span>
+                                              </div>
+                                            </div>
+                                          </div>
+                                          <Badge variant="outline">{product.category}</Badge>
+                                        </div>
+                                      ))}
+                                      {filteredCouponProducts.length === 0 && (
+                                        <p className="text-center text-muted-foreground py-8">
+                                          Nenhum produto encontrado
+                                        </p>
+                                      )}
+                                    </div>
+                                  </ScrollArea>
+                                </div>
+                                <DialogFooter>
+                                  <Button variant="outline" onClick={() => setCouponProductsModalOpen(false)}>
+                                    Cancelar
+                                  </Button>
+                                  <Button onClick={() => setCouponProductsModalOpen(false)}>
+                                    Confirmar ({newCouponData.product_ids.length})
+                                  </Button>
+                                </DialogFooter>
+                              </DialogContent>
+                            </Dialog>
                           </div>
                           <DialogFooter>
                             <Button variant="outline" onClick={() => {
