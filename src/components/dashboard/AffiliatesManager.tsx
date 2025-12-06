@@ -1586,7 +1586,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                           <Tabs defaultValue="geral" className="flex-1 flex flex-col overflow-hidden">
                             <TabsList className="grid w-full grid-cols-2">
                               <TabsTrigger value="geral">Geral</TabsTrigger>
-                              <TabsTrigger value="regras">Regras Específicas Comissão</TabsTrigger>
+                              <TabsTrigger value="regras">Regras Específicas</TabsTrigger>
                             </TabsList>
                             
                             <TabsContent value="geral" className="flex-1 overflow-hidden mt-4">
