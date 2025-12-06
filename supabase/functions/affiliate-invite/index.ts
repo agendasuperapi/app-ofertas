@@ -6,6 +6,48 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Rate limiting for verify action - 5 requests per minute per IP
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 5;
+const verifyRateLimits = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIP(req: Request): string {
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0].trim();
+  }
+  return req.headers.get("cf-connecting-ip") || 
+         req.headers.get("x-real-ip") || 
+         "unknown";
+}
+
+function checkVerifyRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
+  const now = Date.now();
+  const entry = verifyRateLimits.get(ip);
+  
+  // Clean up old entries periodically
+  if (verifyRateLimits.size > 1000) {
+    for (const [key, value] of verifyRateLimits.entries()) {
+      if (value.resetAt < now) {
+        verifyRateLimits.delete(key);
+      }
+    }
+  }
+  
+  if (!entry || entry.resetAt < now) {
+    verifyRateLimits.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true };
+  }
+  
+  if (entry.count >= RATE_LIMIT_MAX_REQUESTS) {
+    const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
+    return { allowed: false, retryAfter };
+  }
+  
+  entry.count++;
+  return { allowed: true };
+}
+
 function generateToken(): string {
   const array = new Uint8Array(24);
   crypto.getRandomValues(array);
@@ -404,11 +446,34 @@ serve(async (req) => {
       }
 
       case "verify": {
+        // Rate limit check for verify action
+        const clientIP = getClientIP(req);
+        const rateCheck = checkVerifyRateLimit(clientIP);
+        
+        if (!rateCheck.allowed) {
+          console.log(`[affiliate-invite] Rate limit exceeded for IP: ${clientIP}`);
+          return new Response(
+            JSON.stringify({ 
+              valid: false, 
+              error: "Muitas tentativas. Tente novamente em alguns minutos.",
+              retry_after: rateCheck.retryAfter 
+            }),
+            { 
+              status: 429, 
+              headers: { 
+                ...corsHeaders, 
+                "Content-Type": "application/json",
+                "Retry-After": String(rateCheck.retryAfter)
+              } 
+            }
+          );
+        }
+        
         // Verificar se token de convite é válido
         const { token } = body;
 
         console.log(`[affiliate-invite] ========== VERIFY ACTION ==========`);
-        console.log(`[affiliate-invite] Token received: "${token}"`);
+        console.log(`[affiliate-invite] Token received: "${token}", IP: ${clientIP}`);
         console.log(`[affiliate-invite] Token length: ${token?.length}`);
 
         if (!token) {
