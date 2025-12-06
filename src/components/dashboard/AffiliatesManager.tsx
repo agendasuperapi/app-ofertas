@@ -1597,11 +1597,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                 )}
               </div>
               {selectedAffiliate && (
-                <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                  <div className="text-right">
-                    <Label className="text-sm font-medium">Comissão Ativa</Label>
-                    <p className="text-xs text-muted-foreground">O afiliado receberá comissão</p>
-                  </div>
+                <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-primary/10 border border-primary/20 rounded-lg mt-2 sm:mt-0">
                   <Switch
                     checked={selectedAffiliate.commission_enabled}
                     onCheckedChange={async (checked) => {
@@ -1609,6 +1605,10 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                       setSelectedAffiliate({ ...selectedAffiliate, commission_enabled: checked });
                     }}
                   />
+                  <div className="text-left">
+                    <Label className="text-xs sm:text-sm font-medium">Comissão Ativa</Label>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">O afiliado receberá comissão</p>
+                  </div>
                 </div>
               )}
             </div>
