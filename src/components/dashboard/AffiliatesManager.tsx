@@ -22,6 +22,7 @@ import {
   Copy, Check, Tag, Percent, Settings, Eye, 
   Clock, CheckCircle, XCircle, CreditCard, Loader2, AlertCircle, Search, Mail, Link2, Package, ChevronDown, ChevronRight, Pencil, X, Save
 } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
@@ -84,6 +85,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const [affiliateEarnings, setAffiliateEarnings] = useState<AffiliateEarning[]>([]);
   const [affiliateStats, setAffiliateStats] = useState<AffiliateStats | null>(null);
   const [allEarnings, setAllEarnings] = useState<any[]>([]);
+  const [salesChartData, setSalesChartData] = useState<{ date: string; vendas: number; comissao: number }[]>([]);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [ruleDialogOpen, setRuleDialogOpen] = useState(false);
   const [ruleProductsModalOpen, setRuleProductsModalOpen] = useState(false);
@@ -386,6 +388,39 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     setCommissionRules(rules);
     setAffiliateEarnings(earnings);
     setAffiliateStats(stats);
+    
+    // Process earnings data for the chart (last 30 days)
+    const chartData = processEarningsForChart(earnings);
+    setSalesChartData(chartData);
+  };
+
+  // Process earnings into chart data grouped by date
+  const processEarningsForChart = (earnings: AffiliateEarning[]) => {
+    const last30Days: { [key: string]: { vendas: number; comissao: number } } = {};
+    
+    // Initialize last 30 days
+    for (let i = 29; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateKey = format(date, 'dd/MM', { locale: ptBR });
+      last30Days[dateKey] = { vendas: 0, comissao: 0 };
+    }
+    
+    // Aggregate earnings by date
+    earnings.forEach((earning) => {
+      const date = new Date(earning.created_at);
+      const dateKey = format(date, 'dd/MM', { locale: ptBR });
+      if (last30Days[dateKey]) {
+        last30Days[dateKey].vendas += Number(earning.order_total) || 0;
+        last30Days[dateKey].comissao += Number(earning.commission_amount) || 0;
+      }
+    });
+    
+    return Object.entries(last30Days).map(([date, data]) => ({
+      date,
+      vendas: data.vendas,
+      comissao: data.comissao,
+    }));
   };
 
   const handleSaveDefaultCommission = async () => {
@@ -1589,7 +1624,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               </TabsList>
               
               {/* Aba Resumo */}
-              <TabsContent value="resumo" className="flex-1 overflow-auto mt-4">
+              <TabsContent value="resumo" className="flex-1 overflow-auto mt-4 space-y-4">
                 {affiliateStats && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <Card>
@@ -1618,6 +1653,100 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                     </Card>
                   </div>
                 )}
+                
+                {/* Gráfico de Evolução de Vendas */}
+                <Card>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-primary" />
+                      <CardTitle className="text-base">Evolução de Vendas (Últimos 30 dias)</CardTitle>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {salesChartData.length > 0 ? (
+                      <div className="h-[250px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={salesChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                              </linearGradient>
+                              <linearGradient id="colorComissao" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="hsl(142 76% 36%)" stopOpacity={0.3}/>
+                                <stop offset="95%" stopColor="hsl(142 76% 36%)" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                            <XAxis 
+                              dataKey="date" 
+                              tick={{ fontSize: 10 }} 
+                              tickLine={false}
+                              axisLine={false}
+                              interval="preserveStartEnd"
+                              className="text-muted-foreground"
+                            />
+                            <YAxis 
+                              tick={{ fontSize: 10 }} 
+                              tickLine={false}
+                              axisLine={false}
+                              tickFormatter={(value) => `R$ ${value.toLocaleString('pt-BR')}`}
+                              width={80}
+                              className="text-muted-foreground"
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: 'hsl(var(--background))',
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '8px',
+                                fontSize: '12px',
+                              }}
+                              formatter={(value: number, name: string) => [
+                                formatCurrency(value),
+                                name === 'vendas' ? 'Vendas' : 'Comissão'
+                              ]}
+                              labelStyle={{ fontWeight: 'bold' }}
+                            />
+                            <Area
+                              type="monotone"
+                              dataKey="vendas"
+                              stroke="hsl(var(--primary))"
+                              fillOpacity={1}
+                              fill="url(#colorVendas)"
+                              strokeWidth={2}
+                              name="vendas"
+                            />
+                            <Area
+                              type="monotone"
+                              dataKey="comissao"
+                              stroke="hsl(142 76% 36%)"
+                              fillOpacity={1}
+                              fill="url(#colorComissao)"
+                              strokeWidth={2}
+                              name="comissao"
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+                        <p>Nenhum dado de vendas disponível</p>
+                      </div>
+                    )}
+                    
+                    {/* Legenda */}
+                    <div className="flex items-center justify-center gap-6 mt-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-primary" />
+                        <span className="text-muted-foreground">Vendas</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(142 76% 36%)' }} />
+                        <span className="text-muted-foreground">Comissão</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
               
               {/* Aba Regras de Comissão */}
