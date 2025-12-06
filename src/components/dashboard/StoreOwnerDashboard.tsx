@@ -2172,7 +2172,7 @@ export const StoreOwnerDashboard = ({
                           {myStore?.id && <div className="hidden md:block">
                               <WhatsAppStatusIndicator storeId={myStore.id} />
                             </div>}
-                          <span className="text-xs text-muted-foreground hidden md:inline">v 1.9</span>
+                          <span className="text-xs text-muted-foreground hidden md:inline">v 2.0</span>
                         </div>
                       </div>
                     </div>
