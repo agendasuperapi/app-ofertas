@@ -93,6 +93,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const [collapsedRuleCategories, setCollapsedRuleCategories] = useState<Set<string>>(new Set());
   const [selectedRuleIds, setSelectedRuleIds] = useState<Set<string>>(new Set());
   const [rulesSearchTerm, setRulesSearchTerm] = useState('');
+  const [commissionValueError, setCommissionValueError] = useState(false);
   
   // Estados para edição de regra inline
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
@@ -499,6 +500,18 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   };
 
   const handleAddRule = async () => {
+    // Validar valor da comissão
+    if (!ruleFormData.commission_value || ruleFormData.commission_value <= 0) {
+      toast({
+        title: 'Digite o valor da comissão',
+        description: 'O valor da comissão é obrigatório.',
+        variant: 'destructive',
+      });
+      setCommissionValueError(true);
+      setTimeout(() => setCommissionValueError(false), 2000);
+      return;
+    }
+    
     if (!selectedAffiliate || ruleFormData.product_ids.length === 0) {
       toast({
         title: 'Selecione pelo menos um produto',
@@ -2321,13 +2334,23 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                     min="0"
                     step="0.01"
                     value={ruleFormData.commission_value}
-                    onChange={(e) => setRuleFormData({ ...ruleFormData, commission_value: Number(e.target.value) })}
-                    className="pr-8"
+                    onChange={(e) => {
+                      setRuleFormData({ ...ruleFormData, commission_value: Number(e.target.value) });
+                      setCommissionValueError(false);
+                    }}
+                    className={`pr-8 transition-all ${
+                      commissionValueError 
+                        ? 'border-destructive ring-2 ring-destructive/50 animate-pulse' 
+                        : ''
+                    }`}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
                     {ruleFormData.commission_type === 'percentage' ? '%' : 'R$'}
                   </span>
                 </div>
+                {commissionValueError && (
+                  <p className="text-xs text-destructive animate-pulse">Digite o valor da comissão</p>
+                )}
               </div>
             </div>
 
@@ -2397,7 +2420,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
             </Button>
             <Button 
               onClick={handleAddRule}
-              disabled={ruleFormData.product_ids.length === 0 || ruleFormData.commission_value <= 0}
+              disabled={ruleFormData.product_ids.length === 0}
             >
               <Plus className="h-4 w-4 mr-1" />
               Adicionar {ruleFormData.product_ids.length > 0 && `(${ruleFormData.product_ids.length})`}
