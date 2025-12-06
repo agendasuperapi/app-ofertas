@@ -119,16 +119,16 @@ export const SortableProductCard = ({
                   {product.description}
                 </p>
               )}
-              <div className="flex justify-between items-center mt-auto pt-3">
-                <span className="font-bold text-primary text-lg">
+              <div className="flex flex-wrap justify-between items-center gap-2 mt-auto pt-3">
+                <span className="font-bold text-primary text-lg shrink-0">
                   R$ {Number(product.price).toFixed(2)}
                 </span>
                 {!isReorderMode && (
-                  <div className="flex gap-2 items-center">
+                  <div className="flex flex-wrap gap-1 items-center justify-end flex-1 min-w-0">
                     {hasPermission('products', 'update') && (
                       <>
                         {/* Switch de Disponibilidade */}
-                        <div className="flex items-center gap-2 mr-2">
+                        <div className="flex items-center gap-1 shrink-0">
                           <Switch
                             checked={product.is_available}
                             onCheckedChange={(checked) => 
