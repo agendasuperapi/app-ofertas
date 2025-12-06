@@ -2088,6 +2088,20 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                           <span className="text-sm truncate block">
                                             {rule.product?.name || 'Produto'}
                                           </span>
+                                          {(rule.product?.short_id || rule.product?.external_code) && (
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                              {rule.product?.short_id && (
+                                                <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                                                  ID: {rule.product.short_id}
+                                                </span>
+                                              )}
+                                              {rule.product?.external_code && (
+                                                <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                                                  Ext: {rule.product.external_code}
+                                                </span>
+                                              )}
+                                            </div>
+                                          )}
                                         </div>
                                         
                                         {/* Modo de Edição ou Visualização */}

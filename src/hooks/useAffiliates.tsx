@@ -48,7 +48,7 @@ export interface AffiliateCommissionRule {
   is_active: boolean;
   created_at: string;
   updated_at: string;
-  product?: { id: string; name: string } | null;
+  product?: { id: string; name: string; short_id?: string | null; external_code?: string | null } | null;
 }
 
 export interface AffiliateEarning {
@@ -311,7 +311,7 @@ export const useAffiliates = (storeId?: string) => {
     try {
       const { data, error } = await (supabase as any)
         .from('affiliate_commission_rules')
-        .select(`*, product:products(id, name)`)
+        .select(`*, product:products(id, name, short_id, external_code)`)
         .eq('affiliate_id', affiliateId)
         .order('created_at', { ascending: false });
       if (error) throw error;
