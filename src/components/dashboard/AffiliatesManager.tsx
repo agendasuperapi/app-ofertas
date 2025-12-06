@@ -639,6 +639,8 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     }
 
     try {
+      let couponId = editingCouponId;
+      
       if (editingCouponId) {
         // Atualizar cupom existente
         await updateCoupon(editingCouponId, {
@@ -676,12 +678,8 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
         }) as any;
 
         if (couponResult?.id) {
+          couponId = couponResult.id;
           // Aplicar automaticamente as configurações de escopo do cupom à comissão do afiliado
-          const categoryConfigs = newCouponData.category_names.map(name => ({
-            name,
-            type: 'percentage' as const,
-            value: 10,
-          }));
           const productConfigs = newCouponData.product_ids.map(id => ({
             id,
             type: 'percentage' as const,
@@ -692,6 +690,53 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
             coupon_ids: [...formData.coupon_ids, couponResult.id],
             commission_products: productConfigs,
           });
+        }
+      }
+
+      // Salvar regras específicas de desconto no banco de dados
+      if (couponId) {
+        // Deletar regras existentes
+        await supabase
+          .from('coupon_discount_rules')
+          .delete()
+          .eq('coupon_id', couponId);
+
+        // Inserir regras de produto
+        if (couponDiscountRules.length > 0) {
+          const productRules = couponDiscountRules.map(rule => ({
+            coupon_id: couponId,
+            rule_type: 'product' as const,
+            product_id: rule.product_id,
+            discount_type: rule.discount_type,
+            discount_value: rule.discount_value,
+          }));
+          
+          const { error: productError } = await supabase
+            .from('coupon_discount_rules')
+            .insert(productRules);
+          
+          if (productError) {
+            console.error('Error saving product rules:', productError);
+          }
+        }
+
+        // Inserir regras de categoria
+        if (couponCategoryRules.length > 0) {
+          const categoryRules = couponCategoryRules.map(rule => ({
+            coupon_id: couponId,
+            rule_type: 'category' as const,
+            category_name: rule.category_name,
+            discount_type: rule.discount_type,
+            discount_value: rule.discount_value,
+          }));
+          
+          const { error: categoryError } = await supabase
+            .from('coupon_discount_rules')
+            .insert(categoryRules);
+          
+          if (categoryError) {
+            console.error('Error saving category rules:', categoryError);
+          }
         }
       }
       
@@ -709,6 +754,8 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
         category_names: [],
         product_ids: [],
       });
+      setCouponDiscountRules([]);
+      setCouponCategoryRules([]);
     } catch (error) {
       console.error('Error saving coupon:', error);
     }
@@ -2382,7 +2429,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                     size="icon"
                                     variant="ghost"
                                     className="h-8 w-8"
-                                    onClick={() => {
+                                    onClick={async () => {
                                       setEditingCouponId(coupon.id);
                                       setNewCouponData({
                                         code: coupon.code,
@@ -2396,6 +2443,37 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                         category_names: (coupon as any).category_names || [],
                                         product_ids: (coupon as any).product_ids || [],
                                       });
+                                      
+                                      // Carregar regras específicas do banco de dados
+                                      const { data: rules } = await supabase
+                                        .from('coupon_discount_rules')
+                                        .select('*')
+                                        .eq('coupon_id', coupon.id);
+                                      
+                                      if (rules) {
+                                        const productRules = rules
+                                          .filter(r => r.rule_type === 'product' && r.product_id)
+                                          .map(r => ({
+                                            product_id: r.product_id!,
+                                            discount_type: r.discount_type as 'percentage' | 'fixed',
+                                            discount_value: r.discount_value,
+                                          }));
+                                        
+                                        const categoryRules = rules
+                                          .filter(r => r.rule_type === 'category' && r.category_name)
+                                          .map(r => ({
+                                            category_name: r.category_name!,
+                                            discount_type: r.discount_type as 'percentage' | 'fixed',
+                                            discount_value: r.discount_value,
+                                          }));
+                                        
+                                        setCouponDiscountRules(productRules);
+                                        setCouponCategoryRules(categoryRules);
+                                      } else {
+                                        setCouponDiscountRules([]);
+                                        setCouponCategoryRules([]);
+                                      }
+                                      
                                       setNewCouponDialogOpen(true);
                                     }}
                                   >

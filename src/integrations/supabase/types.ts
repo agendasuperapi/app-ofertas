@@ -641,6 +641,57 @@ export type Database = {
           },
         ]
       }
+      coupon_discount_rules: {
+        Row: {
+          category_name: string | null
+          coupon_id: string
+          created_at: string | null
+          discount_type: string
+          discount_value: number
+          id: string
+          product_id: string | null
+          rule_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          category_name?: string | null
+          coupon_id: string
+          created_at?: string | null
+          discount_type: string
+          discount_value: number
+          id?: string
+          product_id?: string | null
+          rule_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          category_name?: string | null
+          coupon_id?: string
+          created_at?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          product_id?: string | null
+          rule_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_discount_rules_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_discount_rules_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coupons: {
         Row: {
           applies_to: string
