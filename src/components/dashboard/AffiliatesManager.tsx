@@ -118,7 +118,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const [newCouponData, setNewCouponData] = useState({
     code: '',
     discount_type: 'percentage' as 'percentage' | 'fixed',
-    discount_value: 10,
+    discount_value: 0,
     min_order_value: 0,
     max_uses: null as number | null,
     valid_from: new Date().toISOString().split('T')[0],
@@ -745,7 +745,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
       setNewCouponData({
         code: '',
         discount_type: 'percentage',
-        discount_value: 10,
+        discount_value: 0,
         min_order_value: 0,
         max_uses: null,
         valid_from: new Date().toISOString().split('T')[0],
@@ -1607,7 +1607,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                           setNewCouponData({
                             code: '',
                             discount_type: 'percentage',
-                            discount_value: 10,
+                            discount_value: 0,
                             min_order_value: 0,
                             max_uses: null,
                             valid_from: new Date().toISOString().split('T')[0],
@@ -2336,7 +2336,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                               setNewCouponData({
                                 code: '',
                                 discount_type: 'percentage',
-                                discount_value: 10,
+                                discount_value: 0,
                                 min_order_value: 0,
                                 max_uses: null,
                                 valid_from: new Date().toISOString().split('T')[0],
