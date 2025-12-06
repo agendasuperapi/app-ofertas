@@ -241,6 +241,7 @@ serve(async (req) => {
           lowerError.includes('is already in use');
 
         if (nameInUse) {
+          // Tentar conectar à instância existente
           const connectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
             method: 'GET',
             headers: {
@@ -251,6 +252,76 @@ serve(async (req) => {
           if (!connectResponse.ok) {
             const connectErr = await connectResponse.text();
             console.error('Evolution API Connect Error (existing):', connectErr);
+            
+            // Se retornou 401 Unauthorized, a instância está "fantasma" - deletar e recriar
+            if (connectResponse.status === 401) {
+              console.log('Instance is stale (401), deleting and recreating...');
+              
+              // Tentar deletar a instância fantasma
+              try {
+                await fetch(`${EVOLUTION_API_URL}/instance/delete/${instanceName}`, {
+                  method: 'DELETE',
+                  headers: {
+                    'apikey': EVOLUTION_API_KEY,
+                  },
+                });
+                console.log('Stale instance deleted');
+              } catch (deleteError) {
+                console.log('Could not delete stale instance:', deleteError);
+              }
+              
+              // Esperar um pouco antes de recriar
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              
+              // Tentar criar novamente
+              const retryCreateResponse = await fetch(`${EVOLUTION_API_URL}/instance/create`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'apikey': EVOLUTION_API_KEY,
+                },
+                body: JSON.stringify({
+                  instanceName: instanceName,
+                  token: EVOLUTION_API_KEY,
+                  qrcode: true,
+                  integration: 'WHATSAPP-BAILEYS'
+                }),
+              });
+              
+              if (retryCreateResponse.ok) {
+                const retryCreateData = await retryCreateResponse.json();
+                console.log('Instance recreated after cleanup:', retryCreateData);
+                
+                // Conectar para obter QR code
+                const retryConnectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
+                  method: 'GET',
+                  headers: {
+                    'apikey': EVOLUTION_API_KEY,
+                  },
+                });
+                
+                if (retryConnectResponse.ok) {
+                  const retryConnectData = await retryConnectResponse.json();
+                  console.log('QR Code generated after recreation:', retryConnectData);
+                  
+                  return new Response(
+                    JSON.stringify({
+                      success: true,
+                      instance: retryCreateData,
+                      qrcode: retryConnectData
+                    }),
+                    { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+                  );
+                }
+              }
+              
+              // Se ainda falhar, retornar erro
+              return new Response(
+                JSON.stringify({ success: false, error: 'Falha ao recriar instância. Tente novamente em alguns minutos.', details: connectErr }),
+                { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              );
+            }
+            
             return new Response(
               JSON.stringify({ success: false, error: 'Failed to connect existing instance', details: connectErr }),
               { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
