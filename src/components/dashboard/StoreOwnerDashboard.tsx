@@ -1607,12 +1607,44 @@ export const StoreOwnerDashboard = ({
     setProductToDuplicate(product);
     setIsDuplicateDialogOpen(true);
   };
-  const handleDuplicateProduct = (product: any) => {
+  const handleDuplicateProduct = async (product: any) => {
     // Set flags for duplication
     setIsDuplicating(true);
     setDuplicatingFromProductId(product.id);
     setEditingProduct(null);
     setActiveProductTab("info");
+
+    let duplicatedImageUrl = '';
+    
+    // Se o produto original tem imagem, copiar para temp/
+    if (product.image_url) {
+      try {
+        const cleanUrl = product.image_url.split('?')[0];
+        const originalPath = cleanUrl.split('product-images/')[1];
+        
+        if (originalPath) {
+          const tempPath = `temp/${Date.now()}_copy.jpg`;
+          
+          // Copiar arquivo no storage
+          const { error: copyError } = await supabase.storage
+            .from('product-images')
+            .copy(originalPath, tempPath);
+          
+          if (!copyError) {
+            const { data: publicUrlData } = supabase.storage
+              .from('product-images')
+              .getPublicUrl(tempPath);
+            
+            duplicatedImageUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
+            console.log('✅ Imagem copiada para temp:', duplicatedImageUrl);
+          } else {
+            console.error('Erro ao copiar imagem:', copyError);
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao copiar imagem:', error);
+      }
+    }
 
     // Fill form with copied data
     setProductForm({
@@ -1622,7 +1654,7 @@ export const StoreOwnerDashboard = ({
       price: product.price,
       promotional_price: product.promotional_price || null,
       is_available: product.is_available,
-      image_url: product.image_url || '',
+      image_url: duplicatedImageUrl, // URL da cópia em temp/, não do original
       is_pizza: product.is_pizza || false,
       max_flavors: product.max_flavors || 2,
       external_code: '',
