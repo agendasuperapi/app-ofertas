@@ -400,6 +400,41 @@ serve(async (req) => {
           );
         }
         
+        // Se retornou 401 Unauthorized, a instância está "fantasma" - limpar e retornar desconectado
+        if (statusResponse.status === 401) {
+          console.log('Instance is stale (401) during status check, cleaning up...');
+          
+          // Tentar deletar a instância fantasma da Evolution API
+          try {
+            await fetch(`${EVOLUTION_API_URL}/instance/delete/${instanceName}`, {
+              method: 'DELETE',
+              headers: {
+                'apikey': EVOLUTION_API_KEY,
+              },
+            });
+            console.log('Stale instance deleted from Evolution API');
+          } catch (deleteError) {
+            console.log('Could not delete stale instance:', deleteError);
+          }
+          
+          // Deletar o registro da tabela store_instances para forçar reconexão
+          await supabaseClient
+            .from('store_instances')
+            .delete()
+            .eq('store_id', storeId);
+          
+          console.log('Cleared store_instances record for store:', storeId);
+          
+          return new Response(
+            JSON.stringify({
+              success: true,
+              status: 'disconnected',
+              message: 'Instância estava desatualizada e foi limpa. Reconecte o WhatsApp.'
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+        
         return new Response(
           JSON.stringify({ 
             success: false, 
