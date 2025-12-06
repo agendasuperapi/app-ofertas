@@ -1579,7 +1579,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                             Novo Cupom
                           </Button>
                         </DialogTrigger>
-                        <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+                        <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
                           <DialogHeader>
                             <DialogTitle>{editingCouponId ? 'Editar Cupom' : 'Novo Cupom'}</DialogTitle>
                           </DialogHeader>
