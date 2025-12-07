@@ -116,6 +116,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const [newCouponDialogOpen, setNewCouponDialogOpen] = useState(false);
   const [affiliateSearchTerm, setAffiliateSearchTerm] = useState('');
   const [affiliateStatusFilter, setAffiliateStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [toggleStatusAffiliate, setToggleStatusAffiliate] = useState<Affiliate | null>(null);
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
   const [couponProductsModalOpen, setCouponProductsModalOpen] = useState(false);
   const [newCouponData, setNewCouponData] = useState({
@@ -1033,7 +1034,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                         variant="outline" 
                         size="sm" 
                         className={affiliate.is_active ? "text-destructive hover:text-destructive" : "text-green-600 hover:text-green-700"}
-                        onClick={() => toggleAffiliateStatus(affiliate.id, !affiliate.is_active)}
+                        onClick={() => setToggleStatusAffiliate(affiliate)}
                       >
                         {affiliate.is_active ? (
                           <>
@@ -3542,6 +3543,37 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AlertDialog: Confirmar Ativação/Inativação de Afiliado */}
+      <AlertDialog open={!!toggleStatusAffiliate} onOpenChange={(open) => !open && setToggleStatusAffiliate(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {toggleStatusAffiliate?.is_active ? 'Inativar afiliado?' : 'Ativar afiliado?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {toggleStatusAffiliate?.is_active 
+                ? `Deseja inativar o afiliado "${toggleStatusAffiliate?.name}"? Ele não receberá mais comissões enquanto estiver inativo.`
+                : `Deseja ativar o afiliado "${toggleStatusAffiliate?.name}"? Ele voltará a receber comissões normalmente.`
+              }
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className={toggleStatusAffiliate?.is_active ? "bg-destructive hover:bg-destructive/90" : "bg-green-600 hover:bg-green-700"}
+              onClick={() => {
+                if (toggleStatusAffiliate) {
+                  toggleAffiliateStatus(toggleStatusAffiliate.id, !toggleStatusAffiliate.is_active);
+                  setToggleStatusAffiliate(null);
+                }
+              }}
+            >
+              {toggleStatusAffiliate?.is_active ? 'Inativar' : 'Ativar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
