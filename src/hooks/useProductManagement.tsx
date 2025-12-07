@@ -28,7 +28,10 @@ export const useProductManagement = (storeId?: string) => {
       
       const { data, error } = await supabase
         .from('products')
-        .select('*')
+        .select(`
+          *,
+          product_images!left(id, image_url, is_primary, display_order)
+        `)
         .eq('store_id', storeId!)
         .order('category', { ascending: true })
         .order('display_order', { ascending: true, nullsFirst: false })
@@ -39,8 +42,15 @@ export const useProductManagement = (storeId?: string) => {
         throw error;
       }
       
-      // Filter out soft-deleted products if deleted_at column exists
-      const filteredData = data?.filter(p => !(p as any).deleted_at) || [];
+      // Filter out soft-deleted products and resolve primary image URL
+      const filteredData = (data?.filter(p => !(p as any).deleted_at) || []).map(product => {
+        const images = product.product_images || [];
+        const primaryImage = images.find((img: any) => img.is_primary) || images[0];
+        return {
+          ...product,
+          resolved_image_url: primaryImage?.image_url || product.image_url
+        };
+      });
       console.log('[useProductManagement] Products fetched:', filteredData.length);
       return filteredData;
     },
