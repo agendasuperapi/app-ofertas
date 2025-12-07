@@ -69,9 +69,10 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
   const { toast } = useToast();
 
-  // Estados de busca
+  // Estados de busca e filtros
   const [categorySearch, setCategorySearch] = useState('');
   const [productSearch, setProductSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
   // Verificar permissões
   const hasPermission = (action: string): boolean => {
@@ -109,6 +110,12 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
     if (!productSearch.trim()) return products;
     return products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()));
   }, [products, productSearch]);
+
+  // Filtro de cupons por status
+  const filteredCoupons = useMemo(() => {
+    if (statusFilter === 'all') return coupons;
+    return coupons.filter(c => statusFilter === 'active' ? c.is_active : !c.is_active);
+  }, [coupons, statusFilter]);
 
   // Função para encontrar o afiliado vinculado a um cupom
   const getLinkedAffiliate = (couponId: string) => {
@@ -567,6 +574,33 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
         )}
       </div>
 
+      {/* Filtro de status */}
+      {coupons.length > 0 && (
+        <div className="flex gap-2 mb-4">
+          <Button
+            variant={statusFilter === 'all' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setStatusFilter('all')}
+          >
+            Todos ({coupons.length})
+          </Button>
+          <Button
+            variant={statusFilter === 'active' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setStatusFilter('active')}
+          >
+            Ativos ({coupons.filter(c => c.is_active).length})
+          </Button>
+          <Button
+            variant={statusFilter === 'inactive' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setStatusFilter('inactive')}
+          >
+            Inativos ({coupons.filter(c => !c.is_active).length})
+          </Button>
+        </div>
+      )}
+
       {coupons.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
@@ -582,9 +616,18 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
             )}
           </CardContent>
         </Card>
+      ) : filteredCoupons.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Ticket className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground text-center mb-4">
+              Nenhum cupom encontrado com o filtro selecionado
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {coupons.map((coupon, index) => (
+          {filteredCoupons.map((coupon, index) => (
             <motion.div
               key={coupon.id}
               initial={{ opacity: 0, y: 20 }}
