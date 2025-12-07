@@ -1472,19 +1472,28 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
 
       {/* Dialog: Detalhes do Afiliado */}
       <Dialog open={detailsModalOpen} onOpenChange={setDetailsModalOpen}>
-        <DialogContent className="max-w-4xl h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-4xl h-[90vh] overflow-hidden flex flex-col glass">
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <div>
-                <DialogTitle>Detalhes do Afiliado</DialogTitle>
+              <div className="flex items-center gap-3">
                 {selectedAffiliate && (
-                  <DialogDescription>
-                    {selectedAffiliate.name} - {selectedAffiliate.email}
-                  </DialogDescription>
+                  <div className="h-12 w-12 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+                    <span className="text-lg font-bold text-white">
+                      {selectedAffiliate.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
                 )}
+                <div>
+                  <DialogTitle className="text-xl gradient-text">Detalhes do Afiliado</DialogTitle>
+                  {selectedAffiliate && (
+                    <DialogDescription className="flex items-center gap-2">
+                      {selectedAffiliate.name} - {selectedAffiliate.email}
+                    </DialogDescription>
+                  )}
+                </div>
               </div>
               {selectedAffiliate && (
-                <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-primary/10 border border-primary/20 rounded-lg mt-2 sm:mt-0">
+                <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg mt-2 sm:mt-0">
                   <Switch
                     checked={selectedAffiliate.commission_enabled}
                     onCheckedChange={async (checked) => {
@@ -1503,7 +1512,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
           
           {selectedAffiliate && (
             <Tabs defaultValue="resumo" className="flex-1 flex flex-col overflow-hidden">
-              <TabsList className="w-full justify-start flex-wrap">
+              <TabsList className="w-full justify-start flex-wrap glass">
                 <TabsTrigger value="resumo">Resumo</TabsTrigger>
                 <TabsTrigger value="dados">Dados</TabsTrigger>
                 <TabsTrigger value="cupons">Cupons</TabsTrigger>
@@ -1515,127 +1524,180 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               {/* Aba Resumo */}
               <TabsContent value="resumo" className="flex-1 overflow-auto mt-4 space-y-4">
                 {affiliateStats && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <Card>
-                      <CardContent className="pt-4">
-                        <p className="text-sm text-muted-foreground">Total Vendas</p>
-                        <p className="text-xl font-bold">{formatCurrency(affiliateStats.totalSales)}</p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="pt-4">
-                        <p className="text-sm text-muted-foreground">Total Comissões</p>
-                        <p className="text-xl font-bold">{formatCurrency(affiliateStats.totalEarnings)}</p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="pt-4">
-                        <p className="text-sm text-muted-foreground">Pendente</p>
-                        <p className="text-xl font-bold text-amber-600">{formatCurrency(affiliateStats.pendingEarnings)}</p>
-                      </CardContent>
-                    </Card>
-                    <Card>
-                      <CardContent className="pt-4">
-                        <p className="text-sm text-muted-foreground">Pedidos</p>
-                        <p className="text-xl font-bold">{affiliateStats.totalOrders}</p>
-                      </CardContent>
-                    </Card>
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="grid grid-cols-2 md:grid-cols-4 gap-4"
+                  >
+                    <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                      <Card className="glass-card overflow-hidden border-primary/10 hover:border-primary/30 transition-all">
+                        <CardContent className="pt-4 relative">
+                          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+                          <div className="flex items-center justify-between relative">
+                            <div>
+                              <p className="text-sm text-muted-foreground font-medium">Total Vendas</p>
+                              <p className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">{formatCurrency(affiliateStats.totalSales)}</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                              <TrendingUp className="h-5 w-5 text-primary" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                    <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                      <Card className="glass-card overflow-hidden border-green-500/10 hover:border-green-500/30 transition-all">
+                        <CardContent className="pt-4 relative">
+                          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />
+                          <div className="flex items-center justify-between relative">
+                            <div>
+                              <p className="text-sm text-muted-foreground font-medium">Total Comissões</p>
+                              <p className="text-2xl font-bold text-green-600">{formatCurrency(affiliateStats.totalEarnings)}</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center">
+                              <DollarSign className="h-5 w-5 text-green-600" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                    <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                      <Card className="glass-card overflow-hidden border-amber-500/10 hover:border-amber-500/30 transition-all">
+                        <CardContent className="pt-4 relative">
+                          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
+                          <div className="flex items-center justify-between relative">
+                            <div>
+                              <p className="text-sm text-muted-foreground font-medium">Pendente</p>
+                              <p className="text-2xl font-bold text-amber-600">{formatCurrency(affiliateStats.pendingEarnings)}</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center">
+                              <Clock className="h-5 w-5 text-amber-600" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                    <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                      <Card className="glass-card overflow-hidden border-blue-500/10 hover:border-blue-500/30 transition-all">
+                        <CardContent className="pt-4 relative">
+                          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
+                          <div className="flex items-center justify-between relative">
+                            <div>
+                              <p className="text-sm text-muted-foreground font-medium">Pedidos</p>
+                              <p className="text-2xl font-bold text-blue-600">{affiliateStats.totalOrders}</p>
+                            </div>
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-500/5 flex items-center justify-center">
+                              <Package className="h-5 w-5 text-blue-600" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  </motion.div>
                 )}
                 
                 {/* Gráfico de Evolução de Vendas */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-base">Evolução de Vendas (Últimos 30 dias)</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    {salesChartData.length > 0 ? (
-                      <div className="h-[250px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={salesChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                            <defs>
-                              <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                              </linearGradient>
-                              <linearGradient id="colorComissao" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="hsl(142 76% 36%)" stopOpacity={0.3}/>
-                                <stop offset="95%" stopColor="hsl(142 76% 36%)" stopOpacity={0}/>
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                            <XAxis 
-                              dataKey="date" 
-                              tick={{ fontSize: 10 }} 
-                              tickLine={false}
-                              axisLine={false}
-                              interval="preserveStartEnd"
-                              className="text-muted-foreground"
-                            />
-                            <YAxis 
-                              tick={{ fontSize: 10 }} 
-                              tickLine={false}
-                              axisLine={false}
-                              tickFormatter={(value) => `R$ ${value.toLocaleString('pt-BR')}`}
-                              width={80}
-                              className="text-muted-foreground"
-                            />
-                            <Tooltip
-                              contentStyle={{
-                                backgroundColor: 'hsl(var(--background))',
-                                border: '1px solid hsl(var(--border))',
-                                borderRadius: '8px',
-                                fontSize: '12px',
-                              }}
-                              formatter={(value: number, name: string) => [
-                                formatCurrency(value),
-                                name === 'vendas' ? 'Vendas' : 'Comissão'
-                              ]}
-                              labelStyle={{ fontWeight: 'bold' }}
-                            />
-                            <Area
-                              type="monotone"
-                              dataKey="vendas"
-                              stroke="hsl(var(--primary))"
-                              fillOpacity={1}
-                              fill="url(#colorVendas)"
-                              strokeWidth={2}
-                              name="vendas"
-                            />
-                            <Area
-                              type="monotone"
-                              dataKey="comissao"
-                              stroke="hsl(142 76% 36%)"
-                              fillOpacity={1}
-                              fill="url(#colorComissao)"
-                              strokeWidth={2}
-                              name="comissao"
-                            />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-                    ) : (
-                      <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-                        <p>Nenhum dado de vendas disponível</p>
-                      </div>
-                    )}
-                    
-                    {/* Legenda */}
-                    <div className="flex items-center justify-center gap-6 mt-4 text-sm">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                >
+                  <Card className="glass-card overflow-hidden">
+                    <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-primary" />
-                        <span className="text-muted-foreground">Vendas</span>
+                        <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center">
+                          <TrendingUp className="h-4 w-4 text-white" />
+                        </div>
+                        <CardTitle className="text-base">Evolução de Vendas (Últimos 30 dias)</CardTitle>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(142 76% 36%)' }} />
-                        <span className="text-muted-foreground">Comissão</span>
+                    </CardHeader>
+                    <CardContent>
+                      {salesChartData.length > 0 ? (
+                        <div className="h-[250px] w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={salesChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                              <defs>
+                                <linearGradient id="colorVendas" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                                </linearGradient>
+                                <linearGradient id="colorComissao" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="hsl(142 76% 36%)" stopOpacity={0.3}/>
+                                  <stop offset="95%" stopColor="hsl(142 76% 36%)" stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                              <XAxis 
+                                dataKey="date" 
+                                tick={{ fontSize: 10 }} 
+                                tickLine={false}
+                                axisLine={false}
+                                interval="preserveStartEnd"
+                                className="text-muted-foreground"
+                              />
+                              <YAxis 
+                                tick={{ fontSize: 10 }} 
+                                tickLine={false}
+                                axisLine={false}
+                                tickFormatter={(value) => `R$ ${value.toLocaleString('pt-BR')}`}
+                                width={80}
+                                className="text-muted-foreground"
+                              />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: 'hsl(var(--background))',
+                                  border: '1px solid hsl(var(--border))',
+                                  borderRadius: '8px',
+                                  fontSize: '12px',
+                                }}
+                                formatter={(value: number, name: string) => [
+                                  formatCurrency(value),
+                                  name === 'vendas' ? 'Vendas' : 'Comissão'
+                                ]}
+                                labelStyle={{ fontWeight: 'bold' }}
+                              />
+                              <Area
+                                type="monotone"
+                                dataKey="vendas"
+                                stroke="hsl(var(--primary))"
+                                fillOpacity={1}
+                                fill="url(#colorVendas)"
+                                strokeWidth={2}
+                                name="vendas"
+                              />
+                              <Area
+                                type="monotone"
+                                dataKey="comissao"
+                                stroke="hsl(142 76% 36%)"
+                                fillOpacity={1}
+                                fill="url(#colorComissao)"
+                                strokeWidth={2}
+                                name="comissao"
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+                      ) : (
+                        <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+                          <p>Nenhum dado de vendas disponível</p>
+                        </div>
+                      )}
+                      
+                      {/* Legenda */}
+                      <div className="flex items-center justify-center gap-6 mt-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-gradient-primary shadow-glow" />
+                          <span className="text-muted-foreground">Vendas</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(142 76% 36%)' }} />
+                          <span className="text-muted-foreground">Comissão</span>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </TabsContent>
               
               {/* Aba Dados */}
