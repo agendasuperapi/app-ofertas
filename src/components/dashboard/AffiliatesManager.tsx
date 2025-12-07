@@ -1499,28 +1499,30 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
 
       {/* Dialog: Detalhes do Afiliado */}
       <Dialog open={detailsModalOpen} onOpenChange={setDetailsModalOpen}>
-        <DialogContent className="max-w-4xl h-[90vh] overflow-hidden flex flex-col glass">
-          <DialogHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+        <DialogContent className="w-[95vw] max-w-4xl h-[90vh] overflow-hidden flex flex-col glass p-3 sm:p-6">
+          <DialogHeader className="space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
                 {selectedAffiliate && (
-                  <div className="h-12 w-12 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
-                    <span className="text-lg font-bold text-white">
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
+                    <span className="text-base sm:text-lg font-bold text-white">
                       {selectedAffiliate.name.charAt(0).toUpperCase()}
                     </span>
                   </div>
                 )}
-                <div>
-                  <DialogTitle className="text-xl gradient-text">Detalhes do Afiliado</DialogTitle>
+                <div className="min-w-0 flex-1">
+                  <DialogTitle className="text-lg sm:text-xl gradient-text truncate">Detalhes do Afiliado</DialogTitle>
                   {selectedAffiliate && (
-                    <DialogDescription className="flex items-center gap-2">
-                      {selectedAffiliate.name} - {selectedAffiliate.email}
+                    <DialogDescription className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2 text-xs sm:text-sm truncate">
+                      <span className="truncate">{selectedAffiliate.name}</span>
+                      <span className="hidden sm:inline">-</span>
+                      <span className="truncate text-muted-foreground">{selectedAffiliate.email}</span>
                     </DialogDescription>
                   )}
                 </div>
               </div>
               {selectedAffiliate && (
-                <div className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg mt-2 sm:mt-0">
+                <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg flex-shrink-0">
                   <Switch
                     checked={selectedAffiliate.commission_enabled}
                     onCheckedChange={async (checked) => {
@@ -1529,8 +1531,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                     }}
                   />
                   <div className="text-left">
-                    <Label className="text-xs sm:text-sm font-medium">Comissão Ativa</Label>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground hidden sm:block">O afiliado receberá comissão</p>
+                    <Label className="text-xs font-medium">Comissão Ativa</Label>
                   </div>
                 </div>
               )}
@@ -1539,14 +1540,16 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
           
           {selectedAffiliate && (
             <Tabs defaultValue="resumo" className="flex-1 flex flex-col overflow-hidden">
-              <TabsList className="w-full justify-start flex-wrap glass">
-                <TabsTrigger value="resumo">Resumo</TabsTrigger>
-                <TabsTrigger value="dados">Dados</TabsTrigger>
-                <TabsTrigger value="cupons">Cupons</TabsTrigger>
-                <TabsTrigger value="regras">Comissão Padrão</TabsTrigger>
-                <TabsTrigger value="regras-especificas">Regras Específicas Comissão</TabsTrigger>
-                <TabsTrigger value="historico">Histórico</TabsTrigger>
-              </TabsList>
+              <div className="w-full overflow-x-auto pb-2">
+                <TabsList className="w-max justify-start glass mb-2">
+                  <TabsTrigger value="resumo" className="text-xs sm:text-sm px-2 sm:px-3">Resumo</TabsTrigger>
+                  <TabsTrigger value="dados" className="text-xs sm:text-sm px-2 sm:px-3">Dados</TabsTrigger>
+                  <TabsTrigger value="cupons" className="text-xs sm:text-sm px-2 sm:px-3">Cupons</TabsTrigger>
+                  <TabsTrigger value="regras" className="text-xs sm:text-sm px-2 sm:px-3">Comissão Padrão</TabsTrigger>
+                  <TabsTrigger value="regras-especificas" className="text-xs sm:text-sm px-2 sm:px-3">Regras Específicas</TabsTrigger>
+                  <TabsTrigger value="historico" className="text-xs sm:text-sm px-2 sm:px-3">Histórico</TabsTrigger>
+                </TabsList>
+              </div>
               
               {/* Aba Resumo */}
               <TabsContent value="resumo" className="flex-1 overflow-auto mt-4 space-y-4">
@@ -1555,19 +1558,19 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4 }}
-                    className="grid grid-cols-2 md:grid-cols-4 gap-4"
+                    className="grid grid-cols-2 gap-2 sm:gap-4"
                   >
                     <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                       <Card className="glass-card overflow-hidden border-primary/10 hover:border-primary/30 transition-all">
-                        <CardContent className="pt-4 relative">
+                        <CardContent className="p-3 sm:pt-4 relative">
                           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-                          <div className="flex items-center justify-between relative">
-                            <div>
-                              <p className="text-sm text-muted-foreground font-medium">Total Vendas</p>
-                              <p className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">{formatCurrency(affiliateStats.totalSales)}</p>
+                          <div className="flex items-center justify-between relative gap-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs sm:text-sm text-muted-foreground font-medium">Total Vendas</p>
+                              <p className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent truncate">{formatCurrency(affiliateStats.totalSales)}</p>
                             </div>
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                              <TrendingUp className="h-5 w-5 text-primary" />
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
+                              <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                             </div>
                           </div>
                         </CardContent>
@@ -1575,15 +1578,15 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                     </motion.div>
                     <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                       <Card className="glass-card overflow-hidden border-green-500/10 hover:border-green-500/30 transition-all">
-                        <CardContent className="pt-4 relative">
+                        <CardContent className="p-3 sm:pt-4 relative">
                           <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />
-                          <div className="flex items-center justify-between relative">
-                            <div>
-                              <p className="text-sm text-muted-foreground font-medium">Total Comissões</p>
-                              <p className="text-2xl font-bold text-green-600">{formatCurrency(affiliateStats.totalEarnings)}</p>
+                          <div className="flex items-center justify-between relative gap-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs sm:text-sm text-muted-foreground font-medium">Total Comissões</p>
+                              <p className="text-lg sm:text-2xl font-bold text-green-600 truncate">{formatCurrency(affiliateStats.totalEarnings)}</p>
                             </div>
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center">
-                              <DollarSign className="h-5 w-5 text-green-600" />
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center flex-shrink-0">
+                              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                             </div>
                           </div>
                         </CardContent>
@@ -1591,15 +1594,15 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                     </motion.div>
                     <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                       <Card className="glass-card overflow-hidden border-amber-500/10 hover:border-amber-500/30 transition-all">
-                        <CardContent className="pt-4 relative">
+                        <CardContent className="p-3 sm:pt-4 relative">
                           <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
-                          <div className="flex items-center justify-between relative">
-                            <div>
-                              <p className="text-sm text-muted-foreground font-medium">Pendente</p>
-                              <p className="text-2xl font-bold text-amber-600">{formatCurrency(affiliateStats.pendingEarnings)}</p>
+                          <div className="flex items-center justify-between relative gap-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs sm:text-sm text-muted-foreground font-medium">Pendente</p>
+                              <p className="text-lg sm:text-2xl font-bold text-amber-600 truncate">{formatCurrency(affiliateStats.pendingEarnings)}</p>
                             </div>
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center">
-                              <Clock className="h-5 w-5 text-amber-600" />
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center flex-shrink-0">
+                              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-amber-600" />
                             </div>
                           </div>
                         </CardContent>
@@ -1607,15 +1610,15 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                     </motion.div>
                     <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
                       <Card className="glass-card overflow-hidden border-blue-500/10 hover:border-blue-500/30 transition-all">
-                        <CardContent className="pt-4 relative">
+                        <CardContent className="p-3 sm:pt-4 relative">
                           <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
-                          <div className="flex items-center justify-between relative">
-                            <div>
-                              <p className="text-sm text-muted-foreground font-medium">Pedidos</p>
-                              <p className="text-2xl font-bold text-blue-600">{affiliateStats.totalOrders}</p>
+                          <div className="flex items-center justify-between relative gap-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs sm:text-sm text-muted-foreground font-medium">Pedidos</p>
+                              <p className="text-lg sm:text-2xl font-bold text-blue-600">{affiliateStats.totalOrders}</p>
                             </div>
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-500/5 flex items-center justify-center">
-                              <Package className="h-5 w-5 text-blue-600" />
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-blue-500/20 to-blue-500/5 flex items-center justify-center flex-shrink-0">
+                              <Package className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
                             </div>
                           </div>
                         </CardContent>
