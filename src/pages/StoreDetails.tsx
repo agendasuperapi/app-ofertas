@@ -830,9 +830,9 @@ export default function StoreDetails() {
                             {/* Product Image on Left */}
                             <div className="flex-shrink-0 relative">
                               <div className="w-36 h-24 md:w-48 md:h-32 rounded-xl overflow-hidden bg-muted/30">
-                                {product.image_url ? (
+                            {(product.resolved_image_url || product.image_url) ? (
                                   <img 
-                                    src={product.image_url} 
+                                    src={product.resolved_image_url || product.image_url} 
                                     alt={product.name}
                                     className="w-full h-full object-cover"
                                   />
@@ -933,9 +933,9 @@ export default function StoreDetails() {
                             {/* Product Image on Left */}
                             <div className="flex-shrink-0 relative">
                               <div className="w-36 h-24 md:w-48 md:h-32 rounded-xl overflow-hidden bg-muted/30">
-                                {product.image_url ? (
+                            {(product.resolved_image_url || product.image_url) ? (
                                   <img 
-                                    src={product.image_url} 
+                                    src={product.resolved_image_url || product.image_url} 
                                     alt={product.name}
                                     className="w-full h-full object-cover"
                                   />
@@ -1046,14 +1046,14 @@ export default function StoreDetails() {
                           }`}
                           onClick={() => setDetailsProduct(product)}
                         >
-                          {product.image_url && (
+                          {(product.resolved_image_url || product.image_url) && (
                             <div className="relative aspect-[4/3] overflow-hidden bg-muted/30">
                               <motion.img
                                 initial={{ scale: 0.95, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ duration: 0.6, ease: "easeOut" }}
                                 whileHover={{ scale: 1.15 }}
-                                src={product.image_url} 
+                                src={product.resolved_image_url || product.image_url}
                               alt={product.name}
                               className="w-full h-full object-cover transition-transform duration-500 ease-out"
                             />
@@ -1182,14 +1182,14 @@ export default function StoreDetails() {
                           }`}
                           onClick={() => setDetailsProduct(product)}
                         >
-                          {product.image_url && (
+                          {(product.resolved_image_url || product.image_url) && (
                             <div className="relative h-56 md:h-44 overflow-hidden bg-muted/30">
                               <motion.img
                                 initial={{ scale: 0.95, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ duration: 0.6, ease: "easeOut" }}
                                 whileHover={{ scale: 1.15 }}
-                                src={product.image_url} 
+                                src={product.resolved_image_url || product.image_url}
                               alt={product.name}
                               className="w-full h-full object-cover transition-transform duration-500 ease-out"
                             />
