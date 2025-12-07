@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -822,27 +823,34 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <Users className="h-6 w-6 text-primary" />
+          <h2 className="text-3xl font-bold gradient-text flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+              <Users className="h-5 w-5 text-white" />
+            </div>
             Afiliados
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-muted-foreground mt-1">
             Gerencie seus afiliados e comissões
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setInviteDialogOpen(true)}>
+          <Button variant="outline" className="hover-lift" onClick={() => setInviteDialogOpen(true)}>
             <Mail className="h-4 w-4 mr-2" />
             Convidar Afiliado
           </Button>
-          <Button onClick={() => handleOpenDialog()}>
+          <Button className="bg-gradient-primary shadow-glow hover-lift" onClick={() => handleOpenDialog()}>
             <Plus className="h-4 w-4 mr-2" />
             Novo Afiliado
           </Button>
         </div>
-      </div>
+      </motion.div>
       
       {/* Invite Dialog */}
       <InviteAffiliateDialog
@@ -853,55 +861,85 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
       />
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Total</p>
-                <p className="text-2xl font-bold">{totalAffiliates}</p>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+        className="grid grid-cols-2 md:grid-cols-4 gap-4"
+      >
+        <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+          <Card className="glass-card overflow-hidden border-primary/10 hover:border-primary/30 transition-all">
+            <CardContent className="pt-6 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+              <div className="flex items-center justify-between relative">
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium">Total</p>
+                  <p className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">{totalAffiliates}</p>
+                </div>
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
               </div>
-              <Users className="h-8 w-8 text-primary/20" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Ativos</p>
-                <p className="text-2xl font-bold text-green-600">{activeAffiliates}</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+        <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+          <Card className="glass-card overflow-hidden border-green-500/10 hover:border-green-500/30 transition-all">
+            <CardContent className="pt-6 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />
+              <div className="flex items-center justify-between relative">
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium">Ativos</p>
+                  <p className="text-3xl font-bold text-green-600">{activeAffiliates}</p>
+                </div>
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center">
+                  <CheckCircle className="h-6 w-6 text-green-600" />
+                </div>
               </div>
-              <CheckCircle className="h-8 w-8 text-green-600/20" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Pendente</p>
-                <p className="text-2xl font-bold text-amber-600">{formatCurrency(totalPendingEarnings)}</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+        <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+          <Card className="glass-card overflow-hidden border-amber-500/10 hover:border-amber-500/30 transition-all">
+            <CardContent className="pt-6 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
+              <div className="flex items-center justify-between relative">
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium">Pendente</p>
+                  <p className="text-3xl font-bold text-amber-600">{formatCurrency(totalPendingEarnings)}</p>
+                </div>
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center">
+                  <Clock className="h-6 w-6 text-amber-600" />
+                </div>
               </div>
-              <Clock className="h-8 w-8 text-amber-600/20" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Pago</p>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(totalPaidEarnings)}</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+        <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+          <Card className="glass-card overflow-hidden border-green-500/10 hover:border-green-500/30 transition-all">
+            <CardContent className="pt-6 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />
+              <div className="flex items-center justify-between relative">
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium">Pago</p>
+                  <p className="text-3xl font-bold text-green-600">{formatCurrency(totalPaidEarnings)}</p>
+                </div>
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center">
+                  <DollarSign className="h-6 w-6 text-green-600" />
+                </div>
               </div>
-              <DollarSign className="h-8 w-8 text-green-600/20" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
 
       {/* Lista de Afiliados */}
-      <div className="space-y-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="space-y-4"
+      >
         {/* Campo de Busca e Filtros */}
         {affiliates.length > 0 && (
           <div className="flex flex-col sm:flex-row gap-3">
@@ -911,11 +949,11 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                 placeholder="Buscar por nome, email ou CPF/CNPJ..."
                 value={affiliateSearchTerm}
                 onChange={(e) => setAffiliateSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 glass"
               />
             </div>
             <Select value={affiliateStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setAffiliateStatusFilter(value)}>
-              <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectTrigger className="w-full sm:w-[180px] glass">
                 <SelectValue placeholder="Filtrar por status" />
               </SelectTrigger>
               <SelectContent>
@@ -928,14 +966,16 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
         )}
 
         {affiliates.length === 0 ? (
-          <Card>
+          <Card className="glass-card">
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <Users className="h-12 w-12 text-muted-foreground/50 mb-4" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mb-4">
+                <Users className="h-8 w-8 text-primary" />
+              </div>
               <h3 className="text-lg font-semibold mb-2">Nenhum afiliado cadastrado</h3>
               <p className="text-muted-foreground mb-4">
                 Cadastre seu primeiro afiliado para começar a gerar comissões.
               </p>
-              <Button onClick={() => handleOpenDialog()}>
+              <Button className="bg-gradient-primary shadow-glow hover-lift" onClick={() => handleOpenDialog()}>
                 <Plus className="h-4 w-4 mr-2" />
                 Cadastrar Afiliado
               </Button>
@@ -958,17 +998,25 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                  affiliate.cpf_cnpj?.toLowerCase().includes(searchLower);
                 return nameMatch || emailMatch || cpfMatch;
               })
-              .map((affiliate) => (
-              <Card key={affiliate.id} className="overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <span className="text-lg font-bold text-primary">
-                          {affiliate.name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="min-w-0">
+              .map((affiliate, index) => (
+              <motion.div
+                key={affiliate.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+                whileHover={{ y: -4 }}
+              >
+                <Card className="glass-card overflow-hidden hover:border-primary/30 transition-all group">
+                  <CardContent className="p-4 relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative">
+                      <div className="flex items-start gap-4">
+                        <div className="h-12 w-12 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-glow">
+                          <span className="text-lg font-bold text-white">
+                            {affiliate.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold truncate">{affiliate.name}</h3>
                           <Badge 
@@ -1052,10 +1100,11 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                   </div>
                 </CardContent>
               </Card>
+            </motion.div>
             ))}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Dialog: Criar/Editar Afiliado */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
