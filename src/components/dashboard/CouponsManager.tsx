@@ -72,7 +72,7 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
   // Estados de busca e filtros
   const [categorySearch, setCategorySearch] = useState('');
   const [productSearch, setProductSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [couponSearch, setCouponSearch] = useState('');
 
   // Verificar permissões
