@@ -841,7 +841,7 @@ export const StoreOwnerDashboard = ({
     dateRange: reportsDateRange
   } = useDateRangeFilter();
   const [periodFilter, setPeriodFilter] = useState<string>("all");
-  const [statsStatusFilter, setStatsStatusFilter] = useState<string>("entregue");
+  const [statsStatusFilter, setStatsStatusFilter] = useState<string>("delivered");
   const [statsPaymentFilter, setStatsPaymentFilter] = useState<'all' | 'received' | 'pending'>('all');
   const [customDateRange, setCustomDateRange] = useState<{
     from: Date | undefined;
