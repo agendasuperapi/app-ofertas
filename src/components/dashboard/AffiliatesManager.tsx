@@ -114,6 +114,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const [createdAffiliateName, setCreatedAffiliateName] = useState<string>('');
   const [newCouponDialogOpen, setNewCouponDialogOpen] = useState(false);
   const [affiliateSearchTerm, setAffiliateSearchTerm] = useState('');
+  const [affiliateStatusFilter, setAffiliateStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
   const [couponProductsModalOpen, setCouponProductsModalOpen] = useState(false);
   const [newCouponData, setNewCouponData] = useState({
@@ -899,16 +900,28 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
 
       {/* Lista de Afiliados */}
       <div className="space-y-4">
-        {/* Campo de Busca */}
+        {/* Campo de Busca e Filtros */}
         {affiliates.length > 0 && (
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar por nome, email ou CPF/CNPJ..."
-              value={affiliateSearchTerm}
-              onChange={(e) => setAffiliateSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por nome, email ou CPF/CNPJ..."
+                value={affiliateSearchTerm}
+                onChange={(e) => setAffiliateSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={affiliateStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setAffiliateStatusFilter(value)}>
+              <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filtrar por status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Ativos</SelectItem>
+                <SelectItem value="inactive">Inativos</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         )}
 
@@ -930,6 +943,11 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
           <div className="grid gap-4">
             {affiliates
               .filter((affiliate) => {
+                // Filtro de status
+                if (affiliateStatusFilter === 'active' && !affiliate.is_active) return false;
+                if (affiliateStatusFilter === 'inactive' && affiliate.is_active) return false;
+                
+                // Filtro de busca
                 if (!affiliateSearchTerm.trim()) return true;
                 const searchLower = affiliateSearchTerm.toLowerCase().trim();
                 const nameMatch = affiliate.name?.toLowerCase().includes(searchLower);
