@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -145,27 +146,44 @@ export const CombosManager = ({ storeId, products }: CombosManagerProps) => {
   const savingsPercent = totalPrice > 0 ? ((savings / totalPrice) * 100).toFixed(0) : 0;
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Combos Promocionais</CardTitle>
-            <CardDescription>
-              Crie pacotes com múltiplos produtos a preços especiais
-            </CardDescription>
-          </div>
-          <ResponsiveDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <Button onClick={() => handleOpenDialog()}>
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Combo
-            </Button>
-            <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50">
-              <ResponsiveDialogHeader>
-                <ResponsiveDialogTitle>{editingCombo ? 'Editar Combo' : 'Novo Combo'}</ResponsiveDialogTitle>
-                <ResponsiveDialogDescription>
-                  Configure o combo com produtos e preço promocional
-                </ResponsiveDialogDescription>
-              </ResponsiveDialogHeader>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
+      <Card className="glass-card">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+                <Package className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <CardTitle className="gradient-text">Combos Promocionais</CardTitle>
+                <CardDescription>
+                  Crie pacotes com múltiplos produtos a preços especiais
+                </CardDescription>
+              </div>
+            </div>
+            <ResponsiveDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <Button onClick={() => handleOpenDialog()} className="bg-gradient-primary shadow-glow hover-lift">
+                <Plus className="w-4 h-4 mr-2" />
+                Novo Combo
+              </Button>
+              <ResponsiveDialogContent className="w-full max-w-full md:max-w-[80vw] lg:max-w-[50vw] max-h-[87vh] md:max-h-[90vh] flex flex-col bg-background z-50 glass">
+                <ResponsiveDialogHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+                      <Package className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <ResponsiveDialogTitle className="gradient-text">{editingCombo ? 'Editar Combo' : 'Novo Combo'}</ResponsiveDialogTitle>
+                      <ResponsiveDialogDescription>
+                        Configure o combo com produtos e preço promocional
+                      </ResponsiveDialogDescription>
+                    </div>
+                  </div>
+                </ResponsiveDialogHeader>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
@@ -447,5 +465,6 @@ export const CombosManager = ({ storeId, products }: CombosManagerProps) => {
         </AlertDialog>
       </CardContent>
     </Card>
+    </motion.div>
   );
 };

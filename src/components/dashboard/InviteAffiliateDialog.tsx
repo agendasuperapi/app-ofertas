@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,23 +99,36 @@ export function InviteAffiliateDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md glass">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <UserPlus className="h-5 w-5" />
-            Convidar Afiliado
-          </DialogTitle>
-          <DialogDescription>
-            Envie um convite para um novo afiliado se cadastrar no sistema independente.
-          </DialogDescription>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+              <UserPlus className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <DialogTitle className="text-xl gradient-text">
+                Convidar Afiliado
+              </DialogTitle>
+              <DialogDescription>
+                Envie um convite para um novo afiliado se cadastrar no sistema independente.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         {inviteLink ? (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-950 rounded-lg">
-              <CheckCircle className="h-6 w-6 text-green-600" />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-4"
+          >
+            <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-500/10 to-green-600/5 border border-green-500/20 rounded-lg">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg animate-pulse">
+                <CheckCircle className="h-5 w-5 text-white" />
+              </div>
               <div>
-                <p className="font-medium text-green-800 dark:text-green-200">Convite criado!</p>
+                <p className="font-medium text-green-700 dark:text-green-300">Convite criado!</p>
                 <p className="text-sm text-green-600 dark:text-green-400">
                   Envie o link abaixo para {formData.name}
                 </p>
@@ -127,9 +141,9 @@ export function InviteAffiliateDialog({
                 <Input
                   value={inviteLink}
                   readOnly
-                  className="font-mono text-xs"
+                  className="font-mono text-xs glass"
                 />
-                <Button variant="outline" size="icon" onClick={copyInviteLink}>
+                <Button variant="outline" size="icon" onClick={copyInviteLink} className="hover-lift">
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
@@ -139,11 +153,11 @@ export function InviteAffiliateDialog({
             </div>
 
             <DialogFooter>
-              <Button onClick={handleClose} className="w-full">
+              <Button onClick={handleClose} className="w-full bg-gradient-primary shadow-glow hover-lift">
                 Fechar
               </Button>
             </DialogFooter>
-          </div>
+          </motion.div>
         ) : (
           <div className="space-y-4">
             <div className="space-y-2">

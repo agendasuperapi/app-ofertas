@@ -286,15 +286,25 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex items-center justify-between"
+      >
         <div>
-          <h2 className="text-2xl font-bold gradient-text">Cupons de Desconto</h2>
-          <p className="text-muted-foreground">Gerencie os cupons promocionais da sua loja</p>
+          <h2 className="text-3xl font-bold gradient-text flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+              <Ticket className="h-5 w-5 text-white" />
+            </div>
+            Cupons de Desconto
+          </h2>
+          <p className="text-muted-foreground mt-1">Gerencie os cupons promocionais da sua loja</p>
         </div>
-      </div>
+      </motion.div>
 
       <Tabs defaultValue="management" className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-md grid-cols-2 glass">
           <TabsTrigger value="management" className="gap-2">
             <Ticket className="h-4 w-4" />
             Gerenciar Cupons
@@ -310,20 +320,27 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
             {canCreate && (
               <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button onClick={() => handleOpenDialog()} className="gap-2">
+                  <Button onClick={() => handleOpenDialog()} className="gap-2 bg-gradient-primary shadow-glow hover-lift">
                     <Plus className="h-4 w-4" />
                     Novo Cupom
                   </Button>
                 </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[500px] glass">
             <form onSubmit={handleSubmit}>
               <DialogHeader>
-                <DialogTitle>
-                  {editingCoupon ? 'Editar Cupom' : 'Criar Novo Cupom'}
-                </DialogTitle>
-                <DialogDescription>
-                  Configure os detalhes do cupom de desconto
-                </DialogDescription>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+                    <Ticket className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-xl gradient-text">
+                      {editingCoupon ? 'Editar Cupom' : 'Criar Novo Cupom'}
+                    </DialogTitle>
+                    <DialogDescription>
+                      Configure os detalhes do cupom de desconto
+                    </DialogDescription>
+                  </div>
+                </div>
               </DialogHeader>
 
               <div className="grid gap-4 py-4">

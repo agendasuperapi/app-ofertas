@@ -552,31 +552,43 @@ export const OrderStatusManager = ({ storeId }: OrderStatusManagerProps) => {
   });
 
   return (
-    <Card>
+    <Card className="glass-card">
       <CardHeader>
         <div className="flex justify-between items-start">
-          <div>
-            <CardTitle>Status dos Pedidos</CardTitle>
-            <CardDescription>
-              Configure os status dos pedidos e as mensagens do WhatsApp
-            </CardDescription>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+              <AlertCircle className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <CardTitle className="gradient-text">Status dos Pedidos</CardTitle>
+              <CardDescription>
+                Configure os status dos pedidos e as mensagens do WhatsApp
+              </CardDescription>
+            </div>
           </div>
           {canEdit && (
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
-                <Button onClick={handleAddNew}>
+                <Button onClick={handleAddNew} className="bg-gradient-primary shadow-glow hover-lift">
                   <Plus className="h-4 w-4 mr-2" />
                   Adicionar Etapa
                 </Button>
               </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl glass">
               <DialogHeader>
-                <DialogTitle>
-                  {editingStatus?.id.startsWith('new_') ? 'Nova Etapa' : 'Editar Etapa'}
-                </DialogTitle>
-                <DialogDescription>
-                  Configure a etapa do pedido e a mensagem que será enviada
-                </DialogDescription>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+                    <Edit className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-xl gradient-text">
+                      {editingStatus?.id.startsWith('new_') ? 'Nova Etapa' : 'Editar Etapa'}
+                    </DialogTitle>
+                    <DialogDescription>
+                      Configure a etapa do pedido e a mensagem que será enviada
+                    </DialogDescription>
+                  </div>
+                </div>
               </DialogHeader>
 
               {editingStatus && (

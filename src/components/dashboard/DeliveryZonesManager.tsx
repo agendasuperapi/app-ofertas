@@ -222,11 +222,22 @@ export const DeliveryZonesManager = ({ storeId }: DeliveryZonesManagerProps) => 
       transition={{ duration: 0.5 }}
       className="p-6 space-y-4"
     >
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+          <MapPin className="h-5 w-5 text-white" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold gradient-text">Zonas de Entrega</h2>
+          <p className="text-muted-foreground text-sm">Configure taxas de entrega por região</p>
+        </div>
+      </div>
+
       {/* Card de Restrição por Zona */}
-      <Card className={requireDeliveryZone ? "border-orange-500" : ""}>
+      <Card className={cn("glass-card transition-all", requireDeliveryZone ? "border-orange-500/50" : "")}>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base text-primary">
-            <MapPin className="h-4 w-4" />
+          <CardTitle className="flex items-center gap-2 text-base gradient-text">
+            <MapPin className="h-4 w-4 text-primary" />
             Restringir Entrega por Zona
           </CardTitle>
           <CardDescription className="text-xs">

@@ -1108,11 +1108,16 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
 
       {/* Dialog: Criar/Editar Afiliado */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-lg h-[90vh] overflow-hidden flex flex-col glass">
           <DialogHeader>
-            <DialogTitle>
-              {editingAffiliate ? 'Editar Afiliado' : 'Novo Afiliado'}
-            </DialogTitle>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+                <Users className="h-5 w-5 text-white" />
+              </div>
+              <DialogTitle className="text-xl gradient-text">
+                {editingAffiliate ? 'Editar Afiliado' : 'Novo Afiliado'}
+              </DialogTitle>
+            </div>
           </DialogHeader>
           <div className="flex-1 overflow-auto mt-4">
             <div className="space-y-4">
@@ -1243,9 +1248,14 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
       </Dialog>
       {/* Dialog: Registrar Pagamento */}
       <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md glass">
           <DialogHeader>
-            <DialogTitle>Registrar Pagamento</DialogTitle>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
+                <CreditCard className="h-5 w-5 text-white" />
+              </div>
+              <DialogTitle className="text-xl gradient-text">Registrar Pagamento</DialogTitle>
+            </div>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -1298,17 +1308,26 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
 
       {/* Dialog: Link de Convite Gerado */}
       <Dialog open={inviteLinkDialogOpen} onOpenChange={setInviteLinkDialogOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md glass">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              Afiliado Cadastrado!
-            </DialogTitle>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg animate-pulse">
+                <CheckCircle className="h-5 w-5 text-white" />
+              </div>
+              <DialogTitle className="text-xl gradient-text">
+                Afiliado Cadastrado!
+              </DialogTitle>
+            </div>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-950 rounded-lg">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="space-y-4"
+          >
+            <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-green-500/10 to-green-600/5 border border-green-500/20 rounded-lg">
               <div>
-                <p className="font-medium text-green-800 dark:text-green-200">Convite criado com sucesso!</p>
+                <p className="font-medium text-green-700 dark:text-green-300">Convite criado com sucesso!</p>
                 <p className="text-sm text-green-600 dark:text-green-400">
                   Envie o link abaixo para {createdAffiliateName}
                 </p>
@@ -1321,7 +1340,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                 <Input
                   value={generatedInviteLink || ''}
                   readOnly
-                  className="font-mono text-xs"
+                  className="font-mono text-xs glass"
                 />
                 <Button 
                   variant="outline" 
@@ -1340,13 +1359,16 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                 Este link expira em 7 dias
               </p>
             </div>
-          </div>
+          </motion.div>
           <DialogFooter>
-            <Button onClick={() => {
-              setInviteLinkDialogOpen(false);
-              setGeneratedInviteLink(null);
-              setCreatedAffiliateName('');
-            }} className="w-full">
+            <Button 
+              className="w-full bg-gradient-primary shadow-glow hover-lift"
+              onClick={() => {
+                setInviteLinkDialogOpen(false);
+                setGeneratedInviteLink(null);
+                setCreatedAffiliateName('');
+              }}
+            >
               Fechar
             </Button>
           </DialogFooter>
@@ -1355,9 +1377,14 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
 
       {/* Dialog: Selecionar Produtos */}
       <Dialog open={productsModalOpen} onOpenChange={setProductsModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh]">
+        <DialogContent className="max-w-2xl max-h-[80vh] glass">
           <DialogHeader>
-            <DialogTitle>Selecionar Produtos e Comissões</DialogTitle>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+                <Package className="h-5 w-5 text-white" />
+              </div>
+              <DialogTitle className="text-xl gradient-text">Selecionar Produtos e Comissões</DialogTitle>
+            </div>
           </DialogHeader>
           <div className="space-y-4">
             <div className="relative">

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useStoreEmployees, EmployeePermissions } from '@/hooks/useStoreEmployees';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -278,29 +279,46 @@ export const EmployeesManager = ({ storeId }: EmployeesManagerProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex items-center justify-between"
+      >
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Gestão de Funcionários</h2>
-          <p className="text-muted-foreground mt-2">
+          <h2 className="text-3xl font-bold gradient-text flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+              <Shield className="h-5 w-5 text-white" />
+            </div>
+            Gestão de Funcionários
+          </h2>
+          <p className="text-muted-foreground mt-1">
             Gerencie sua equipe e controle de acessos ao sistema
           </p>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={resetForm}>
+            <Button onClick={resetForm} className="bg-gradient-primary shadow-glow hover-lift">
               <UserPlus className="mr-2 h-4 w-4" />
               Adicionar Funcionário
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto glass">
             <DialogHeader>
-              <DialogTitle>
-                {editingEmployee ? 'Editar Funcionário' : 'Novo Funcionário'}
-              </DialogTitle>
-              <DialogDescription>
-                Preencha os dados do funcionário e configure suas permissões de acesso
-              </DialogDescription>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+                  <UserPlus className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <DialogTitle className="text-xl gradient-text">
+                    {editingEmployee ? 'Editar Funcionário' : 'Novo Funcionário'}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Preencha os dados do funcionário e configure suas permissões de acesso
+                  </DialogDescription>
+                </div>
+              </div>
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -460,7 +478,7 @@ export const EmployeesManager = ({ storeId }: EmployeesManagerProps) => {
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+      </motion.div>
 
       <Tabs defaultValue="employees" className="space-y-4">
         <TabsList>
