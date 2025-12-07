@@ -73,6 +73,7 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
   const [categorySearch, setCategorySearch] = useState('');
   const [productSearch, setProductSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [couponSearch, setCouponSearch] = useState('');
 
   // Verificar permissões
   const hasPermission = (action: string): boolean => {
@@ -111,11 +112,30 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
     return products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()));
   }, [products, productSearch]);
 
-  // Filtro de cupons por status
+  // Filtro de cupons por status e busca
   const filteredCoupons = useMemo(() => {
-    if (statusFilter === 'all') return coupons;
-    return coupons.filter(c => statusFilter === 'active' ? c.is_active : !c.is_active);
-  }, [coupons, statusFilter]);
+    let result = coupons;
+    
+    // Filtro por status
+    if (statusFilter !== 'all') {
+      result = result.filter(c => statusFilter === 'active' ? c.is_active : !c.is_active);
+    }
+    
+    // Filtro por busca (código ou afiliado)
+    if (couponSearch.trim()) {
+      const searchLower = couponSearch.toLowerCase().trim();
+      result = result.filter(coupon => {
+        const codeMatch = coupon.code.toLowerCase().includes(searchLower);
+        const linkedAffiliate = affiliates.find(affiliate => 
+          affiliate.affiliate_coupons?.some((ac: any) => ac.coupon_id === coupon.id)
+        );
+        const affiliateMatch = linkedAffiliate?.name.toLowerCase().includes(searchLower);
+        return codeMatch || affiliateMatch;
+      });
+    }
+    
+    return result;
+  }, [coupons, statusFilter, couponSearch, affiliates]);
 
   // Função para encontrar o afiliado vinculado a um cupom
   const getLinkedAffiliate = (couponId: string) => {
@@ -574,10 +594,31 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
         )}
       </div>
 
-      {/* Filtro de status */}
+      {/* Filtro de status e busca */}
       {coupons.length > 0 && (
         <Card className="mb-4">
-          <CardContent className="py-3 px-4">
+          <CardContent className="py-3 px-4 space-y-3">
+            {/* Campo de busca */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por código ou afiliado..."
+                value={couponSearch}
+                onChange={(e) => setCouponSearch(e.target.value)}
+                className="pl-9 pr-9"
+              />
+              {couponSearch && (
+                <button
+                  type="button"
+                  onClick={() => setCouponSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  <XCircle className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            
+            {/* Filtros de status */}
             <div className="flex gap-2 flex-wrap">
               <Button
                 variant={statusFilter === 'all' ? 'default' : 'outline'}
