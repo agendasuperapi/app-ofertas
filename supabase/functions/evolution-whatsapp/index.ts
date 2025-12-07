@@ -555,10 +555,42 @@ serve(async (req) => {
         
       console.log('Final status determined:', finalStatus);
 
+      // Se conectado, buscar informações do número via fetchInstances
+      let connectedPhone = null;
+      if (finalStatus === 'open' || finalStatus === 'connected') {
+        try {
+          const instanceInfoResponse = await fetch(`${EVOLUTION_API_URL}/instance/fetchInstances?instanceName=${instanceName}`, {
+            method: 'GET',
+            headers: {
+              'apikey': EVOLUTION_API_KEY,
+            },
+          });
+          
+          if (instanceInfoResponse.ok) {
+            const instanceInfo = await instanceInfoResponse.json();
+            console.log('Instance info:', JSON.stringify(instanceInfo, null, 2));
+            
+            // O número pode estar em diferentes lugares dependendo da versão da API
+            const ownerJid = instanceInfo?.[0]?.instance?.owner ?? 
+                            instanceInfo?.instance?.owner ?? 
+                            instanceInfo?.owner;
+            
+            if (ownerJid) {
+              // O formato é algo como "5538999524679@s.whatsapp.net"
+              connectedPhone = ownerJid.split('@')[0];
+              console.log('Connected phone extracted:', connectedPhone);
+            }
+          }
+        } catch (phoneError) {
+          console.log('Could not fetch phone number:', phoneError);
+        }
+      }
+
       return new Response(
         JSON.stringify({
           success: true,
-          status: finalStatus
+          status: finalStatus,
+          connectedPhone: connectedPhone
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
