@@ -113,6 +113,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const [generatedInviteLink, setGeneratedInviteLink] = useState<string | null>(null);
   const [createdAffiliateName, setCreatedAffiliateName] = useState<string>('');
   const [newCouponDialogOpen, setNewCouponDialogOpen] = useState(false);
+  const [affiliateSearchTerm, setAffiliateSearchTerm] = useState('');
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
   const [couponProductsModalOpen, setCouponProductsModalOpen] = useState(false);
   const [newCouponData, setNewCouponData] = useState({
@@ -898,6 +899,19 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
 
       {/* Lista de Afiliados */}
       <div className="space-y-4">
+        {/* Campo de Busca */}
+        {affiliates.length > 0 && (
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome, email ou CPF/CNPJ..."
+              value={affiliateSearchTerm}
+              onChange={(e) => setAffiliateSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        )}
+
         {affiliates.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
@@ -914,7 +928,17 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
           </Card>
         ) : (
           <div className="grid gap-4">
-            {affiliates.map((affiliate) => (
+            {affiliates
+              .filter((affiliate) => {
+                if (!affiliateSearchTerm.trim()) return true;
+                const searchLower = affiliateSearchTerm.toLowerCase().trim();
+                const nameMatch = affiliate.name?.toLowerCase().includes(searchLower);
+                const emailMatch = affiliate.email?.toLowerCase().includes(searchLower);
+                const cpfMatch = affiliate.cpf_cnpj?.replace(/\D/g, '').includes(searchLower.replace(/\D/g, '')) ||
+                                 affiliate.cpf_cnpj?.toLowerCase().includes(searchLower);
+                return nameMatch || emailMatch || cpfMatch;
+              })
+              .map((affiliate) => (
               <Card key={affiliate.id} className="overflow-hidden">
                 <CardContent className="p-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
