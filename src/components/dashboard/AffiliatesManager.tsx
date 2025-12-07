@@ -2558,7 +2558,15 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                     }}
                                   />
                                   <div>
-                                    <p className="font-medium">{coupon.code}</p>
+                                    <div className="flex items-center gap-2">
+                                      <p className="font-medium">{coupon.code}</p>
+                                      <Badge 
+                                        variant={coupon.is_active ? "default" : "destructive"}
+                                        className={coupon.is_active ? "bg-green-600 text-white text-xs" : "text-xs"}
+                                      >
+                                        {coupon.is_active ? "Ativo" : "Inativo"}
+                                      </Badge>
+                                    </div>
                                     <p className="text-sm text-muted-foreground">
                                       {coupon.discount_type === 'percentage' 
                                         ? `${coupon.discount_value}% de desconto` 
