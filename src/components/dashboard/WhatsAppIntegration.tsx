@@ -414,6 +414,12 @@ export const WhatsAppIntegration = ({ storeId, store, onStoreUpdate, isActive = 
         if (connected) {
           addLog('✅ WhatsApp conectado com sucesso!', 'success');
           setQrCode("");
+          
+          // Atualizar número do telefone conectado se retornado pela API
+          if (data.connectedPhone) {
+            console.log('[WhatsApp] Número conectado:', data.connectedPhone);
+            setPhoneNumber(data.connectedPhone);
+          }
         } else {
           addLog(`⚠️ WhatsApp não conectado. Status: ${data.status}`, 'error');
         }
