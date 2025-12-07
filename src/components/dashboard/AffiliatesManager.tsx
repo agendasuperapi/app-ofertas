@@ -1787,6 +1787,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                       value={newCouponData.code}
                                       onChange={(e) => setNewCouponData({ ...newCouponData, code: e.target.value.toUpperCase() })}
                                       placeholder="Ex: AFILIADO10"
+                                      disabled={!!editingCouponId}
                                     />
                                   </div>
                                   <div className="grid grid-cols-2 gap-4">
