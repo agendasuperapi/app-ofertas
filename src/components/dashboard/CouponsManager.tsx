@@ -309,6 +309,7 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                     placeholder="Ex: PROMO10"
                     required
                     maxLength={20}
+                    disabled={!!editingCoupon}
                   />
                   <p className="text-xs text-muted-foreground">Apenas letras maiúsculas e números</p>
                 </div>
