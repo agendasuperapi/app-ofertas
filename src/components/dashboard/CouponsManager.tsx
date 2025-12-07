@@ -325,7 +325,7 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                     Novo Cupom
                   </Button>
                 </DialogTrigger>
-          <DialogContent className="sm:max-w-[500px] glass">
+          <DialogContent className="sm:max-w-[500px] glass max-h-[90vh] overflow-y-auto">
             <form onSubmit={handleSubmit}>
               <DialogHeader>
                 <div className="flex items-center gap-3">
