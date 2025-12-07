@@ -576,29 +576,33 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
 
       {/* Filtro de status */}
       {coupons.length > 0 && (
-        <div className="flex gap-2 mb-4">
-          <Button
-            variant={statusFilter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setStatusFilter('all')}
-          >
-            Todos ({coupons.length})
-          </Button>
-          <Button
-            variant={statusFilter === 'active' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setStatusFilter('active')}
-          >
-            Ativos ({coupons.filter(c => c.is_active).length})
-          </Button>
-          <Button
-            variant={statusFilter === 'inactive' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setStatusFilter('inactive')}
-          >
-            Inativos ({coupons.filter(c => !c.is_active).length})
-          </Button>
-        </div>
+        <Card className="mb-4">
+          <CardContent className="py-3 px-4">
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                variant={statusFilter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('all')}
+              >
+                Todos ({coupons.length})
+              </Button>
+              <Button
+                variant={statusFilter === 'active' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('active')}
+              >
+                Ativos ({coupons.filter(c => c.is_active).length})
+              </Button>
+              <Button
+                variant={statusFilter === 'inactive' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('inactive')}
+              >
+                Inativos ({coupons.filter(c => !c.is_active).length})
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {coupons.length === 0 ? (
