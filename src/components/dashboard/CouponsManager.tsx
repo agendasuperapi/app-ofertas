@@ -3,6 +3,7 @@ import { useCoupons, Coupon, DiscountType } from '@/hooks/useCoupons';
 import { useEmployeeAccess } from '@/hooks/useEmployeeAccess';
 import { useCategories } from '@/hooks/useCategories';
 import { useProducts } from '@/hooks/useProducts';
+import { useAffiliates } from '@/hooks/useAffiliates';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -37,7 +38,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Plus, Pencil, Trash2, Ticket, Calendar, DollarSign, Users, Copy, BarChart3, Search, XCircle } from 'lucide-react';
+import { Plus, Pencil, Trash2, Ticket, Calendar, DollarSign, Users, Copy, BarChart3, Search, XCircle, UserCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import { z } from 'zod';
@@ -62,6 +63,7 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
   const { coupons, isLoading, createCoupon, updateCoupon, deleteCoupon, toggleCouponStatus } = useCoupons(storeId);
   const { categories } = useCategories(storeId);
   const { data: products = [] } = useProducts(storeId);
+  const { affiliates } = useAffiliates(storeId);
   const employeeAccess = useEmployeeAccess();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
@@ -107,6 +109,13 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
     if (!productSearch.trim()) return products;
     return products.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()));
   }, [products, productSearch]);
+
+  // Função para encontrar o afiliado vinculado a um cupom
+  const getLinkedAffiliate = (couponId: string) => {
+    return affiliates.find(affiliate => 
+      affiliate.affiliate_coupons?.some((ac: any) => ac.coupon_id === couponId)
+    );
+  };
 
   const resetForm = () => {
     setFormData({
@@ -658,6 +667,17 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                       {coupon.valid_until ? formatDate(coupon.valid_until) : 'Sem data limite'}
                     </span>
                   </div>
+                  {(() => {
+                    const linkedAffiliate = getLinkedAffiliate(coupon.id);
+                    return linkedAffiliate ? (
+                      <div className="flex items-center gap-2">
+                        <UserCheck className="h-4 w-4 text-primary" />
+                        <span className="text-sm">
+                          Afiliado: <span className="font-medium">{linkedAffiliate.name}</span>
+                        </span>
+                      </div>
+                    ) : null;
+                  })()}
                   <div className="pt-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground">Status</span>
