@@ -970,7 +970,10 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold truncate">{affiliate.name}</h3>
-                          <Badge variant={affiliate.is_active ? 'default' : 'secondary'}>
+                          <Badge 
+                            variant={affiliate.is_active ? 'default' : 'secondary'}
+                            className={affiliate.is_active ? 'bg-green-600 hover:bg-green-700 text-white' : ''}
+                          >
                             {affiliate.is_active ? 'Ativo' : 'Inativo'}
                           </Badge>
                           {affiliate.commission_enabled && (
