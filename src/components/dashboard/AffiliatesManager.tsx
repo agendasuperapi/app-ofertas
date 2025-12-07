@@ -67,12 +67,12 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
 
   // Filter coupons: only show coupons not linked to other affiliates
   const availableCoupons = coupons.filter((coupon) => {
-    // Check if coupon is linked via legacy field (coupon_id) - only if coupon exists
-    const linkedViaLegacy = affiliates.find(a => a.coupon_id === coupon.id && a.coupon !== null);
+    // Check if coupon is linked via legacy field (coupon_id)
+    const linkedViaLegacy = affiliates.find(a => a.coupon_id === coupon.id);
     
-    // Check if coupon is linked via junction table (affiliate_coupons) - only if coupon exists
+    // Check if coupon is linked via junction table (affiliate_coupons)
     const linkedViaJunction = affiliates.find(a => 
-      a.affiliate_coupons?.some(ac => ac.coupon_id === coupon.id && ac.coupon !== null)
+      a.affiliate_coupons?.some(ac => ac.coupon_id === coupon.id)
     );
     
     const linkedAffiliate = linkedViaLegacy || linkedViaJunction;
