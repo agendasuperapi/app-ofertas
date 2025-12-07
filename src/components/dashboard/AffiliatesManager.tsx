@@ -77,9 +77,10 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     
     const linkedAffiliate = linkedViaLegacy || linkedViaJunction;
     
-    // Allow if: not linked to any affiliate, OR linked to the affiliate being edited
+    // Allow if: not linked to any affiliate, OR linked to the affiliate being edited/viewed
     if (!linkedAffiliate) return true;
-    return linkedAffiliate.id === editingAffiliate?.id;
+    const currentAffiliateId = editingAffiliate?.id || selectedAffiliate?.id;
+    return linkedAffiliate.id === currentAffiliateId;
   });
   const [commissionRules, setCommissionRules] = useState<AffiliateCommissionRule[]>([]);
   const [affiliateEarnings, setAffiliateEarnings] = useState<AffiliateEarning[]>([]);
