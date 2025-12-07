@@ -2360,6 +2360,7 @@ export type Database = {
           created_at: string | null
           evolution_instance_id: string
           id: number
+          instance_name: string | null
           store_id: string
           updated_at: string | null
         }
@@ -2367,6 +2368,7 @@ export type Database = {
           created_at?: string | null
           evolution_instance_id: string
           id?: number
+          instance_name?: string | null
           store_id: string
           updated_at?: string | null
         }
@@ -2374,6 +2376,7 @@ export type Database = {
           created_at?: string | null
           evolution_instance_id?: string
           id?: number
+          instance_name?: string | null
           store_id?: string
           updated_at?: string | null
         }

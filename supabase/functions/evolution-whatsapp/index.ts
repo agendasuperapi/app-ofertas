@@ -258,6 +258,7 @@ serve(async (req) => {
               console.log('Instance is stale (401), deleting and recreating...');
               
               // Tentar deletar a instância fantasma
+              let deleteSucceeded = false;
               try {
                 const deleteResponse = await fetch(`${EVOLUTION_API_URL}/instance/delete/${instanceName}`, {
                   method: 'DELETE',
@@ -268,12 +269,21 @@ serve(async (req) => {
                 console.log('Stale instance delete response status:', deleteResponse.status);
                 if (deleteResponse.ok) {
                   console.log('Stale instance deleted successfully');
+                  deleteSucceeded = true;
                 } else {
                   const deleteErr = await deleteResponse.text();
                   console.log('Stale instance delete failed:', deleteErr);
                 }
               } catch (deleteError) {
                 console.log('Could not delete stale instance:', deleteError);
+              }
+
+              // Se a deleção falhou, usar nome alternativo
+              let finalInstanceName = instanceName;
+              if (!deleteSucceeded) {
+                const suffix = Date.now().toString(36).slice(-4);
+                finalInstanceName = `${instanceName}_${suffix}`;
+                console.log(`Delete failed, using alternative instance name: ${finalInstanceName}`);
               }
               
               // Implementar retry com múltiplas tentativas e backoff exponencial
@@ -285,7 +295,7 @@ serve(async (req) => {
               
               while (retryAttempt < maxRetries && !retrySuccess) {
                 const waitTime = 2000 * (retryAttempt + 1); // 2s, 4s, 6s
-                console.log(`Retry attempt ${retryAttempt + 1}/${maxRetries}, waiting ${waitTime}ms before creating instance...`);
+                console.log(`Retry attempt ${retryAttempt + 1}/${maxRetries}, waiting ${waitTime}ms before creating instance ${finalInstanceName}...`);
                 
                 await new Promise(resolve => setTimeout(resolve, waitTime));
                 
@@ -297,7 +307,7 @@ serve(async (req) => {
                       'apikey': EVOLUTION_API_KEY,
                     },
                     body: JSON.stringify({
-                      instanceName: instanceName,
+                      instanceName: finalInstanceName,
                       token: EVOLUTION_API_KEY,
                       qrcode: true,
                       integration: 'WHATSAPP-BAILEYS'
@@ -313,6 +323,13 @@ serve(async (req) => {
                   } else {
                     lastRetryError = await retryCreateResponse.text();
                     console.log(`Retry attempt ${retryAttempt + 1} failed:`, lastRetryError);
+                    
+                    // Se o nome alternativo também está em uso, gerar outro
+                    if (lastRetryError.toLowerCase().includes('already in use') && finalInstanceName !== instanceName) {
+                      const newSuffix = Date.now().toString(36).slice(-4);
+                      finalInstanceName = `${instanceName}_${newSuffix}`;
+                      console.log(`Name collision, trying new alternative: ${finalInstanceName}`);
+                    }
                     retryAttempt++;
                   }
                 } catch (fetchError) {
@@ -323,13 +340,30 @@ serve(async (req) => {
               }
               
               if (retrySuccess && retryCreateData) {
+                // Salvar o nome real da instância no banco de dados
+                console.log(`Saving instance name ${finalInstanceName} for store ${storeId}`);
+                const { error: updateError } = await supabaseClient
+                  .from('store_instances')
+                  .upsert({
+                    store_id: storeId,
+                    evolution_instance_id: finalInstanceName,
+                    instance_name: finalInstanceName,
+                    updated_at: new Date().toISOString()
+                  }, { onConflict: 'store_id' });
+                
+                if (updateError) {
+                  console.error('Failed to save instance name:', updateError);
+                } else {
+                  console.log('Instance name saved successfully');
+                }
+
                 // Conectar para obter QR code
                 console.log('Instance created successfully, now connecting for QR code...');
                 
                 // Aguardar um pouco antes de conectar
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 
-                const retryConnectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${instanceName}`, {
+                const retryConnectResponse = await fetch(`${EVOLUTION_API_URL}/instance/connect/${finalInstanceName}`, {
                   method: 'GET',
                   headers: {
                     'apikey': EVOLUTION_API_KEY,
@@ -346,7 +380,8 @@ serve(async (req) => {
                     JSON.stringify({
                       success: true,
                       instance: retryCreateData,
-                      qrcode: retryConnectData
+                      qrcode: retryConnectData,
+                      instanceName: finalInstanceName
                     }),
                     { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
                   );
