@@ -2,9 +2,12 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 const fetchFeaturedProducts = async (storeId: string) => {
-  const result = await (supabase as any)
+  const result = await supabase
     .from('products')
-    .select('*')
+    .select(`
+      *,
+      product_images!left(id, image_url, is_primary, display_order)
+    `)
     .eq('store_id', storeId)
     .eq('is_available', true)
     .eq('is_featured', true)
@@ -13,7 +16,16 @@ const fetchFeaturedProducts = async (storeId: string) => {
     .limit(10);
 
   if (result.error) throw result.error;
-  return result.data || [];
+  
+  // Process products to get primary image URL
+  return (result.data || []).map(product => {
+    const images = product.product_images || [];
+    const primaryImage = images.find((img: any) => img.is_primary) || images[0];
+    return {
+      ...product,
+      resolved_image_url: primaryImage?.image_url || product.image_url
+    };
+  });
 };
 
 export const useFeaturedProducts = (storeId: string) => {

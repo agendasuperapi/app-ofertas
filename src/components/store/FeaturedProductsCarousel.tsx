@@ -20,6 +20,7 @@ interface Product {
   price: number;
   promotional_price?: number;
   image_url?: string;
+  resolved_image_url?: string;
   category: string;
 }
 
@@ -116,9 +117,9 @@ export const FeaturedProductsCarousel = ({
 
                     {/* Imagem do Produto */}
                     <div className="relative w-full aspect-[4/3] overflow-hidden bg-muted/30">
-                      {product.image_url ? (
+                      {(product.resolved_image_url || product.image_url) ? (
                         <img
-                          src={product.image_url}
+                          src={product.resolved_image_url || product.image_url}
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
