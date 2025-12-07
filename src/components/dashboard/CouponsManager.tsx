@@ -596,54 +596,42 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
 
       {/* Filtro de status e busca */}
       {coupons.length > 0 && (
-        <Card className="mb-4">
-          <CardContent className="py-3 px-4 space-y-3">
-            {/* Campo de busca */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por código ou afiliado..."
-                value={couponSearch}
-                onChange={(e) => setCouponSearch(e.target.value)}
-                className="pl-9 pr-9"
-              />
-              {couponSearch && (
-                <button
-                  type="button"
-                  onClick={() => setCouponSearch('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  <XCircle className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-            
-            {/* Filtros de status */}
-            <div className="flex gap-2 flex-wrap">
-              <Button
-                variant={statusFilter === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setStatusFilter('all')}
+        <div className="mb-4 flex gap-3 items-center">
+          {/* Campo de busca */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por código ou afiliado..."
+              value={couponSearch}
+              onChange={(e) => setCouponSearch(e.target.value)}
+              className="pl-9 pr-9"
+            />
+            {couponSearch && (
+              <button
+                type="button"
+                onClick={() => setCouponSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
               >
-                Todos ({coupons.length})
-              </Button>
-              <Button
-                variant={statusFilter === 'active' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setStatusFilter('active')}
-              >
-                Ativos ({coupons.filter(c => c.is_active).length})
-              </Button>
-              <Button
-                variant={statusFilter === 'inactive' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setStatusFilter('inactive')}
-              >
-                Inativos ({coupons.filter(c => !c.is_active).length})
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                <XCircle className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          
+          {/* Dropdown de status */}
+          <Select
+            value={statusFilter}
+            onValueChange={(value: 'all' | 'active' | 'inactive') => setStatusFilter(value)}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos ({coupons.length})</SelectItem>
+              <SelectItem value="active">Ativos ({coupons.filter(c => c.is_active).length})</SelectItem>
+              <SelectItem value="inactive">Inativos ({coupons.filter(c => !c.is_active).length})</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       )}
 
       {coupons.length === 0 ? (
