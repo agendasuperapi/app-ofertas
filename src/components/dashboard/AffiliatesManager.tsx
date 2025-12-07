@@ -3252,60 +3252,62 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                     </Button>
                   </CardHeader>
                   <CardContent>
-                    <ScrollArea className="h-[400px]">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Pedido</TableHead>
-                            <TableHead>Data</TableHead>
-                            <TableHead>Valor Venda</TableHead>
-                            <TableHead>Comissão</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Ações</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {affiliateEarnings.map((earning) => (
-                            <TableRow key={earning.id}>
-                              <TableCell className="font-mono text-sm">
-                                #{earning.order?.order_number || '-'}
-                              </TableCell>
-                              <TableCell className="text-sm">
-                                {format(new Date(earning.created_at), 'dd/MM/yyyy', { locale: ptBR })}
-                              </TableCell>
-                              <TableCell>{formatCurrency(earning.order_total)}</TableCell>
-                              <TableCell className="font-semibold text-green-600">
-                                {formatCurrency(earning.commission_amount)}
-                              </TableCell>
-                              <TableCell>{getStatusBadge(earning.status)}</TableCell>
-                              <TableCell>
-                                <Select
-                                  value={earning.status}
-                                  onValueChange={(value) => updateEarningStatus(earning.id, value as any)}
-                                >
-                                  <SelectTrigger className="w-[120px] h-8">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="pending">Pendente</SelectItem>
-                                    <SelectItem value="approved">Aprovada</SelectItem>
-                                    <SelectItem value="paid">Paga</SelectItem>
-                                    <SelectItem value="cancelled">Cancelada</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                          {affiliateEarnings.length === 0 && (
+                    <div className="h-[400px] overflow-auto">
+                      <div className="overflow-x-auto">
+                        <Table>
+                          <TableHeader>
                             <TableRow>
-                              <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                                Nenhuma comissão registrada
-                              </TableCell>
+                              <TableHead>Pedido</TableHead>
+                              <TableHead>Data</TableHead>
+                              <TableHead>Valor Venda</TableHead>
+                              <TableHead>Comissão</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Ações</TableHead>
                             </TableRow>
-                          )}
-                        </TableBody>
-                      </Table>
-                    </ScrollArea>
+                          </TableHeader>
+                          <TableBody>
+                            {affiliateEarnings.map((earning) => (
+                              <TableRow key={earning.id}>
+                                <TableCell className="font-mono text-sm">
+                                  #{earning.order?.order_number || '-'}
+                                </TableCell>
+                                <TableCell className="text-sm">
+                                  {format(new Date(earning.created_at), 'dd/MM/yyyy', { locale: ptBR })}
+                                </TableCell>
+                                <TableCell>{formatCurrency(earning.order_total)}</TableCell>
+                                <TableCell className="font-semibold text-green-600">
+                                  {formatCurrency(earning.commission_amount)}
+                                </TableCell>
+                                <TableCell>{getStatusBadge(earning.status)}</TableCell>
+                                <TableCell>
+                                  <Select
+                                    value={earning.status}
+                                    onValueChange={(value) => updateEarningStatus(earning.id, value as any)}
+                                  >
+                                    <SelectTrigger className="w-[120px] h-8">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="pending">Pendente</SelectItem>
+                                      <SelectItem value="approved">Aprovada</SelectItem>
+                                      <SelectItem value="paid">Paga</SelectItem>
+                                      <SelectItem value="cancelled">Cancelada</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                            {affiliateEarnings.length === 0 && (
+                              <TableRow>
+                                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                  Nenhuma comissão registrada
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
