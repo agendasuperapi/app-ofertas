@@ -18,8 +18,18 @@ import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AffiliateStoreProductsTab } from '@/components/dashboard/AffiliateStoreProductsTab';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { format } from 'date-fns';
+import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogFooter,
+} from '@/components/ui/responsive-dialog';
 import {
   Users,
   DollarSign,
@@ -46,6 +56,8 @@ import {
   ChevronRight,
   Grid3X3,
   X,
+  Calendar as CalendarIcon,
+  Filter,
 } from 'lucide-react';
 
 // Cores para gráfico de pizza
@@ -72,6 +84,15 @@ export default function AffiliateDashboardNew() {
   // Store modal state
   const [selectedStore, setSelectedStore] = useState<typeof affiliateStores[0] | null>(null);
 
+  // Filter states
+  const [periodFilter, setPeriodFilter] = useState<string>('all');
+  const [storeFilter, setStoreFilter] = useState<string>('all');
+  const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
+  const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
+
   // Extrair IDs dos store_affiliates para notificações em tempo real
   const storeAffiliateIds = useMemo(() => 
     affiliateStores.map(s => s.store_affiliate_id).filter(Boolean),
@@ -88,13 +109,98 @@ export default function AffiliateDashboardNew() {
     onNewEarning: handleNewEarning
   });
 
-  // Dados para gráficos - Comissões ao longo do tempo
-  const commissionsOverTime = useMemo(() => {
+  // Filtered orders based on period and store
+  const filteredAffiliateOrders = useMemo(() => {
     if (!affiliateOrders || affiliateOrders.length === 0) return [];
+    
+    return affiliateOrders.filter(order => {
+      const orderDate = new Date(order.order_date);
+      const now = new Date();
+      
+      // Period filter
+      let passesDateFilter = true;
+      switch (periodFilter) {
+        case 'today':
+          passesDateFilter = isWithinInterval(orderDate, {
+            start: startOfDay(now),
+            end: endOfDay(now),
+          });
+          break;
+        case '7days':
+          passesDateFilter = isWithinInterval(orderDate, {
+            start: startOfDay(subDays(now, 7)),
+            end: endOfDay(now),
+          });
+          break;
+        case 'week':
+          passesDateFilter = isWithinInterval(orderDate, {
+            start: startOfWeek(now, { locale: ptBR }),
+            end: endOfWeek(now, { locale: ptBR }),
+          });
+          break;
+        case '30days':
+          passesDateFilter = isWithinInterval(orderDate, {
+            start: startOfDay(subDays(now, 30)),
+            end: endOfDay(now),
+          });
+          break;
+        case 'month':
+          passesDateFilter = isWithinInterval(orderDate, {
+            start: startOfMonth(now),
+            end: endOfMonth(now),
+          });
+          break;
+        case 'custom':
+          if (customDateRange.from && customDateRange.to) {
+            passesDateFilter = isWithinInterval(orderDate, {
+              start: startOfDay(customDateRange.from),
+              end: endOfDay(customDateRange.to),
+            });
+          }
+          break;
+        case 'all':
+        default:
+          passesDateFilter = true;
+      }
+      
+      // Store filter
+      let passesStoreFilter = true;
+      if (storeFilter !== 'all') {
+        passesStoreFilter = order.store_affiliate_id === storeFilter;
+      }
+      
+      return passesDateFilter && passesStoreFilter;
+    });
+  }, [affiliateOrders, periodFilter, storeFilter, customDateRange]);
+
+  // Filtered stats based on filtered orders
+  const filteredStats = useMemo(() => {
+    const totalOrders = filteredAffiliateOrders.length;
+    const totalSales = filteredAffiliateOrders.reduce((sum, order) => sum + (order.order_total || 0), 0);
+    const totalCommission = filteredAffiliateOrders.reduce((sum, order) => sum + (order.commission_amount || 0), 0);
+    const pendingCommission = filteredAffiliateOrders
+      .filter(order => order.commission_status === 'pending')
+      .reduce((sum, order) => sum + (order.commission_amount || 0), 0);
+    const paidCommission = filteredAffiliateOrders
+      .filter(order => order.commission_status === 'paid')
+      .reduce((sum, order) => sum + (order.commission_amount || 0), 0);
+
+    return {
+      total_orders: totalOrders,
+      total_sales: totalSales,
+      total_commission: totalCommission,
+      pending_commission: pendingCommission,
+      paid_commission: paidCommission,
+    };
+  }, [filteredAffiliateOrders]);
+
+  // Dados para gráficos - Comissões ao longo do tempo (usando dados filtrados)
+  const commissionsOverTime = useMemo(() => {
+    if (!filteredAffiliateOrders || filteredAffiliateOrders.length === 0) return [];
     
     const ordersByDate: Record<string, { pedidos: number; comissao: number }> = {};
     
-    affiliateOrders.forEach(order => {
+    filteredAffiliateOrders.forEach(order => {
       const date = format(new Date(order.order_date), 'dd/MM', { locale: ptBR });
       if (!ordersByDate[date]) {
         ordersByDate[date] = { pedidos: 0, comissao: 0 };
@@ -106,20 +212,27 @@ export default function AffiliateDashboardNew() {
     return Object.entries(ordersByDate)
       .map(([date, data]) => ({ date, ...data }))
       .slice(-14); // Últimos 14 dias
-  }, [affiliateOrders]);
+  }, [filteredAffiliateOrders]);
 
-  // Dados para gráfico de pizza - Comissões por loja
+  // Dados para gráfico de pizza - Comissões por loja (usando dados filtrados)
   const commissionsByStore = useMemo(() => {
-    if (!affiliateStores || affiliateStores.length === 0) return [];
+    if (!filteredAffiliateOrders || filteredAffiliateOrders.length === 0) return [];
     
-    return affiliateStores
-      .filter(store => store.total_commission > 0)
-      .map(store => ({
-        name: store.store_name,
-        value: store.total_commission
-      }))
+    const storeCommissions: Record<string, { name: string; value: number }> = {};
+    
+    filteredAffiliateOrders.forEach(order => {
+      const storeName = order.store_name || 'Loja';
+      if (!storeCommissions[storeName]) {
+        storeCommissions[storeName] = { name: storeName, value: 0 };
+      }
+      storeCommissions[storeName].value += order.commission_amount || 0;
+    });
+    
+    return Object.values(storeCommissions)
+      .filter(store => store.value > 0)
+      .sort((a, b) => b.value - a.value)
       .slice(0, 6); // Top 6 lojas
-  }, [affiliateStores]);
+  }, [filteredAffiliateOrders]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -389,97 +502,190 @@ export default function AffiliateDashboardNew() {
     );
   }
 
-  // Render Stats Cards (reusable)
-  const renderStatsCards = () => (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        whileHover={{ scale: 1.02 }}
-      >
-        <Card className="glass border-border/50 overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
-          <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 shadow-[0_0_20px_hsl(217_91%_60%/0.4)]">
-                <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+  // Render Stats Cards (reusable) - using filtered data
+  const renderStatsCards = () => {
+    // Determine if we should show filtered data or all data
+    const showFilteredData = periodFilter !== 'all' || storeFilter !== 'all';
+    const displayStats = showFilteredData ? filteredStats : affiliateStats;
+    
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          whileHover={{ scale: 1.02 }}
+        >
+          <Card className="glass border-border/50 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
+            <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 shadow-[0_0_20px_hsl(217_91%_60%/0.4)]">
+                  <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Lojas</p>
+                  <p className="text-lg sm:text-2xl font-bold gradient-text">{affiliateStats?.total_stores || 0}</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">Lojas</p>
-                <p className="text-lg sm:text-2xl font-bold gradient-text">{affiliateStats?.total_stores || 0}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        whileHover={{ scale: 1.02 }}
-      >
-        <Card className="glass border-border/50 overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />
-          <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-500 to-emerald-600 shadow-[0_0_20px_hsl(142_76%_36%/0.4)]">
-                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          whileHover={{ scale: 1.02 }}
+        >
+          <Card className="glass border-border/50 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />
+            <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-500 to-emerald-600 shadow-[0_0_20px_hsl(142_76%_36%/0.4)]">
+                  <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Vendas</p>
+                  <p className="text-base sm:text-2xl font-bold text-green-600 truncate">{formatCurrency(displayStats?.total_sales || 0)}</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Vendas</p>
-                <p className="text-base sm:text-2xl font-bold text-green-600 truncate">{formatCurrency(affiliateStats?.total_sales || 0)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        whileHover={{ scale: 1.02 }}
-      >
-        <Card className="glass border-border/50 overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent pointer-events-none" />
-          <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-yellow-500 to-amber-600 shadow-[0_0_20px_hsl(45_93%_47%/0.4)]">
-                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          whileHover={{ scale: 1.02 }}
+        >
+          <Card className="glass border-border/50 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent pointer-events-none" />
+            <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-yellow-500 to-amber-600 shadow-[0_0_20px_hsl(45_93%_47%/0.4)]">
+                  <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Pendente</p>
+                  <p className="text-base sm:text-2xl font-bold text-yellow-600 truncate">{formatCurrency(displayStats?.pending_commission || 0)}</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">Pendente</p>
-                <p className="text-base sm:text-2xl font-bold text-yellow-600 truncate">{formatCurrency(affiliateStats?.pending_commission || 0)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        whileHover={{ scale: 1.02 }}
-      >
-        <Card className="glass border-border/50 overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-          <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-primary to-primary-glow shadow-glow">
-                <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          whileHover={{ scale: 1.02 }}
+        >
+          <Card className="glass border-border/50 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+            <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-primary to-primary-glow shadow-glow">
+                  <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Ganhos</p>
+                  <p className="text-base sm:text-2xl font-bold gradient-text truncate">{formatCurrency(displayStats?.total_commission || 0)}</p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Ganhos</p>
-                <p className="text-base sm:text-2xl font-bold gradient-text truncate">{formatCurrency(affiliateStats?.total_commission || 0)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  };
+
+  // Render Filters Section
+  const renderFiltersSection = () => (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 bg-muted/30 rounded-lg border border-border/50"
+    >
+      <div className="flex items-center gap-2">
+        <Filter className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm font-medium">Filtros</span>
+        {(periodFilter !== 'all' || storeFilter !== 'all') && (
+          <Badge variant="secondary" className="text-xs">
+            {filteredAffiliateOrders.length} pedido(s)
+          </Badge>
+        )}
+      </div>
+      
+      <div className="flex flex-wrap gap-2">
+        {/* Period Filter */}
+        <Select value={periodFilter} onValueChange={(value) => {
+          setPeriodFilter(value);
+          if (value === 'custom') {
+            setShowCustomDatePicker(true);
+          }
+        }}>
+          <SelectTrigger className="w-[140px] h-9">
+            <SelectValue placeholder="Período" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todo período</SelectItem>
+            <SelectItem value="today">Hoje</SelectItem>
+            <SelectItem value="7days">Últimos 7 dias</SelectItem>
+            <SelectItem value="week">Esta semana</SelectItem>
+            <SelectItem value="30days">Últimos 30 dias</SelectItem>
+            <SelectItem value="month">Este mês</SelectItem>
+            <SelectItem value="custom">Personalizado</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Store Filter */}
+        <Select value={storeFilter} onValueChange={setStoreFilter}>
+          <SelectTrigger className="w-[160px] h-9">
+            <SelectValue placeholder="Loja" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas as lojas</SelectItem>
+            {affiliateStores.map((store) => (
+              <SelectItem key={store.store_affiliate_id} value={store.store_affiliate_id}>
+                {store.store_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Custom Date Range Button */}
+        {periodFilter === 'custom' && customDateRange.from && customDateRange.to && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCustomDatePicker(true)}
+            className="h-9 gap-2"
+          >
+            <CalendarIcon className="h-4 w-4" />
+            {format(customDateRange.from, 'dd/MM/yy', { locale: ptBR })} - {format(customDateRange.to, 'dd/MM/yy', { locale: ptBR })}
+          </Button>
+        )}
+
+        {/* Clear Filters */}
+        {(periodFilter !== 'all' || storeFilter !== 'all') && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setPeriodFilter('all');
+              setStoreFilter('all');
+              setCustomDateRange({ from: undefined, to: undefined });
+            }}
+            className="h-9 text-muted-foreground"
+          >
+            <X className="h-4 w-4 mr-1" />
+            Limpar
+          </Button>
+        )}
+      </div>
+    </motion.div>
   );
 
   // Home Tab Content
@@ -490,6 +696,9 @@ export default function AffiliateDashboardNew() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
     >
+      {/* Filters Section */}
+      {renderFiltersSection()}
+      
       {renderStatsCards()}
       
       {/* Quick Summary */}
@@ -517,7 +726,11 @@ export default function AffiliateDashboardNew() {
                   <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span className="text-xs sm:text-sm">Total de Pedidos</span>
                 </div>
-                <p className="text-xl sm:text-2xl font-bold">{affiliateStats?.total_orders || 0}</p>
+                <p className="text-xl sm:text-2xl font-bold">
+                  {(periodFilter !== 'all' || storeFilter !== 'all') 
+                    ? filteredStats.total_orders 
+                    : (affiliateStats?.total_orders || 0)}
+                </p>
               </div>
               <div className="p-3 sm:p-4 bg-muted/50 rounded-lg border border-border/50">
                 <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1">
@@ -525,7 +738,9 @@ export default function AffiliateDashboardNew() {
                   <span className="text-xs sm:text-sm">Total Pago</span>
                 </div>
                 <p className="text-lg sm:text-2xl font-bold text-green-600 truncate">
-                  {formatCurrency(affiliateStats?.paid_commission || 0)}
+                  {formatCurrency((periodFilter !== 'all' || storeFilter !== 'all') 
+                    ? filteredStats.paid_commission 
+                    : (affiliateStats?.paid_commission || 0))}
                 </p>
               </div>
             </div>
@@ -1346,6 +1561,111 @@ export default function AffiliateDashboardNew() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Custom Date Range Dialog */}
+      <ResponsiveDialog 
+        open={showCustomDatePicker} 
+        onOpenChange={setShowCustomDatePicker}
+      >
+        <ResponsiveDialogContent className="sm:max-w-lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5 text-primary" />
+              Selecionar Período Personalizado
+            </ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
+          
+          <div className="py-4 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Data Inicial</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {customDateRange.from ? (
+                        format(customDateRange.from, "dd/MM/yyyy", { locale: ptBR })
+                      ) : (
+                        <span className="text-muted-foreground">Selecione</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={customDateRange.from}
+                      onSelect={(date) => setCustomDateRange(prev => ({ ...prev, from: date }))}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Data Final</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {customDateRange.to ? (
+                        format(customDateRange.to, "dd/MM/yyyy", { locale: ptBR })
+                      ) : (
+                        <span className="text-muted-foreground">Selecione</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={customDateRange.to}
+                      onSelect={(date) => setCustomDateRange(prev => ({ ...prev, to: date }))}
+                      disabled={(date) => customDateRange.from ? date < customDateRange.from : false}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+            
+            {customDateRange.from && customDateRange.to && (
+              <div className="p-3 bg-primary/5 rounded-lg border border-primary/20 text-center">
+                <p className="text-sm text-muted-foreground">Período selecionado:</p>
+                <p className="font-medium">
+                  {format(customDateRange.from, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })} até{' '}
+                  {format(customDateRange.to, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                </p>
+              </div>
+            )}
+          </div>
+          
+          <ResponsiveDialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCustomDateRange({ from: undefined, to: undefined });
+                setPeriodFilter('all');
+                setShowCustomDatePicker(false);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => setShowCustomDatePicker(false)}
+              disabled={!customDateRange.from || !customDateRange.to}
+            >
+              Aplicar
+            </Button>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }
