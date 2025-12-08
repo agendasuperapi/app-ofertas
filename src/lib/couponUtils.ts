@@ -158,22 +158,56 @@ export const calculateItemDiscount = (
   allItems: CartItem[],
   discountRules?: CouponDiscountRule[]
 ): { isEligible: boolean; discount: number; usedRule?: CouponDiscountRule } => {
+  console.log('🔍 [calculateItemDiscount] Iniciando cálculo:', {
+    productId: item.productId,
+    productName: item.productName,
+    category: (item as any).category,
+    appliesTo,
+    discountType,
+    discountValue,
+    hasDiscountRules: !!discountRules,
+    rulesCount: discountRules?.length || 0
+  });
+  
   // Verificar se o item é elegível baseado no escopo do cupom
   const isEligible = isItemEligible(item, appliesTo, categoryNames, productIds);
   
+  console.log('🔍 [calculateItemDiscount] Elegibilidade:', {
+    productName: item.productName,
+    isEligible,
+    categoryNames,
+    productIds
+  });
+  
   if (!isEligible) {
+    console.log('❌ [calculateItemDiscount] Item NÃO elegível:', item.productName);
     return { isEligible: false, discount: 0 };
   }
   
   const itemSubtotal = calculateItemSubtotal(item);
+  console.log('💰 [calculateItemDiscount] Subtotal do item:', itemSubtotal);
   
   // Verificar se existe uma regra específica para este item
   const specificRule = discountRules ? findItemDiscountRule(item, discountRules) : null;
+  
+  console.log('🎯 [calculateItemDiscount] Regra específica encontrada:', specificRule ? {
+    ruleType: specificRule.rule_type,
+    discountType: specificRule.discount_type,
+    discountValue: specificRule.discount_value,
+    productId: specificRule.product_id,
+    categoryName: specificRule.category_name
+  } : 'NENHUMA (usar padrão)');
   
   if (specificRule) {
     // Usar a regra específica
     if (specificRule.discount_type === 'percentage') {
       const discount = (itemSubtotal * specificRule.discount_value) / 100;
+      console.log('✅ [calculateItemDiscount] Desconto com REGRA ESPECÍFICA (%):', {
+        productName: item.productName,
+        subtotal: itemSubtotal,
+        discountValue: specificRule.discount_value,
+        calculatedDiscount: discount
+      });
       return { isEligible: true, discount, usedRule: specificRule };
     } else {
       // Para valor fixo em regra específica, aplicar proporcional
@@ -190,14 +224,31 @@ export const calculateItemDiscount = (
       }
       
       const proportionalDiscount = (itemSubtotal / totalEligibleSubtotal) * Math.min(specificRule.discount_value, totalEligibleSubtotal);
+      console.log('✅ [calculateItemDiscount] Desconto com REGRA ESPECÍFICA (fixo):', {
+        productName: item.productName,
+        subtotal: itemSubtotal,
+        proportionalDiscount
+      });
       return { isEligible: true, discount: proportionalDiscount, usedRule: specificRule };
     }
   }
   
   // Sem regra específica - usar desconto padrão do cupom
+  console.log('📌 [calculateItemDiscount] Usando desconto PADRÃO do cupom:', {
+    productName: item.productName,
+    discountType,
+    discountValue
+  });
+  
   // Para porcentagem: aplicar % diretamente ao subtotal do item
   if (discountType === 'percentage') {
     const discount = (itemSubtotal * discountValue) / 100;
+    console.log('✅ [calculateItemDiscount] Desconto PADRÃO (%):', {
+      productName: item.productName,
+      subtotal: itemSubtotal,
+      discountValue,
+      calculatedDiscount: discount
+    });
     return { isEligible: true, discount };
   }
   

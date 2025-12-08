@@ -1084,6 +1084,16 @@ export default function Cart() {
                         
                         {/* Mostrar desconto do cupom para este item */}
                         {cart.couponCode && cart.couponDiscountType && cart.couponDiscountValue !== undefined && (() => {
+                          // Debug: verificar regras de desconto
+                          console.log('📦 [Cart.tsx] Regras de desconto no carrinho:', {
+                            couponCode: cart.couponCode,
+                            couponDiscountRules: cart.couponDiscountRules,
+                            rulesCount: cart.couponDiscountRules?.length || 0,
+                            productName: item.productName,
+                            productId: item.productId,
+                            category: (item as any).category
+                          });
+                          
                           const itemDiscountInfo = calculateItemDiscount(
                             item,
                             cart.couponDiscount || 0,
