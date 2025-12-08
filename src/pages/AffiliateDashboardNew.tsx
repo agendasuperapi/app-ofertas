@@ -342,7 +342,7 @@ export default function AffiliateDashboardNew() {
           x: 0
         }} transition={{
           delay: 0.1 + idx * 0.1
-        }} className="p-4 bg-card rounded-xl border border-border shadow-sm space-y-4">
+        }} className="p-4 bg-gradient-to-br from-muted/30 to-muted/60 rounded-xl border border-border shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-mono font-bold text-2xl gradient-text">{coupon.code}</p>
