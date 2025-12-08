@@ -67,31 +67,40 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendin
       <AnimatePresence>
         {showRelatoriosMenu && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 400, damping: 25 }}
-            className="fixed bottom-20 left-1/2 -translate-x-1/2 z-[60] w-[90vw] max-w-xs"
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] w-[85vw] max-w-xs"
           >
-            <div className="bg-background border border-border rounded-lg shadow-2xl overflow-hidden">
+            <div className="bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden">
               {relatoriosSubmenus.map((submenu, index) => {
                 const SubmenuIcon = submenu.icon;
                 const isActive = activeTab === submenu.id;
                 
                 return (
-                  <button
+                  <motion.button
                     key={submenu.id}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => handleRelatorioClick(submenu.id)}
                     className={cn(
-                      "w-full flex items-center gap-3 px-4 py-3 transition-colors",
+                      "w-full flex items-center gap-3 px-4 py-3.5 transition-all duration-200",
                       "hover:bg-muted/50 active:bg-muted",
-                      isActive && "bg-primary/10 text-primary font-medium",
-                      index !== relatoriosSubmenus.length - 1 && "border-b border-border"
+                      isActive && "bg-primary/10",
+                      index !== relatoriosSubmenus.length - 1 && "border-b border-border/50"
                     )}
                   >
-                    <SubmenuIcon className="w-5 h-5" />
-                    <span className="text-sm">{submenu.label}</span>
-                  </button>
+                    <div className={cn(
+                      "p-2 rounded-xl transition-all",
+                      isActive ? "bg-primary/15 text-primary" : "bg-muted/50 text-muted-foreground"
+                    )}>
+                      <SubmenuIcon className="w-4 h-4" />
+                    </div>
+                    <span className={cn(
+                      "text-sm font-medium",
+                      isActive && "text-primary"
+                    )}>{submenu.label}</span>
+                  </motion.button>
                 );
               })}
             </div>
@@ -99,84 +108,97 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendin
         )}
       </AnimatePresence>
 
+      {/* Barra de navegação flutuante */}
       <motion.nav
-        initial={{ y: 100 }}
-        animate={{ y: 0 }}
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 20 }}
-        className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-lg border-t border-border shadow-lg safe-area-inset-bottom"
+        className="fixed bottom-4 left-4 right-4 z-50"
       >
-        <div className="grid grid-cols-5 h-16">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
+        <div className="bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden">
+          <div className="grid grid-cols-5 h-16 px-1">
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id || 
+                (item.isRelatorios && activeTab.startsWith("relatorio-"));
+              const isSpecialItem = item.isMenu || item.isRelatorios;
 
-            return (
-              <button
-                key={item.id}
-                ref={item.isRelatorios ? relatoriosButtonRef : null}
-                onClick={() => handleClick(item)}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-1 relative transition-colors",
-                  "active:scale-95 transition-transform duration-100",
-                  isActive && !item.isMenu && !item.isRelatorios ? "text-primary" : "text-muted-foreground"
-                )}
-              >
-              {/* Indicador de aba ativa */}
-              {isActive && !item.isMenu && !item.isRelatorios && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-primary rounded-b-full"
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                />
-              )}
+              return (
+                <motion.button
+                  key={item.id}
+                  ref={item.isRelatorios ? relatoriosButtonRef : null}
+                  onClick={() => handleClick(item)}
+                  whileTap={{ scale: 0.9 }}
+                  className="flex flex-col items-center justify-center gap-1 relative py-2"
+                >
+                  {/* Pill de fundo ativo */}
+                  {isActive && !item.isMenu && (
+                    <motion.div
+                      layoutId="activeTabPill"
+                      className="absolute inset-1.5 bg-primary/10 rounded-xl"
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
+                  )}
 
-              {/* Ícone com animação e badge */}
-              <motion.div
-                animate={{
-                  scale: isActive && !item.isMenu && !item.isRelatorios ? 1.1 : 1,
-                  y: isActive && !item.isMenu && !item.isRelatorios ? -2 : 0,
-                }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                className="relative"
-              >
-                <Icon 
-                  className={cn(
-                    "w-5 h-5 transition-all",
-                    isActive && !item.isMenu && !item.isRelatorios && "stroke-[2.5]"
-                  )} 
-                />
-                
-                {/* Badge de contagem de pedidos */}
-                {item.id === "pedidos" && pendingOrdersCount > 0 && (
+                  {/* Ícone com animação e badge */}
                   <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    exit={{ scale: 0 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                    className="absolute -top-1 -right-2 min-w-[18px] h-[18px] flex items-center justify-center bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full px-1 shadow-lg"
+                    animate={{
+                      scale: isActive && !item.isMenu ? 1.1 : 1,
+                    }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    className="relative z-10"
                   >
-                    {pendingOrdersCount > 99 ? "99+" : pendingOrdersCount}
+                    <Icon 
+                      className={cn(
+                        "w-5 h-5 transition-all duration-200",
+                        isActive && !item.isMenu 
+                          ? "text-primary stroke-[2.5]" 
+                          : "text-muted-foreground"
+                      )} 
+                    />
+                    
+                    {/* Badge de contagem de pedidos */}
+                    {item.id === "pedidos" && pendingOrdersCount > 0 && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                        transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                        className="absolute -top-1.5 -right-2.5 min-w-[18px] h-[18px] flex items-center justify-center bg-gradient-to-r from-destructive to-red-500 text-destructive-foreground text-[10px] font-bold rounded-full px-1 shadow-lg ring-2 ring-background"
+                      >
+                        <motion.span
+                          animate={{ scale: [1, 1.1, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          {pendingOrdersCount > 99 ? "99+" : pendingOrdersCount}
+                        </motion.span>
+                      </motion.div>
+                    )}
                   </motion.div>
-                )}
-              </motion.div>
 
-              {/* Label */}
-              <span 
-                className={cn(
-                  "text-[10px] font-medium transition-all",
-                  isActive && !item.isMenu && !item.isRelatorios && "font-semibold"
-                )}
-              >
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+                  {/* Label */}
+                  <span 
+                    className={cn(
+                      "text-[10px] font-medium transition-all duration-200 z-10",
+                      isActive && !item.isMenu 
+                        ? "text-primary font-semibold" 
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    {item.label}
+                  </span>
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
 
-        {/* Barra de segurança inferior para iOS */}
-        <div className="h-safe-area-inset-bottom bg-background/95" />
+        {/* Safe area inset para iOS */}
+        <div className="h-[env(safe-area-inset-bottom)]" />
       </motion.nav>
+
+      {/* Spacer para evitar sobreposição de conteúdo */}
+      <div className="h-24" />
     </>
   );
 };
