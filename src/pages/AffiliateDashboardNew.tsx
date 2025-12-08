@@ -14,6 +14,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { AffiliateDashboardSidebar } from '@/components/dashboard/AffiliateDashboardSidebar';
 import { AffiliateDashboardBottomNav } from '@/components/dashboard/AffiliateDashboardBottomNav';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AffiliateStoreProductsTab } from '@/components/dashboard/AffiliateStoreProductsTab';
 import {
   Users,
   DollarSign,
@@ -37,7 +39,8 @@ import {
   Calculator,
   Home,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  Grid3X3
 } from 'lucide-react';
 
 export default function AffiliateDashboardNew() {
@@ -861,7 +864,7 @@ export default function AffiliateDashboardNew() {
 
       {/* Modal de Detalhes da Loja */}
       <Dialog open={!!selectedStore} onOpenChange={(open) => !open && setSelectedStore(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto glass">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto glass">
           <DialogHeader>
             <div className="flex items-center gap-4">
               {selectedStore?.store_logo ? (
@@ -900,69 +903,96 @@ export default function AffiliateDashboardNew() {
           </DialogHeader>
           
           {selectedStore && (
-            <div className="space-y-6 mt-4">
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-3">
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="p-4 bg-muted/50 rounded-lg border border-border/50 text-center"
-                >
-                  <DollarSign className="h-5 w-5 mx-auto text-muted-foreground mb-1" />
-                  <p className="text-xs text-muted-foreground">Total Vendas</p>
-                  <p className="font-bold text-lg">{formatCurrency(selectedStore.total_sales)}</p>
-                </motion.div>
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="p-4 bg-green-500/10 rounded-lg border border-green-500/20 text-center"
-                >
-                  <Wallet className="h-5 w-5 mx-auto text-green-600 mb-1" />
-                  <p className="text-xs text-muted-foreground">Ganhos</p>
-                  <p className="font-bold text-lg text-green-600">{formatCurrency(selectedStore.total_commission)}</p>
-                </motion.div>
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center"
-                >
-                  <Clock className="h-5 w-5 mx-auto text-yellow-600 mb-1" />
-                  <p className="text-xs text-muted-foreground">Pendente</p>
-                  <p className="font-bold text-lg text-yellow-600">{formatCurrency(selectedStore.pending_commission)}</p>
-                </motion.div>
-              </div>
-
-              {/* Commission Config */}
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="p-4 bg-primary/5 rounded-lg border border-primary/20"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <BarChart3 className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">Configuração de Comissão</span>
-                </div>
-                <p className="text-2xl font-bold gradient-text">
-                  {selectedStore.commission_type === 'percentage' 
-                    ? `${selectedStore.commission_value}%`
-                    : formatCurrency(selectedStore.commission_value)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {selectedStore.commission_type === 'percentage' 
-                    ? 'Percentual sobre cada venda'
-                    : 'Valor fixo por venda'}
-                </p>
-              </motion.div>
-
-              {/* Cupons */}
-              <Separator />
+            <Tabs defaultValue="overview" className="mt-4">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="overview" className="flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Resumo</span>
+                </TabsTrigger>
+                <TabsTrigger value="products" className="flex items-center gap-2">
+                  <Grid3X3 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Produtos</span>
+                </TabsTrigger>
+                <TabsTrigger value="coupons" className="flex items-center gap-2">
+                  <Ticket className="h-4 w-4" />
+                  <span className="hidden sm:inline">Cupons</span>
+                </TabsTrigger>
+              </TabsList>
               
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
+              {/* Tab Resumo */}
+              <TabsContent value="overview" className="space-y-6 mt-4">
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-3">
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="p-4 bg-muted/50 rounded-lg border border-border/50 text-center"
+                  >
+                    <DollarSign className="h-5 w-5 mx-auto text-muted-foreground mb-1" />
+                    <p className="text-xs text-muted-foreground">Total Vendas</p>
+                    <p className="font-bold text-lg">{formatCurrency(selectedStore.total_sales)}</p>
+                  </motion.div>
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                    className="p-4 bg-green-500/10 rounded-lg border border-green-500/20 text-center"
+                  >
+                    <Wallet className="h-5 w-5 mx-auto text-green-600 mb-1" />
+                    <p className="text-xs text-muted-foreground">Ganhos</p>
+                    <p className="font-bold text-lg text-green-600">{formatCurrency(selectedStore.total_commission)}</p>
+                  </motion.div>
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center"
+                  >
+                    <Clock className="h-5 w-5 mx-auto text-yellow-600 mb-1" />
+                    <p className="text-xs text-muted-foreground">Pendente</p>
+                    <p className="font-bold text-lg text-yellow-600">{formatCurrency(selectedStore.pending_commission)}</p>
+                  </motion.div>
+                </div>
+
+                {/* Commission Config */}
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                  className="p-4 bg-primary/5 rounded-lg border border-primary/20"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">Configuração de Comissão</span>
+                  </div>
+                  <p className="text-2xl font-bold gradient-text">
+                    {selectedStore.commission_type === 'percentage' 
+                      ? `${selectedStore.commission_value}%`
+                      : formatCurrency(selectedStore.commission_value)}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {selectedStore.commission_type === 'percentage' 
+                      ? 'Percentual sobre cada venda'
+                      : 'Valor fixo por venda'}
+                  </p>
+                </motion.div>
+              </TabsContent>
+
+              <TabsContent value="products" className="mt-4">
+                <AffiliateStoreProductsTab
+                  storeId={selectedStore.store_id}
+                  storeSlug={selectedStore.store_slug}
+                  storeAffiliateId={selectedStore.store_affiliate_id}
+                  defaultCommissionType={selectedStore.commission_type}
+                  defaultCommissionValue={selectedStore.commission_value}
+                  couponCode={selectedStore.coupon_code || (selectedStore.coupons?.[0]?.code || '')}
+                />
+              </TabsContent>
+
+              {/* Tab Cupons */}
+              <TabsContent value="coupons" className="space-y-3 mt-4">
+                <div className="flex items-center gap-2 mb-4">
                   <Ticket className="h-5 w-5 text-primary" />
                   <span className="font-medium">
                     {(selectedStore.coupons?.length || (selectedStore.coupon_code ? 1 : 0)) > 1 
@@ -983,7 +1013,7 @@ export default function AffiliateDashboardNew() {
                         key={idx} 
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.5 + idx * 0.1 }}
+                        transition={{ delay: 0.1 + idx * 0.1 }}
                         className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-4"
                       >
                         <div className="flex items-center justify-between">
@@ -1076,8 +1106,8 @@ export default function AffiliateDashboardNew() {
                     </p>
                   </div>
                 )}
-              </div>
-            </div>
+              </TabsContent>
+            </Tabs>
           )}
         </DialogContent>
       </Dialog>
