@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback, Fragment } from 'react';
-import { useAffiliateAuth, AffiliateOrderItem } from '@/hooks/useAffiliateAuth';
+import { useState, useMemo, useCallback } from 'react';
+import { useAffiliateAuth, AffiliateOrderItem, AffiliateOrder } from '@/hooks/useAffiliateAuth';
 import { useAffiliateEarningsNotification } from '@/hooks/useAffiliateEarningsNotification';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollableTable } from '@/components/ui/scrollable-table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import {
   Users,
@@ -27,8 +28,6 @@ import {
   Link,
   Ticket,
   ShoppingBag,
-  ChevronDown,
-  ChevronUp,
   Package,
   Target,
   Settings,
@@ -49,9 +48,9 @@ export default function AffiliateDashboardNew() {
   } = useAffiliateAuth();
 
   const [selectedStoreId, setSelectedStoreId] = useState<string | null>(null);
-  const [expandedOrders, setExpandedOrders] = useState<Record<string, boolean>>({});
-  const [orderItems, setOrderItems] = useState<Record<string, AffiliateOrderItem[]>>({});
-  const [loadingItems, setLoadingItems] = useState<Record<string, boolean>>({});
+  const [selectedOrder, setSelectedOrder] = useState<AffiliateOrder | null>(null);
+  const [orderModalItems, setOrderModalItems] = useState<AffiliateOrderItem[]>([]);
+  const [loadingModalItems, setLoadingModalItems] = useState(false);
 
   // Extrair IDs dos store_affiliates para notificações em tempo real
   const storeAffiliateIds = useMemo(() => 
@@ -96,34 +95,25 @@ export default function AffiliateDashboardNew() {
     toast.success('Logout realizado com sucesso');
   };
 
-  const toggleOrderExpansion = async (orderId: string, storeAffiliateId: string | undefined) => {
-    console.log('[toggleOrderExpansion] orderId:', orderId, 'storeAffiliateId:', storeAffiliateId);
+  const openOrderModal = async (order: AffiliateOrder) => {
+    setSelectedOrder(order);
+    setLoadingModalItems(true);
+    setOrderModalItems([]);
     
-    const isExpanded = expandedOrders[orderId];
-    
-    if (isExpanded) {
-      setExpandedOrders(prev => ({ ...prev, [orderId]: false }));
-      return;
-    }
-
-    // Se já temos os itens, apenas expandir
-    if (orderItems[orderId]) {
-      setExpandedOrders(prev => ({ ...prev, [orderId]: true }));
-      return;
-    }
-
-    // Carregar itens do pedido - suporta pedidos legados (sem store_affiliate_id)
-    setLoadingItems(prev => ({ ...prev, [orderId]: true }));
     try {
-      const items = await fetchOrderItems(orderId, storeAffiliateId || null);
-      setOrderItems(prev => ({ ...prev, [orderId]: items }));
-      setExpandedOrders(prev => ({ ...prev, [orderId]: true }));
+      const items = await fetchOrderItems(order.order_id, order.store_affiliate_id || null);
+      setOrderModalItems(items);
     } catch (err) {
       console.error('Erro ao carregar itens:', err);
       toast.error('Erro ao carregar itens do pedido');
     } finally {
-      setLoadingItems(prev => ({ ...prev, [orderId]: false }));
+      setLoadingModalItems(false);
     }
+  };
+
+  const closeOrderModal = () => {
+    setSelectedOrder(null);
+    setOrderModalItems([]);
   };
 
   const selectedStore = affiliateStores.find(s => s.store_id === selectedStoreId);
@@ -444,7 +434,6 @@ export default function AffiliateDashboardNew() {
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="w-10"></TableHead>
                           <TableHead>Pedido</TableHead>
                           <TableHead>Data</TableHead>
                           <TableHead>Loja</TableHead>
@@ -457,166 +446,50 @@ export default function AffiliateDashboardNew() {
                       </TableHeader>
                       <TableBody>
                       {affiliateOrders.map((order) => (
-                          <Fragment key={order.earning_id}>
-                            <TableRow 
-                              className="cursor-pointer hover:bg-muted/50"
-                              onClick={() => toggleOrderExpansion(order.order_id, order.store_affiliate_id)}
-                            >
-                              <TableCell className="w-10">
-                                {loadingItems[order.order_id] ? (
-                                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                                ) : expandedOrders[order.order_id] ? (
-                                  <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                          <TableRow 
+                            key={order.earning_id}
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => openOrderModal(order)}
+                          >
+                            <TableCell className="font-mono font-medium">
+                              #{order.order_number}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                              {formatDate(order.order_date)}
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {order.store_name}
+                            </TableCell>
+                            <TableCell>
+                              {order.customer_name}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="font-mono text-xs">
+                                {order.coupon_code || '-'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right whitespace-nowrap">
+                              {formatCurrency(order.order_total)}
+                            </TableCell>
+                            <TableCell className="text-right font-semibold text-green-600 whitespace-nowrap">
+                              {formatCurrency(order.commission_amount)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge 
+                                variant={order.commission_status === 'paid' ? 'default' : 'secondary'}
+                                className={order.commission_status === 'paid' 
+                                  ? 'bg-green-500/10 text-green-600 border-green-500/20' 
+                                  : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
+                                }
+                              >
+                                {order.commission_status === 'paid' ? (
+                                  <><CheckCircle className="h-3 w-3 mr-1" /> Pago</>
                                 ) : (
-                                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                  <><Clock className="h-3 w-3 mr-1" /> Pendente</>
                                 )}
-                              </TableCell>
-                              <TableCell className="font-mono font-medium">
-                                #{order.order_number}
-                              </TableCell>
-                              <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                                {formatDate(order.order_date)}
-                              </TableCell>
-                              <TableCell className="font-medium">
-                                {order.store_name}
-                              </TableCell>
-                              <TableCell>
-                                {order.customer_name}
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="outline" className="font-mono text-xs">
-                                  {order.coupon_code || '-'}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="text-right whitespace-nowrap">
-                                {formatCurrency(order.order_total)}
-                              </TableCell>
-                              <TableCell className="text-right font-semibold text-green-600 whitespace-nowrap">
-                                {formatCurrency(order.commission_amount)}
-                              </TableCell>
-                              <TableCell>
-                                <Badge 
-                                  variant={order.commission_status === 'paid' ? 'default' : 'secondary'}
-                                  className={order.commission_status === 'paid' 
-                                    ? 'bg-green-500/10 text-green-600 border-green-500/20' 
-                                    : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
-                                  }
-                                >
-                                  {order.commission_status === 'paid' ? (
-                                    <><CheckCircle className="h-3 w-3 mr-1" /> Pago</>
-                                  ) : (
-                                    <><Clock className="h-3 w-3 mr-1" /> Pendente</>
-                                  )}
-                                </Badge>
-                              </TableCell>
-                            </TableRow>
-                            {/* Linha expandida com itens */}
-                            {expandedOrders[order.order_id] && orderItems[order.order_id] && (
-                              <TableRow key={`${order.earning_id}-items`}>
-                                <TableCell colSpan={9} className="bg-muted/30 p-0">
-                                  <div className="py-3 px-4 space-y-2">
-                                    <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground mb-2">
-                                      <Package className="h-4 w-4" />
-                                      Itens do Pedido
-                                    </div>
-                                    {orderItems[order.order_id].length === 0 ? (
-                                      <p className="text-sm text-muted-foreground">Nenhum item encontrado</p>
-                                    ) : (
-                                      <div className="space-y-2">
-                                        {orderItems[order.order_id].map((item) => {
-                                          const itemDiscount = item.item_discount || 0;
-                                          
-                                          return (
-                                            <div 
-                                              key={item.item_id} 
-                                              className="flex items-center justify-between py-2 px-3 bg-background rounded-lg border"
-                                            >
-                                              <div className="flex-1">
-                                                <div className="flex items-center gap-2">
-                                                  <p className="font-medium text-sm">{item.product_name}</p>
-                                                  {/* Badge de elegibilidade do cupom */}
-                                                  {item.is_coupon_eligible ? (
-                                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-500/10 text-green-600 border-green-500/20">
-                                                      Com desconto
-                                                    </Badge>
-                                                  ) : (
-                                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-gray-500/10 text-gray-500 border-gray-500/20">
-                                                      Sem desconto
-                                                    </Badge>
-                                                  )}
-                                                </div>
-                                                <p className="text-xs text-muted-foreground">
-                                                  {item.quantity}x {formatCurrency(item.unit_price)} = {formatCurrency(item.subtotal)}
-                                                  {itemDiscount > 0 && (
-                                                    <span className="text-orange-500 ml-1">
-                                                      (-{formatCurrency(itemDiscount)})
-                                                    </span>
-                                                  )}
-                                                  {item.item_value_with_discount !== undefined && item.item_value_with_discount !== item.subtotal && (
-                                                    <span className="text-green-600 ml-1">
-                                                      = {formatCurrency(item.item_value_with_discount)}
-                                                    </span>
-                                                  )}
-                                                </p>
-                                              </div>
-                                              <div className="flex items-center gap-2 flex-wrap justify-end">
-                                                {/* Badge de origem da comissão */}
-                                                {item.commission_source === 'specific_product' && (
-                                                  <Badge 
-                                                    variant="outline" 
-                                                    className="text-[10px] px-1.5 py-0 bg-purple-500/10 text-purple-600 border-purple-500/20"
-                                                  >
-                                                    <Target className="h-3 w-3 mr-1" />
-                                                    Regra específica
-                                                  </Badge>
-                                                )}
-                                                {item.commission_source === 'default' && (
-                                                  <Badge 
-                                                    variant="outline" 
-                                                    className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-600 border-blue-500/20"
-                                                  >
-                                                    <Settings className="h-3 w-3 mr-1" />
-                                                    Padrão
-                                                  </Badge>
-                                                )}
-                                                {item.commission_source === 'none' && (
-                                                  <Badge 
-                                                    variant="outline" 
-                                                    className="text-[10px] px-1.5 py-0 bg-gray-500/10 text-gray-500 border-gray-500/20"
-                                                  >
-                                                    <Ban className="h-3 w-3 mr-1" />
-                                                    Sem comissão
-                                                  </Badge>
-                                                )}
-                                                {item.commission_source === 'proporcional' && (
-                                                  <Badge 
-                                                    variant="outline" 
-                                                    className="text-[10px] px-1.5 py-0 bg-orange-500/10 text-orange-600 border-orange-500/20"
-                                                  >
-                                                    <Calculator className="h-3 w-3 mr-1" />
-                                                    Proporcional
-                                                  </Badge>
-                                                )}
-                                                <Badge variant="secondary" className="text-xs">
-                                                  {item.commission_type === 'percentage' 
-                                                    ? `${item.commission_value}%` 
-                                                    : formatCurrency(item.commission_value)
-                                                  }
-                                                </Badge>
-                                                <span className="font-semibold text-green-600 text-sm whitespace-nowrap">
-                                                  {formatCurrency(item.item_commission)}
-                                                </span>
-                                              </div>
-                                            </div>
-                                          );
-                                        })}
-                                      </div>
-                                    )}
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            )}
-                          </Fragment>
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
                         ))}
                       </TableBody>
                     </Table>
@@ -747,6 +620,180 @@ export default function AffiliateDashboardNew() {
           </TabsContent>
         </Tabs>
       </main>
+
+      {/* Modal de Detalhes do Pedido */}
+      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && closeOrderModal()}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5 text-primary" />
+              Pedido #{selectedOrder?.order_number}
+            </DialogTitle>
+            <DialogDescription>
+              Detalhes do pedido e comissão
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedOrder && (
+            <div className="space-y-6 mt-4">
+              {/* Info do Pedido */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-xs text-muted-foreground">Data</p>
+                  <p className="font-medium">{formatDate(selectedOrder.order_date)}</p>
+                </div>
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-xs text-muted-foreground">Loja</p>
+                  <p className="font-medium">{selectedOrder.store_name}</p>
+                </div>
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-xs text-muted-foreground">Cliente</p>
+                  <p className="font-medium">{selectedOrder.customer_name}</p>
+                </div>
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-xs text-muted-foreground">Cupom</p>
+                  <Badge variant="outline" className="font-mono text-xs">
+                    {selectedOrder.coupon_code || '-'}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Totais */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
+                  <p className="text-xs text-muted-foreground">Valor do Pedido</p>
+                  <p className="text-xl font-bold">{formatCurrency(selectedOrder.order_total)}</p>
+                </div>
+                <div className="p-4 bg-green-500/5 rounded-lg border border-green-500/20">
+                  <p className="text-xs text-muted-foreground">Sua Comissão</p>
+                  <p className="text-xl font-bold text-green-600">{formatCurrency(selectedOrder.commission_amount)}</p>
+                  <Badge 
+                    variant={selectedOrder.commission_status === 'paid' ? 'default' : 'secondary'}
+                    className={`mt-1 ${selectedOrder.commission_status === 'paid' 
+                      ? 'bg-green-500/10 text-green-600 border-green-500/20' 
+                      : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
+                    }`}
+                  >
+                    {selectedOrder.commission_status === 'paid' ? (
+                      <><CheckCircle className="h-3 w-3 mr-1" /> Pago</>
+                    ) : (
+                      <><Clock className="h-3 w-3 mr-1" /> Pendente</>
+                    )}
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Itens do Pedido */}
+              <div>
+                <div className="flex items-center gap-2 text-sm font-medium mb-3">
+                  <Package className="h-4 w-4" />
+                  Itens do Pedido
+                </div>
+                
+                {loadingModalItems ? (
+                  <div className="py-8 text-center">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground mt-2">Carregando itens...</p>
+                  </div>
+                ) : orderModalItems.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-4 text-center">Nenhum item encontrado</p>
+                ) : (
+                  <div className="space-y-2">
+                    {orderModalItems.map((item) => {
+                      const itemDiscount = item.item_discount || 0;
+                      
+                      return (
+                        <div 
+                          key={item.item_id} 
+                          className="p-3 bg-muted/50 rounded-lg border space-y-2"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <p className="font-medium text-sm">{item.product_name}</p>
+                                {item.is_coupon_eligible ? (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-500/10 text-green-600 border-green-500/20">
+                                    Com desconto
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-gray-500/10 text-gray-500 border-gray-500/20">
+                                    Sem desconto
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {item.quantity}x {formatCurrency(item.unit_price)} = {formatCurrency(item.subtotal)}
+                                {itemDiscount > 0 && (
+                                  <span className="text-orange-500 ml-1">
+                                    (-{formatCurrency(itemDiscount)})
+                                  </span>
+                                )}
+                                {item.item_value_with_discount !== undefined && item.item_value_with_discount !== item.subtotal && (
+                                  <span className="text-green-600 ml-1">
+                                    = {formatCurrency(item.item_value_with_discount)}
+                                  </span>
+                                )}
+                              </p>
+                            </div>
+                            <span className="font-semibold text-green-600 text-sm whitespace-nowrap">
+                              {formatCurrency(item.item_commission)}
+                            </span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {item.commission_source === 'specific_product' && (
+                              <Badge 
+                                variant="outline" 
+                                className="text-[10px] px-1.5 py-0 bg-purple-500/10 text-purple-600 border-purple-500/20"
+                              >
+                                <Target className="h-3 w-3 mr-1" />
+                                Regra específica
+                              </Badge>
+                            )}
+                            {item.commission_source === 'default' && (
+                              <Badge 
+                                variant="outline" 
+                                className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-600 border-blue-500/20"
+                              >
+                                <Settings className="h-3 w-3 mr-1" />
+                                Padrão
+                              </Badge>
+                            )}
+                            {item.commission_source === 'none' && (
+                              <Badge 
+                                variant="outline" 
+                                className="text-[10px] px-1.5 py-0 bg-gray-500/10 text-gray-500 border-gray-500/20"
+                              >
+                                <Ban className="h-3 w-3 mr-1" />
+                                Sem comissão
+                              </Badge>
+                            )}
+                            {item.commission_source === 'proporcional' && (
+                              <Badge 
+                                variant="outline" 
+                                className="text-[10px] px-1.5 py-0 bg-orange-500/10 text-orange-600 border-orange-500/20"
+                              >
+                                <Calculator className="h-3 w-3 mr-1" />
+                                Proporcional
+                              </Badge>
+                            )}
+                            <Badge variant="secondary" className="text-xs">
+                              {item.commission_type === 'percentage' 
+                                ? `${item.commission_value}%` 
+                                : formatCurrency(item.commission_value)
+                              }
+                            </Badge>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
