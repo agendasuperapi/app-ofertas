@@ -258,6 +258,18 @@ export function AffiliateStoreProductsTab({
                       <div>
                         <p className="font-medium text-sm truncate max-w-[200px]">{product.name}</p>
                         <p className="text-xs text-muted-foreground">{product.category}</p>
+                        <div className="flex gap-2 mt-1 flex-wrap">
+                          {product.short_id && (
+                            <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                              #{product.short_id}
+                            </span>
+                          )}
+                          {product.external_code && (
+                            <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                              Ext: {product.external_code}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
