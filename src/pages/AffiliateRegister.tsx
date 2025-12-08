@@ -195,7 +195,7 @@ export default function AffiliateRegister() {
                   id="cpf"
                   value={cpf}
                   onChange={setCpf}
-                  disabled={isLoading}
+                  disabled={isLoading || !!inviteData?.cpf_cnpj}
                 />
               </div>
 
@@ -216,9 +216,9 @@ export default function AffiliateRegister() {
                 <Input
                   id="email"
                   type="email"
+                  placeholder="Seu e-mail (opcional)"
                   value={inviteData?.email || ''}
-                  disabled
-                  className="bg-muted"
+                  disabled={isLoading}
                 />
               </div>
 
