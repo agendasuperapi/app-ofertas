@@ -342,11 +342,15 @@ export default function AffiliateDashboardNew() {
           x: 0
         }} transition={{
           delay: 0.1 + idx * 0.1
-        }} className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-4">
+        }} className="p-4 bg-card rounded-xl border border-border shadow-sm space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-mono font-bold text-2xl gradient-text">{coupon.code}</p>
-                    {coupon.discount_type}
+                    {coupon.discount_type && (
+                      <Badge variant="secondary" className="mt-1">
+                        {coupon.discount_type === 'percentage' ? `${coupon.discount_value}% OFF` : `R$ ${coupon.discount_value} OFF`}
+                      </Badge>
+                    )}
                   </div>
                   <Button variant="outline" size="sm" onClick={e => {
               e.stopPropagation();
@@ -359,18 +363,17 @@ export default function AffiliateDashboardNew() {
                 
                 {coupon.discount_type && <div className="text-xs text-muted-foreground">
                     {coupon.applies_to === 'all' || !coupon.applies_to ? <span className="inline-flex items-center gap-1">
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Geral</Badge>
-                        <span>​ </span>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">Geral</Badge>
                       </span> : coupon.applies_to === 'categories' && coupon.category_names?.length ? <span className="inline-flex items-center gap-1 flex-wrap">
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Categorias</Badge>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">Categorias</Badge>
                         <span>{coupon.category_names.join(', ')}</span>
                       </span> : coupon.applies_to === 'products' && coupon.product_ids?.length ? <span className="inline-flex items-center gap-1">
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Produtos</Badge>
+                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">Produtos</Badge>
                         <span>{coupon.product_ids.length} produto(s) específico(s)</span>
                       </span> : null}
                   </div>}
                 
-                <div className="pt-3 border-t border-primary/10">
+                <div className="pt-3 border-t border-border">
                   <div className="flex items-center gap-2 mb-2">
                     <Link className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium">Link de afiliado</span>
@@ -388,7 +391,7 @@ export default function AffiliateDashboardNew() {
                 </div>
 
                 {/* Produtos do Cupom - Expandir/Colapsar */}
-                <Collapsible className="pt-3 border-t border-primary/10">
+                <Collapsible className="pt-3 border-t border-border">
                   <CollapsibleTrigger asChild>
                     <Button variant="ghost" className="w-full justify-between px-0 hover:bg-transparent">
                       <span className="flex items-center gap-2 text-sm font-medium">
