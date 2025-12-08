@@ -123,9 +123,22 @@ export const SortableProductCard = ({
                 </p>
               )}
               <div className="flex flex-wrap justify-between items-center gap-2 mt-auto pt-3">
-                <span className="font-bold text-primary text-lg shrink-0">
-                  R$ {Number(product.price).toFixed(2)}
-                </span>
+                <div className="flex flex-col shrink-0">
+                  {product.promotional_price && product.promotional_price > 0 && product.promotional_price < product.price ? (
+                    <>
+                      <span className="text-sm text-muted-foreground line-through">
+                        R$ {Number(product.price).toFixed(2)}
+                      </span>
+                      <span className="font-bold text-green-600 text-lg">
+                        R$ {Number(product.promotional_price).toFixed(2)}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="font-bold text-primary text-lg">
+                      R$ {Number(product.price).toFixed(2)}
+                    </span>
+                  )}
+                </div>
                 {!isReorderMode && (
                   <div className="flex flex-wrap gap-1 items-center justify-end flex-1 min-w-0">
                     {hasPermission('products', 'update') && (
