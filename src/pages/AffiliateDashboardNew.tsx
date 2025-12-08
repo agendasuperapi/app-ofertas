@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollableTable } from '@/components/ui/scrollable-table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { AffiliateDashboardSidebar } from '@/components/dashboard/AffiliateDashboardSidebar';
 import { AffiliateDashboardBottomNav } from '@/components/dashboard/AffiliateDashboardBottomNav';
 import { toast } from 'sonner';
@@ -863,9 +864,9 @@ export default function AffiliateDashboardNew() {
       </Dialog>
 
       {/* Modal de Detalhes da Loja */}
-      <Dialog open={!!selectedStore} onOpenChange={(open) => !open && setSelectedStore(null)}>
-        <DialogContent className="max-w-3xl h-[90vh] flex flex-col glass">
-          <DialogHeader className="flex-shrink-0">
+      <Drawer open={!!selectedStore} onOpenChange={(open) => !open && setSelectedStore(null)}>
+        <DrawerContent className="h-[88vh] flex flex-col glass">
+          <DrawerHeader className="flex-shrink-0">
             <div className="flex items-center gap-4">
               {selectedStore?.store_logo ? (
                 <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
@@ -881,10 +882,10 @@ export default function AffiliateDashboardNew() {
                 </div>
               )}
               <div>
-                <DialogTitle className="text-xl gradient-text">
+                <DrawerTitle className="text-xl gradient-text">
                   {selectedStore?.store_name}
-                </DialogTitle>
-                <DialogDescription className="flex items-center gap-2 mt-1">
+                </DrawerTitle>
+                <DrawerDescription className="flex items-center gap-2 mt-1">
                   <Badge 
                     variant={selectedStore?.status === 'active' ? 'default' : 'secondary'}
                     className={selectedStore?.status === 'active' ? 'bg-green-500/10 text-green-600 border-green-500/20' : ''}
@@ -900,10 +901,10 @@ export default function AffiliateDashboardNew() {
                   >
                     Visitar loja <ExternalLink className="h-3 w-3" />
                   </a>
-                </DialogDescription>
+                </DrawerDescription>
               </div>
             </div>
-          </DialogHeader>
+          </DrawerHeader>
           
           {selectedStore && (
             <Tabs defaultValue="overview" className="mt-4 flex-1 flex flex-col min-h-0">
@@ -1112,8 +1113,8 @@ export default function AffiliateDashboardNew() {
               </TabsContent>
             </Tabs>
           )}
-        </DialogContent>
-      </Dialog>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
