@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Mail, Clock, CheckCircle, XCircle, Loader2, RefreshCw, Copy, Users } from 'lucide-react';
+import { Mail, Clock, CheckCircle, XCircle, Loader2, RefreshCw, Copy, Users, Trash2 } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { format, formatDistanceToNow, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
@@ -121,6 +122,24 @@ export const AffiliateInvitesManager = ({ storeId, storeName = 'Loja' }: Affilia
     } catch (err) {
       console.error('Error resending invite:', err);
       toast({ title: "Erro ao reenviar convite", variant: "destructive" });
+    }
+  };
+
+  // Helper para excluir convite pendente/expirado
+  const handleDeleteInvite = async (invite: any) => {
+    try {
+      const { error } = await supabase
+        .from('store_affiliates')
+        .delete()
+        .eq('id', invite.id);
+
+      if (error) throw error;
+
+      toast({ title: "Convite excluído!", description: "O convite foi removido com sucesso." });
+      fetchAffiliateInvites();
+    } catch (err) {
+      console.error('Error deleting invite:', err);
+      toast({ title: "Erro ao excluir convite", variant: "destructive" });
     }
   };
 
@@ -353,14 +372,45 @@ export const AffiliateInvitesManager = ({ storeId, storeName = 'Loja' }: Affilia
                                 </Button>
                               )}
                               {(isExpired || (invite.status === 'pending' && !isExpired)) && (
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm"
-                                  onClick={() => handleResendInvite(invite)}
-                                  title={isExpired ? "Gerar novo convite" : "Reenviar convite"}
-                                >
-                                  <RefreshCw className="h-4 w-4" />
-                                </Button>
+                                <>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => handleResendInvite(invite)}
+                                    title={isExpired ? "Gerar novo convite" : "Reenviar convite"}
+                                  >
+                                    <RefreshCw className="h-4 w-4" />
+                                  </Button>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                        title="Excluir convite"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Excluir convite?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          Tem certeza que deseja excluir o convite para {invite.affiliate_accounts?.name || 'este afiliado'}? Esta ação não pode ser desfeita.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction 
+                                          onClick={() => handleDeleteInvite(invite)}
+                                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                        >
+                                          Excluir
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </>
                               )}
                             </div>
                           </TableCell>
