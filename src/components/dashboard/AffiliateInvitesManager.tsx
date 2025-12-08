@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Mail, Clock, CheckCircle, XCircle, Loader2, RefreshCw, Copy, Users, Trash2 } from 'lucide-react';
+import { Mail, Clock, CheckCircle, XCircle, Loader2, RefreshCw, Copy, Users, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { format, formatDistanceToNow, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -23,6 +23,8 @@ export const AffiliateInvitesManager = ({ storeId, storeName = 'Loja' }: Affilia
   const [invitesLoading, setInvitesLoading] = useState(false);
   const [inviteStatusFilter, setInviteStatusFilter] = useState<'all' | 'pending' | 'active' | 'expired'>('all');
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Função para buscar convites de afiliados
   const fetchAffiliateInvites = useCallback(async () => {
@@ -160,6 +162,15 @@ export const AffiliateInvitesManager = ({ storeId, storeName = 'Loja' }: Affilia
   const pendingCount = affiliateInvites.filter(i => i.status === 'pending' && (!i.invite_expires || !isPast(new Date(i.invite_expires)))).length;
   const activeCount = affiliateInvites.filter(i => i.status === 'active').length;
   const expiredCount = affiliateInvites.filter(i => i.status === 'pending' && i.invite_expires && isPast(new Date(i.invite_expires))).length;
+
+  // Paginação
+  const totalPages = Math.ceil(filteredInvites.length / itemsPerPage);
+  const paginatedInvites = filteredInvites.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  
+  // Reset page when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [inviteStatusFilter]);
 
   return (
     <div className="space-y-6">
@@ -324,7 +335,7 @@ export const AffiliateInvitesManager = ({ storeId, storeName = 'Loja' }: Affilia
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredInvites.map((invite) => {
+                    {paginatedInvites.map((invite) => {
                       const isExpired = invite.status === 'pending' && invite.invite_expires && isPast(new Date(invite.invite_expires));
                       return (
                         <TableRow key={invite.id}>
@@ -419,6 +430,58 @@ export const AffiliateInvitesManager = ({ storeId, storeName = 'Loja' }: Affilia
                     })}
                   </TableBody>
                 </Table>
+                
+                {/* Paginação */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-4 border-t border-border/50 mt-4">
+                    <p className="text-sm text-muted-foreground">
+                      Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredInvites.length)} de {filteredInvites.length} convites
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                          let pageNum: number;
+                          if (totalPages <= 5) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalPages - 2) {
+                            pageNum = totalPages - 4 + i;
+                          } else {
+                            pageNum = currentPage - 2 + i;
+                          }
+                          return (
+                            <Button
+                              key={pageNum}
+                              variant={currentPage === pageNum ? "default" : "outline"}
+                              size="sm"
+                              className="w-8 h-8 p-0"
+                              onClick={() => setCurrentPage(pageNum)}
+                            >
+                              {pageNum}
+                            </Button>
+                          );
+                        })}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
