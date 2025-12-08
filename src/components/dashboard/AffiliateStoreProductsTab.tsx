@@ -29,6 +29,7 @@ interface Product {
   promotional_price: number | null;
   image_url: string | null;
   short_id: string | null;
+  external_code: string | null;
   is_available: boolean;
 }
 
@@ -71,7 +72,7 @@ export function AffiliateStoreProductsTab({
       // Fetch products
       const { data: productsData, error: productsError } = await supabase
         .from('products')
-        .select('id, name, category, price, promotional_price, image_url, short_id, is_available')
+        .select('id, name, category, price, promotional_price, image_url, short_id, external_code, is_available')
         .eq('store_id', storeId)
         .eq('is_available', true)
         .is('deleted_at', null)
@@ -167,10 +168,15 @@ export function AffiliateStoreProductsTab({
     return `https://ofertas.app/p/${product.short_id}?cupom=${couponCode}`;
   };
 
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = products.filter(product => {
+    const search = searchTerm.toLowerCase();
+    return (
+      product.name.toLowerCase().includes(search) ||
+      product.category.toLowerCase().includes(search) ||
+      (product.short_id && product.short_id.toLowerCase().includes(search)) ||
+      (product.external_code && product.external_code.toLowerCase().includes(search))
+    );
+  });
 
   // Group by category
   const productsByCategory = filteredProducts.reduce((acc, product) => {
@@ -196,7 +202,7 @@ export function AffiliateStoreProductsTab({
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar produtos..."
+          placeholder="Buscar por nome, código interno ou externo..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
