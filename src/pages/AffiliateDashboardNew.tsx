@@ -132,58 +132,58 @@ export default function AffiliateDashboardNew() {
 
   // Render Stats Cards (reusable)
   const renderStatsCards = () => (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center">
-              <Building2 className="h-5 w-5 text-blue-500" />
+        <CardContent className="p-3 sm:pt-6 sm:px-6">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500/10 rounded-full flex items-center justify-center flex-shrink-0">
+              <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Lojas</p>
-              <p className="text-2xl font-bold">{affiliateStats?.total_stores || 0}</p>
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">Lojas</p>
+              <p className="text-lg sm:text-2xl font-bold">{affiliateStats?.total_stores || 0}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-500/10 rounded-full flex items-center justify-center">
-              <DollarSign className="h-5 w-5 text-green-500" />
+        <CardContent className="p-3 sm:pt-6 sm:px-6">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-500/10 rounded-full flex items-center justify-center flex-shrink-0">
+              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Total Vendas</p>
-              <p className="text-2xl font-bold">{formatCurrency(affiliateStats?.total_sales || 0)}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-yellow-500/10 rounded-full flex items-center justify-center">
-              <Clock className="h-5 w-5 text-yellow-500" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Pendente</p>
-              <p className="text-2xl font-bold">{formatCurrency(affiliateStats?.pending_commission || 0)}</p>
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Vendas</p>
+              <p className="text-base sm:text-2xl font-bold truncate">{formatCurrency(affiliateStats?.total_sales || 0)}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-              <Wallet className="h-5 w-5 text-primary" />
+        <CardContent className="p-3 sm:pt-6 sm:px-6">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-500/10 rounded-full flex items-center justify-center flex-shrink-0">
+              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Total Ganhos</p>
-              <p className="text-2xl font-bold">{formatCurrency(affiliateStats?.total_commission || 0)}</p>
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">Pendente</p>
+              <p className="text-base sm:text-2xl font-bold truncate">{formatCurrency(affiliateStats?.pending_commission || 0)}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-3 sm:pt-6 sm:px-6">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
+              <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Ganhos</p>
+              <p className="text-base sm:text-2xl font-bold truncate">{formatCurrency(affiliateStats?.total_commission || 0)}</p>
             </div>
           </div>
         </CardContent>
@@ -198,30 +198,30 @@ export default function AffiliateDashboardNew() {
       
       {/* Quick Summary */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Home className="h-5 w-5" />
+        <CardHeader className="p-4 sm:p-6">
+          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <Home className="h-4 w-4 sm:h-5 sm:w-5" />
             Bem-vindo, {affiliateUser?.name?.split(' ')[0]}!
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-xs sm:text-sm">
             Resumo rápido do seu desempenho como afiliado
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-muted rounded-lg">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <TrendingUp className="h-4 w-4" />
-                <span className="text-sm">Total de Pedidos</span>
+        <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 space-y-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-4">
+            <div className="p-3 sm:p-4 bg-muted rounded-lg">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1">
+                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">Total de Pedidos</span>
               </div>
-              <p className="text-2xl font-bold">{affiliateStats?.total_orders || 0}</p>
+              <p className="text-xl sm:text-2xl font-bold">{affiliateStats?.total_orders || 0}</p>
             </div>
-            <div className="p-4 bg-muted rounded-lg">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <CheckCircle className="h-4 w-4" />
-                <span className="text-sm">Total Pago</span>
+            <div className="p-3 sm:p-4 bg-muted rounded-lg">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1">
+                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="text-xs sm:text-sm">Total Pago</span>
               </div>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-lg sm:text-2xl font-bold text-green-600 truncate">
                 {formatCurrency(affiliateStats?.paid_commission || 0)}
               </p>
             </div>
@@ -708,7 +708,7 @@ export default function AffiliateDashboardNew() {
         />
 
         {/* Main Content */}
-        <main className="flex-1 container mx-auto px-4 py-6 pb-24 md:pb-6">
+        <main className="flex-1 w-full max-w-full overflow-x-hidden px-2 sm:px-4 py-4 sm:py-6 pb-24 md:pb-6">
           {renderContent()}
         </main>
       </div>
