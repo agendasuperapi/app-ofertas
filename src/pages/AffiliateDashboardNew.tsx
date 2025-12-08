@@ -17,6 +17,9 @@ import { AffiliateDashboardBottomNav } from '@/components/dashboard/AffiliateDas
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AffiliateStoreProductsTab } from '@/components/dashboard/AffiliateStoreProductsTab';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import {
   Users,
   DollarSign,
@@ -44,6 +47,9 @@ import {
   Grid3X3,
   X,
 } from 'lucide-react';
+
+// Cores para gráfico de pizza
+const COLORS = ['hsl(var(--primary))', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
 export default function AffiliateDashboardNew() {
   const {
@@ -81,6 +87,39 @@ export default function AffiliateDashboardNew() {
     storeAffiliateIds,
     onNewEarning: handleNewEarning
   });
+
+  // Dados para gráficos - Comissões ao longo do tempo
+  const commissionsOverTime = useMemo(() => {
+    if (!affiliateOrders || affiliateOrders.length === 0) return [];
+    
+    const ordersByDate: Record<string, { pedidos: number; comissao: number }> = {};
+    
+    affiliateOrders.forEach(order => {
+      const date = format(new Date(order.order_date), 'dd/MM', { locale: ptBR });
+      if (!ordersByDate[date]) {
+        ordersByDate[date] = { pedidos: 0, comissao: 0 };
+      }
+      ordersByDate[date].pedidos += 1;
+      ordersByDate[date].comissao += order.commission_amount || 0;
+    });
+    
+    return Object.entries(ordersByDate)
+      .map(([date, data]) => ({ date, ...data }))
+      .slice(-14); // Últimos 14 dias
+  }, [affiliateOrders]);
+
+  // Dados para gráfico de pizza - Comissões por loja
+  const commissionsByStore = useMemo(() => {
+    if (!affiliateStores || affiliateStores.length === 0) return [];
+    
+    return affiliateStores
+      .filter(store => store.total_commission > 0)
+      .map(store => ({
+        name: store.store_name,
+        value: store.total_commission
+      }))
+      .slice(0, 6); // Top 6 lojas
+  }, [affiliateStores]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -538,6 +577,139 @@ export default function AffiliateDashboardNew() {
         </CardContent>
       </Card>
       </motion.div>
+
+      {/* Charts Section */}
+      {affiliateOrders.length > 0 && (
+        <div className="grid gap-4 md:gap-6 md:grid-cols-2">
+          {/* Comissões ao Longo do Tempo */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <Card className="glass border-border/50 overflow-hidden">
+              <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-primary/5 to-transparent">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                  Pedidos ao Longo do Tempo
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6 pt-2 sm:pt-4">
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart data={commissionsOverTime}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="pedidos" 
+                      stroke="hsl(var(--primary))" 
+                      strokeWidth={3} 
+                      dot={{ fill: 'hsl(var(--primary))', r: 4 }} 
+                      name="Pedidos" 
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Comissões Recebidas */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+          >
+            <Card className="glass border-border/50 overflow-hidden">
+              <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-green-500/5 to-transparent">
+                <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+                  Comissões Recebidas
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 sm:p-6 pt-2 sm:pt-4">
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={commissionsOverTime}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
+                      formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Comissão']}
+                    />
+                    <Bar 
+                      dataKey="comissao" 
+                      fill="hsl(142 76% 36%)" 
+                      radius={[8, 8, 0, 0]} 
+                      name="Comissão" 
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Comissões por Loja */}
+          {commissionsByStore.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="md:col-span-2"
+            >
+              <Card className="glass border-border/50 overflow-hidden">
+                <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-blue-500/5 to-transparent">
+                  <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                    <Store className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
+                    Comissões por Loja
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 sm:p-6 pt-2 sm:pt-4">
+                  <ResponsiveContainer width="100%" height={280}>
+                    <PieChart>
+                      <Pie 
+                        data={commissionsByStore} 
+                        cx="50%" 
+                        cy="50%" 
+                        labelLine={false}
+                        label={({ name, percent }) => `${name.slice(0, 15)}${name.length > 15 ? '...' : ''} (${(percent * 100).toFixed(0)}%)`}
+                        outerRadius={100}
+                        fill="hsl(var(--primary))" 
+                        dataKey="value"
+                      >
+                        {commissionsByStore.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'hsl(var(--card))',
+                          border: '1px solid hsl(var(--border))',
+                          borderRadius: '8px'
+                        }}
+                        formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Comissão']}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 
