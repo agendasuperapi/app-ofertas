@@ -16,13 +16,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useEmployeeAccess } from "@/hooks/useEmployeeAccess";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { arrayMove } from "@dnd-kit/sortable";
@@ -567,29 +566,28 @@ export const OrderStatusManager = ({ storeId }: OrderStatusManagerProps) => {
             </div>
           </div>
           {canEdit && (
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={handleAddNew} className="bg-gradient-primary shadow-glow hover-lift">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Etapa
-                </Button>
-              </DialogTrigger>
-            <DialogContent className="max-w-2xl glass">
-              <DialogHeader>
+            <>
+            <Button onClick={handleAddNew} className="bg-gradient-primary shadow-glow hover-lift">
+              <Plus className="h-4 w-4 mr-2" />
+              Adicionar Etapa
+            </Button>
+            <ResponsiveDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <ResponsiveDialogContent className="max-w-2xl glass">
+              <ResponsiveDialogHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
                     <Edit className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <DialogTitle className="text-xl gradient-text">
+                    <ResponsiveDialogTitle className="text-xl gradient-text">
                       {editingStatus?.id.startsWith('new_') ? 'Nova Etapa' : 'Editar Etapa'}
-                    </DialogTitle>
-                    <DialogDescription>
+                    </ResponsiveDialogTitle>
+                    <ResponsiveDialogDescription>
                       Configure a etapa do pedido e a mensagem que será enviada
-                    </DialogDescription>
+                    </ResponsiveDialogDescription>
                   </div>
                 </div>
-              </DialogHeader>
+              </ResponsiveDialogHeader>
 
               {editingStatus && (
                 <ScrollArea className="max-h-[60vh] pr-4">
@@ -753,8 +751,9 @@ export const OrderStatusManager = ({ storeId }: OrderStatusManagerProps) => {
                   </div>
                 </ScrollArea>
               )}
-            </DialogContent>
-          </Dialog>
+            </ResponsiveDialogContent>
+          </ResponsiveDialog>
+          </>
           )}
         </div>
       </CardHeader>

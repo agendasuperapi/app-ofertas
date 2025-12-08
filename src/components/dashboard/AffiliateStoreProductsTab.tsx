@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollableTable } from '@/components/ui/scrollable-table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription } from '@/components/ui/responsive-dialog';
 import { toast } from 'sonner';
 import { Loader2, Copy, ExternalLink, Package, Search, Target, Calculator, Ban, Link, ImageIcon } from 'lucide-react';
 interface Product {
@@ -247,17 +247,17 @@ export function AffiliateStoreProductsTab({
       </ScrollableTable>
 
       {/* Product Details Modal */}
-      <Dialog open={!!selectedProduct} onOpenChange={open => !open && setSelectedProduct(null)}>
-        <DialogContent className="max-w-lg glass">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 gradient-text">
+      <ResponsiveDialog open={!!selectedProduct} onOpenChange={open => !open && setSelectedProduct(null)}>
+        <ResponsiveDialogContent className="max-w-lg glass">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="flex items-center gap-2 gradient-text">
               <Package className="h-5 w-5 text-primary" />
               Detalhes do Produto
-            </DialogTitle>
-            <DialogDescription>
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Informações e link de afiliado
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           
           {selectedProduct && <motion.div initial={{
           opacity: 0,
@@ -345,7 +345,7 @@ export function AffiliateStoreProductsTab({
                 Ver produto na loja
               </Button>
             </motion.div>}
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>;
 }

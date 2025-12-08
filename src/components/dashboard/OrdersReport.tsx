@@ -12,7 +12,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Search, ShoppingCart, Download, Tag, FileText, FileSpreadsheet, Clock, Truck, Wallet, DollarSign, Filter, Settings } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { ScrollableTable } from "@/components/ui/scrollable-table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle } from "@/components/ui/responsive-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -97,6 +97,7 @@ export const OrdersReport = ({
     allow_orders_when_closed: boolean;
   } | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [columnsOpen, setColumnsOpen] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState(() => {
     const saved = localStorage.getItem(`ordersReport-columns-${storeId}`);
     return saved ? JSON.parse(saved) : {
@@ -594,17 +595,15 @@ export const OrdersReport = ({
       <Card>
       <CardHeader className="flex flex-col gap-4">
           <div className="flex gap-3">
-            <Dialog open={filtersOpen} onOpenChange={setFiltersOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="default" className="gap-2">
-                  <Filter className="h-4 w-4" />
-                  Filtros
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Filtros de Pedidos</DialogTitle>
-                </DialogHeader>
+            <Button variant="outline" size="default" className="gap-2" onClick={() => setFiltersOpen(true)}>
+              <Filter className="h-4 w-4" />
+              Filtros
+            </Button>
+            <ResponsiveDialog open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <ResponsiveDialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+                <ResponsiveDialogHeader>
+                  <ResponsiveDialogTitle>Filtros de Pedidos</ResponsiveDialogTitle>
+                </ResponsiveDialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="space-y-2">
                     <Label>Buscar</Label>
@@ -777,20 +776,18 @@ export const OrdersReport = ({
                     </Button>
                   </div>
                 </div>
-              </DialogContent>
-            </Dialog>
+              </ResponsiveDialogContent>
+            </ResponsiveDialog>
             
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="outline" size="default" className="gap-2">
-                  <Settings className="h-4 w-4" />
-                  Colunas
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Personalizar Colunas</DialogTitle>
-                </DialogHeader>
+            <Button variant="outline" size="default" className="gap-2" onClick={() => setColumnsOpen(true)}>
+              <Settings className="h-4 w-4" />
+              Colunas
+            </Button>
+            <ResponsiveDialog open={columnsOpen} onOpenChange={setColumnsOpen}>
+              <ResponsiveDialogContent className="sm:max-w-[425px]">
+                <ResponsiveDialogHeader>
+                  <ResponsiveDialogTitle>Personalizar Colunas</ResponsiveDialogTitle>
+                </ResponsiveDialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox id="col-order" checked={visibleColumns.order_number} onCheckedChange={checked => setVisibleColumns(prev => ({
@@ -891,8 +888,8 @@ export const OrdersReport = ({
                     <Label htmlFor="col-coupon" className="cursor-pointer">Cupom</Label>
                   </div>
                 </div>
-              </DialogContent>
-            </Dialog>
+              </ResponsiveDialogContent>
+            </ResponsiveDialog>
           </div>
           
           <div className="flex gap-2">
