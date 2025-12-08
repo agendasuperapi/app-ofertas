@@ -74,27 +74,23 @@ export default function AffiliateRegister() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name || !password || !confirmPassword) {
+    if (!name || !phone || !cpf || !password || !confirmPassword) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
-    // Validate CPF if provided
-    if (cpf) {
-      const cpfNumbers = cpf.replace(/\D/g, '');
-      if (cpfNumbers.length !== 11 || !isValidCPF(cpfNumbers)) {
-        toast.error('CPF inválido');
-        return;
-      }
+    // Validate CPF
+    const cpfNumbers = cpf.replace(/\D/g, '');
+    if (cpfNumbers.length !== 11 || !isValidCPF(cpfNumbers)) {
+      toast.error('CPF inválido');
+      return;
     }
 
-    // Validate phone if provided
-    if (phone) {
-      const phoneNumbers = phone.replace(/\D/g, '').replace(/^55/, '');
-      if (phoneNumbers.length !== 10 && phoneNumbers.length !== 11) {
-        toast.error('Telefone inválido. Use (XX) XXXXX-XXXX');
-        return;
-      }
+    // Validate phone
+    const phoneNumbers = phone.replace(/\D/g, '').replace(/^55/, '');
+    if (phoneNumbers.length !== 10 && phoneNumbers.length !== 11) {
+      toast.error('Telefone inválido. Use (XX) XXXXX-XXXX');
+      return;
     }
 
     if (password.length < 6) {
@@ -211,7 +207,7 @@ export default function AffiliateRegister() {
               </div>
 
               <div className="space-y-2 pb-4">
-                <Label htmlFor="phone">Telefone</Label>
+                <Label htmlFor="phone">Telefone *</Label>
                 <PhoneInput
                   id="phone"
                   value={phone}
@@ -221,7 +217,7 @@ export default function AffiliateRegister() {
               </div>
 
               <div className="space-y-2 pb-4">
-                <Label htmlFor="cpf">CPF</Label>
+                <Label htmlFor="cpf">CPF *</Label>
                 <CPFInput
                   id="cpf"
                   value={cpf}
