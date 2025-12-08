@@ -93,7 +93,7 @@ interface AffiliateAuthContextType {
   isLoading: boolean;
   affiliateLogin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   affiliateLogout: () => Promise<void>;
-  affiliateRegister: (token: string, password: string, name: string, phone?: string) => Promise<{ success: boolean; error?: string }>;
+  affiliateRegister: (token: string, password: string, name: string, phone?: string, cpf?: string) => Promise<{ success: boolean; error?: string }>;
   refreshData: () => Promise<void>;
   fetchAffiliateOrders: () => Promise<void>;
   fetchOrderItems: (orderId: string, storeAffiliateId: string | null) => Promise<AffiliateOrderItem[]>;
@@ -233,10 +233,10 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
     setAffiliateOrders([]);
   };
 
-  const affiliateRegister = async (token: string, password: string, name: string, phone?: string) => {
+  const affiliateRegister = async (token: string, password: string, name: string, phone?: string, cpf?: string) => {
     try {
       const { data, error } = await supabase.functions.invoke('affiliate-auth', {
-        body: { action: 'register', invite_token: token, password, name, phone }
+        body: { action: 'register', invite_token: token, password, name, phone, cpf_cnpj: cpf }
       });
 
       if (error || !data?.success) {

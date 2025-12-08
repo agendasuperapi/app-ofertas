@@ -6,8 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { PhoneInput } from '@/components/ui/phone-input';
+import { CPFInput, isValidCPF } from '@/components/ui/cpf-input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { toast } from 'sonner';
-import { Loader2, Users, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 
 export default function AffiliateRegister() {
   const navigate = useNavigate();
@@ -26,6 +29,7 @@ export default function AffiliateRegister() {
   
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -75,6 +79,24 @@ export default function AffiliateRegister() {
       return;
     }
 
+    // Validate CPF if provided
+    if (cpf) {
+      const cpfNumbers = cpf.replace(/\D/g, '');
+      if (cpfNumbers.length !== 11 || !isValidCPF(cpfNumbers)) {
+        toast.error('CPF inválido');
+        return;
+      }
+    }
+
+    // Validate phone if provided
+    if (phone) {
+      const phoneNumbers = phone.replace(/\D/g, '').replace(/^55/, '');
+      if (phoneNumbers.length !== 10 && phoneNumbers.length !== 11) {
+        toast.error('Telefone inválido. Use (XX) XXXXX-XXXX');
+        return;
+      }
+    }
+
     if (password.length < 6) {
       toast.error('A senha deve ter pelo menos 6 caracteres');
       return;
@@ -86,7 +108,13 @@ export default function AffiliateRegister() {
     }
 
     setIsLoading(true);
-    const result = await affiliateRegister(token!, password, name, phone || undefined);
+    const result = await affiliateRegister(
+      token!, 
+      password, 
+      name, 
+      phone || undefined,
+      cpf || undefined
+    );
     setIsLoading(false);
 
     if (result.success) {
@@ -182,23 +210,30 @@ export default function AffiliateRegister() {
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 pb-4">
                 <Label htmlFor="phone">Telefone</Label>
-                <Input
+                <PhoneInput
                   id="phone"
-                  type="tel"
-                  placeholder="(11) 99999-9999"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={setPhone}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="space-y-2 pb-4">
+                <Label htmlFor="cpf">CPF</Label>
+                <CPFInput
+                  id="cpf"
+                  value={cpf}
+                  onChange={setCpf}
                   disabled={isLoading}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">Senha *</Label>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   placeholder="Mínimo 6 caracteres"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -208,9 +243,8 @@ export default function AffiliateRegister() {
 
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
-                <Input
+                <PasswordInput
                   id="confirmPassword"
-                  type="password"
                   placeholder="Repita a senha"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
