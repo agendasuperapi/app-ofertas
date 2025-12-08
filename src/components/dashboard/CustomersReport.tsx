@@ -5,15 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Users, Download, FileText, FileSpreadsheet } from "lucide-react";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Search, Users, Download, FileText, FileSpreadsheet, ChevronLeft, ChevronRight } from "lucide-react";
 import { ScrollableTable } from "@/components/ui/scrollable-table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { generateCustomersReport } from "@/lib/pdfReports";
+import { useIsMobile } from "@/hooks/use-mobile";
 import * as XLSX from 'xlsx';
 
 interface Customer {
@@ -23,6 +22,7 @@ interface Customer {
   delivery_number: string;
   delivery_neighborhood: string;
   delivery_complement: string;
+  delivery_city?: string;
   total_orders: number;
   total_spent: number;
   last_order: string;
@@ -40,6 +40,7 @@ export const CustomersReport = ({ storeId, storeName = "Minha Loja", dateRange }
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const isMobile = useIsMobile();
 
   const fetchCustomers = async () => {
     try {
@@ -80,6 +81,7 @@ export const CustomersReport = ({ storeId, storeName = "Minha Loja", dateRange }
             delivery_number: order.delivery_number || '',
             delivery_neighborhood: order.delivery_neighborhood || '',
             delivery_complement: order.delivery_complement || '',
+            delivery_city: order.delivery_city || '',
             total_orders: 1,
             total_spent: order.total || 0,
             last_order: order.created_at,
@@ -137,7 +139,7 @@ export const CustomersReport = ({ storeId, storeName = "Minha Loja", dateRange }
       customer.customer_name,
       customer.customer_phone,
       customer.delivery_street && customer.delivery_number 
-        ? `${customer.delivery_street}, ${customer.delivery_number}${customer.delivery_neighborhood ? ` - ${customer.delivery_neighborhood}` : ''}${(customer as any).delivery_city ? ` - ${(customer as any).delivery_city}` : ''}`
+        ? `${customer.delivery_street}, ${customer.delivery_number}${customer.delivery_neighborhood ? ` - ${customer.delivery_neighborhood}` : ''}${customer.delivery_city ? ` - ${customer.delivery_city}` : ''}`
         : '-',
       customer.total_orders,
       `R$ ${customer.total_spent.toFixed(2)}`,
@@ -181,7 +183,7 @@ export const CustomersReport = ({ storeId, storeName = "Minha Loja", dateRange }
       'Nome': customer.customer_name,
       'WhatsApp': customer.customer_phone,
       'Endereço': customer.delivery_street && customer.delivery_number 
-        ? `${customer.delivery_street}, ${customer.delivery_number}${customer.delivery_neighborhood ? ` - ${customer.delivery_neighborhood}` : ''}${(customer as any).delivery_city ? ` - ${(customer as any).delivery_city}` : ''}`
+        ? `${customer.delivery_street}, ${customer.delivery_number}${customer.delivery_neighborhood ? ` - ${customer.delivery_neighborhood}` : ''}${customer.delivery_city ? ` - ${customer.delivery_city}` : ''}`
         : '-',
       'Total de Pedidos': customer.total_orders,
       'Total Gasto': customer.total_spent,
@@ -189,15 +191,13 @@ export const CustomersReport = ({ storeId, storeName = "Minha Loja", dateRange }
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
-    
-    // Auto-width das colunas
     const colWidths = [
-      { wch: 25 }, // Nome
-      { wch: 15 }, // WhatsApp
-      { wch: 40 }, // Endereço
-      { wch: 18 }, // Total de Pedidos
-      { wch: 15 }, // Total Gasto
-      { wch: 15 }  // Último Pedido
+      { wch: 25 },
+      { wch: 15 },
+      { wch: 40 },
+      { wch: 18 },
+      { wch: 15 },
+      { wch: 15 }
     ];
     ws['!cols'] = colWidths;
 
@@ -220,144 +220,185 @@ export const CustomersReport = ({ storeId, storeName = "Minha Loja", dateRange }
       </div>
       
       <Card>
-      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex-1 w-full sm:max-w-sm">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Buscar cliente..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex-1 w-full sm:max-w-sm">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar cliente..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+            </div>
           </div>
-        </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={exportToCSV}
-            disabled={filteredCustomers.length === 0}
-            className="flex-1 sm:flex-none"
-          >
-            <Download className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">CSV</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={exportToExcel}
-            disabled={filteredCustomers.length === 0}
-            className="flex-1 sm:flex-none"
-          >
-            <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Excel</span>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={exportToPDF}
-            disabled={filteredCustomers.length === 0}
-            className="flex-1 sm:flex-none"
-          >
-            <FileText className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">PDF</span>
-          </Button>
-        </div>
-      </CardHeader>
-        <CardContent className="p-0 sm:p-6">
-          <ScrollableTable>
-            <Table className="min-w-[800px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>WhatsApp</TableHead>
-                  <TableHead>Endereço</TableHead>
-                  <TableHead className="text-right">Pedidos</TableHead>
-                  <TableHead className="text-right">Total Gasto</TableHead>
-                  <TableHead>Último Pedido</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCustomers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
-                      {searchTerm ? 'Nenhum cliente encontrado' : 'Nenhum cliente no período selecionado'}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedCustomers.map((customer, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{customer.customer_name}</TableCell>
-                      <TableCell>{customer.customer_phone}</TableCell>
-                      <TableCell>
-                        {customer.delivery_street && customer.delivery_number ? (
-                          <div className="text-sm">
-                            <div>{customer.delivery_street}, {customer.delivery_number}</div>
-                            {customer.delivery_complement && (
-                              <div className="text-muted-foreground">{customer.delivery_complement}</div>
-                            )}
-                            <div className="text-muted-foreground">
-                              {customer.delivery_neighborhood}
-                              {(customer as any).delivery_city && ` - ${(customer as any).delivery_city}`}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToCSV}
+              disabled={filteredCustomers.length === 0}
+              className="flex-1 sm:flex-none"
+            >
+              <Download className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">CSV</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToExcel}
+              disabled={filteredCustomers.length === 0}
+              className="flex-1 sm:flex-none"
+            >
+              <FileSpreadsheet className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Excel</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToPDF}
+              disabled={filteredCustomers.length === 0}
+              className="flex-1 sm:flex-none"
+            >
+              <FileText className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">PDF</span>
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-3 sm:p-6">
+          {/* Mobile Cards View */}
+          {isMobile ? (
+            <div className="space-y-3">
+              {filteredCustomers.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {searchTerm ? 'Nenhum cliente encontrado' : 'Nenhum cliente no período selecionado'}
+                </div>
+              ) : (
+                paginatedCustomers.map((customer, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border rounded-lg p-4 space-y-3"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-medium">{customer.customer_name}</p>
+                        <p className="text-sm text-muted-foreground">{customer.customer_phone}</p>
+                      </div>
+                      <Badge variant="secondary">{customer.total_orders} pedidos</Badge>
+                    </div>
+                    
+                    {customer.delivery_street && customer.delivery_number && (
+                      <div className="text-sm text-muted-foreground">
+                        <p>{customer.delivery_street}, {customer.delivery_number}</p>
+                        {customer.delivery_neighborhood && (
+                          <p>{customer.delivery_neighborhood}{customer.delivery_city ? ` - ${customer.delivery_city}` : ''}</p>
                         )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Badge variant="secondary">{customer.total_orders}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        R$ {customer.total_spent.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {format(new Date(customer.last_order), "dd/MM/yyyy", { locale: ptBR })}
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">R$ {customer.total_spent.toFixed(2)}</span>
+                      <span className="text-muted-foreground">
+                        Último: {format(new Date(customer.last_order), "dd/MM/yyyy", { locale: ptBR })}
+                      </span>
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          ) : (
+            /* Desktop Table View */
+            <ScrollableTable>
+              <Table className="min-w-[800px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>WhatsApp</TableHead>
+                    <TableHead>Endereço</TableHead>
+                    <TableHead className="text-right">Pedidos</TableHead>
+                    <TableHead className="text-right">Total Gasto</TableHead>
+                    <TableHead>Último Pedido</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCustomers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground">
+                        {searchTerm ? 'Nenhum cliente encontrado' : 'Nenhum cliente no período selecionado'}
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-        </TableBody>
-            </Table>
-          </ScrollableTable>
+                  ) : (
+                    paginatedCustomers.map((customer, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{customer.customer_name}</TableCell>
+                        <TableCell>{customer.customer_phone}</TableCell>
+                        <TableCell>
+                          {customer.delivery_street && customer.delivery_number ? (
+                            <div className="text-sm">
+                              <div>{customer.delivery_street}, {customer.delivery_number}</div>
+                              {customer.delivery_complement && (
+                                <div className="text-muted-foreground">{customer.delivery_complement}</div>
+                              )}
+                              <div className="text-muted-foreground">
+                                {customer.delivery_neighborhood}
+                                {customer.delivery_city && ` - ${customer.delivery_city}`}
+                              </div>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant="secondary">{customer.total_orders}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          R$ {customer.total_spent.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {format(new Date(customer.last_order), "dd/MM/yyyy", { locale: ptBR })}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </ScrollableTable>
+          )}
 
-    {/* Paginação */}
-    {totalPages > 1 && (
-      <div className="mt-4">
-        <Pagination>
-          <PaginationContent>
-            <PaginationItem>
-              <PaginationPrevious 
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-              />
-            </PaginationItem>
-            
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <PaginationItem key={page}>
-                <PaginationLink
-                  onClick={() => setCurrentPage(page)}
-                  isActive={currentPage === page}
-                  className="cursor-pointer"
+          {/* Paginação */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t pt-4 mt-4">
+              <p className="text-xs text-muted-foreground hidden sm:block">
+                Mostrando {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredCustomers.length)} de {filteredCustomers.length}
+              </p>
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
                 >
-                  {page}
-                </PaginationLink>
-              </PaginationItem>
-            ))}
-
-            <PaginationItem>
-              <PaginationNext 
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
-    )}
-  </CardContent>
-</Card>
-</div>
-);
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-medium px-2">
+                  {currentPage} / {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
