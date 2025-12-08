@@ -9,11 +9,11 @@ import { ShoppingBag, Heart, Store, TrendingUp, Eye, X, Sparkles, Calendar as Ca
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
@@ -237,11 +237,11 @@ export const CustomerDashboard = () => {
       </motion.div>
 
       {/* Custom Date Range Dialog */}
-      <Dialog open={showCustomDatePicker} onOpenChange={setShowCustomDatePicker}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Selecionar Período Personalizado</DialogTitle>
-          </DialogHeader>
+      <ResponsiveDialog open={showCustomDatePicker} onOpenChange={setShowCustomDatePicker}>
+        <ResponsiveDialogContent className="sm:max-w-[600px]">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Selecionar Período Personalizado</ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
           <div className="grid gap-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -327,8 +327,8 @@ export const CustomerDashboard = () => {
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -723,16 +723,16 @@ export const CustomerDashboard = () => {
       )}
 
       {/* Order Details Dialog */}
-      <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
+      <ResponsiveDialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
+        <ResponsiveDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="flex items-center justify-between">
               <span>Detalhes do Pedido {selectedOrder?.order_number}</span>
-            </DialogTitle>
-          </DialogHeader>
+            </ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
 
           {selectedOrder && (
-            <div className="space-y-6">
+            <div className="space-y-6 px-4">
               {/* Status */}
               <div className="flex items-center justify-between p-4 bg-accent/50 rounded-lg">
                 <span className="font-medium">Status:</span>
@@ -854,8 +854,8 @@ export const CustomerDashboard = () => {
               </Button>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 };

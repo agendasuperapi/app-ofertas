@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogTitle } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -161,14 +161,14 @@ export const AddToCartDialog = ({ open, onOpenChange, product, onAdd }: AddToCar
   const total = (price + addonsTotal + flavorsTotal) * quantity;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{product.name}</DialogTitle>
-          <DialogDescription>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="sm:max-w-[425px]">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{product.name}</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             R$ {price.toFixed(2)} {product.promotional_price && <span className="text-xs line-through text-muted-foreground ml-2">R$ {product.price.toFixed(2)}</span>}
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
@@ -392,7 +392,7 @@ export const AddToCartDialog = ({ open, onOpenChange, product, onAdd }: AddToCar
           </div>
         </div>
 
-        <DialogFooter>
+        <ResponsiveDialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancelar
           </Button>
@@ -402,8 +402,8 @@ export const AddToCartDialog = ({ open, onOpenChange, product, onAdd }: AddToCar
           >
             Adicionar ao Carrinho
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 };

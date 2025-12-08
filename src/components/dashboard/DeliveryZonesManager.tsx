@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle } from "@/components/ui/responsive-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -344,19 +344,17 @@ export const DeliveryZonesManager = ({ storeId }: DeliveryZonesManagerProps) => 
                 Configure cidades e bairros com taxas de entrega
               </CardDescription>
             </div>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={() => handleOpenDialog()} size="sm">
-                  <Plus className="w-3 h-3 mr-1" />
-                  Adicionar
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
+            <Button onClick={() => handleOpenDialog()} size="sm">
+              <Plus className="w-3 h-3 mr-1" />
+              Adicionar
+            </Button>
+            <ResponsiveDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <ResponsiveDialogContent>
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle>
                 {editingZone ? 'Editar Zona de Entrega' : 'Nova Zona de Entrega'}
-              </DialogTitle>
-            </DialogHeader>
+              </ResponsiveDialogTitle>
+            </ResponsiveDialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="cep">CEP (opcional)</Label>
@@ -450,8 +448,8 @@ export const DeliveryZonesManager = ({ storeId }: DeliveryZonesManagerProps) => 
                 </Button>
               </div>
               </form>
-            </DialogContent>
-          </Dialog>
+            </ResponsiveDialogContent>
+          </ResponsiveDialog>
           </div>
         </CardHeader>
         <CardContent className="space-y-3 pt-3">

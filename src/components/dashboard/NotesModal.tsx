@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useState, useEffect } from "react";
@@ -32,13 +32,13 @@ export const NotesModal = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="top-4 translate-y-0 max-h-[90vh]">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-        </DialogHeader>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="max-h-[90vh]">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle>{title}</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
         
-        <div className="py-4">
+        <div className="py-4 px-4">
           <Textarea
             value={localValue}
             onChange={(e) => setLocalValue(e.target.value)}
@@ -48,7 +48,7 @@ export const NotesModal = ({
           />
         </div>
 
-        <DialogFooter className="flex gap-2">
+        <ResponsiveDialogFooter className="flex gap-2">
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -62,8 +62,8 @@ export const NotesModal = ({
           >
             Salvar
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 };
