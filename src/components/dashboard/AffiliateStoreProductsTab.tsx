@@ -8,8 +8,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollableTable } from '@/components/ui/scrollable-table';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription } from '@/components/ui/responsive-dialog';
 import { toast } from 'sonner';
-import { Loader2, Copy, ExternalLink, Package, Search, Target, Calculator, Ban, Link, ImageIcon } from 'lucide-react';
+import { Loader2, Copy, ExternalLink, Package, Search, Target, Calculator, Ban, Link, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+const PRODUCTS_PER_PAGE = 10;
+
 interface Product {
   id: string;
   name: string;
@@ -55,6 +58,7 @@ export function AffiliateStoreProductsTab({
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const isMobile = useIsMobile();
   useEffect(() => {
     fetchData();
@@ -183,6 +187,16 @@ export function AffiliateStoreProductsTab({
     return product.name.toLowerCase().includes(search) || product.category.toLowerCase().includes(search) || product.short_id && product.short_id.toLowerCase().includes(search) || product.external_code && product.external_code.toLowerCase().includes(search);
   });
 
+  // Reset page when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredProducts.length / PRODUCTS_PER_PAGE);
+  const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
+  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + PRODUCTS_PER_PAGE);
+
   // Group by category
   const productsByCategory = filteredProducts.reduce((acc, product) => {
     if (!acc[product.category]) {
@@ -207,12 +221,12 @@ export function AffiliateStoreProductsTab({
       {/* Products - Mobile Cards or Desktop Table */}
       {isMobile ? (
         <div className="space-y-3">
-          {filteredProducts.length === 0 ? (
+          {paginatedProducts.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Nenhum produto encontrado
             </div>
           ) : (
-            filteredProducts.map(product => {
+            paginatedProducts.map(product => {
               const commission = getProductCommission(product.id);
               const commissionAmount = calculateCommission(product);
               return (
@@ -328,14 +342,14 @@ export function AffiliateStoreProductsTab({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredProducts.length === 0 ? (
+              {paginatedProducts.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     Nenhum produto encontrado
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredProducts.map(product => {
+                paginatedProducts.map(product => {
                   const commission = getProductCommission(product.id);
                   const commissionAmount = calculateCommission(product);
                   return (
@@ -427,6 +441,36 @@ export function AffiliateStoreProductsTab({
             </TableBody>
           </Table>
         </ScrollableTable>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t pt-4">
+          <p className="text-sm text-muted-foreground">
+            Mostrando {startIndex + 1}-{Math.min(startIndex + PRODUCTS_PER_PAGE, filteredProducts.length)} de {filteredProducts.length} produtos
+          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-sm font-medium px-2">
+              {currentPage} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
       )}
 
       {/* Product Details Modal */}
