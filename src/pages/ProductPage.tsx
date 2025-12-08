@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Navigation } from '@/components/layout/Navigation';
 import { Button } from '@/components/ui/button';
@@ -31,9 +31,13 @@ interface Product {
 export default function ProductPage() {
   const { shortId } = useParams<{ shortId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { addToCart } = useCart();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Capturar cupom da URL
+  const affiliateCoupon = searchParams.get('cupom');
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -58,13 +62,14 @@ export default function ProductPage() {
         return;
       }
 
-      // Redirecionar para a loja com o produto em popup
+      // Redirecionar para a loja com o produto em popup e preservar o cupom
       const storeSlug = (data as any).stores.slug;
-      navigate(`/${storeSlug}?product=${shortId}`, { replace: true });
+      const couponParam = affiliateCoupon ? `&cupom=${affiliateCoupon}` : '';
+      navigate(`/${storeSlug}?product=${shortId}${couponParam}`, { replace: true });
     };
 
     fetchProduct();
-  }, [shortId, navigate]);
+  }, [shortId, navigate, affiliateCoupon]);
 
   const handleAddToCart = () => {
     if (!product) return;
