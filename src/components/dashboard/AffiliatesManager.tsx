@@ -78,9 +78,17 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     
     const linkedAffiliate = linkedViaLegacy || linkedViaJunction;
     
-    // Allow if: not linked to any affiliate, OR linked to the affiliate being edited/viewed
+    // If not linked to any affiliate, it's available
     if (!linkedAffiliate) return true;
+    
+    // Get current affiliate being edited (from edit mode or details modal)
     const currentAffiliateId = editingAffiliate?.id || selectedAffiliate?.id;
+    
+    // If we're creating a new affiliate (no editingAffiliate and no selectedAffiliate in edit context),
+    // exclude coupons already linked to other affiliates
+    if (!currentAffiliateId) return false;
+    
+    // Allow if linked to the affiliate being edited/viewed
     return linkedAffiliate.id === currentAffiliateId;
   });
   const [commissionRules, setCommissionRules] = useState<AffiliateCommissionRule[]>([]);
