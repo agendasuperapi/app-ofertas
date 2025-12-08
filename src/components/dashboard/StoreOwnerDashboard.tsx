@@ -5710,18 +5710,18 @@ export const StoreOwnerDashboard = ({
       </AlertDialog>
 
       {/* Modal de descrição em mobile */}
-      <Dialog open={isDescriptionDialogOpen} onOpenChange={setIsDescriptionDialogOpen}>
-        <DialogContent className="max-w-lg w-[96vw] sm:w-full top-[5%] translate-y-0">
-          <DialogHeader>
-            <DialogTitle>Descrição do Produto</DialogTitle>
-            <DialogDescription>
+      <ResponsiveDialog open={isDescriptionDialogOpen} onOpenChange={setIsDescriptionDialogOpen}>
+        <ResponsiveDialogContent className="max-w-lg w-[96vw] sm:w-full">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Descrição do Produto</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Digite a descrição do produto abaixo
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-2">
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <div className="mt-2 px-4">
             <Textarea value={tempDescription} onChange={e => setTempDescription(e.target.value)} className="w-full resize-none min-h-[60px] sm:min-h-[120px]" placeholder="Digite a descrição do produto..." autoFocus />
           </div>
-          <div className="mt-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+          <ResponsiveDialogFooter>
             <Button variant="outline" onClick={() => setIsDescriptionDialogOpen(false)} className="w-full sm:w-auto">
               Cancelar
             </Button>
@@ -5734,9 +5734,9 @@ export const StoreOwnerDashboard = ({
               }} className="w-full sm:w-auto">
               Salvar
             </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
       </div>
 
       {/* Mobile Bottom Navigation */}

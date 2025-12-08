@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogDescription, ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogTitle } from '@/components/ui/responsive-dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { MessageSquare, Send, X, Loader2 } from 'lucide-react';
@@ -173,14 +173,14 @@ export function WhatsAppConfirmDialog({
       setIsSending(false);
     }
   };
-  return <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+  return <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="max-w-2xl">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5 text-green-600" />
             Enviar mensagem WhatsApp?
-          </DialogTitle>
-          <DialogDescription className="space-y-2">
+          </ResponsiveDialogTitle>
+          <ResponsiveDialogDescription className="space-y-2">
             <p>
               Deseja notificar o cliente <strong>{customerName}</strong> sobre a mudança de status do pedido <strong>#{orderNumber}</strong>?
             </p>
@@ -193,10 +193,10 @@ export function WhatsAppConfirmDialog({
                 {newStatusLabel}
               </span>
             </div>
-          </DialogDescription>
-        </DialogHeader>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 px-4">
           <div>
             <p className="text-sm font-medium mb-2">Preview da mensagem:</p>
             {isLoadingPreview ? <div className="flex items-center justify-center p-8">
@@ -215,7 +215,7 @@ export function WhatsAppConfirmDialog({
           </div>
         </div>
 
-        <DialogFooter className="flex-col sm:flex-row gap-2">
+        <ResponsiveDialogFooter className="flex-col sm:flex-row gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSending}>
             <X className="w-4 h-4 mr-2" />
             Cancelar
@@ -228,7 +228,7 @@ export function WhatsAppConfirmDialog({
             {isSending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
             Enviar WhatsApp
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>;
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>;
 }

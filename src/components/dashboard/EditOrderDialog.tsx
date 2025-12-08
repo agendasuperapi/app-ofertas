@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ResponsiveDialog as ObservationDialog, ResponsiveDialogContent as ObservationDialogContent, ResponsiveDialogHeader as ObservationDialogHeader, ResponsiveDialogTitle as ObservationDialogTitle, ResponsiveDialogDescription as ObservationDialogDescription } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -934,15 +934,15 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
     </ResponsiveDialog>
 
     {/* Modal de Observação */}
-    <Dialog open={observationModalOpen} onOpenChange={setObservationModalOpen}>
-      <DialogContent className="max-w-lg w-[96vw] sm:w-full top-[15%] translate-y-0">
-        <DialogHeader>
-          <DialogTitle>Observação do Produto</DialogTitle>
-          <DialogDescription>
+    <ObservationDialog open={observationModalOpen} onOpenChange={setObservationModalOpen}>
+      <ObservationDialogContent className="max-w-lg w-[96vw] sm:w-full">
+        <ObservationDialogHeader>
+          <ObservationDialogTitle>Observação do Produto</ObservationDialogTitle>
+          <ObservationDialogDescription>
             Edite a observação deste item do pedido
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 mt-2">
+          </ObservationDialogDescription>
+        </ObservationDialogHeader>
+        <div className="space-y-4 mt-2 px-4">
           <div>
             <Label>Produto: {editingObservationItem?.product_name}</Label>
           </div>
@@ -956,7 +956,7 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
             />
           </div>
         </div>
-        <div className="mt-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+        <div className="mt-4 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 p-4">
           <Button
             variant="outline"
             onClick={() => {
@@ -980,8 +980,8 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
             Salvar
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </ObservationDialogContent>
+    </ObservationDialog>
     </>
   );
 };
