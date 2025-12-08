@@ -3277,6 +3277,19 @@ export type Database = {
           is_valid: boolean
         }[]
       }
+      verify_commission_integrity: {
+        Args: { p_order_id: string }
+        Returns: {
+          commission_total: number
+          earning_id: string
+          is_valid: boolean
+          issues: string[]
+          items_missing: number
+          order_number: string
+          total_item_earnings: number
+          total_order_items: number
+        }[]
+      }
     }
     Enums: {
       app_role: "customer" | "store_owner" | "admin"
