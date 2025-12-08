@@ -81,9 +81,6 @@ const CPFInput = React.forwardRef<HTMLInputElement, CPFInputProps>(
           transition={{ duration: 0.2 }}
         >
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-lg z-10 pointer-events-none">
-              🇧🇷
-            </span>
             <Input
               ref={ref}
               type="text"
@@ -94,7 +91,7 @@ const CPFInput = React.forwardRef<HTMLInputElement, CPFInputProps>(
               onBlur={handleBlur}
               placeholder="000.000.000-00"
               className={cn(
-                "pl-12 transition-all duration-300",
+                "transition-all duration-300",
                 isFocused && "ring-2 ring-primary/20 border-primary",
                 isComplete && !isValid && "border-destructive ring-2 ring-destructive/20",
                 className
