@@ -189,14 +189,13 @@ export default function AffiliateRegister() {
 
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={inviteData?.email || ''}
-                  disabled
-                  className="bg-muted"
+              <div className="space-y-2 pb-4">
+                <Label htmlFor="cpf">CPF *</Label>
+                <CPFInput
+                  id="cpf"
+                  value={cpf}
+                  onChange={setCpf}
+                  disabled={isLoading}
                 />
               </div>
 
@@ -212,22 +211,23 @@ export default function AffiliateRegister() {
                 />
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="email">E-mail</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={inviteData?.email || ''}
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
+
               <div className="space-y-2 pb-4">
                 <Label htmlFor="phone">Telefone *</Label>
                 <PhoneInput
                   id="phone"
                   value={phone}
                   onChange={setPhone}
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="space-y-2 pb-4">
-                <Label htmlFor="cpf">CPF *</Label>
-                <CPFInput
-                  id="cpf"
-                  value={cpf}
-                  onChange={setCpf}
                   disabled={isLoading}
                 />
               </div>
