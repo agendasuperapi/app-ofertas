@@ -891,6 +891,23 @@ export default function Cart() {
   
         console.log('✅ Order created successfully, clearing cart...');
         
+        // Log para debug de comissões de afiliado
+        console.log('📊 [COMMISSION DEBUG] Pedido criado com informações de cupom:', {
+          couponCode: cart.couponCode,
+          couponDiscount: cart.couponDiscount,
+          couponAppliesTo: cart.couponAppliesTo,
+          couponCategoryNames: cart.couponCategoryNames,
+          couponProductIds: cart.couponProductIds,
+          discountRulesCount: cart.couponDiscountRules?.length || 0,
+          discountRules: cart.couponDiscountRules?.map(r => ({
+            type: r.rule_type,
+            productId: r.product_id,
+            category: r.category_name,
+            discountType: r.discount_type,
+            discountValue: r.discount_value
+          })) || []
+        });
+        
         // Clear cart and AWAIT completion before navigating
         await clearCart();
         console.log('🗑️ Cart cleared successfully');
