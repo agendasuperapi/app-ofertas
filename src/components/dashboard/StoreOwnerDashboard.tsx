@@ -82,6 +82,7 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, Pagi
 import { CouponsManager } from "./CouponsManager";
 import { EmployeesManager } from "./EmployeesManager";
 import { AffiliatesManager } from "./AffiliatesManager";
+import { AffiliateInvitesManager } from "./AffiliateInvitesManager";
 import { AffiliatesReportsTab } from "./AffiliatesReportsTab";
 import { useEmployeeAccess } from "@/hooks/useEmployeeAccess";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -3260,6 +3261,11 @@ export const StoreOwnerDashboard = ({
         {/* Afiliados Tab */}
         {myStore?.id && <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8", activeTab !== 'afiliados' && 'hidden')}>
             <AffiliatesManager storeId={myStore.id} storeName={myStore.name} />
+          </div>}
+
+        {/* Afiliados Convites Tab */}
+        {myStore?.id && <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8", activeTab !== 'afiliados-convites' && 'hidden')}>
+            <AffiliateInvitesManager storeId={myStore.id} storeName={myStore.name} />
           </div>}
 
         {/* Afiliados Relatórios Tab */}
