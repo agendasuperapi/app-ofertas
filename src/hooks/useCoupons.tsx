@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CartItem } from '@/contexts/CartContext';
-import { calculateEligibleSubtotal, calculateDiscount } from '@/lib/couponUtils';
+import { calculateEligibleSubtotal, calculateDiscount, calculateTotalDiscountWithRules, CouponDiscountRule } from '@/lib/couponUtils';
 
 export type DiscountType = 'percentage' | 'fixed';
 
@@ -35,6 +35,7 @@ export interface CouponValidation {
   category_names?: string[];
   product_ids?: string[];
   has_no_eligible_items?: boolean;
+  discount_rules?: CouponDiscountRule[];
 }
 
 export const useCoupons = (storeId: string | undefined) => {
@@ -112,6 +113,24 @@ export const useCoupons = (storeId: string | undefined) => {
           error_message: 'Cupom não encontrado ou inativo',
         };
       }
+
+      // 1.1 Buscar regras de desconto personalizadas do cupom
+      const { data: discountRulesData } = await supabase
+        .from('coupon_discount_rules')
+        .select('*')
+        .eq('coupon_id', coupon.id);
+
+      const discountRules: CouponDiscountRule[] = (discountRulesData || []).map(rule => ({
+        id: rule.id,
+        coupon_id: rule.coupon_id,
+        rule_type: rule.rule_type as 'product' | 'category',
+        product_id: rule.product_id,
+        category_name: rule.category_name,
+        discount_type: rule.discount_type as 'percentage' | 'fixed',
+        discount_value: rule.discount_value
+      }));
+
+      console.log('📜 Regras de desconto personalizadas:', discountRules.length > 0 ? discountRules : 'Nenhuma');
 
       // 2. Validar período
       const now = new Date();
@@ -268,7 +287,8 @@ export const useCoupons = (storeId: string | undefined) => {
           applies_to: appliesTo,
           category_names: coupon.category_names || [],
           product_ids: coupon.product_ids || [],
-          has_no_eligible_items: true
+          has_no_eligible_items: true,
+          discount_rules: discountRules
         };
       }
 
@@ -289,25 +309,54 @@ export const useCoupons = (storeId: string | undefined) => {
         };
       }
 
-      // 7. Calcular desconto
-      const discountAmount = calculateDiscount(
-        eligibleSubtotal,
-        coupon.discount_type as DiscountType,
-        coupon.discount_value
-      );
-
-      console.log('');
-      console.log('🧮 ─────────────────────────────────────────────');
-      console.log('🧮 CÁLCULO DO DESCONTO:');
-      console.log('🧮 ─────────────────────────────────────────────');
-      console.log(`   Tipo: ${coupon.discount_type}`);
-      console.log(`   Valor configurado: ${coupon.discount_value}${coupon.discount_type === 'percentage' ? '%' : ' R$'}`);
-      console.log(`   Base de cálculo (subtotal elegível): R$ ${eligibleSubtotal.toFixed(2)}`);
-      if (coupon.discount_type === 'percentage') {
-        console.log(`   Cálculo: R$ ${eligibleSubtotal.toFixed(2)} × ${coupon.discount_value}% = R$ ${discountAmount.toFixed(2)}`);
+      // 7. Calcular desconto - usar regras personalizadas se existirem
+      let discountAmount: number;
+      
+      if (discountRules.length > 0) {
+        // Calcular com regras personalizadas
+        discountAmount = calculateTotalDiscountWithRules(
+          itemsWithCategory,
+          {
+            appliesTo,
+            categoryNames: coupon.category_names || [],
+            productIds: coupon.product_ids || []
+          },
+          coupon.discount_type as DiscountType,
+          coupon.discount_value,
+          discountRules
+        );
+        
+        console.log('');
+        console.log('🧮 ─────────────────────────────────────────────');
+        console.log('🧮 CÁLCULO DO DESCONTO (COM REGRAS PERSONALIZADAS):');
+        console.log('🧮 ─────────────────────────────────────────────');
+        console.log(`   Regras personalizadas: ${discountRules.length}`);
+        discountRules.forEach(rule => {
+          console.log(`     - ${rule.rule_type === 'product' ? 'Produto' : 'Categoria'}: ${rule.discount_value}${rule.discount_type === 'percentage' ? '%' : ' R$'}`);
+        });
+        console.log(`   Desconto total calculado: R$ ${discountAmount.toFixed(2)}`);
       } else {
-        console.log(`   Desconto fixo aplicado: R$ ${discountAmount.toFixed(2)}`);
+        // Calcular desconto padrão
+        discountAmount = calculateDiscount(
+          eligibleSubtotal,
+          coupon.discount_type as DiscountType,
+          coupon.discount_value
+        );
+        
+        console.log('');
+        console.log('🧮 ─────────────────────────────────────────────');
+        console.log('🧮 CÁLCULO DO DESCONTO:');
+        console.log('🧮 ─────────────────────────────────────────────');
+        console.log(`   Tipo: ${coupon.discount_type}`);
+        console.log(`   Valor configurado: ${coupon.discount_value}${coupon.discount_type === 'percentage' ? '%' : ' R$'}`);
+        console.log(`   Base de cálculo (subtotal elegível): R$ ${eligibleSubtotal.toFixed(2)}`);
+        if (coupon.discount_type === 'percentage') {
+          console.log(`   Cálculo: R$ ${eligibleSubtotal.toFixed(2)} × ${coupon.discount_value}% = R$ ${discountAmount.toFixed(2)}`);
+        } else {
+          console.log(`   Desconto fixo aplicado: R$ ${discountAmount.toFixed(2)}`);
+        }
       }
+      
       console.log('');
       console.log('✅ ═══════════════════════════════════════════════');
       console.log('✅ CUPOM VÁLIDO - DESCONTO FINAL: R$', discountAmount.toFixed(2));
@@ -321,7 +370,8 @@ export const useCoupons = (storeId: string | undefined) => {
         error_message: null,
         applies_to: appliesTo,
         category_names: coupon.category_names || [],
-        product_ids: coupon.product_ids || []
+        product_ids: coupon.product_ids || [],
+        discount_rules: discountRules
       };
 
     } catch (error: any) {

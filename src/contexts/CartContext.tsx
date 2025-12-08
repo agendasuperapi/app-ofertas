@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useSavedCarts } from '@/hooks/useSavedCarts';
 import { useDebounce } from '@/hooks/useNotificationThrottler';
+import { CouponDiscountRule } from '@/lib/couponUtils';
 
 // Função para gerar ID único para cada item do carrinho
 // Baseado em: storeId + productId + customizações (size, addons, flavors, observation, color)
@@ -90,6 +91,7 @@ export interface Cart {
   couponDiscountType?: 'percentage' | 'fixed';
   couponDiscountValue?: number;
   couponHasNoEligibleItems?: boolean;
+  couponDiscountRules?: CouponDiscountRule[];
 }
 
 export interface MultiStoreCart {
@@ -126,7 +128,7 @@ interface CartContextType {
   clearCart: () => Promise<void>;
   getTotal: () => number;
   getItemCount: () => number;
-  applyCoupon: (code: string, discount: number, appliesTo?: 'all' | 'category' | 'product', categoryNames?: string[], productIds?: string[], discountType?: 'percentage' | 'fixed', discountValue?: number, hasNoEligibleItems?: boolean) => void;
+  applyCoupon: (code: string, discount: number, appliesTo?: 'all' | 'category' | 'product', categoryNames?: string[], productIds?: string[], discountType?: 'percentage' | 'fixed', discountValue?: number, hasNoEligibleItems?: boolean, discountRules?: CouponDiscountRule[]) => void;
   removeCoupon: () => void;
   validateAndSyncCart: (targetStoreId?: string) => Promise<void>;
 }
@@ -652,7 +654,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     productIds?: string[],
     discountType?: 'percentage' | 'fixed',
     discountValue?: number,
-    hasNoEligibleItems?: boolean
+    hasNoEligibleItems?: boolean,
+    discountRules?: CouponDiscountRule[]
   ) => {
     if (!multiCart.activeStoreId) return;
 
@@ -673,7 +676,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             couponProductIds: productIds,
             couponDiscountType: discountType,
             couponDiscountValue: discountValue,
-            couponHasNoEligibleItems: hasNoEligibleItems
+            couponHasNoEligibleItems: hasNoEligibleItems,
+            couponDiscountRules: discountRules
           }
         }
       };
@@ -700,7 +704,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             couponProductIds: undefined,
             couponDiscountType: undefined,
             couponDiscountValue: undefined,
-            couponHasNoEligibleItems: undefined
+            couponHasNoEligibleItems: undefined,
+            couponDiscountRules: undefined
           }
         }
       };
