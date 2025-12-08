@@ -6,14 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Package, Download, FileText, FileSpreadsheet } from "lucide-react";
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Search, Package, Download, FileText, FileSpreadsheet, ChevronLeft, ChevronRight } from "lucide-react";
 import { ScrollableTable } from "@/components/ui/scrollable-table";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { generateProductsReport } from "@/lib/pdfReports";
+import { useIsMobile } from "@/hooks/use-mobile";
 import * as XLSX from 'xlsx';
 
 interface RegisteredProduct {
@@ -40,6 +39,7 @@ export const RegisteredProductsReport = ({ storeId, storeName = "Minha Loja" }: 
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const isMobile = useIsMobile();
 
   const fetchProducts = async () => {
     try {
@@ -165,17 +165,15 @@ export const RegisteredProductsReport = ({ storeId, storeName = "Minha Loja" }: 
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
-    
-    // Auto-width das colunas
     const colWidths = [
-      { wch: 12 }, // Código
-      { wch: 15 }, // Código Externo
-      { wch: 30 }, // Nome
-      { wch: 40 }, // Descrição
-      { wch: 15 }, // Categoria
-      { wch: 12 }, // Preço
-      { wch: 18 }, // Preço Promocional
-      { wch: 10 }  // Status
+      { wch: 12 },
+      { wch: 15 },
+      { wch: 30 },
+      { wch: 40 },
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 18 },
+      { wch: 10 }
     ];
     ws['!cols'] = colWidths;
 
@@ -198,7 +196,7 @@ export const RegisteredProductsReport = ({ storeId, storeName = "Minha Loja" }: 
       </div>
       
       <Card>
-      <CardHeader className="flex flex-col gap-4">
+        <CardHeader className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row gap-4 w-full">
             <div className="flex-1">
               <div className="relative">
@@ -257,102 +255,158 @@ export const RegisteredProductsReport = ({ storeId, storeName = "Minha Loja" }: 
             </Button>
           </div>
         </CardHeader>
-        <CardContent className="p-0 sm:p-6">
-          <ScrollableTable>
-            <Table className="min-w-[900px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Código</TableHead>
-                  <TableHead>Código Externo</TableHead>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Descrição</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead className="text-right">Preço</TableHead>
-                  <TableHead className="text-right">Preço Promocional</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProducts.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
-                      {searchTerm || statusFilter !== "all" 
-                        ? 'Nenhum produto encontrado com os filtros selecionados' 
-                        : 'Nenhum produto cadastrado'}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedProducts.map((product) => (
-                    <TableRow key={product.id}>
-                      <TableCell className="font-mono text-sm">
-                        {product.short_id || product.id.substring(0, 8)}
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">
-                        {product.external_code || '-'}
-                      </TableCell>
-                      <TableCell className="font-medium">{product.name}</TableCell>
-                      <TableCell className="max-w-[300px] truncate text-sm text-muted-foreground">
-                        {product.description || '-'}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{product.category}</Badge>
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        R$ {product.price.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right">
+        <CardContent className="p-3 sm:p-6">
+          {/* Mobile Cards View */}
+          {isMobile ? (
+            <div className="space-y-3">
+              {filteredProducts.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  {searchTerm || statusFilter !== "all" 
+                    ? 'Nenhum produto encontrado com os filtros selecionados' 
+                    : 'Nenhum produto cadastrado'}
+                </div>
+              ) : (
+                paginatedProducts.map((product, index) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border rounded-lg p-4 space-y-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{product.name}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <span className="font-mono">{product.short_id || product.id.substring(0, 8)}</span>
+                          {product.external_code && (
+                            <span>• Ext: {product.external_code}</span>
+                          )}
+                        </div>
+                      </div>
+                      <Badge variant={product.is_available ? "default" : "secondary"}>
+                        {product.is_available ? "Ativo" : "Inativo"}
+                      </Badge>
+                    </div>
+                    
+                    {product.description && (
+                      <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
+                    )}
+                    
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline">{product.category}</Badge>
+                      <div className="text-right">
                         {product.promotional_price && product.promotional_price > 0 ? (
-                          <span className="text-green-600 font-medium">
-                            R$ {product.promotional_price.toFixed(2)}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground line-through">
+                              R$ {product.price.toFixed(2)}
+                            </span>
+                            <span className="font-medium text-green-600">
+                              R$ {product.promotional_price.toFixed(2)}
+                            </span>
+                          </div>
                         ) : (
-                          <span className="text-muted-foreground">-</span>
+                          <span className="font-medium">R$ {product.price.toFixed(2)}</span>
                         )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={product.is_available ? "default" : "secondary"}>
-                          {product.is_available ? "Ativo" : "Inativo"}
-                        </Badge>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          ) : (
+            /* Desktop Table View */
+            <ScrollableTable>
+              <Table className="min-w-[900px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Código</TableHead>
+                    <TableHead>Código Externo</TableHead>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Descrição</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead className="text-right">Preço</TableHead>
+                    <TableHead className="text-right">Preço Promocional</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredProducts.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center text-muted-foreground">
+                        {searchTerm || statusFilter !== "all" 
+                          ? 'Nenhum produto encontrado com os filtros selecionados' 
+                          : 'Nenhum produto cadastrado'}
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
+                  ) : (
+                    paginatedProducts.map((product) => (
+                      <TableRow key={product.id}>
+                        <TableCell className="font-mono text-sm">
+                          {product.short_id || product.id.substring(0, 8)}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {product.external_code || '-'}
+                        </TableCell>
+                        <TableCell className="font-medium">{product.name}</TableCell>
+                        <TableCell className="max-w-[300px] truncate text-sm text-muted-foreground">
+                          {product.description || '-'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{product.category}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          R$ {product.price.toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {product.promotional_price && product.promotional_price > 0 ? (
+                            <span className="text-green-600 font-medium">
+                              R$ {product.promotional_price.toFixed(2)}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={product.is_available ? "default" : "secondary"}>
+                            {product.is_available ? "Ativo" : "Inativo"}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
               </Table>
             </ScrollableTable>
+          )}
 
           {/* Paginação */}
           {totalPages > 1 && (
-            <div className="mt-4">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                    />
-                  </PaginationItem>
-                  
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(page)}
-                        isActive={currentPage === page}
-                        className="cursor-pointer"
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-
-                  <PaginationItem>
-                    <PaginationNext 
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+            <div className="flex items-center justify-between border-t pt-4 mt-4">
+              <p className="text-xs text-muted-foreground hidden sm:block">
+                Mostrando {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredProducts.length)} de {filteredProducts.length}
+              </p>
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-medium px-2">
+                  {currentPage} / {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>

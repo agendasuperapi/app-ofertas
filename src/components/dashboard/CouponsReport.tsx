@@ -20,6 +20,7 @@ import { toast } from '@/hooks/use-toast';
 import { generateCouponsReport } from '@/lib/pdfReports';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useIsMobile } from '@/hooks/use-mobile';
 import * as XLSX from 'xlsx';
 
 interface CouponsReportProps {
@@ -34,6 +35,8 @@ interface CouponUsage {
 }
 
 export function CouponsReport({ storeId, storeName = "Minha Loja" }: CouponsReportProps) {
+  const isMobile = useIsMobile();
+  
   const { data: orders, isLoading } = useQuery({
     queryKey: ['coupon-report', storeId],
     queryFn: async () => {
@@ -84,7 +87,6 @@ export function CouponsReport({ storeId, storeName = "Minha Loja" }: CouponsRepo
 
   const exportToPDF = async () => {
     try {
-      // Buscar cupons completos do banco de dados para gerar relatório mais completo
       const { data: coupons, error } = await supabase
         .from('coupons' as any)
         .select('code, discount, discount_type, usage_count, valid_until')
@@ -118,7 +120,6 @@ export function CouponsReport({ storeId, storeName = "Minha Loja" }: CouponsRepo
 
   const exportToExcel = async () => {
     try {
-      // Buscar cupons completos do banco de dados
       const { data: coupons, error } = await supabase
         .from('coupons' as any)
         .select('code, discount, discount_type, usage_count, valid_until, is_active')
@@ -136,15 +137,13 @@ export function CouponsReport({ storeId, storeName = "Minha Loja" }: CouponsRepo
       }));
 
       const ws = XLSX.utils.json_to_sheet(data);
-      
-      // Auto-width das colunas
       const colWidths = [
-        { wch: 15 }, // Código
-        { wch: 12 }, // Desconto
-        { wch: 15 }, // Tipo
-        { wch: 8 },  // Usos
-        { wch: 15 }, // Validade
-        { wch: 10 }  // Status
+        { wch: 15 },
+        { wch: 12 },
+        { wch: 15 },
+        { wch: 8 },
+        { wch: 15 },
+        { wch: 10 }
       ];
       ws['!cols'] = colWidths;
 
@@ -167,11 +166,10 @@ export function CouponsReport({ storeId, storeName = "Minha Loja" }: CouponsRepo
     }
   };
 
-
   if (isLoading) {
     return (
       <div className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
           {[1, 2, 3].map((i) => (
             <Card key={i}>
               <CardHeader>
@@ -183,14 +181,6 @@ export function CouponsReport({ storeId, storeName = "Minha Loja" }: CouponsRepo
             </Card>
           ))}
         </div>
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-64 w-full" />
-          </CardContent>
-        </Card>
       </div>
     );
   }
@@ -203,7 +193,7 @@ export function CouponsReport({ storeId, storeName = "Minha Loja" }: CouponsRepo
       </div>
       
       {/* Estatísticas gerais */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -304,53 +294,94 @@ export function CouponsReport({ storeId, storeName = "Minha Loja" }: CouponsRepo
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-0 sm:p-6">
+          <CardContent className="p-3 sm:p-6">
             {couponStats.coupons.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Tag className="h-12 w-12 mx-auto mb-4 opacity-20" />
                 <p className="text-lg font-medium">Nenhum cupom utilizado ainda</p>
                 <p className="text-sm">Os cupons utilizados aparecerão aqui</p>
               </div>
+            ) : isMobile ? (
+              /* Mobile Cards View */
+              <div className="space-y-3">
+                {couponStats.coupons.map((coupon, index) => (
+                  <motion.div
+                    key={coupon.code}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="border rounded-lg p-4 space-y-3"
+                  >
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="gap-1">
+                        <Tag className="h-3 w-3" />
+                        {coupon.code}
+                      </Badge>
+                      {index === 0 && (
+                        <Badge variant="default" className="text-xs">
+                          Mais usado
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div>
+                        <p className="text-muted-foreground text-xs">Utilizações</p>
+                        <Badge variant="secondary">{coupon.totalUses}x</Badge>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Total</p>
+                        <p className="font-medium text-destructive">R$ {coupon.totalDiscount.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Média</p>
+                        <p className="text-muted-foreground">R$ {(coupon.totalDiscount / coupon.totalUses).toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
             ) : (
+              /* Desktop Table View */
               <ScrollableTable maxHeight="h-[400px] sm:h-[600px]">
                 <div className="rounded-md border">
                   <Table className="min-w-[700px]">
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Código do Cupom</TableHead>
-                      <TableHead className="text-center">Utilizações</TableHead>
-                      <TableHead className="text-right">Desconto Total</TableHead>
-                      <TableHead className="text-right">Desconto Médio</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {couponStats.coupons.map((coupon, index) => (
-                      <TableRow key={coupon.code}>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="gap-1">
-                              <Tag className="h-3 w-3" />
-                              {coupon.code}
-                            </Badge>
-                            {index === 0 && (
-                              <Badge variant="default" className="text-xs">
-                                Mais usado
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant="secondary">{coupon.totalUses}x</Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-medium text-destructive">
-                          R$ {coupon.totalDiscount.toFixed(2)}
-                        </TableCell>
-                        <TableCell className="text-right text-muted-foreground">
-                          R$ {(coupon.totalDiscount / coupon.totalUses).toFixed(2)}
-                        </TableCell>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Código do Cupom</TableHead>
+                        <TableHead className="text-center">Utilizações</TableHead>
+                        <TableHead className="text-right">Desconto Total</TableHead>
+                        <TableHead className="text-right">Desconto Médio</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
+                    </TableHeader>
+                    <TableBody>
+                      {couponStats.coupons.map((coupon, index) => (
+                        <TableRow key={coupon.code}>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="gap-1">
+                                <Tag className="h-3 w-3" />
+                                {coupon.code}
+                              </Badge>
+                              {index === 0 && (
+                                <Badge variant="default" className="text-xs">
+                                  Mais usado
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge variant="secondary">{coupon.totalUses}x</Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-destructive">
+                            R$ {coupon.totalDiscount.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right text-muted-foreground">
+                            R$ {(coupon.totalDiscount / coupon.totalUses).toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
                   </Table>
                 </div>
               </ScrollableTable>
