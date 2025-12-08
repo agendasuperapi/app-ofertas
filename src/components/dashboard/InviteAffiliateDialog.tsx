@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-
+import { CPFInput, isValidCPF } from '@/components/ui/cpf-input';
 import { toast } from 'sonner';
-import { Loader2, Mail, UserPlus, Copy, CheckCircle } from 'lucide-react';
+import { Loader2, UserPlus, Copy, CheckCircle } from 'lucide-react';
 
 interface InviteAffiliateDialogProps {
   storeId: string;
@@ -27,13 +27,21 @@ export function InviteAffiliateDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    email: '',
+    cpf: '',
     name: '',
+    email: '', // Email é opcional para contato
   });
 
   const handleSubmit = async () => {
-    if (!formData.email || !formData.name) {
-      toast.error('Preencha nome e email do afiliado');
+    if (!formData.cpf || !formData.name) {
+      toast.error('Preencha nome e CPF do afiliado');
+      return;
+    }
+
+    // Validar CPF
+    const cpfNumbers = formData.cpf.replace(/\D/g, '');
+    if (cpfNumbers.length !== 11 || !isValidCPF(cpfNumbers)) {
+      toast.error('CPF inválido');
       return;
     }
 
@@ -44,8 +52,9 @@ export function InviteAffiliateDialog({
           action: 'send',
           store_id: storeId,
           store_name: storeName,
-          email: formData.email,
+          cpf: cpfNumbers,
           name: formData.name,
+          email: formData.email || undefined,
         }
       });
 
@@ -88,8 +97,9 @@ export function InviteAffiliateDialog({
   const handleClose = () => {
     setInviteLink(null);
     setFormData({
-      email: '',
+      cpf: '',
       name: '',
+      email: '',
     });
     onOpenChange(false);
     if (inviteLink) {
@@ -172,7 +182,17 @@ export function InviteAffiliateDialog({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail do afiliado *</Label>
+              <Label htmlFor="cpf">CPF do afiliado *</Label>
+              <CPFInput
+                id="cpf"
+                value={formData.cpf}
+                onChange={(value) => setFormData({ ...formData, cpf: value })}
+                disabled={isLoading}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail do afiliado (opcional)</Label>
               <Input
                 id="email"
                 type="email"
@@ -181,6 +201,9 @@ export function InviteAffiliateDialog({
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 disabled={isLoading}
               />
+              <p className="text-xs text-muted-foreground">
+                O e-mail é opcional e será usado apenas para contato
+              </p>
             </div>
 
             <p className="text-sm text-muted-foreground">
@@ -199,7 +222,7 @@ export function InviteAffiliateDialog({
                   </>
                 ) : (
                   <>
-                    <Mail className="mr-2 h-4 w-4" />
+                    <UserPlus className="mr-2 h-4 w-4" />
                     Criar Convite
                   </>
                 )}

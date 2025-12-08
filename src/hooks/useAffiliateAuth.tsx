@@ -91,7 +91,7 @@ interface AffiliateAuthContextType {
   affiliateOrders: AffiliateOrder[];
   isAuthenticated: boolean;
   isLoading: boolean;
-  affiliateLogin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  affiliateLogin: (cpf: string, password: string) => Promise<{ success: boolean; error?: string }>;
   affiliateLogout: () => Promise<void>;
   affiliateRegister: (token: string, password: string, name: string, phone?: string, cpf?: string) => Promise<{ success: boolean; error?: string }>;
   refreshData: () => Promise<void>;
@@ -195,10 +195,13 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
     validateSession();
   }, []);
 
-  const affiliateLogin = async (email: string, password: string) => {
+  const affiliateLogin = async (cpf: string, password: string) => {
     try {
+      // Normalizar CPF removendo caracteres não numéricos
+      const normalizedCpf = cpf.replace(/\D/g, '');
+      
       const { data, error } = await supabase.functions.invoke('affiliate-auth', {
-        body: { action: 'login', email, password }
+        body: { action: 'login', cpf: normalizedCpf, password }
       });
 
       if (error || !data?.success) {

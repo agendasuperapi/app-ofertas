@@ -22,6 +22,7 @@ export default function AffiliateRegister() {
   const [isValidToken, setIsValidToken] = useState(false);
   const [inviteData, setInviteData] = useState<{
     email: string;
+    cpf_cnpj?: string;
     store_name: string;
     affiliate_name?: string;
   } | null>(null);
@@ -56,11 +57,16 @@ export default function AffiliateRegister() {
         setIsValidToken(true);
         setInviteData({
           email: data.affiliate?.email || '',
+          cpf_cnpj: data.affiliate?.cpf_cnpj || '',
           store_name: data.store?.name || '',
           affiliate_name: data.affiliate?.name
         });
         if (data.affiliate?.name) {
           setName(data.affiliate.name);
+        }
+        // Preencher CPF se já foi definido no convite
+        if (data.affiliate?.cpf_cnpj) {
+          setCpf(data.affiliate.cpf_cnpj);
         }
       }
     } catch (err) {

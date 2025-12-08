@@ -2957,6 +2957,18 @@ export type Database = {
           phone: string
         }[]
       }
+      get_affiliate_account_by_cpf: {
+        Args: { p_cpf: string }
+        Returns: {
+          cpf_cnpj: string
+          email: string
+          id: string
+          is_active: boolean
+          is_verified: boolean
+          name: string
+          password_hash: string
+        }[]
+      }
       get_affiliate_account_by_email: {
         Args: { p_email: string }
         Returns: {
