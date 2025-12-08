@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { useAffiliateAuth, AffiliateOrderItem, AffiliateOrder } from '@/hooks/useAffiliateAuth';
 import { useAffiliateEarningsNotification } from '@/hooks/useAffiliateEarningsNotification';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -133,146 +134,192 @@ export default function AffiliateDashboardNew() {
   // Render Stats Cards (reusable)
   const renderStatsCards = () => (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
-      <Card>
-        <CardContent className="p-3 sm:pt-6 sm:px-6">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500/10 rounded-full flex items-center justify-center flex-shrink-0">
-              <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        whileHover={{ scale: 1.02 }}
+      >
+        <Card className="glass border-border/50 overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
+          <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 shadow-[0_0_20px_hsl(217_91%_60%/0.4)]">
+                <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Lojas</p>
+                <p className="text-lg sm:text-2xl font-bold gradient-text">{affiliateStats?.total_stores || 0}</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">Lojas</p>
-              <p className="text-lg sm:text-2xl font-bold">{affiliateStats?.total_stores || 0}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-      <Card>
-        <CardContent className="p-3 sm:pt-6 sm:px-6">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-500/10 rounded-full flex items-center justify-center flex-shrink-0">
-              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-green-500" />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        whileHover={{ scale: 1.02 }}
+      >
+        <Card className="glass border-border/50 overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />
+          <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-500 to-emerald-600 shadow-[0_0_20px_hsl(142_76%_36%/0.4)]">
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Vendas</p>
+                <p className="text-base sm:text-2xl font-bold text-green-600 truncate">{formatCurrency(affiliateStats?.total_sales || 0)}</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Vendas</p>
-              <p className="text-base sm:text-2xl font-bold truncate">{formatCurrency(affiliateStats?.total_sales || 0)}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-      <Card>
-        <CardContent className="p-3 sm:pt-6 sm:px-6">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-500/10 rounded-full flex items-center justify-center flex-shrink-0">
-              <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        whileHover={{ scale: 1.02 }}
+      >
+        <Card className="glass border-border/50 overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent pointer-events-none" />
+          <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-yellow-500 to-amber-600 shadow-[0_0_20px_hsl(45_93%_47%/0.4)]">
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Pendente</p>
+                <p className="text-base sm:text-2xl font-bold text-yellow-600 truncate">{formatCurrency(affiliateStats?.pending_commission || 0)}</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">Pendente</p>
-              <p className="text-base sm:text-2xl font-bold truncate">{formatCurrency(affiliateStats?.pending_commission || 0)}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
 
-      <Card>
-        <CardContent className="p-3 sm:pt-6 sm:px-6">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-              <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        whileHover={{ scale: 1.02 }}
+      >
+        <Card className="glass border-border/50 overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+          <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-primary to-primary-glow shadow-glow">
+                <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Ganhos</p>
+                <p className="text-base sm:text-2xl font-bold gradient-text truncate">{formatCurrency(affiliateStats?.total_commission || 0)}</p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Ganhos</p>
-              <p className="text-base sm:text-2xl font-bold truncate">{formatCurrency(affiliateStats?.total_commission || 0)}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   );
 
   // Home Tab Content
   const renderHomeContent = () => (
-    <div className="space-y-6">
+    <motion.div 
+      className="space-y-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+    >
       {renderStatsCards()}
       
       {/* Quick Summary */}
-      <Card>
-        <CardHeader className="p-4 sm:p-6">
-          <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-            <Home className="h-4 w-4 sm:h-5 sm:w-5" />
-            Bem-vindo, {affiliateUser?.name?.split(' ')[0]}!
-          </CardTitle>
-          <CardDescription className="text-xs sm:text-sm">
-            Resumo rápido do seu desempenho como afiliado
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 space-y-4">
-          <div className="grid grid-cols-2 gap-2 sm:gap-4">
-            <div className="p-3 sm:p-4 bg-muted rounded-lg">
-              <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1">
-                <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="text-xs sm:text-sm">Total de Pedidos</span>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <Card className="glass border-border/50 overflow-hidden">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow">
+                <Home className="h-4 w-4 text-white" />
               </div>
-              <p className="text-xl sm:text-2xl font-bold">{affiliateStats?.total_orders || 0}</p>
-            </div>
-            <div className="p-3 sm:p-4 bg-muted rounded-lg">
-              <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1">
-                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="text-xs sm:text-sm">Total Pago</span>
-              </div>
-              <p className="text-lg sm:text-2xl font-bold text-green-600 truncate">
-                {formatCurrency(affiliateStats?.paid_commission || 0)}
-              </p>
-            </div>
-          </div>
-
-          {affiliateStores.length > 0 && (
-            <>
-              <Separator />
-              <div>
-                <h4 className="font-medium mb-3">Suas Lojas</h4>
-                <div className="space-y-2">
-                  {affiliateStores.slice(0, 3).map((store) => (
-                    <div
-                      key={store.store_affiliate_id}
-                      className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                    >
-                      <div className="flex items-center gap-3">
-                        {store.store_logo ? (
-                          <img
-                            src={store.store_logo}
-                            alt={store.store_name}
-                            className="w-8 h-8 rounded object-cover"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
-                            <Store className="h-4 w-4 text-muted-foreground" />
-                          </div>
-                        )}
-                        <span className="font-medium">{store.store_name}</span>
-                      </div>
-                      <span className="font-semibold text-green-600">
-                        {formatCurrency(store.total_commission)}
-                      </span>
-                    </div>
-                  ))}
-                  {affiliateStores.length > 3 && (
-                    <Button 
-                      variant="ghost" 
-                      className="w-full" 
-                      onClick={() => setActiveTab('stores')}
-                    >
-                      Ver todas as {affiliateStores.length} lojas
-                    </Button>
-                  )}
+              <span className="gradient-text">Bem-vindo, {affiliateUser?.name?.split(' ')[0]}!</span>
+            </CardTitle>
+            <CardDescription className="text-xs sm:text-sm">
+              Resumo rápido do seu desempenho como afiliado
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 space-y-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4">
+              <div className="p-3 sm:p-4 bg-muted/50 rounded-lg border border-border/50">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1">
+                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm">Total de Pedidos</span>
                 </div>
+                <p className="text-xl sm:text-2xl font-bold">{affiliateStats?.total_orders || 0}</p>
               </div>
-            </>
-          )}
+              <div className="p-3 sm:p-4 bg-muted/50 rounded-lg border border-border/50">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1">
+                  <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="text-xs sm:text-sm">Total Pago</span>
+                </div>
+                <p className="text-lg sm:text-2xl font-bold text-green-600 truncate">
+                  {formatCurrency(affiliateStats?.paid_commission || 0)}
+                </p>
+              </div>
+            </div>
+
+            {affiliateStores.length > 0 && (
+              <>
+                <Separator />
+                <div>
+                  <h4 className="font-medium mb-3">Suas Lojas</h4>
+                  <div className="space-y-2">
+                    {affiliateStores.slice(0, 3).map((store) => (
+                      <motion.div
+                        key={store.store_affiliate_id}
+                        whileHover={{ scale: 1.01 }}
+                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border/50"
+                      >
+                        <div className="flex items-center gap-3">
+                          {store.store_logo ? (
+                            <img
+                              src={store.store_logo}
+                              alt={store.store_name}
+                              className="w-8 h-8 rounded object-cover"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                              <Store className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          )}
+                          <span className="font-medium">{store.store_name}</span>
+                        </div>
+                        <span className="font-semibold text-green-600">
+                          {formatCurrency(store.total_commission)}
+                        </span>
+                      </motion.div>
+                    ))}
+                    {affiliateStores.length > 3 && (
+                      <Button 
+                        variant="ghost" 
+                        className="w-full" 
+                        onClick={() => setActiveTab('stores')}
+                      >
+                        Ver todas as {affiliateStores.length} lojas
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
         </CardContent>
       </Card>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 
   // Stores Tab Content
