@@ -139,6 +139,27 @@ serve(async (req) => {
         const normalizedEmail = email ? email.toLowerCase().trim() : null;
         console.log(`[affiliate-invite] Normalized CPF: ${normalizedCpf}, email: ${normalizedEmail}`);
 
+        // Verificar se e-mail já está cadastrado em outra conta (se fornecido)
+        if (normalizedEmail && !normalizedEmail.includes('@temp.local')) {
+          const { data: existingWithEmail } = await supabase
+            .from("affiliate_accounts")
+            .select("id, cpf_cnpj")
+            .eq("email", normalizedEmail)
+            .single();
+
+          if (existingWithEmail) {
+            // Verificar se é outro CPF usando este e-mail
+            const existingAccountCpf = normalizeCpf(existingWithEmail.cpf_cnpj || '');
+            if (existingAccountCpf !== normalizedCpf) {
+              console.log(`[affiliate-invite] Email ${normalizedEmail} already in use by another CPF`);
+              return new Response(
+                JSON.stringify({ error: "Este e-mail já está cadastrado em outra conta de afiliado" }),
+                { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+              );
+            }
+          }
+        }
+
         // Verificar se já existe conta de afiliado com este CPF
         let affiliateAccount;
         
