@@ -242,18 +242,9 @@ export default function AffiliateDashboardNew() {
   // Renderiza o conteúdo das abas do modal da loja
   const renderStoreModalContent = (store: typeof affiliateStores[0]) => <Tabs defaultValue="overview" className="mt-4 flex-1 flex flex-col min-h-0 px-4">
       <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
-        <TabsTrigger value="overview" className="flex items-center gap-2">
-          <BarChart3 className="h-4 w-4" />
-          <span className="hidden sm:inline">Resumo</span>
-        </TabsTrigger>
-        <TabsTrigger value="products" className="flex items-center gap-2">
-          <Grid3X3 className="h-4 w-4" />
-          <span className="hidden sm:inline">Produtos</span>
-        </TabsTrigger>
-        <TabsTrigger value="coupons" className="flex items-center gap-2">
-          <Ticket className="h-4 w-4" />
-          <span className="hidden sm:inline">Cupons</span>
-        </TabsTrigger>
+        <TabsTrigger value="overview">Resumo</TabsTrigger>
+        <TabsTrigger value="products">Produtos</TabsTrigger>
+        <TabsTrigger value="coupons">Cupons</TabsTrigger>
       </TabsList>
       
       {/* Tab Resumo */}
