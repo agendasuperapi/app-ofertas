@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,10 +21,10 @@ import { InviteAffiliateDialog } from './InviteAffiliateDialog';
 import { 
   Users, Plus, Edit, Trash2, DollarSign, TrendingUp, 
   Copy, Check, Tag, Percent, Settings, Eye, 
-  Clock, CheckCircle, XCircle, CreditCard, Loader2, AlertCircle, Search, Mail, Link2, Package, ChevronDown, ChevronRight, Pencil, X, Save, UserCheck, UserX
+  Clock, CheckCircle, XCircle, CreditCard, Loader2, AlertCircle, Search, Mail, Link2, Package, ChevronDown, ChevronRight, Pencil, X, Save, UserCheck, UserX, RefreshCw, ExternalLink
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { format } from 'date-fns';
+import { format, formatDistanceToNow, isPast } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
 import { validatePixKey, detectPixKeyType } from '@/lib/pixValidation';
@@ -120,6 +120,12 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const [toggleStatusAffiliate, setToggleStatusAffiliate] = useState<Affiliate | null>(null);
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
   const [couponProductsModalOpen, setCouponProductsModalOpen] = useState(false);
+  
+  // Estados para convites
+  const [affiliateInvites, setAffiliateInvites] = useState<any[]>([]);
+  const [invitesLoading, setInvitesLoading] = useState(false);
+  const [inviteStatusFilter, setInviteStatusFilter] = useState<'all' | 'pending' | 'active' | 'expired'>('all');
+  
   const [newCouponData, setNewCouponData] = useState({
     code: '',
     discount_type: 'percentage' as 'percentage' | 'fixed',
@@ -245,6 +251,120 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
       getAllStoreEarnings().then(setAllEarnings);
     }
   }, [activeTab, getAllStoreEarnings]);
+
+  // Função para buscar convites de afiliados
+  const fetchAffiliateInvites = useCallback(async () => {
+    if (!storeId) return;
+    setInvitesLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('store_affiliates')
+        .select(`
+          id, status, invite_token, invited_at, accepted_at, invite_expires, is_active,
+          affiliate_accounts (name, email, cpf_cnpj, phone)
+        `)
+        .eq('store_id', storeId)
+        .order('invited_at', { ascending: false });
+
+      if (error) throw error;
+      setAffiliateInvites(data || []);
+    } catch (error) {
+      console.error('Error fetching affiliate invites:', error);
+    } finally {
+      setInvitesLoading(false);
+    }
+  }, [storeId]);
+
+  // Carregar convites ao montar
+  useEffect(() => {
+    fetchAffiliateInvites();
+  }, [fetchAffiliateInvites]);
+
+  // Helper para formatar CPF
+  const formatCPF = (cpf?: string | null) => {
+    if (!cpf) return '-';
+    const cleaned = cpf.replace(/\D/g, '');
+    if (cleaned.length !== 11) return cpf;
+    return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  };
+
+  // Helper para obter badge de status do convite
+  const getInviteStatusBadge = (invite: any) => {
+    if (invite.status === 'active') {
+      return (
+        <Badge className="bg-green-600 text-white">
+          <CheckCircle className="h-3 w-3 mr-1" />
+          Aceito
+        </Badge>
+      );
+    }
+    if (invite.status === 'pending') {
+      const isExpired = invite.invite_expires && isPast(new Date(invite.invite_expires));
+      if (isExpired) {
+        return (
+          <Badge variant="destructive">
+            <XCircle className="h-3 w-3 mr-1" />
+            Expirado
+          </Badge>
+        );
+      }
+      return (
+        <Badge variant="outline" className="text-amber-600 border-amber-600">
+          <Clock className="h-3 w-3 mr-1" />
+          Pendente
+        </Badge>
+      );
+    }
+    return <Badge variant="secondary">{invite.status}</Badge>;
+  };
+
+  // Helper para copiar link de convite
+  const copyInviteLink = async (token: string) => {
+    const link = `${window.location.origin}/afiliado/cadastro?token=${token}`;
+    await navigator.clipboard.writeText(link);
+    toast({ title: "Link copiado!", description: "O link de convite foi copiado para a área de transferência." });
+  };
+
+  // Helper para reenviar convite
+  const handleResendInvite = async (invite: any) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('affiliate-invite', {
+        body: {
+          action: 'send',
+          store_id: storeId,
+          store_name: storeName,
+          cpf_cnpj: invite.affiliate_accounts?.cpf_cnpj,
+          email: invite.affiliate_accounts?.email,
+          name: invite.affiliate_accounts?.name,
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast({ title: "Convite reenviado!", description: "Um novo link de convite foi gerado." });
+        fetchAffiliateInvites();
+      } else {
+        toast({ title: "Erro ao reenviar", description: data?.error || "Tente novamente.", variant: "destructive" });
+      }
+    } catch (err) {
+      console.error('Error resending invite:', err);
+      toast({ title: "Erro ao reenviar convite", variant: "destructive" });
+    }
+  };
+
+  // Filtrar convites
+  const filteredInvites = affiliateInvites.filter((invite) => {
+    if (inviteStatusFilter === 'all') return true;
+    if (inviteStatusFilter === 'active') return invite.status === 'active';
+    if (inviteStatusFilter === 'pending') {
+      return invite.status === 'pending' && (!invite.invite_expires || !isPast(new Date(invite.invite_expires)));
+    }
+    if (inviteStatusFilter === 'expired') {
+      return invite.status === 'pending' && invite.invite_expires && isPast(new Date(invite.invite_expires));
+    }
+    return true;
+  });
 
   const resetForm = () => {
     setFormData({
@@ -931,6 +1051,136 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
             </CardContent>
           </Card>
         </motion.div>
+      </motion.div>
+
+      {/* Seção de Convites Enviados */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.15 }}
+      >
+        <Card className="glass-card overflow-hidden">
+          <CardHeader className="pb-3 border-b border-border/50">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-glow">
+                  <Mail className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg gradient-text">Convites Enviados</CardTitle>
+                  <CardDescription>Acompanhe o status dos convites de afiliados</CardDescription>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Select value={inviteStatusFilter} onValueChange={(value: 'all' | 'pending' | 'active' | 'expired') => setInviteStatusFilter(value)}>
+                  <SelectTrigger className="w-[140px] glass h-9">
+                    <SelectValue placeholder="Filtrar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos ({affiliateInvites.length})</SelectItem>
+                    <SelectItem value="pending">Pendentes</SelectItem>
+                    <SelectItem value="active">Aceitos</SelectItem>
+                    <SelectItem value="expired">Expirados</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm" onClick={fetchAffiliateInvites} disabled={invitesLoading}>
+                  <RefreshCw className={`h-4 w-4 ${invitesLoading ? 'animate-spin' : ''}`} />
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-4">
+            {invitesLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : filteredInvites.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Mail className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                <p>Nenhum convite encontrado</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Afiliado</TableHead>
+                      <TableHead className="hidden sm:table-cell">CPF</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="hidden md:table-cell">Data do Convite</TableHead>
+                      <TableHead className="hidden lg:table-cell">Expira em</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredInvites.map((invite) => {
+                      const isExpired = invite.status === 'pending' && invite.invite_expires && isPast(new Date(invite.invite_expires));
+                      return (
+                        <TableRow key={invite.id}>
+                          <TableCell>
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-medium truncate">{invite.affiliate_accounts?.name || '-'}</span>
+                              <span className="text-xs text-muted-foreground truncate">{invite.affiliate_accounts?.email || '-'}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden sm:table-cell font-mono text-sm">
+                            {formatCPF(invite.affiliate_accounts?.cpf_cnpj)}
+                          </TableCell>
+                          <TableCell>
+                            {getInviteStatusBadge(invite)}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell text-sm text-muted-foreground">
+                            {invite.invited_at 
+                              ? format(new Date(invite.invited_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })
+                              : '-'
+                            }
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                            {invite.status === 'pending' && invite.invite_expires ? (
+                              isExpired ? (
+                                <span className="text-destructive">Expirado</span>
+                              ) : (
+                                formatDistanceToNow(new Date(invite.invite_expires), { locale: ptBR, addSuffix: true })
+                              )
+                            ) : invite.status === 'active' && invite.accepted_at ? (
+                              <span className="text-green-600">
+                                Aceito {format(new Date(invite.accepted_at), "dd/MM/yyyy", { locale: ptBR })}
+                              </span>
+                            ) : '-'}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              {invite.status === 'pending' && invite.invite_token && !isExpired && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => copyInviteLink(invite.invite_token)}
+                                  title="Copiar link"
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {(isExpired || (invite.status === 'pending' && !isExpired)) && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => handleResendInvite(invite)}
+                                  title={isExpired ? "Gerar novo convite" : "Reenviar convite"}
+                                >
+                                  <RefreshCw className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </motion.div>
 
       {/* Lista de Afiliados */}
