@@ -359,7 +359,7 @@ export default function AffiliateDashboardNew() {
                 {coupon.discount_type && <div className="text-xs text-muted-foreground">
                     {coupon.applies_to === 'all' || !coupon.applies_to ? <span className="inline-flex items-center gap-1">
                         <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Geral</Badge>
-                        <span>Vale para todos os produtos</span>
+                        <span>​O link do cupom abaixo exibe todos os itens da loja. </span>
                       </span> : coupon.applies_to === 'categories' && coupon.category_names?.length ? <span className="inline-flex items-center gap-1 flex-wrap">
                         <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Categorias</Badge>
                         <span>{coupon.category_names.join(', ')}</span>
