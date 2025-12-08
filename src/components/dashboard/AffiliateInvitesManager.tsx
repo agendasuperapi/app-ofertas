@@ -104,7 +104,7 @@ export const AffiliateInvitesManager = ({ storeId, storeName = 'Loja' }: Affilia
           action: 'send',
           store_id: storeId,
           store_name: storeName,
-          cpf_cnpj: invite.affiliate_accounts?.cpf_cnpj,
+          cpf: invite.affiliate_accounts?.cpf_cnpj,
           email: invite.affiliate_accounts?.email,
           name: invite.affiliate_accounts?.name,
         }
