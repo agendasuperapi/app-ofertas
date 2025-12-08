@@ -10,7 +10,6 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollableTable } from '@/components/ui/scrollable-table';
-
 import { AffiliateDashboardSidebar } from '@/components/dashboard/AffiliateDashboardSidebar';
 import { AffiliateDashboardBottomNav } from '@/components/dashboard/AffiliateDashboardBottomNav';
 import { toast } from 'sonner';
@@ -22,47 +21,11 @@ import { ptBR } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-  ResponsiveDialog,
-  ResponsiveDialogContent,
-  ResponsiveDialogHeader,
-  ResponsiveDialogTitle,
-  ResponsiveDialogDescription,
-  ResponsiveDialogFooter,
-} from '@/components/ui/responsive-dialog';
-import {
-  Users,
-  DollarSign,
-  Store,
-  TrendingUp,
-  Copy,
-  LogOut,
-  Loader2,
-  Clock,
-  CheckCircle,
-  Building2,
-  Wallet,
-  BarChart3,
-  User,
-  Link,
-  Ticket,
-  ShoppingBag,
-  Package,
-  Target,
-  Ban,
-  Calculator,
-  Home,
-  ExternalLink,
-  ChevronRight,
-  Grid3X3,
-  X,
-  Calendar as CalendarIcon,
-  Filter,
-} from 'lucide-react';
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
+import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter } from 'lucide-react';
 
 // Cores para gráfico de pizza
 const COLORS = ['hsl(var(--primary))', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
-
 export default function AffiliateDashboardNew() {
   const {
     affiliateUser,
@@ -74,36 +37,34 @@ export default function AffiliateDashboardNew() {
     refreshData,
     fetchOrderItems
   } = useAffiliateAuth();
-
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('home');
   const [selectedOrder, setSelectedOrder] = useState<AffiliateOrder | null>(null);
   const [orderModalItems, setOrderModalItems] = useState<AffiliateOrderItem[]>([]);
   const [loadingModalItems, setLoadingModalItems] = useState(false);
-  
+
   // Store modal state
   const [selectedStore, setSelectedStore] = useState<typeof affiliateStores[0] | null>(null);
 
   // Filter states
   const [periodFilter, setPeriodFilter] = useState<string>('all');
   const [storeFilter, setStoreFilter] = useState<string>('all');
-  const [customDateRange, setCustomDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+  const [customDateRange, setCustomDateRange] = useState<{
+    from: Date | undefined;
+    to: Date | undefined;
+  }>({
     from: undefined,
-    to: undefined,
+    to: undefined
   });
   const [showCustomDatePicker, setShowCustomDatePicker] = useState(false);
 
   // Extrair IDs dos store_affiliates para notificações em tempo real
-  const storeAffiliateIds = useMemo(() => 
-    affiliateStores.map(s => s.store_affiliate_id).filter(Boolean),
-    [affiliateStores]
-  );
+  const storeAffiliateIds = useMemo(() => affiliateStores.map(s => s.store_affiliate_id).filter(Boolean), [affiliateStores]);
 
   // Hook de notificação de ganhos em tempo real
   const handleNewEarning = useCallback(() => {
     refreshData();
   }, [refreshData]);
-
   useAffiliateEarningsNotification({
     storeAffiliateIds,
     onNewEarning: handleNewEarning
@@ -112,49 +73,52 @@ export default function AffiliateDashboardNew() {
   // Filtered orders based on period and store
   const filteredAffiliateOrders = useMemo(() => {
     if (!affiliateOrders || affiliateOrders.length === 0) return [];
-    
     return affiliateOrders.filter(order => {
       const orderDate = new Date(order.order_date);
       const now = new Date();
-      
+
       // Period filter
       let passesDateFilter = true;
       switch (periodFilter) {
         case 'today':
           passesDateFilter = isWithinInterval(orderDate, {
             start: startOfDay(now),
-            end: endOfDay(now),
+            end: endOfDay(now)
           });
           break;
         case '7days':
           passesDateFilter = isWithinInterval(orderDate, {
             start: startOfDay(subDays(now, 7)),
-            end: endOfDay(now),
+            end: endOfDay(now)
           });
           break;
         case 'week':
           passesDateFilter = isWithinInterval(orderDate, {
-            start: startOfWeek(now, { locale: ptBR }),
-            end: endOfWeek(now, { locale: ptBR }),
+            start: startOfWeek(now, {
+              locale: ptBR
+            }),
+            end: endOfWeek(now, {
+              locale: ptBR
+            })
           });
           break;
         case '30days':
           passesDateFilter = isWithinInterval(orderDate, {
             start: startOfDay(subDays(now, 30)),
-            end: endOfDay(now),
+            end: endOfDay(now)
           });
           break;
         case 'month':
           passesDateFilter = isWithinInterval(orderDate, {
             start: startOfMonth(now),
-            end: endOfMonth(now),
+            end: endOfMonth(now)
           });
           break;
         case 'custom':
           if (customDateRange.from && customDateRange.to) {
             passesDateFilter = isWithinInterval(orderDate, {
               start: startOfDay(customDateRange.from),
-              end: endOfDay(customDateRange.to),
+              end: endOfDay(customDateRange.to)
             });
           }
           break;
@@ -162,13 +126,12 @@ export default function AffiliateDashboardNew() {
         default:
           passesDateFilter = true;
       }
-      
+
       // Store filter
       let passesStoreFilter = true;
       if (storeFilter !== 'all') {
         passesStoreFilter = order.store_affiliate_id === storeFilter;
       }
-      
       return passesDateFilter && passesStoreFilter;
     });
   }, [affiliateOrders, periodFilter, storeFilter, customDateRange]);
@@ -178,74 +141,72 @@ export default function AffiliateDashboardNew() {
     const totalOrders = filteredAffiliateOrders.length;
     const totalSales = filteredAffiliateOrders.reduce((sum, order) => sum + (order.order_total || 0), 0);
     const totalCommission = filteredAffiliateOrders.reduce((sum, order) => sum + (order.commission_amount || 0), 0);
-    const pendingCommission = filteredAffiliateOrders
-      .filter(order => order.commission_status === 'pending')
-      .reduce((sum, order) => sum + (order.commission_amount || 0), 0);
-    const paidCommission = filteredAffiliateOrders
-      .filter(order => order.commission_status === 'paid')
-      .reduce((sum, order) => sum + (order.commission_amount || 0), 0);
-
+    const pendingCommission = filteredAffiliateOrders.filter(order => order.commission_status === 'pending').reduce((sum, order) => sum + (order.commission_amount || 0), 0);
+    const paidCommission = filteredAffiliateOrders.filter(order => order.commission_status === 'paid').reduce((sum, order) => sum + (order.commission_amount || 0), 0);
     return {
       total_orders: totalOrders,
       total_sales: totalSales,
       total_commission: totalCommission,
       pending_commission: pendingCommission,
-      paid_commission: paidCommission,
+      paid_commission: paidCommission
     };
   }, [filteredAffiliateOrders]);
 
   // Dados para gráficos - Comissões ao longo do tempo (usando dados filtrados)
   const commissionsOverTime = useMemo(() => {
     if (!filteredAffiliateOrders || filteredAffiliateOrders.length === 0) return [];
-    
-    const ordersByDate: Record<string, { pedidos: number; comissao: number }> = {};
-    
+    const ordersByDate: Record<string, {
+      pedidos: number;
+      comissao: number;
+    }> = {};
     filteredAffiliateOrders.forEach(order => {
-      const date = format(new Date(order.order_date), 'dd/MM', { locale: ptBR });
+      const date = format(new Date(order.order_date), 'dd/MM', {
+        locale: ptBR
+      });
       if (!ordersByDate[date]) {
-        ordersByDate[date] = { pedidos: 0, comissao: 0 };
+        ordersByDate[date] = {
+          pedidos: 0,
+          comissao: 0
+        };
       }
       ordersByDate[date].pedidos += 1;
       ordersByDate[date].comissao += order.commission_amount || 0;
     });
-    
-    return Object.entries(ordersByDate)
-      .map(([date, data]) => ({ date, ...data }))
-      .slice(-14); // Últimos 14 dias
+    return Object.entries(ordersByDate).map(([date, data]) => ({
+      date,
+      ...data
+    })).slice(-14); // Últimos 14 dias
   }, [filteredAffiliateOrders]);
 
   // Dados para gráfico de pizza - Comissões por loja (usando dados filtrados)
   const commissionsByStore = useMemo(() => {
     if (!filteredAffiliateOrders || filteredAffiliateOrders.length === 0) return [];
-    
-    const storeCommissions: Record<string, { name: string; value: number }> = {};
-    
+    const storeCommissions: Record<string, {
+      name: string;
+      value: number;
+    }> = {};
     filteredAffiliateOrders.forEach(order => {
       const storeName = order.store_name || 'Loja';
       if (!storeCommissions[storeName]) {
-        storeCommissions[storeName] = { name: storeName, value: 0 };
+        storeCommissions[storeName] = {
+          name: storeName,
+          value: 0
+        };
       }
       storeCommissions[storeName].value += order.commission_amount || 0;
     });
-    
-    return Object.values(storeCommissions)
-      .filter(store => store.value > 0)
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 6); // Top 6 lojas
+    return Object.values(storeCommissions).filter(store => store.value > 0).sort((a, b) => b.value - a.value).slice(0, 6); // Top 6 lojas
   }, [filteredAffiliateOrders]);
-
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
       currency: 'BRL'
     }).format(value || 0);
   };
-
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast.success(`${label} copiado!`);
   };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -255,17 +216,14 @@ export default function AffiliateDashboardNew() {
       minute: '2-digit'
     });
   };
-
   const handleLogout = async () => {
     await affiliateLogout();
     toast.success('Logout realizado com sucesso');
   };
-
   const openOrderModal = async (order: AffiliateOrder) => {
     setSelectedOrder(order);
     setLoadingModalItems(true);
     setOrderModalItems([]);
-    
     try {
       const items = await fetchOrderItems(order.order_id, order.store_affiliate_id || null);
       setOrderModalItems(items);
@@ -276,15 +234,13 @@ export default function AffiliateDashboardNew() {
       setLoadingModalItems(false);
     }
   };
-
   const closeOrderModal = () => {
     setSelectedOrder(null);
     setOrderModalItems([]);
   };
 
   // Renderiza o conteúdo das abas do modal da loja
-  const renderStoreModalContent = (store: typeof affiliateStores[0]) => (
-    <Tabs defaultValue="overview" className="mt-4 flex-1 flex flex-col min-h-0 px-4">
+  const renderStoreModalContent = (store: typeof affiliateStores[0]) => <Tabs defaultValue="overview" className="mt-4 flex-1 flex flex-col min-h-0 px-4">
       <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
         <TabsTrigger value="overview" className="flex items-center gap-2">
           <BarChart3 className="h-4 w-4" />
@@ -304,32 +260,41 @@ export default function AffiliateDashboardNew() {
       <TabsContent value="overview" className="space-y-6 mt-4 flex-1 overflow-y-auto">
         {/* Stats */}
         <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 sm:gap-3">
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="p-3 sm:p-4 bg-muted/50 rounded-lg border border-border/50 text-center"
-          >
+          <motion.div initial={{
+          opacity: 0,
+          y: 10
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: 0.1
+        }} className="p-3 sm:p-4 bg-muted/50 rounded-lg border border-border/50 text-center">
             <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-muted-foreground mb-1" />
             <p className="text-[10px] sm:text-xs text-muted-foreground">Total Vendas</p>
             <p className="font-bold text-sm sm:text-lg">{formatCurrency(store.total_sales)}</p>
           </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="p-3 sm:p-4 bg-green-500/10 rounded-lg border border-green-500/20 text-center"
-          >
+          <motion.div initial={{
+          opacity: 0,
+          y: 10
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: 0.2
+        }} className="p-3 sm:p-4 bg-green-500/10 rounded-lg border border-green-500/20 text-center">
             <Wallet className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-green-600 mb-1" />
             <p className="text-[10px] sm:text-xs text-muted-foreground">Ganhos</p>
             <p className="font-bold text-sm sm:text-lg text-green-600">{formatCurrency(store.total_commission)}</p>
           </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="p-3 sm:p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center"
-          >
+          <motion.div initial={{
+          opacity: 0,
+          y: 10
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: 0.3
+        }} className="p-3 sm:p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center">
             <Clock className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-yellow-600 mb-1" />
             <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
             <p className="font-bold text-sm sm:text-lg text-yellow-600">{formatCurrency(store.pending_commission)}</p>
@@ -337,38 +302,30 @@ export default function AffiliateDashboardNew() {
         </div>
 
         {/* Commission Config */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="p-4 bg-primary/5 rounded-lg border border-primary/20"
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 10
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.4
+      }} className="p-4 bg-primary/5 rounded-lg border border-primary/20">
           <div className="flex items-center gap-2 mb-2">
             <BarChart3 className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium">Configuração de Comissão</span>
           </div>
           <p className="text-2xl font-bold gradient-text">
-            {store.commission_type === 'percentage' 
-              ? `${store.commission_value}%`
-              : formatCurrency(store.commission_value)}
+            {store.commission_type === 'percentage' ? `${store.commission_value}%` : formatCurrency(store.commission_value)}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            {store.commission_type === 'percentage' 
-              ? 'Percentual sobre cada venda'
-              : 'Valor fixo por venda'}
+            {store.commission_type === 'percentage' ? 'Percentual sobre cada venda' : 'Valor fixo por venda'}
           </p>
         </motion.div>
       </TabsContent>
 
       <TabsContent value="products" className="mt-4 flex-1 overflow-y-auto">
-        <AffiliateStoreProductsTab
-          storeId={store.store_id}
-          storeSlug={store.store_slug}
-          storeAffiliateId={store.store_affiliate_id}
-          defaultCommissionType={store.commission_type}
-          defaultCommissionValue={store.commission_value}
-          couponCode={store.coupon_code || (store.coupons?.[0]?.code || '')}
-        />
+        <AffiliateStoreProductsTab storeId={store.store_id} storeSlug={store.store_slug} storeAffiliateId={store.store_affiliate_id} defaultCommissionType={store.commission_type} defaultCommissionValue={store.commission_value} couponCode={store.coupon_code || store.coupons?.[0]?.code || ''} />
       </TabsContent>
 
       {/* Tab Cupons */}
@@ -376,72 +333,50 @@ export default function AffiliateDashboardNew() {
         <div className="flex items-center gap-2 mb-4">
           <Ticket className="h-5 w-5 text-primary" />
           <span className="font-medium">
-            {(store.coupons?.length || (store.coupon_code ? 1 : 0)) > 1 
-              ? `Seus cupons de desconto (${store.coupons?.length})` 
-              : 'Seu cupom de desconto'}
+            {(store.coupons?.length || (store.coupon_code ? 1 : 0)) > 1 ? `Seus cupons de desconto (${store.coupons?.length})` : 'Seu cupom de desconto'}
           </span>
         </div>
         
-        {(store.coupons && store.coupons.length > 0) || store.coupon_code ? (
-          <div className="space-y-3">
-            {(store.coupons && store.coupons.length > 0 
-              ? store.coupons 
-              : store.coupon_code 
-                ? [{ code: store.coupon_code, discount_type: store.coupon_discount_type || '', discount_value: store.coupon_discount_value || 0 }]
-                : []
-            ).map((coupon, idx) => (
-              <motion.div 
-                key={idx} 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 + idx * 0.1 }}
-                className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-4"
-              >
+        {store.coupons && store.coupons.length > 0 || store.coupon_code ? <div className="space-y-3">
+            {(store.coupons && store.coupons.length > 0 ? store.coupons : store.coupon_code ? [{
+          code: store.coupon_code,
+          discount_type: store.coupon_discount_type || '',
+          discount_value: store.coupon_discount_value || 0
+        }] : []).map((coupon, idx) => <motion.div key={idx} initial={{
+          opacity: 0,
+          x: -10
+        }} animate={{
+          opacity: 1,
+          x: 0
+        }} transition={{
+          delay: 0.1 + idx * 0.1
+        }} className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-mono font-bold text-2xl gradient-text">{coupon.code}</p>
-                    {coupon.discount_type && (
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {coupon.discount_type === 'percentage' 
-                          ? `${coupon.discount_value}% de desconto`
-                          : `${formatCurrency(coupon.discount_value || 0)} de desconto`}
-                      </p>
-                    )}
+                    {coupon.discount_type}
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      copyToClipboard(coupon.code, 'Cupom');
-                    }}
-                    className="shrink-0"
-                  >
+                  <Button variant="outline" size="sm" onClick={e => {
+              e.stopPropagation();
+              copyToClipboard(coupon.code, 'Cupom');
+            }} className="shrink-0">
                     <Copy className="h-4 w-4 mr-2" />
                     Copiar
                   </Button>
                 </div>
                 
-                {coupon.discount_type && (
-                  <div className="text-xs text-muted-foreground">
-                    {coupon.applies_to === 'all' || !coupon.applies_to ? (
-                      <span className="inline-flex items-center gap-1">
+                {coupon.discount_type && <div className="text-xs text-muted-foreground">
+                    {coupon.applies_to === 'all' || !coupon.applies_to ? <span className="inline-flex items-center gap-1">
                         <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Geral</Badge>
                         <span>Vale para todos os produtos</span>
-                      </span>
-                    ) : coupon.applies_to === 'categories' && coupon.category_names?.length ? (
-                      <span className="inline-flex items-center gap-1 flex-wrap">
+                      </span> : coupon.applies_to === 'categories' && coupon.category_names?.length ? <span className="inline-flex items-center gap-1 flex-wrap">
                         <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Categorias</Badge>
                         <span>{coupon.category_names.join(', ')}</span>
-                      </span>
-                    ) : coupon.applies_to === 'products' && coupon.product_ids?.length ? (
-                      <span className="inline-flex items-center gap-1">
+                      </span> : coupon.applies_to === 'products' && coupon.product_ids?.length ? <span className="inline-flex items-center gap-1">
                         <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Produtos</Badge>
                         <span>{coupon.product_ids.length} produto(s) específico(s)</span>
-                      </span>
-                    ) : null}
-                  </div>
-                )}
+                      </span> : null}
+                  </div>}
                 
                 <div className="pt-3 border-t border-primary/10">
                   <div className="flex items-center gap-2 mb-2">
@@ -449,57 +384,36 @@ export default function AffiliateDashboardNew() {
                     <span className="text-sm font-medium">Link de afiliado</span>
                   </div>
                   <div className="flex gap-2">
-                    <Input
-                      value={`https://ofertas.app/${store.store_slug}?cupom=${coupon.code}`}
-                      readOnly
-                      className="font-mono text-xs"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        copyToClipboard(
-                          `https://ofertas.app/${store.store_slug}?cupom=${coupon.code}`,
-                          'Link de afiliado'
-                        );
-                      }}
-                      className="shrink-0"
-                    >
+                    <Input value={`https://ofertas.app/${store.store_slug}?cupom=${coupon.code}`} readOnly className="font-mono text-xs" onClick={e => e.stopPropagation()} />
+                    <Button variant="default" size="sm" onClick={e => {
+                e.stopPropagation();
+                copyToClipboard(`https://ofertas.app/${store.store_slug}?cupom=${coupon.code}`, 'Link de afiliado');
+              }} className="shrink-0">
                       <Copy className="h-4 w-4 mr-2" />
                       Copiar
                     </Button>
                   </div>
                 </div>
-              </motion.div>
-            ))}
+              </motion.div>)}
             
             <p className="text-xs text-muted-foreground text-center py-2">
               Compartilhe o link. O cupom será aplicado automaticamente!
             </p>
-          </div>
-        ) : (
-          <div className="p-6 bg-muted/50 rounded-lg text-center border border-border/50">
+          </div> : <div className="p-6 bg-muted/50 rounded-lg text-center border border-border/50">
             <Ticket className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
             <p className="text-sm text-muted-foreground">
               Aguardando vinculação de cupom pelo lojista
             </p>
-          </div>
-        )}
+          </div>}
       </TabsContent>
-    </Tabs>
-  );
-
+    </Tabs>;
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+    return <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
           <p className="text-muted-foreground">Carregando painel...</p>
         </div>
-      </div>
-    );
+      </div>;
   }
 
   // Render Stats Cards (reusable) - using filtered data
@@ -507,15 +421,18 @@ export default function AffiliateDashboardNew() {
     // Determine if we should show filtered data or all data
     const showFilteredData = periodFilter !== 'all' || storeFilter !== 'all';
     const displayStats = showFilteredData ? filteredStats : affiliateStats;
-    
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 sm:gap-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          whileHover={{ scale: 1.02 }}
-        >
+    return <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 sm:gap-4">
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.1
+      }} whileHover={{
+        scale: 1.02
+      }}>
           <Card className="glass border-border/50 overflow-hidden relative h-full">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
             <CardContent className="p-2.5 sm:p-4 md:pt-6 md:px-6 relative">
@@ -532,12 +449,17 @@ export default function AffiliateDashboardNew() {
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          whileHover={{ scale: 1.02 }}
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.2
+      }} whileHover={{
+        scale: 1.02
+      }}>
           <Card className="glass border-border/50 overflow-hidden relative h-full">
             <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />
             <CardContent className="p-2.5 sm:p-4 md:pt-6 md:px-6 relative">
@@ -554,12 +476,17 @@ export default function AffiliateDashboardNew() {
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          whileHover={{ scale: 1.02 }}
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.3
+      }} whileHover={{
+        scale: 1.02
+      }}>
           <Card className="glass border-border/50 overflow-hidden relative h-full">
             <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent pointer-events-none" />
             <CardContent className="p-2.5 sm:p-4 md:pt-6 md:px-6 relative">
@@ -576,12 +503,17 @@ export default function AffiliateDashboardNew() {
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          whileHover={{ scale: 1.02 }}
-        >
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.4
+      }} whileHover={{
+        scale: 1.02
+      }}>
           <Card className="glass border-border/50 overflow-hidden relative h-full">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-2.5 sm:p-4 md:pt-6 md:px-6 relative">
@@ -597,54 +529,48 @@ export default function AffiliateDashboardNew() {
             </CardContent>
           </Card>
         </motion.div>
-      </div>
-    );
+      </div>;
   };
 
   // Render Filters Section
-  const renderFiltersSection = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-2 p-3 sm:p-4 bg-muted/30 rounded-lg border border-border/50"
-    >
+  const renderFiltersSection = () => <motion.div initial={{
+    opacity: 0,
+    y: 10
+  }} animate={{
+    opacity: 1,
+    y: 0
+  }} className="flex flex-col gap-2 p-3 sm:p-4 bg-muted/30 rounded-lg border border-border/50">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
           <span className="text-xs sm:text-sm font-medium">Filtros</span>
-          {(periodFilter !== 'all' || storeFilter !== 'all') && (
-            <Badge variant="secondary" className="text-[10px] sm:text-xs px-1.5 py-0.5">
+          {(periodFilter !== 'all' || storeFilter !== 'all') && <Badge variant="secondary" className="text-[10px] sm:text-xs px-1.5 py-0.5">
               {filteredAffiliateOrders.length}
-            </Badge>
-          )}
+            </Badge>}
         </div>
         
         {/* Clear Filters - moved to top right */}
-        {(periodFilter !== 'all' || storeFilter !== 'all') && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setPeriodFilter('all');
-              setStoreFilter('all');
-              setCustomDateRange({ from: undefined, to: undefined });
-            }}
-            className="h-7 px-2 text-xs text-muted-foreground"
-          >
+        {(periodFilter !== 'all' || storeFilter !== 'all') && <Button variant="ghost" size="sm" onClick={() => {
+        setPeriodFilter('all');
+        setStoreFilter('all');
+        setCustomDateRange({
+          from: undefined,
+          to: undefined
+        });
+      }} className="h-7 px-2 text-xs text-muted-foreground">
             <X className="h-3 w-3 mr-1" />
             Limpar
-          </Button>
-        )}
+          </Button>}
       </div>
       
       <div className="flex flex-wrap gap-1.5 sm:gap-2">
         {/* Period Filter */}
-        <Select value={periodFilter} onValueChange={(value) => {
-          setPeriodFilter(value);
-          if (value === 'custom') {
-            setShowCustomDatePicker(true);
-          }
-        }}>
+        <Select value={periodFilter} onValueChange={value => {
+        setPeriodFilter(value);
+        if (value === 'custom') {
+          setShowCustomDatePicker(true);
+        }
+      }}>
           <SelectTrigger className="w-[110px] sm:w-[140px] h-8 text-xs sm:text-sm">
             <SelectValue placeholder="Período" />
           </SelectTrigger>
@@ -666,52 +592,52 @@ export default function AffiliateDashboardNew() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas as lojas</SelectItem>
-            {affiliateStores.map((store) => (
-              <SelectItem key={store.store_affiliate_id} value={store.store_affiliate_id}>
+            {affiliateStores.map(store => <SelectItem key={store.store_affiliate_id} value={store.store_affiliate_id}>
                 {store.store_name}
-              </SelectItem>
-            ))}
+              </SelectItem>)}
           </SelectContent>
         </Select>
 
         {/* Custom Date Range Button */}
-        {periodFilter === 'custom' && customDateRange.from && customDateRange.to && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowCustomDatePicker(true)}
-            className="h-8 px-2 gap-1 text-xs"
-          >
+        {periodFilter === 'custom' && customDateRange.from && customDateRange.to && <Button variant="outline" size="sm" onClick={() => setShowCustomDatePicker(true)} className="h-8 px-2 gap-1 text-xs">
             <CalendarIcon className="h-3 w-3" />
-            <span className="hidden xs:inline">{format(customDateRange.from, 'dd/MM', { locale: ptBR })}</span>
-            <span className="xs:hidden">{format(customDateRange.from, 'dd/MM', { locale: ptBR })}</span>
+            <span className="hidden xs:inline">{format(customDateRange.from, 'dd/MM', {
+            locale: ptBR
+          })}</span>
+            <span className="xs:hidden">{format(customDateRange.from, 'dd/MM', {
+            locale: ptBR
+          })}</span>
             <span>-</span>
-            <span>{format(customDateRange.to, 'dd/MM', { locale: ptBR })}</span>
-          </Button>
-        )}
+            <span>{format(customDateRange.to, 'dd/MM', {
+            locale: ptBR
+          })}</span>
+          </Button>}
       </div>
-    </motion.div>
-  );
+    </motion.div>;
 
   // Home Tab Content
-  const renderHomeContent = () => (
-    <motion.div 
-      className="space-y-4 sm:space-y-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-    >
+  const renderHomeContent = () => <motion.div className="space-y-4 sm:space-y-6" initial={{
+    opacity: 0
+  }} animate={{
+    opacity: 1
+  }} transition={{
+    duration: 0.3
+  }}>
       {/* Filters Section */}
       {renderFiltersSection()}
       
       {renderStatsCards()}
       
       {/* Quick Summary */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
+      <motion.div initial={{
+      opacity: 0,
+      y: 20
+    }} animate={{
+      opacity: 1,
+      y: 0
+    }} transition={{
+      delay: 0.5
+    }}>
         <Card className="glass border-border/50 overflow-hidden">
           <CardHeader className="p-3 sm:p-6">
             <CardTitle className="flex items-center gap-2 text-sm sm:text-lg">
@@ -732,9 +658,7 @@ export default function AffiliateDashboardNew() {
                   <span className="text-[10px] sm:text-sm truncate">Pedidos</span>
                 </div>
                 <p className="text-lg sm:text-2xl font-bold">
-                  {(periodFilter !== 'all' || storeFilter !== 'all') 
-                    ? filteredStats.total_orders 
-                    : (affiliateStats?.total_orders || 0)}
+                  {periodFilter !== 'all' || storeFilter !== 'all' ? filteredStats.total_orders : affiliateStats?.total_orders || 0}
                 </p>
               </div>
               <div className="p-2.5 sm:p-4 bg-muted/50 rounded-lg border border-border/50">
@@ -743,70 +667,51 @@ export default function AffiliateDashboardNew() {
                   <span className="text-[10px] sm:text-sm truncate">Pago</span>
                 </div>
                 <p className="text-base sm:text-2xl font-bold text-green-600 truncate">
-                  {formatCurrency((periodFilter !== 'all' || storeFilter !== 'all') 
-                    ? filteredStats.paid_commission 
-                    : (affiliateStats?.paid_commission || 0))}
+                  {formatCurrency(periodFilter !== 'all' || storeFilter !== 'all' ? filteredStats.paid_commission : affiliateStats?.paid_commission || 0)}
                 </p>
               </div>
             </div>
 
-            {affiliateStores.length > 0 && (
-              <>
+            {affiliateStores.length > 0 && <>
                 <Separator />
                 <div>
                   <h4 className="font-medium mb-3">Suas Lojas</h4>
                   <div className="space-y-2">
-                    {affiliateStores.slice(0, 3).map((store) => (
-                      <motion.div
-                        key={store.store_affiliate_id}
-                        whileHover={{ scale: 1.01 }}
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border/50"
-                      >
+                    {affiliateStores.slice(0, 3).map(store => <motion.div key={store.store_affiliate_id} whileHover={{
+                  scale: 1.01
+                }} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border/50">
                         <div className="flex items-center gap-3">
-                          {store.store_logo ? (
-                            <img
-                              src={store.store_logo}
-                              alt={store.store_name}
-                              className="w-8 h-8 rounded object-cover"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                          {store.store_logo ? <img src={store.store_logo} alt={store.store_name} className="w-8 h-8 rounded object-cover" /> : <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
                               <Store className="h-4 w-4 text-muted-foreground" />
-                            </div>
-                          )}
+                            </div>}
                           <span className="font-medium">{store.store_name}</span>
                         </div>
                         <span className="font-semibold text-green-600">
                           {formatCurrency(store.total_commission)}
                         </span>
-                      </motion.div>
-                    ))}
-                    {affiliateStores.length > 3 && (
-                      <Button 
-                        variant="ghost" 
-                        className="w-full" 
-                        onClick={() => setActiveTab('stores')}
-                      >
+                      </motion.div>)}
+                    {affiliateStores.length > 3 && <Button variant="ghost" className="w-full" onClick={() => setActiveTab('stores')}>
                         Ver todas as {affiliateStores.length} lojas
-                      </Button>
-                    )}
+                      </Button>}
                   </div>
                 </div>
-              </>
-            )}
+              </>}
         </CardContent>
       </Card>
       </motion.div>
 
       {/* Charts Section */}
-      {affiliateOrders.length > 0 && (
-        <div className="grid gap-4 md:gap-6 md:grid-cols-2">
+      {affiliateOrders.length > 0 && <div className="grid gap-4 md:gap-6 md:grid-cols-2">
           {/* Comissões ao Longo do Tempo */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-          >
+          <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.6
+      }}>
             <Card className="glass border-border/50 overflow-hidden">
               <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-primary/5 to-transparent">
                 <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
@@ -820,22 +725,17 @@ export default function AffiliateDashboardNew() {
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
                     <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                      labelStyle={{ color: 'hsl(var(--foreground))' }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="pedidos" 
-                      stroke="hsl(var(--primary))" 
-                      strokeWidth={3} 
-                      dot={{ fill: 'hsl(var(--primary))', r: 4 }} 
-                      name="Pedidos" 
-                    />
+                    <Tooltip contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }} labelStyle={{
+                  color: 'hsl(var(--foreground))'
+                }} />
+                    <Line type="monotone" dataKey="pedidos" stroke="hsl(var(--primary))" strokeWidth={3} dot={{
+                  fill: 'hsl(var(--primary))',
+                  r: 4
+                }} name="Pedidos" />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -843,11 +743,15 @@ export default function AffiliateDashboardNew() {
           </motion.div>
 
           {/* Comissões Recebidas */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7 }}
-          >
+          <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.7
+      }}>
             <Card className="glass border-border/50 overflow-hidden">
               <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-green-500/5 to-transparent">
                 <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
@@ -861,21 +765,14 @@ export default function AffiliateDashboardNew() {
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
                     <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px'
-                      }}
-                      labelStyle={{ color: 'hsl(var(--foreground))' }}
-                      formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Comissão']}
-                    />
-                    <Bar 
-                      dataKey="comissao" 
-                      fill="hsl(142 76% 36%)" 
-                      radius={[8, 8, 0, 0]} 
-                      name="Comissão" 
-                    />
+                    <Tooltip contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }} labelStyle={{
+                  color: 'hsl(var(--foreground))'
+                }} formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Comissão']} />
+                    <Bar dataKey="comissao" fill="hsl(142 76% 36%)" radius={[8, 8, 0, 0]} name="Comissão" />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -883,13 +780,15 @@ export default function AffiliateDashboardNew() {
           </motion.div>
 
           {/* Comissões por Loja */}
-          {commissionsByStore.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-              className="md:col-span-2"
-            >
+          {commissionsByStore.length > 0 && <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.8
+      }} className="md:col-span-2">
               <Card className="glass border-border/50 overflow-hidden">
                 <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-blue-500/5 to-transparent">
                   <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
@@ -900,42 +799,27 @@ export default function AffiliateDashboardNew() {
                 <CardContent className="p-4 sm:p-6 pt-2 sm:pt-4">
                   <ResponsiveContainer width="100%" height={280}>
                     <PieChart>
-                      <Pie 
-                        data={commissionsByStore} 
-                        cx="50%" 
-                        cy="50%" 
-                        labelLine={false}
-                        label={({ name, percent }) => `${name.slice(0, 15)}${name.length > 15 ? '...' : ''} (${(percent * 100).toFixed(0)}%)`}
-                        outerRadius={100}
-                        fill="hsl(var(--primary))" 
-                        dataKey="value"
-                      >
-                        {commissionsByStore.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
+                      <Pie data={commissionsByStore} cx="50%" cy="50%" labelLine={false} label={({
+                  name,
+                  percent
+                }) => `${name.slice(0, 15)}${name.length > 15 ? '...' : ''} (${(percent * 100).toFixed(0)}%)`} outerRadius={100} fill="hsl(var(--primary))" dataKey="value">
+                        {commissionsByStore.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
                       </Pie>
-                      <Tooltip 
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px'
-                        }}
-                        formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Comissão']}
-                      />
+                      <Tooltip contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }} formatter={(value: number) => [`R$ ${value.toFixed(2)}`, 'Comissão']} />
                     </PieChart>
                   </ResponsiveContainer>
                 </CardContent>
               </Card>
-            </motion.div>
-          )}
-        </div>
-      )}
-    </motion.div>
-  );
+            </motion.div>}
+        </div>}
+    </motion.div>;
 
   // Stores Tab Content
-  const renderStoresContent = () => (
-    <div className="space-y-4">
+  const renderStoresContent = () => <div className="space-y-4">
       <Card className="glass border-border/50">
         <CardHeader className="p-4 sm:p-6">
           <CardTitle className="flex items-center gap-2">
@@ -948,8 +832,7 @@ export default function AffiliateDashboardNew() {
         </CardHeader>
       </Card>
 
-      {affiliateStores.length === 0 ? (
-        <Card>
+      {affiliateStores.length === 0 ? <Card>
           <CardContent className="py-12 text-center">
             <Store className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">Nenhuma loja vinculada</h3>
@@ -957,43 +840,25 @@ export default function AffiliateDashboardNew() {
               Aguarde um convite de uma loja parceira para começar a ganhar comissões.
             </p>
           </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {affiliateStores.map((store) => (
-            <motion.div
-              key={store.store_affiliate_id}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Card 
-                className="glass border-border/50 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => setSelectedStore(store)}
-              >
+        </Card> : <div className="grid gap-4 md:grid-cols-2">
+          {affiliateStores.map(store => <motion.div key={store.store_affiliate_id} whileHover={{
+        scale: 1.02
+      }} whileTap={{
+        scale: 0.98
+      }}>
+              <Card className="glass border-border/50 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setSelectedStore(store)}>
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      {store.store_logo ? (
-                        <div className="w-12 h-12 rounded-lg overflow-hidden ring-2 ring-primary/20 shadow-glow">
-                          <img
-                            src={store.store_logo}
-                            alt={store.store_name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-glow rounded-lg flex items-center justify-center shadow-glow">
+                      {store.store_logo ? <div className="w-12 h-12 rounded-lg overflow-hidden ring-2 ring-primary/20 shadow-glow">
+                          <img src={store.store_logo} alt={store.store_name} className="w-full h-full object-cover" />
+                        </div> : <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-glow rounded-lg flex items-center justify-center shadow-glow">
                           <Store className="h-6 w-6 text-white" />
-                        </div>
-                      )}
+                        </div>}
                       <div>
                         <CardTitle className="text-base">{store.store_name}</CardTitle>
                         <CardDescription>
-                          {store.coupons?.length 
-                            ? `${store.coupons.length} cupom(s) vinculado(s)`
-                            : store.coupon_code 
-                              ? `Cupom: ${store.coupon_code}`
-                              : 'Sem cupom vinculado'}
+                          {store.coupons?.length ? `${store.coupons.length} cupom(s) vinculado(s)` : store.coupon_code ? `Cupom: ${store.coupon_code}` : 'Sem cupom vinculado'}
                         </CardDescription>
                       </div>
                     </div>
@@ -1022,16 +887,12 @@ export default function AffiliateDashboardNew() {
                   </div>
                 </CardContent>
               </Card>
-            </motion.div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+            </motion.div>)}
+        </div>}
+    </div>;
 
   // Orders Tab Content
-  const renderOrdersContent = () => (
-    <Card>
+  const renderOrdersContent = () => <Card>
       <CardHeader>
         <CardTitle>Meus Pedidos</CardTitle>
         <CardDescription>
@@ -1039,16 +900,13 @@ export default function AffiliateDashboardNew() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {affiliateOrders.length === 0 ? (
-          <div className="py-12 text-center">
+        {affiliateOrders.length === 0 ? <div className="py-12 text-center">
             <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">Nenhum pedido ainda</h3>
             <p className="text-muted-foreground">
               Quando clientes usarem seus cupons, os pedidos aparecerão aqui.
             </p>
-          </div>
-        ) : (
-          <ScrollableTable>
+          </div> : <ScrollableTable>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -1063,12 +921,7 @@ export default function AffiliateDashboardNew() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {affiliateOrders.map((order) => (
-                  <TableRow 
-                    key={order.earning_id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => openOrderModal(order)}
-                  >
+                {affiliateOrders.map(order => <TableRow key={order.earning_id} className="cursor-pointer hover:bg-muted/50" onClick={() => openOrderModal(order)}>
                     <TableCell className="font-mono font-medium">
                       #{order.order_number}
                     </TableCell>
@@ -1093,33 +946,19 @@ export default function AffiliateDashboardNew() {
                       {formatCurrency(order.commission_amount)}
                     </TableCell>
                     <TableCell>
-                      <Badge 
-                        variant={order.commission_status === 'paid' ? 'default' : 'secondary'}
-                        className={order.commission_status === 'paid' 
-                          ? 'bg-green-500/10 text-green-600 border-green-500/20' 
-                          : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
-                        }
-                      >
-                        {order.commission_status === 'paid' ? (
-                          <><CheckCircle className="h-3 w-3 mr-1" /> Pago</>
-                        ) : (
-                          <><Clock className="h-3 w-3 mr-1" /> Pendente</>
-                        )}
+                      <Badge variant={order.commission_status === 'paid' ? 'default' : 'secondary'} className={order.commission_status === 'paid' ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'}>
+                        {order.commission_status === 'paid' ? <><CheckCircle className="h-3 w-3 mr-1" /> Pago</> : <><Clock className="h-3 w-3 mr-1" /> Pendente</>}
                       </Badge>
                     </TableCell>
-                  </TableRow>
-                ))}
+                  </TableRow>)}
               </TableBody>
             </Table>
-          </ScrollableTable>
-        )}
+          </ScrollableTable>}
       </CardContent>
-    </Card>
-  );
+    </Card>;
 
   // Commissions Tab Content
-  const renderCommissionsContent = () => (
-    <Card>
+  const renderCommissionsContent = () => <Card>
       <CardHeader>
         <CardTitle>Resumo de Comissões</CardTitle>
         <CardDescription>
@@ -1152,40 +991,25 @@ export default function AffiliateDashboardNew() {
           <div>
             <h4 className="font-medium mb-3">Por Loja</h4>
             <div className="space-y-2">
-              {affiliateStores.map((store) => (
-                <div
-                  key={store.store_affiliate_id}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
-                >
+              {affiliateStores.map(store => <div key={store.store_affiliate_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
-                    {store.store_logo ? (
-                      <img
-                        src={store.store_logo}
-                        alt={store.store_name}
-                        className="w-8 h-8 rounded object-cover"
-                      />
-                    ) : (
-                      <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
+                    {store.store_logo ? <img src={store.store_logo} alt={store.store_name} className="w-8 h-8 rounded object-cover" /> : <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
                         <Store className="h-4 w-4 text-muted-foreground" />
-                      </div>
-                    )}
+                      </div>}
                     <span className="font-medium">{store.store_name}</span>
                   </div>
                   <span className="font-semibold text-green-600">
                     {formatCurrency(store.total_commission)}
                   </span>
-                </div>
-              ))}
+                </div>)}
             </div>
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 
   // Profile Tab Content
-  const renderProfileContent = () => (
-    <Card>
+  const renderProfileContent = () => <Card>
       <CardHeader>
         <CardTitle>Meus Dados</CardTitle>
         <CardDescription>
@@ -1216,26 +1040,17 @@ export default function AffiliateDashboardNew() {
 
         <div>
           <p className="text-sm text-muted-foreground mb-1">Chave PIX para recebimento</p>
-          {affiliateUser?.pix_key ? (
-            <div className="flex items-center gap-2">
+          {affiliateUser?.pix_key ? <div className="flex items-center gap-2">
               <code className="flex-1 p-2 bg-muted rounded text-sm font-mono">
                 {affiliateUser.pix_key}
               </code>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => copyToClipboard(affiliateUser.pix_key!, 'Chave PIX')}
-              >
+              <Button variant="outline" size="sm" onClick={() => copyToClipboard(affiliateUser.pix_key!, 'Chave PIX')}>
                 <Copy className="h-4 w-4" />
               </Button>
-            </div>
-          ) : (
-            <p className="text-muted-foreground italic">Nenhuma chave PIX cadastrada</p>
-          )}
+            </div> : <p className="text-muted-foreground italic">Nenhuma chave PIX cadastrada</p>}
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 
   // Render content based on active tab
   const renderContent = () => {
@@ -1254,9 +1069,7 @@ export default function AffiliateDashboardNew() {
         return renderHomeContent();
     }
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       {/* Header - Mobile Only */}
       <header className="md:hidden border-b bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -1277,12 +1090,7 @@ export default function AffiliateDashboardNew() {
 
       <div className="flex h-full w-full">
         {/* Desktop Sidebar */}
-        <AffiliateDashboardSidebar
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          affiliateName={affiliateUser?.name}
-          onSignOut={handleLogout}
-        />
+        <AffiliateDashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} affiliateName={affiliateUser?.name} onSignOut={handleLogout} />
 
         {/* Main Content */}
         <main className="flex-1 w-full max-w-full overflow-x-hidden px-2 sm:px-4 py-4 sm:py-6 pb-24 md:pb-6">
@@ -1291,15 +1099,10 @@ export default function AffiliateDashboardNew() {
       </div>
 
       {/* Mobile Bottom Nav */}
-      {isMobile && (
-        <AffiliateDashboardBottomNav
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-      )}
+      {isMobile && <AffiliateDashboardBottomNav activeTab={activeTab} onTabChange={setActiveTab} />}
 
       {/* Modal de Detalhes do Pedido */}
-      <ResponsiveDialog open={!!selectedOrder} onOpenChange={(open) => !open && closeOrderModal()}>
+      <ResponsiveDialog open={!!selectedOrder} onOpenChange={open => !open && closeOrderModal()}>
         <ResponsiveDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle className="flex items-center gap-2">
@@ -1311,8 +1114,7 @@ export default function AffiliateDashboardNew() {
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
           
-          {selectedOrder && (
-            <div className="space-y-6 mt-4">
+          {selectedOrder && <div className="space-y-6 mt-4">
               {/* Info do Pedido */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="p-3 bg-muted rounded-lg">
@@ -1344,18 +1146,8 @@ export default function AffiliateDashboardNew() {
                 <div className="p-4 bg-green-500/5 rounded-lg border border-green-500/20">
                   <p className="text-xs text-muted-foreground">Sua Comissão</p>
                   <p className="text-xl font-bold text-green-600">{formatCurrency(selectedOrder.commission_amount)}</p>
-                  <Badge 
-                    variant={selectedOrder.commission_status === 'paid' ? 'default' : 'secondary'}
-                    className={`mt-1 ${selectedOrder.commission_status === 'paid' 
-                      ? 'bg-green-500/10 text-green-600 border-green-500/20' 
-                      : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'
-                    }`}
-                  >
-                    {selectedOrder.commission_status === 'paid' ? (
-                      <><CheckCircle className="h-3 w-3 mr-1" /> Pago</>
-                    ) : (
-                      <><Clock className="h-3 w-3 mr-1" /> Pendente</>
-                    )}
+                  <Badge variant={selectedOrder.commission_status === 'paid' ? 'default' : 'secondary'} className={`mt-1 ${selectedOrder.commission_status === 'paid' ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'}`}>
+                    {selectedOrder.commission_status === 'paid' ? <><CheckCircle className="h-3 w-3 mr-1" /> Pago</> : <><Clock className="h-3 w-3 mr-1" /> Pendente</>}
                   </Badge>
                 </div>
               </div>
@@ -1367,49 +1159,31 @@ export default function AffiliateDashboardNew() {
                   Itens do Pedido
                 </div>
                 
-                {loadingModalItems ? (
-                  <div className="py-8 text-center">
+                {loadingModalItems ? <div className="py-8 text-center">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto text-muted-foreground" />
                     <p className="text-sm text-muted-foreground mt-2">Carregando itens...</p>
-                  </div>
-                ) : orderModalItems.length === 0 ? (
-                  <p className="text-sm text-muted-foreground py-4 text-center">Nenhum item encontrado</p>
-                ) : (
-                  <div className="space-y-2">
-                    {orderModalItems.map((item) => {
-                      const itemDiscount = item.item_discount || 0;
-                      
-                      return (
-                        <div 
-                          key={item.item_id} 
-                          className="p-3 bg-muted/50 rounded-lg border space-y-2"
-                        >
+                  </div> : orderModalItems.length === 0 ? <p className="text-sm text-muted-foreground py-4 text-center">Nenhum item encontrado</p> : <div className="space-y-2">
+                    {orderModalItems.map(item => {
+                const itemDiscount = item.item_discount || 0;
+                return <div key={item.item_id} className="p-3 bg-muted/50 rounded-lg border space-y-2">
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 flex-wrap">
                                 <p className="font-medium text-sm">{item.product_name}</p>
-                                {item.is_coupon_eligible ? (
-                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-500/10 text-green-600 border-green-500/20">
+                                {item.is_coupon_eligible ? <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-green-500/10 text-green-600 border-green-500/20">
                                     Com desconto
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-gray-500/10 text-gray-500 border-gray-500/20">
+                                  </Badge> : <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-gray-500/10 text-gray-500 border-gray-500/20">
                                     Sem desconto
-                                  </Badge>
-                                )}
+                                  </Badge>}
                               </div>
                               <p className="text-xs text-muted-foreground mt-1">
                                 {item.quantity}x {formatCurrency(item.unit_price)} = {formatCurrency(item.subtotal)}
-                                {itemDiscount > 0 && (
-                                  <span className="text-orange-500 ml-1">
+                                {itemDiscount > 0 && <span className="text-orange-500 ml-1">
                                     (-{formatCurrency(itemDiscount)})
-                                  </span>
-                                )}
-                                {item.item_value_with_discount !== undefined && item.item_value_with_discount !== item.subtotal && (
-                                  <span className="text-green-600 ml-1">
+                                  </span>}
+                                {item.item_value_with_discount !== undefined && item.item_value_with_discount !== item.subtotal && <span className="text-green-600 ml-1">
                                     = {formatCurrency(item.item_value_with_discount)}
-                                  </span>
-                                )}
+                                  </span>}
                               </p>
                             </div>
                             <span className="font-semibold text-green-600 text-sm whitespace-nowrap">
@@ -1418,89 +1192,50 @@ export default function AffiliateDashboardNew() {
                           </div>
                           
                           <div className="flex items-center gap-2 flex-wrap">
-                            {item.commission_source === 'specific_product' && (
-                              <Badge 
-                                variant="outline" 
-                                className="text-[10px] px-1.5 py-0 bg-purple-500/10 text-purple-600 border-purple-500/20"
-                              >
+                            {item.commission_source === 'specific_product' && <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-purple-500/10 text-purple-600 border-purple-500/20">
                                 <Target className="h-3 w-3 mr-1" />
                                 Regra específica
-                              </Badge>
-                            )}
-                            {item.commission_source === 'default' && (
-                              <Badge 
-                                variant="outline" 
-                                className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-600 border-blue-500/20"
-                              >
+                              </Badge>}
+                            {item.commission_source === 'default' && <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-600 border-blue-500/20">
                                 <Calculator className="h-3 w-3 mr-1" />
                                 Padrão
-                              </Badge>
-                            )}
-                            {(item.commission_source === 'none' || !item.commission_source) && item.item_commission === 0 && (
-                              <Badge 
-                                variant="outline" 
-                                className="text-[10px] px-1.5 py-0 bg-gray-500/10 text-gray-500 border-gray-500/20"
-                              >
+                              </Badge>}
+                            {(item.commission_source === 'none' || !item.commission_source) && item.item_commission === 0 && <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-gray-500/10 text-gray-500 border-gray-500/20">
                                 <Ban className="h-3 w-3 mr-1" />
                                 Sem comissão
-                              </Badge>
-                            )}
+                              </Badge>}
                             
-                            {item.item_commission > 0 && (
-                              <span className="text-[10px] text-muted-foreground">
-                                ({item.commission_type === 'percentage' 
-                                  ? `${item.commission_value}%` 
-                                  : formatCurrency(item.commission_value)} de comissão)
-                              </span>
-                            )}
+                            {item.item_commission > 0 && <span className="text-[10px] text-muted-foreground">
+                                ({item.commission_type === 'percentage' ? `${item.commission_value}%` : formatCurrency(item.commission_value)} de comissão)
+                              </span>}
                           </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        </div>;
+              })}
+                  </div>}
               </div>
-            </div>
-          )}
+            </div>}
         </ResponsiveDialogContent>
       </ResponsiveDialog>
 
       {/* Modal de Detalhes da Loja */}
-      <ResponsiveDialog open={!!selectedStore} onOpenChange={(open) => !open && setSelectedStore(null)}>
+      <ResponsiveDialog open={!!selectedStore} onOpenChange={open => !open && setSelectedStore(null)}>
         <ResponsiveDialogContent className="max-w-3xl h-[90vh] flex flex-col glass">
           <ResponsiveDialogHeader className="flex-shrink-0">
             <div className="flex items-center gap-4">
-              {selectedStore?.store_logo ? (
-                <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
-                  <img
-                    src={selectedStore.store_logo}
-                    alt={selectedStore.store_name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-glow rounded-xl flex items-center justify-center shadow-glow flex-shrink-0">
+              {selectedStore?.store_logo ? <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
+                  <img src={selectedStore.store_logo} alt={selectedStore.store_name} className="w-full h-full object-cover" />
+                </div> : <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-glow rounded-xl flex items-center justify-center shadow-glow flex-shrink-0">
                   <Store className="h-8 w-8 text-white" />
-                </div>
-              )}
+                </div>}
               <div>
                 <ResponsiveDialogTitle className="text-xl gradient-text">
                   {selectedStore?.store_name}
                 </ResponsiveDialogTitle>
                 <ResponsiveDialogDescription className="flex items-center gap-2 mt-1">
-                  <Badge 
-                    variant={selectedStore?.status === 'active' ? 'default' : 'secondary'}
-                    className={selectedStore?.status === 'active' ? 'bg-green-500/10 text-green-600 border-green-500/20' : ''}
-                  >
+                  <Badge variant={selectedStore?.status === 'active' ? 'default' : 'secondary'} className={selectedStore?.status === 'active' ? 'bg-green-500/10 text-green-600 border-green-500/20' : ''}>
                     {selectedStore?.status === 'active' ? 'Ativo' : 'Pendente'}
                   </Badge>
-                  <a 
-                    href={`https://ofertas.app/${selectedStore?.store_slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                    onClick={(e) => e.stopPropagation()}
-                  >
+                  <a href={`https://ofertas.app/${selectedStore?.store_slug}`} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline inline-flex items-center gap-1" onClick={e => e.stopPropagation()}>
                     Visitar loja <ExternalLink className="h-3 w-3" />
                   </a>
                 </ResponsiveDialogDescription>
@@ -1513,10 +1248,7 @@ export default function AffiliateDashboardNew() {
       </ResponsiveDialog>
 
       {/* Custom Date Range Dialog */}
-      <ResponsiveDialog 
-        open={showCustomDatePicker} 
-        onOpenChange={setShowCustomDatePicker}
-      >
+      <ResponsiveDialog open={showCustomDatePicker} onOpenChange={setShowCustomDatePicker}>
         <ResponsiveDialogContent className="sm:max-w-lg">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle className="flex items-center gap-2">
@@ -1531,26 +1263,18 @@ export default function AffiliateDashboardNew() {
                 <label className="text-sm font-medium">Data Inicial</label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {customDateRange.from ? (
-                        format(customDateRange.from, "dd/MM/yyyy", { locale: ptBR })
-                      ) : (
-                        <span className="text-muted-foreground">Selecione</span>
-                      )}
+                      {customDateRange.from ? format(customDateRange.from, "dd/MM/yyyy", {
+                      locale: ptBR
+                    }) : <span className="text-muted-foreground">Selecione</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={customDateRange.from}
-                      onSelect={(date) => setCustomDateRange(prev => ({ ...prev, from: date }))}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
+                    <Calendar mode="single" selected={customDateRange.from} onSelect={date => setCustomDateRange(prev => ({
+                    ...prev,
+                    from: date
+                  }))} initialFocus className="pointer-events-auto" />
                   </PopoverContent>
                 </Popover>
               </div>
@@ -1559,63 +1283,52 @@ export default function AffiliateDashboardNew() {
                 <label className="text-sm font-medium">Data Final</label>
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-full justify-start text-left font-normal"
-                    >
+                    <Button variant="outline" className="w-full justify-start text-left font-normal">
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {customDateRange.to ? (
-                        format(customDateRange.to, "dd/MM/yyyy", { locale: ptBR })
-                      ) : (
-                        <span className="text-muted-foreground">Selecione</span>
-                      )}
+                      {customDateRange.to ? format(customDateRange.to, "dd/MM/yyyy", {
+                      locale: ptBR
+                    }) : <span className="text-muted-foreground">Selecione</span>}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={customDateRange.to}
-                      onSelect={(date) => setCustomDateRange(prev => ({ ...prev, to: date }))}
-                      disabled={(date) => customDateRange.from ? date < customDateRange.from : false}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
+                    <Calendar mode="single" selected={customDateRange.to} onSelect={date => setCustomDateRange(prev => ({
+                    ...prev,
+                    to: date
+                  }))} disabled={date => customDateRange.from ? date < customDateRange.from : false} initialFocus className="pointer-events-auto" />
                   </PopoverContent>
                 </Popover>
               </div>
             </div>
             
-            {customDateRange.from && customDateRange.to && (
-              <div className="p-3 bg-primary/5 rounded-lg border border-primary/20 text-center">
+            {customDateRange.from && customDateRange.to && <div className="p-3 bg-primary/5 rounded-lg border border-primary/20 text-center">
                 <p className="text-sm text-muted-foreground">Período selecionado:</p>
                 <p className="font-medium">
-                  {format(customDateRange.from, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })} até{' '}
-                  {format(customDateRange.to, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                  {format(customDateRange.from, "dd 'de' MMMM 'de' yyyy", {
+                locale: ptBR
+              })} até{' '}
+                  {format(customDateRange.to, "dd 'de' MMMM 'de' yyyy", {
+                locale: ptBR
+              })}
                 </p>
-              </div>
-            )}
+              </div>}
           </div>
           
           <ResponsiveDialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setCustomDateRange({ from: undefined, to: undefined });
-                setPeriodFilter('all');
-                setShowCustomDatePicker(false);
-              }}
-            >
+            <Button variant="outline" onClick={() => {
+            setCustomDateRange({
+              from: undefined,
+              to: undefined
+            });
+            setPeriodFilter('all');
+            setShowCustomDatePicker(false);
+          }}>
               Cancelar
             </Button>
-            <Button
-              onClick={() => setShowCustomDatePicker(false)}
-              disabled={!customDateRange.from || !customDateRange.to}
-            >
+            <Button onClick={() => setShowCustomDatePicker(false)} disabled={!customDateRange.from || !customDateRange.to}>
               Aplicar
             </Button>
           </ResponsiveDialogFooter>
         </ResponsiveDialogContent>
       </ResponsiveDialog>
-    </div>
-  );
+    </div>;
 }
