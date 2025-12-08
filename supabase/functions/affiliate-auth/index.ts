@@ -212,6 +212,29 @@ serve(async (req) => {
           }
         }
 
+        // Verificar se telefone já está cadastrado em outra conta
+        const normalizedPhone = phone ? phone.replace(/\D/g, '') : null;
+        if (normalizedPhone && normalizedPhone.length >= 10) {
+          const { data: existingWithPhone } = await supabase
+            .from("affiliate_accounts")
+            .select("id, phone")
+            .neq("id", affiliateAccount.id)
+            .not("phone", "is", null);
+
+          if (existingWithPhone) {
+            for (const acc of existingWithPhone) {
+              const accPhone = (acc.phone || '').replace(/\D/g, '');
+              if (accPhone === normalizedPhone) {
+                console.log(`[affiliate-auth] Phone ${normalizedPhone} already in use by account ${acc.id}`);
+                return new Response(
+                  JSON.stringify({ error: "Este telefone já está cadastrado em outra conta de afiliado" }),
+                  { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
+              }
+            }
+          }
+        }
+
         // Atualizar conta do afiliado - CPF é o identificador principal agora
         const { error: updateAccountError } = await supabase
           .from("affiliate_accounts")
