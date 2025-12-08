@@ -466,7 +466,7 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
               <Tabs defaultValue="geral" className="flex-1 overflow-hidden flex flex-col mt-4">
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="geral" className="text-xs sm:text-sm">Configurações</TabsTrigger>
-                  <TabsTrigger value="regras" className="text-xs sm:text-sm">Regras Específicas</TabsTrigger>
+                  <TabsTrigger value="regras" className="text-xs sm:text-sm">Regras de Desconto</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="geral" className="flex-1 overflow-auto mt-4">
