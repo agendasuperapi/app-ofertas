@@ -299,7 +299,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
         cpf_cnpj: affiliate.cpf_cnpj || '',
         pix_key: affiliate.pix_key || '',
         coupon_ids: couponIds,
-        commission_enabled: affiliate.commission_enabled,
+        commission_enabled: affiliate.use_default_commission ?? true,
         default_commission_type: affiliate.default_commission_type,
         default_commission_value: affiliate.default_commission_value,
         commission_products: productRules,
@@ -321,20 +321,11 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
       return;
     }
 
-    if (formData.coupon_ids.length === 0) {
+    // Validar valor da comissão padrão se estiver habilitada
+    if (formData.commission_enabled && formData.default_commission_value <= 0 && formData.commission_products.length === 0) {
       toast({
-        title: 'Cupom obrigatório',
-        description: 'Selecione ou crie pelo menos um cupom para vincular ao afiliado.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Validação de escopo
-    if (formData.commission_enabled && formData.commission_products.length === 0) {
-      toast({
-        title: 'Selecione pelo menos um produto',
-        description: 'Para comissão por produto, selecione pelo menos um produto.',
+        title: 'Configuração de comissão incompleta',
+        description: 'Defina um valor para a comissão padrão ou adicione regras específicas por produto.',
         variant: 'destructive',
       });
       return;
@@ -349,7 +340,8 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
       coupon_ids: formData.coupon_ids,
       commission_enabled: formData.commission_enabled,
       default_commission_type: formData.default_commission_type,
-      default_commission_value: 0,
+      default_commission_value: formData.default_commission_value,
+      use_default_commission: formData.commission_enabled && formData.default_commission_value > 0,
     };
 
     let result;
@@ -1110,7 +1102,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
 
       {/* Dialog: Criar/Editar Afiliado */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg h-[90vh] overflow-hidden flex flex-col glass">
+        <DialogContent className="w-[95vw] max-w-3xl h-[90vh] overflow-hidden flex flex-col glass p-3 sm:p-6">
           <DialogHeader>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
@@ -1121,128 +1113,424 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               </DialogTitle>
             </div>
           </DialogHeader>
-          <div className="flex-1 overflow-auto mt-4">
-            <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="col-span-2">
-                    <Label>Nome *</Label>
-                    <Input
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      placeholder="Nome completo"
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Label>Email *</Label>
-                    <Input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="email@exemplo.com"
-                    />
-                  </div>
-                  <div>
-                    <Label>Telefone</Label>
-                    <Input
-                      value={formData.phone}
-                      onChange={(e) => {
-                        let value = e.target.value.replace(/\D/g, '');
-                        if (value.length > 11) value = value.slice(0, 11);
-                        if (value.length > 0) {
-                          value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
-                          value = value.replace(/(\d{5})(\d)/, '$1-$2');
-                        }
-                        setFormData({ ...formData, phone: value });
-                      }}
-                      placeholder="(00) 00000-0000"
-                      maxLength={15}
-                    />
-                    {formData.phone && formData.phone.replace(/\D/g, '').length > 0 && formData.phone.replace(/\D/g, '').length < 10 && (
-                      <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" />
-                        Telefone incompleto
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label>CPF/CNPJ</Label>
-                    <Input
-                      value={formData.cpf_cnpj}
-                      onChange={(e) => {
-                        let value = e.target.value.replace(/\D/g, '');
-                        if (value.length > 14) value = value.slice(0, 14);
-                        if (value.length <= 11) {
-                          value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                          value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                          value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-                        } else {
-                          value = value.replace(/^(\d{2})(\d)/, '$1.$2');
-                          value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
-                          value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
-                          value = value.replace(/(\d{4})(\d)/, '$1-$2');
-                        }
-                        setFormData({ ...formData, cpf_cnpj: value });
-                      }}
-                      placeholder="000.000.000-00"
-                      maxLength={18}
-                    />
-                    {formData.cpf_cnpj && (() => {
-                      const digits = formData.cpf_cnpj.replace(/\D/g, '');
-                      if (digits.length > 0 && digits.length < 11) {
-                        return (
-                          <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" />
-                            CPF incompleto
-                          </p>
-                        );
-                      }
-                      if (digits.length > 11 && digits.length < 14) {
-                        return (
-                          <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" />
-                            CNPJ incompleto
-                          </p>
-                        );
-                      }
-                      return null;
-                    })()}
-                  </div>
-                  <div className="col-span-2">
-                    <Label>Chave PIX</Label>
-                    <Input
-                      value={formData.pix_key}
-                      onChange={(e) => setFormData({ ...formData, pix_key: e.target.value })}
-                      placeholder="CPF, CNPJ, Email, Telefone ou Chave Aleatória"
-                    />
-                    {formData.pix_key && (() => {
-                      const validation = validatePixKey(formData.pix_key);
-                      if (validation.type === 'invalid') {
-                        return (
-                          <p className="text-xs text-destructive mt-1 flex items-center gap-1">
-                            <XCircle className="h-3 w-3" />
-                            {validation.message}
-                          </p>
-                        );
-                      }
-                      if (validation.type !== 'empty') {
-                        return (
-                          <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                            <CheckCircle className="h-3 w-3" />
-                            {validation.message}
-                          </p>
-                        );
-                      }
-                      return null;
-                    })()}
-                  </div>
-                </div>
+          
+          <Tabs defaultValue="dados" className="flex-1 flex flex-col overflow-hidden mt-4">
+            <div className="w-full overflow-x-auto pb-2">
+              <TabsList className="w-max justify-start glass mb-2">
+                <TabsTrigger value="dados" className="text-xs sm:text-sm px-2 sm:px-3">Dados</TabsTrigger>
+                <TabsTrigger value="cupons" className="text-xs sm:text-sm px-2 sm:px-3">Cupons</TabsTrigger>
+                <TabsTrigger value="comissao" className="text-xs sm:text-sm px-2 sm:px-3">Comissão Padrão</TabsTrigger>
+                <TabsTrigger value="regras" className="text-xs sm:text-sm px-2 sm:px-3">Regras Específicas</TabsTrigger>
+              </TabsList>
             </div>
-          </div>
-          <DialogFooter>
+            
+            {/* Aba Dados */}
+            <TabsContent value="dados" className="flex-1 overflow-auto mt-2 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <Label>Nome *</Label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Nome completo"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label>Email *</Label>
+                  <Input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="email@exemplo.com"
+                  />
+                </div>
+                <div>
+                  <Label>Telefone</Label>
+                  <Input
+                    value={formData.phone}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/\D/g, '');
+                      if (value.length > 11) value = value.slice(0, 11);
+                      if (value.length > 0) {
+                        value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
+                        value = value.replace(/(\d{5})(\d)/, '$1-$2');
+                      }
+                      setFormData({ ...formData, phone: value });
+                    }}
+                    placeholder="(00) 00000-0000"
+                    maxLength={15}
+                  />
+                  {formData.phone && formData.phone.replace(/\D/g, '').length > 0 && formData.phone.replace(/\D/g, '').length < 10 && (
+                    <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Telefone incompleto
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label>CPF/CNPJ</Label>
+                  <Input
+                    value={formData.cpf_cnpj}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/\D/g, '');
+                      if (value.length > 14) value = value.slice(0, 14);
+                      if (value.length <= 11) {
+                        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+                        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+                      } else {
+                        value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+                        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+                        value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+                        value = value.replace(/(\d{4})(\d)/, '$1-$2');
+                      }
+                      setFormData({ ...formData, cpf_cnpj: value });
+                    }}
+                    placeholder="000.000.000-00"
+                    maxLength={18}
+                  />
+                  {formData.cpf_cnpj && (() => {
+                    const digits = formData.cpf_cnpj.replace(/\D/g, '');
+                    if (digits.length > 0 && digits.length < 11) {
+                      return (
+                        <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          CPF incompleto
+                        </p>
+                      );
+                    }
+                    if (digits.length > 11 && digits.length < 14) {
+                      return (
+                        <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          CNPJ incompleto
+                        </p>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
+                <div className="col-span-2">
+                  <Label>Chave PIX</Label>
+                  <Input
+                    value={formData.pix_key}
+                    onChange={(e) => setFormData({ ...formData, pix_key: e.target.value })}
+                    placeholder="CPF, CNPJ, Email, Telefone ou Chave Aleatória"
+                  />
+                  {formData.pix_key && (() => {
+                    const validation = validatePixKey(formData.pix_key);
+                    if (validation.type === 'invalid') {
+                      return (
+                        <p className="text-xs text-destructive mt-1 flex items-center gap-1">
+                          <XCircle className="h-3 w-3" />
+                          {validation.message}
+                        </p>
+                      );
+                    }
+                    if (validation.type !== 'empty') {
+                      return (
+                        <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3" />
+                          {validation.message}
+                        </p>
+                      );
+                    }
+                    return null;
+                  })()}
+                </div>
+              </div>
+            </TabsContent>
+            
+            {/* Aba Cupons */}
+            <TabsContent value="cupons" className="flex-1 overflow-auto mt-2 space-y-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base font-semibold">Cupons Vinculados</Label>
+                  <Button variant="outline" size="sm" onClick={() => {
+                    setEditingCouponId(null);
+                    setNewCouponData({
+                      code: '',
+                      discount_type: 'percentage',
+                      discount_value: 0,
+                      min_order_value: 0,
+                      max_uses: null,
+                      valid_from: new Date().toISOString().split('T')[0],
+                      valid_until: '',
+                      applies_to: 'all',
+                      category_names: [],
+                      product_ids: [],
+                    });
+                    setCouponDiscountRules([]);
+                    setCouponCategoryRules([]);
+                    setNewCouponDialogOpen(true);
+                  }}>
+                    <Plus className="h-4 w-4 mr-1" />
+                    Novo Cupom
+                  </Button>
+                </div>
+                
+                {formData.coupon_ids.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground border rounded-lg bg-muted/30">
+                    <Tag className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Nenhum cupom vinculado</p>
+                    <p className="text-xs mt-1">Selecione um cupom existente ou crie um novo</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {formData.coupon_ids.map(couponId => {
+                      const coupon = coupons.find(c => c.id === couponId);
+                      if (!coupon) return null;
+                      return (
+                        <div key={couponId} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+                          <div className="flex items-center gap-3">
+                            <Tag className="h-4 w-4 text-primary" />
+                            <div>
+                              <span className="font-mono font-medium">{coupon.code}</span>
+                              <p className="text-xs text-muted-foreground">
+                                {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : formatCurrency(coupon.discount_value)} de desconto
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => setFormData({
+                              ...formData,
+                              coupon_ids: formData.coupon_ids.filter(id => id !== couponId)
+                            })}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+                
+                {availableCoupons.filter(c => !formData.coupon_ids.includes(c.id)).length > 0 && (
+                  <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Cupons Disponíveis</Label>
+                    <div className="max-h-[200px] overflow-y-auto space-y-2 border rounded-lg p-2">
+                      {availableCoupons.filter(c => !formData.coupon_ids.includes(c.id)).map(coupon => (
+                        <div 
+                          key={coupon.id} 
+                          className="flex items-center justify-between p-2 border rounded hover:bg-muted/50 cursor-pointer"
+                          onClick={() => setFormData({
+                            ...formData,
+                            coupon_ids: [...formData.coupon_ids, coupon.id]
+                          })}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Tag className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-mono text-sm">{coupon.code}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : formatCurrency(coupon.discount_value)}
+                            </Badge>
+                          </div>
+                          <Plus className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+            
+            {/* Aba Comissão Padrão */}
+            <TabsContent value="comissao" className="flex-1 overflow-auto mt-2 space-y-4">
+              <Card className="glass-card">
+                <CardContent className="pt-6 space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg">
+                    <div>
+                      <Label className="font-semibold">Comissão Padrão Ativada</Label>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Aplicar comissão automática para produtos sem regra específica
+                      </p>
+                    </div>
+                    <Switch
+                      checked={formData.commission_enabled}
+                      onCheckedChange={(checked) => setFormData({ ...formData, commission_enabled: checked })}
+                    />
+                  </div>
+                  
+                  {formData.commission_enabled && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-4"
+                    >
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label>Tipo de Comissão</Label>
+                          <Select
+                            value={formData.default_commission_type}
+                            onValueChange={(value: 'percentage' | 'fixed') => 
+                              setFormData({ ...formData, default_commission_type: value })
+                            }
+                          >
+                            <SelectTrigger className="glass">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="percentage">
+                                <div className="flex items-center gap-2">
+                                  <Percent className="h-4 w-4" />
+                                  Porcentagem (%)
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="fixed">
+                                <div className="flex items-center gap-2">
+                                  <DollarSign className="h-4 w-4" />
+                                  Valor Fixo (R$)
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Valor</Label>
+                          <div className="relative">
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={formData.default_commission_value || ''}
+                              onChange={(e) => setFormData({ 
+                                ...formData, 
+                                default_commission_value: Number(e.target.value) 
+                              })}
+                              className={`pr-8 glass ${!formData.default_commission_value && formData.commission_enabled ? 'border-destructive' : ''}`}
+                              placeholder="0"
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                              {formData.default_commission_type === 'percentage' ? '%' : 'R$'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-muted/50 rounded-lg border border-border/50">
+                        <p className="text-sm text-muted-foreground">
+                          <strong>Como funciona:</strong> Produtos sem regra de comissão específica receberão automaticamente{' '}
+                          {formData.default_commission_type === 'percentage' 
+                            ? `${formData.default_commission_value || 0}% de comissão`
+                            : formatCurrency(formData.default_commission_value || 0) + ' de comissão'
+                          }.
+                        </p>
+                      </div>
+                    </motion.div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            {/* Aba Regras Específicas */}
+            <TabsContent value="regras" className="flex-1 overflow-auto mt-2 space-y-4">
+              <Card className="glass-card">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Settings className="h-4 w-4 text-primary" />
+                        Regras por Produto
+                      </CardTitle>
+                      <CardDescription className="text-xs mt-1">
+                        Defina comissões específicas para produtos (sobrescreve a comissão padrão)
+                      </CardDescription>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => setProductsModalOpen(true)}>
+                      <Plus className="h-4 w-4 mr-1" />
+                      Selecionar Produtos
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {formData.commission_products.length === 0 ? (
+                    <div className="text-center py-6 text-muted-foreground border rounded-lg border-dashed">
+                      <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">Nenhuma regra específica</p>
+                      <p className="text-xs mt-1">Clique em "Selecionar Produtos" para adicionar</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                      {formData.commission_products.map((productConfig) => {
+                        const product = products.find(p => p.id === productConfig.id);
+                        if (!product) return null;
+                        return (
+                          <div key={productConfig.id} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">{product.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {productConfig.type === 'percentage' 
+                                  ? `${productConfig.value}%` 
+                                  : formatCurrency(productConfig.value)
+                                } de comissão
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Select
+                                value={productConfig.type}
+                                onValueChange={(value: 'percentage' | 'fixed') => {
+                                  setFormData({
+                                    ...formData,
+                                    commission_products: formData.commission_products.map(p =>
+                                      p.id === productConfig.id ? { ...p, type: value } : p
+                                    )
+                                  });
+                                }}
+                              >
+                                <SelectTrigger className="w-[80px] h-8">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="percentage">%</SelectItem>
+                                  <SelectItem value="fixed">R$</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={productConfig.value}
+                                onChange={(e) => {
+                                  setFormData({
+                                    ...formData,
+                                    commission_products: formData.commission_products.map(p =>
+                                      p.id === productConfig.id ? { ...p, value: Number(e.target.value) } : p
+                                    )
+                                  });
+                                }}
+                                className="w-[80px] h-8"
+                              />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive h-8 w-8 p-0"
+                                onClick={() => setFormData({
+                                  ...formData,
+                                  commission_products: formData.commission_products.filter(p => p.id !== productConfig.id)
+                                })}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+          
+          <DialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSubmit}>
+            <Button onClick={handleSubmit} className="bg-gradient-primary">
               {editingAffiliate ? 'Salvar' : 'Cadastrar'}
             </Button>
           </DialogFooter>
