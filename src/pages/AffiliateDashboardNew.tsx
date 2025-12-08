@@ -509,23 +509,23 @@ export default function AffiliateDashboardNew() {
     const displayStats = showFilteredData ? filteredStats : affiliateStats;
     
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 sm:gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           whileHover={{ scale: 1.02 }}
         >
-          <Card className="glass border-border/50 overflow-hidden relative">
+          <Card className="glass border-border/50 overflow-hidden relative h-full">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent pointer-events-none" />
-            <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
+            <CardContent className="p-2.5 sm:p-4 md:pt-6 md:px-6 relative">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 shadow-[0_0_20px_hsl(217_91%_60%/0.4)]">
-                  <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 shadow-[0_0_20px_hsl(217_91%_60%/0.4)]">
+                  <Building2 className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Lojas</p>
-                  <p className="text-lg sm:text-2xl font-bold gradient-text">{affiliateStats?.total_stores || 0}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Lojas</p>
+                  <p className="text-base sm:text-lg md:text-2xl font-bold gradient-text">{affiliateStats?.total_stores || 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -538,16 +538,16 @@ export default function AffiliateDashboardNew() {
           transition={{ delay: 0.2 }}
           whileHover={{ scale: 1.02 }}
         >
-          <Card className="glass border-border/50 overflow-hidden relative">
+          <Card className="glass border-border/50 overflow-hidden relative h-full">
             <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />
-            <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
+            <CardContent className="p-2.5 sm:p-4 md:pt-6 md:px-6 relative">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-500 to-emerald-600 shadow-[0_0_20px_hsl(142_76%_36%/0.4)]">
-                  <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-green-500 to-emerald-600 shadow-[0_0_20px_hsl(142_76%_36%/0.4)]">
+                  <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Vendas</p>
-                  <p className="text-base sm:text-2xl font-bold text-green-600 truncate">{formatCurrency(displayStats?.total_sales || 0)}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Vendas</p>
+                  <p className="text-sm sm:text-base md:text-2xl font-bold text-green-600 truncate">{formatCurrency(displayStats?.total_sales || 0)}</p>
                 </div>
               </div>
             </CardContent>
@@ -560,16 +560,16 @@ export default function AffiliateDashboardNew() {
           transition={{ delay: 0.3 }}
           whileHover={{ scale: 1.02 }}
         >
-          <Card className="glass border-border/50 overflow-hidden relative">
+          <Card className="glass border-border/50 overflow-hidden relative h-full">
             <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent pointer-events-none" />
-            <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
+            <CardContent className="p-2.5 sm:p-4 md:pt-6 md:px-6 relative">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-yellow-500 to-amber-600 shadow-[0_0_20px_hsl(45_93%_47%/0.4)]">
-                  <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-yellow-500 to-amber-600 shadow-[0_0_20px_hsl(45_93%_47%/0.4)]">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Pendente</p>
-                  <p className="text-base sm:text-2xl font-bold text-yellow-600 truncate">{formatCurrency(displayStats?.pending_commission || 0)}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Pendente</p>
+                  <p className="text-sm sm:text-base md:text-2xl font-bold text-yellow-600 truncate">{formatCurrency(displayStats?.pending_commission || 0)}</p>
                 </div>
               </div>
             </CardContent>
@@ -582,16 +582,16 @@ export default function AffiliateDashboardNew() {
           transition={{ delay: 0.4 }}
           whileHover={{ scale: 1.02 }}
         >
-          <Card className="glass border-border/50 overflow-hidden relative">
+          <Card className="glass border-border/50 overflow-hidden relative h-full">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-            <CardContent className="p-3 sm:pt-6 sm:px-6 relative">
+            <CardContent className="p-2.5 sm:p-4 md:pt-6 md:px-6 relative">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-primary to-primary-glow shadow-glow">
-                  <Wallet className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-primary to-primary-glow shadow-glow">
+                  <Wallet className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Total Ganhos</p>
-                  <p className="text-base sm:text-2xl font-bold gradient-text truncate">{formatCurrency(displayStats?.total_commission || 0)}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Ganhos</p>
+                  <p className="text-sm sm:text-base md:text-2xl font-bold gradient-text truncate">{formatCurrency(displayStats?.total_commission || 0)}</p>
                 </div>
               </div>
             </CardContent>
@@ -606,19 +606,38 @@ export default function AffiliateDashboardNew() {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 bg-muted/30 rounded-lg border border-border/50"
+      className="flex flex-col gap-2 p-3 sm:p-4 bg-muted/30 rounded-lg border border-border/50"
     >
-      <div className="flex items-center gap-2">
-        <Filter className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium">Filtros</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <span className="text-xs sm:text-sm font-medium">Filtros</span>
+          {(periodFilter !== 'all' || storeFilter !== 'all') && (
+            <Badge variant="secondary" className="text-[10px] sm:text-xs px-1.5 py-0.5">
+              {filteredAffiliateOrders.length}
+            </Badge>
+          )}
+        </div>
+        
+        {/* Clear Filters - moved to top right */}
         {(periodFilter !== 'all' || storeFilter !== 'all') && (
-          <Badge variant="secondary" className="text-xs">
-            {filteredAffiliateOrders.length} pedido(s)
-          </Badge>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setPeriodFilter('all');
+              setStoreFilter('all');
+              setCustomDateRange({ from: undefined, to: undefined });
+            }}
+            className="h-7 px-2 text-xs text-muted-foreground"
+          >
+            <X className="h-3 w-3 mr-1" />
+            Limpar
+          </Button>
         )}
       </div>
       
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5 sm:gap-2">
         {/* Period Filter */}
         <Select value={periodFilter} onValueChange={(value) => {
           setPeriodFilter(value);
@@ -626,7 +645,7 @@ export default function AffiliateDashboardNew() {
             setShowCustomDatePicker(true);
           }
         }}>
-          <SelectTrigger className="w-[140px] h-9">
+          <SelectTrigger className="w-[110px] sm:w-[140px] h-8 text-xs sm:text-sm">
             <SelectValue placeholder="Período" />
           </SelectTrigger>
           <SelectContent>
@@ -642,7 +661,7 @@ export default function AffiliateDashboardNew() {
 
         {/* Store Filter */}
         <Select value={storeFilter} onValueChange={setStoreFilter}>
-          <SelectTrigger className="w-[160px] h-9">
+          <SelectTrigger className="w-[110px] sm:w-[160px] h-8 text-xs sm:text-sm">
             <SelectValue placeholder="Loja" />
           </SelectTrigger>
           <SelectContent>
@@ -661,27 +680,13 @@ export default function AffiliateDashboardNew() {
             variant="outline"
             size="sm"
             onClick={() => setShowCustomDatePicker(true)}
-            className="h-9 gap-2"
+            className="h-8 px-2 gap-1 text-xs"
           >
-            <CalendarIcon className="h-4 w-4" />
-            {format(customDateRange.from, 'dd/MM/yy', { locale: ptBR })} - {format(customDateRange.to, 'dd/MM/yy', { locale: ptBR })}
-          </Button>
-        )}
-
-        {/* Clear Filters */}
-        {(periodFilter !== 'all' || storeFilter !== 'all') && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setPeriodFilter('all');
-              setStoreFilter('all');
-              setCustomDateRange({ from: undefined, to: undefined });
-            }}
-            className="h-9 text-muted-foreground"
-          >
-            <X className="h-4 w-4 mr-1" />
-            Limpar
+            <CalendarIcon className="h-3 w-3" />
+            <span className="hidden xs:inline">{format(customDateRange.from, 'dd/MM', { locale: ptBR })}</span>
+            <span className="xs:hidden">{format(customDateRange.from, 'dd/MM', { locale: ptBR })}</span>
+            <span>-</span>
+            <span>{format(customDateRange.to, 'dd/MM', { locale: ptBR })}</span>
           </Button>
         )}
       </div>
@@ -691,7 +696,7 @@ export default function AffiliateDashboardNew() {
   // Home Tab Content
   const renderHomeContent = () => (
     <motion.div 
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
@@ -708,36 +713,36 @@ export default function AffiliateDashboardNew() {
         transition={{ delay: 0.5 }}
       >
         <Card className="glass border-border/50 overflow-hidden">
-          <CardHeader className="p-4 sm:p-6">
-            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow">
-                <Home className="h-4 w-4 text-white" />
+          <CardHeader className="p-3 sm:p-6">
+            <CardTitle className="flex items-center gap-2 text-sm sm:text-lg">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-glow">
+                <Home className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
               </div>
-              <span className="gradient-text">Bem-vindo, {affiliateUser?.name?.split(' ')[0]}!</span>
+              <span className="gradient-text truncate">Bem-vindo, {affiliateUser?.name?.split(' ')[0]}!</span>
             </CardTitle>
-            <CardDescription className="text-xs sm:text-sm">
-              Resumo rápido do seu desempenho como afiliado
+            <CardDescription className="text-[10px] sm:text-sm">
+              Resumo rápido do seu desempenho
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0 space-y-4">
-            <div className="grid grid-cols-2 gap-2 sm:gap-4">
-              <div className="p-3 sm:p-4 bg-muted/50 rounded-lg border border-border/50">
-                <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1">
-                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="text-xs sm:text-sm">Total de Pedidos</span>
+          <CardContent className="p-3 sm:p-6 pt-0 sm:pt-0 space-y-3 sm:space-y-4">
+            <div className="grid grid-cols-2 gap-1.5 sm:gap-4">
+              <div className="p-2.5 sm:p-4 bg-muted/50 rounded-lg border border-border/50">
+                <div className="flex items-center gap-1 sm:gap-2 text-muted-foreground mb-1">
+                  <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="text-[10px] sm:text-sm truncate">Pedidos</span>
                 </div>
-                <p className="text-xl sm:text-2xl font-bold">
+                <p className="text-lg sm:text-2xl font-bold">
                   {(periodFilter !== 'all' || storeFilter !== 'all') 
                     ? filteredStats.total_orders 
                     : (affiliateStats?.total_orders || 0)}
                 </p>
               </div>
-              <div className="p-3 sm:p-4 bg-muted/50 rounded-lg border border-border/50">
-                <div className="flex items-center gap-1.5 sm:gap-2 text-muted-foreground mb-1">
-                  <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="text-xs sm:text-sm">Total Pago</span>
+              <div className="p-2.5 sm:p-4 bg-muted/50 rounded-lg border border-border/50">
+                <div className="flex items-center gap-1 sm:gap-2 text-muted-foreground mb-1">
+                  <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="text-[10px] sm:text-sm truncate">Pago</span>
                 </div>
-                <p className="text-lg sm:text-2xl font-bold text-green-600 truncate">
+                <p className="text-base sm:text-2xl font-bold text-green-600 truncate">
                   {formatCurrency((periodFilter !== 'all' || storeFilter !== 'all') 
                     ? filteredStats.paid_commission 
                     : (affiliateStats?.paid_commission || 0))}
