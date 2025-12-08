@@ -864,8 +864,8 @@ export default function AffiliateDashboardNew() {
 
       {/* Modal de Detalhes da Loja */}
       <Dialog open={!!selectedStore} onOpenChange={(open) => !open && setSelectedStore(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto glass">
-          <DialogHeader>
+        <DialogContent className="max-w-3xl h-[90vh] flex flex-col glass">
+          <DialogHeader className="flex-shrink-0">
             <div className="flex items-center gap-4">
               {selectedStore?.store_logo ? (
                 <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
@@ -906,8 +906,8 @@ export default function AffiliateDashboardNew() {
           </DialogHeader>
           
           {selectedStore && (
-            <Tabs defaultValue="overview" className="mt-4">
-              <TabsList className="grid w-full grid-cols-3">
+            <Tabs defaultValue="overview" className="mt-4 flex-1 flex flex-col min-h-0">
+              <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
                 <TabsTrigger value="overview" className="flex items-center gap-2">
                   <BarChart3 className="h-4 w-4" />
                   <span className="hidden sm:inline">Resumo</span>
@@ -923,7 +923,7 @@ export default function AffiliateDashboardNew() {
               </TabsList>
               
               {/* Tab Resumo */}
-              <TabsContent value="overview" className="space-y-6 mt-4">
+              <TabsContent value="overview" className="space-y-6 mt-4 flex-1 overflow-y-auto">
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-3">
                   <motion.div 
@@ -982,7 +982,7 @@ export default function AffiliateDashboardNew() {
                 </motion.div>
               </TabsContent>
 
-              <TabsContent value="products" className="mt-4">
+              <TabsContent value="products" className="mt-4 flex-1 overflow-y-auto">
                 <AffiliateStoreProductsTab
                   storeId={selectedStore.store_id}
                   storeSlug={selectedStore.store_slug}
@@ -994,7 +994,7 @@ export default function AffiliateDashboardNew() {
               </TabsContent>
 
               {/* Tab Cupons */}
-              <TabsContent value="coupons" className="space-y-3 mt-4">
+              <TabsContent value="coupons" className="space-y-3 mt-4 flex-1 overflow-y-auto">
                 <div className="flex items-center gap-2 mb-4">
                   <Ticket className="h-5 w-5 text-primary" />
                   <span className="font-medium">
