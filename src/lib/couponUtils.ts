@@ -121,12 +121,34 @@ export const findItemDiscountRule = (
   item: CartItem,
   discountRules: CouponDiscountRule[]
 ): CouponDiscountRule | null => {
+  // Log detalhado de comparação de IDs
+  const productRules = discountRules.filter(r => r.rule_type === 'product');
+  const categoryRules = discountRules.filter(r => r.rule_type === 'category');
+  
+  console.log('🔎 [findItemDiscountRule] Comparando IDs:', {
+    itemProductId: item.productId,
+    itemProductName: item.productName,
+    itemCategory: (item as any).category,
+    productRulesCount: productRules.length,
+    productRuleIds: productRules.map(r => r.product_id),
+    categoryRulesCount: categoryRules.length,
+    categoryRuleNames: categoryRules.map(r => r.category_name)
+  });
+
   // 1. Verificar regra específica do produto
   const productRule = discountRules.find(
     rule => rule.rule_type === 'product' && rule.product_id === item.productId
   );
+  
   if (productRule) {
+    console.log('✅ [findItemDiscountRule] MATCH encontrado! Regra de produto:', {
+      productId: productRule.product_id,
+      discountType: productRule.discount_type,
+      discountValue: productRule.discount_value
+    });
     return productRule;
+  } else {
+    console.log('❌ [findItemDiscountRule] Nenhuma regra de PRODUTO encontrada para:', item.productId);
   }
 
   // 2. Verificar regra de categoria
@@ -135,11 +157,20 @@ export const findItemDiscountRule = (
     rule => rule.rule_type === 'category' && 
     rule.category_name?.toLowerCase().trim() === itemCategory
   );
+  
   if (categoryRule) {
+    console.log('✅ [findItemDiscountRule] MATCH encontrado! Regra de categoria:', {
+      categoryName: categoryRule.category_name,
+      discountType: categoryRule.discount_type,
+      discountValue: categoryRule.discount_value
+    });
     return categoryRule;
+  } else if (itemCategory) {
+    console.log('❌ [findItemDiscountRule] Nenhuma regra de CATEGORIA encontrada para:', itemCategory);
   }
 
   // 3. Sem regra específica - usar desconto padrão
+  console.log('📌 [findItemDiscountRule] Sem regra específica, usar desconto padrão');
   return null;
 };
 
