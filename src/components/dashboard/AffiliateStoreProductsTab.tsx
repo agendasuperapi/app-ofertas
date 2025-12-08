@@ -9,6 +9,7 @@ import { ScrollableTable } from '@/components/ui/scrollable-table';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription } from '@/components/ui/responsive-dialog';
 import { toast } from 'sonner';
 import { Loader2, Copy, ExternalLink, Package, Search, Target, Calculator, Ban, Link, ImageIcon } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 interface Product {
   id: string;
   name: string;
@@ -46,6 +47,7 @@ export function AffiliateStoreProductsTab({
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const isMobile = useIsMobile();
   useEffect(() => {
     fetchData();
   }, [storeId, storeAffiliateId]);
@@ -163,88 +165,230 @@ export function AffiliateStoreProductsTab({
         <Input placeholder="Buscar por nome, código interno ou externo..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
       </div>
 
-      {/* Products Table */}
-      <ScrollableTable>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[50px]">Foto</TableHead>
-              <TableHead>Produto</TableHead>
-              <TableHead className="text-right">Preço</TableHead>
-              <TableHead className="text-center">Comissão</TableHead>
-              <TableHead className="text-right">Você Ganha</TableHead>
-              <TableHead className="text-center">Cupons Itens</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredProducts.length === 0 ? <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  Nenhum produto encontrado
-                </TableCell>
-              </TableRow> : filteredProducts.map(product => {
-            const commission = getProductCommission(product.id);
-            const commissionAmount = calculateCommission(product);
-            const productPrice = product.promotional_price || product.price;
-            return <TableRow key={product.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setSelectedProduct(product)}>
-                    <TableCell>
-                      {product.image_url ? <img src={product.image_url} alt={product.name} className="w-10 h-10 rounded-lg object-cover" /> : <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
-                          <ImageIcon className="h-4 w-4 text-muted-foreground" />
-                        </div>}
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium text-sm truncate max-w-[200px]">{product.name}</p>
-                        <p className="text-xs text-muted-foreground">{product.category}</p>
-                        <div className="flex gap-2 mt-1 flex-wrap">
-                          {product.short_id && <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
-                              #{product.short_id}
-                            </span>}
-                          {product.external_code && <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
-                              Ext: {product.external_code}
-                            </span>}
+      {/* Products - Mobile Cards or Desktop Table */}
+      {isMobile ? (
+        <div className="space-y-3">
+          {filteredProducts.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Nenhum produto encontrado
+            </div>
+          ) : (
+            filteredProducts.map(product => {
+              const commission = getProductCommission(product.id);
+              const commissionAmount = calculateCommission(product);
+              return (
+                <div
+                  key={product.id}
+                  className="bg-card border rounded-xl p-4 space-y-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => setSelectedProduct(product)}
+                >
+                  {/* Header: Foto + Nome */}
+                  <div className="flex gap-3">
+                    {product.image_url ? (
+                      <img
+                        src={product.image_url}
+                        alt={product.name}
+                        className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                        <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm line-clamp-2">{product.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{product.category}</p>
+                      <div className="flex gap-2 mt-1 flex-wrap">
+                        {product.short_id && (
+                          <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                            #{product.short_id}
+                          </span>
+                        )}
+                        {product.external_code && (
+                          <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                            Ext: {product.external_code}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Grid: Preço e Comissão */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-muted/50 rounded-lg p-2">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Preço</p>
+                      {product.promotional_price ? (
+                        <div>
+                          <p className="font-semibold text-green-600">{formatCurrency(product.promotional_price)}</p>
+                          <p className="text-xs text-muted-foreground line-through">{formatCurrency(product.price)}</p>
                         </div>
+                      ) : (
+                        <p className="font-semibold">{formatCurrency(product.price)}</p>
+                      )}
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-2">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Comissão</p>
+                      <div className="mt-1">
+                        {commission.source === 'specific' && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-purple-500/10 text-purple-600 border-purple-500/20">
+                            <Target className="h-3 w-3 mr-1" />
+                            {commission.type === 'percentage' ? `${commission.value}%` : formatCurrency(commission.value)}
+                          </Badge>
+                        )}
+                        {commission.source === 'default' && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-600 border-blue-500/20">
+                            <Calculator className="h-3 w-3 mr-1" />
+                            {commission.type === 'percentage' ? `${commission.value}%` : formatCurrency(commission.value)}
+                          </Badge>
+                        )}
+                        {commission.source === 'none' && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-gray-500/10 text-gray-500 border-gray-500/20">
+                            <Ban className="h-3 w-3 mr-1" />
+                            Sem
+                          </Badge>
+                        )}
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div>
-                        {product.promotional_price ? <>
-                            <p className="font-medium text-green-600">{formatCurrency(product.promotional_price)}</p>
-                            <p className="text-xs text-muted-foreground line-through">{formatCurrency(product.price)}</p>
-                          </> : <p className="font-medium">{formatCurrency(product.price)}</p>}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {commission.source === 'specific' && <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-purple-500/10 text-purple-600 border-purple-500/20">
-                          <Target className="h-3 w-3 mr-1" />
-                          {commission.type === 'percentage' ? `${commission.value}%` : formatCurrency(commission.value)}
-                        </Badge>}
-                      {commission.source === 'default' && <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-600 border-blue-500/20">
-                          <Calculator className="h-3 w-3 mr-1" />
-                          {commission.type === 'percentage' ? `${commission.value}%` : formatCurrency(commission.value)}
-                        </Badge>}
-                      {commission.source === 'none' && <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-gray-500/10 text-gray-500 border-gray-500/20">
-                          <Ban className="h-3 w-3 mr-1" />
-                          Sem
-                        </Badge>}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <span className="font-bold text-green-600">
-                        {formatCurrency(commissionAmount)}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Button variant="ghost" size="sm" onClick={e => {
-                  e.stopPropagation();
-                  copyToClipboard(getProductLink(product), 'Link do produto');
-                }}>
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>;
-          })}
-          </TableBody>
-        </Table>
-      </ScrollableTable>
+                    </div>
+                  </div>
+
+                  {/* Você Ganha - destaque */}
+                  <div className="bg-green-500/10 rounded-lg p-3 text-center">
+                    <span className="text-xs text-muted-foreground">Você Ganha: </span>
+                    <span className="font-bold text-lg text-green-600">{formatCurrency(commissionAmount)}</span>
+                  </div>
+
+                  {/* Botão Copiar Link */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copyToClipboard(getProductLink(product), 'Link do produto');
+                    }}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copiar Link do Produto
+                  </Button>
+                </div>
+              );
+            })
+          )}
+        </div>
+      ) : (
+        <ScrollableTable>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[50px]">Foto</TableHead>
+                <TableHead>Produto</TableHead>
+                <TableHead className="text-right">Preço</TableHead>
+                <TableHead className="text-center">Comissão</TableHead>
+                <TableHead className="text-right">Você Ganha</TableHead>
+                <TableHead className="text-center">Copiar</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredProducts.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    Nenhum produto encontrado
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredProducts.map(product => {
+                  const commission = getProductCommission(product.id);
+                  const commissionAmount = calculateCommission(product);
+                  return (
+                    <TableRow
+                      key={product.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => setSelectedProduct(product)}
+                    >
+                      <TableCell>
+                        {product.image_url ? (
+                          <img src={product.image_url} alt={product.name} className="w-10 h-10 rounded-lg object-cover" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                            <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium text-sm truncate max-w-[200px]">{product.name}</p>
+                          <p className="text-xs text-muted-foreground">{product.category}</p>
+                          <div className="flex gap-2 mt-1 flex-wrap">
+                            {product.short_id && (
+                              <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                                #{product.short_id}
+                              </span>
+                            )}
+                            {product.external_code && (
+                              <span className="text-[10px] text-muted-foreground font-mono bg-muted px-1.5 py-0.5 rounded">
+                                Ext: {product.external_code}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div>
+                          {product.promotional_price ? (
+                            <>
+                              <p className="font-medium text-green-600">{formatCurrency(product.promotional_price)}</p>
+                              <p className="text-xs text-muted-foreground line-through">{formatCurrency(product.price)}</p>
+                            </>
+                          ) : (
+                            <p className="font-medium">{formatCurrency(product.price)}</p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {commission.source === 'specific' && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-purple-500/10 text-purple-600 border-purple-500/20">
+                            <Target className="h-3 w-3 mr-1" />
+                            {commission.type === 'percentage' ? `${commission.value}%` : formatCurrency(commission.value)}
+                          </Badge>
+                        )}
+                        {commission.source === 'default' && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-600 border-blue-500/20">
+                            <Calculator className="h-3 w-3 mr-1" />
+                            {commission.type === 'percentage' ? `${commission.value}%` : formatCurrency(commission.value)}
+                          </Badge>
+                        )}
+                        {commission.source === 'none' && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-gray-500/10 text-gray-500 border-gray-500/20">
+                            <Ban className="h-3 w-3 mr-1" />
+                            Sem
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span className="font-bold text-green-600">
+                          {formatCurrency(commissionAmount)}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={e => {
+                            e.stopPropagation();
+                            copyToClipboard(getProductLink(product), 'Link do produto');
+                          }}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
+        </ScrollableTable>
+      )}
 
       {/* Product Details Modal */}
       <ResponsiveDialog open={!!selectedProduct} onOpenChange={open => !open && setSelectedProduct(null)}>
