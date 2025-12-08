@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import * as bcrypt from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
+import { hashSync, compareSync, genSaltSync } from "https://deno.land/x/bcrypt@v0.4.1/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,21 +10,10 @@ const corsHeaders = {
 // Bcrypt cost factor (12 is recommended for production)
 const BCRYPT_ROUNDS = 12;
 
-// Secure password hashing using bcrypt
-async function hashPassword(password: string): Promise<string> {
-  const salt = await bcrypt.genSalt(BCRYPT_ROUNDS);
-  return await bcrypt.hash(password, salt);
-}
-
-// Verify password against bcrypt hash
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  // Handle legacy SHA-256 hashes (64 hex chars) for backward compatibility
-  if (hash.length === 64 && /^[a-f0-9]+$/.test(hash)) {
-    const legacyHash = await legacyHashPassword(password);
-    return legacyHash === hash;
-  }
-  // bcrypt hash verification
-  return await bcrypt.compare(password, hash);
+// Secure password hashing using bcrypt (synchronous - no Workers needed)
+function hashPassword(password: string): string {
+  const salt = genSaltSync(BCRYPT_ROUNDS);
+  return hashSync(password, salt);
 }
 
 // Legacy SHA-256 hash for backward compatibility with existing passwords
@@ -34,6 +23,22 @@ async function legacyHashPassword(password: string): Promise<string> {
   const hashBuffer = await crypto.subtle.digest("SHA-256", data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Verify password against bcrypt hash (handles legacy SHA-256 too)
+async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  // Handle legacy SHA-256 hashes (64 hex chars) for backward compatibility
+  if (hash.length === 64 && /^[a-f0-9]+$/.test(hash)) {
+    const legacyHash = await legacyHashPassword(password);
+    return legacyHash === hash;
+  }
+  // bcrypt hash verification (synchronous - no Workers needed)
+  try {
+    return compareSync(password, hash);
+  } catch (error) {
+    console.error("[affiliate-auth] bcrypt compare error:", error);
+    return false;
+  }
 }
 
 function generateToken(): string {
@@ -167,7 +172,7 @@ serve(async (req) => {
         }
 
         const affiliateAccount = storeAffiliate.affiliate_accounts;
-        const passwordHash = await hashPassword(password);
+        const passwordHash = hashPassword(password);
 
         // Atualizar conta do afiliado
         const { error: updateAccountError } = await supabase
@@ -286,7 +291,7 @@ serve(async (req) => {
 
         // If using legacy hash, upgrade to bcrypt
         if (account.password_hash.length === 64 && /^[a-f0-9]+$/.test(account.password_hash)) {
-          const newHash = await hashPassword(password);
+          const newHash = hashPassword(password);
           await supabase
             .from("affiliate_accounts")
             .update({ password_hash: newHash, updated_at: new Date().toISOString() })
@@ -480,7 +485,7 @@ serve(async (req) => {
           );
         }
 
-        const passwordHash = await hashPassword(newPassword);
+        const passwordHash = hashPassword(newPassword);
 
         await supabase
           .from("affiliate_accounts")
@@ -629,7 +634,7 @@ serve(async (req) => {
         }
 
         // Atualizar senha com bcrypt
-        const newPasswordHash = await hashPassword(new_password);
+        const newPasswordHash = hashPassword(new_password);
         await supabase
           .from("affiliate_accounts")
           .update({
