@@ -17,6 +17,7 @@ interface Product {
   price: number;
   promotional_price: number | null;
   image_url: string | null;
+  resolved_image_url?: string | null;
   short_id: string | null;
   external_code: string | null;
   is_available: boolean;
@@ -54,17 +55,34 @@ export function AffiliateStoreProductsTab({
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch products
+      // Fetch products with images
       const {
         data: productsData,
         error: productsError
-      } = await supabase.from('products').select('id, name, category, price, promotional_price, image_url, short_id, external_code, is_available').eq('store_id', storeId).eq('is_available', true).is('deleted_at', null).order('category', {
+      } = await supabase.from('products').select(`
+        id, name, category, price, promotional_price, image_url, short_id, external_code, is_available,
+        product_images!left(image_url, is_primary)
+      `).eq('store_id', storeId).eq('is_available', true).is('deleted_at', null).order('category', {
         ascending: true
       }).order('name', {
         ascending: true
       });
       if (productsError) throw productsError;
-      setProducts(productsData || []);
+      
+      // Resolve images - prioritize primary image from product_images
+      const productsWithResolvedImages = (productsData || []).map(product => {
+        const productImages = product.product_images as Array<{ image_url: string; is_primary: boolean }> | null;
+        const primaryImage = productImages?.find(img => img.is_primary);
+        const firstImage = productImages?.[0];
+        const resolved_image_url = primaryImage?.image_url || firstImage?.image_url || product.image_url;
+        return {
+          ...product,
+          resolved_image_url,
+          product_images: undefined
+        } as Product;
+      });
+      
+      setProducts(productsWithResolvedImages);
 
       // Fetch commission rules for this store affiliate
       // We need to get affiliate_id from store_affiliates first
@@ -184,9 +202,9 @@ export function AffiliateStoreProductsTab({
                 >
                   {/* Header: Foto + Nome */}
                   <div className="flex gap-3">
-                    {product.image_url ? (
+                    {(product.resolved_image_url || product.image_url) ? (
                       <img
-                        src={product.image_url}
+                        src={product.resolved_image_url || product.image_url || ''}
                         alt={product.name}
                         className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
                       />
@@ -306,8 +324,8 @@ export function AffiliateStoreProductsTab({
                       onClick={() => setSelectedProduct(product)}
                     >
                       <TableCell>
-                        {product.image_url ? (
-                          <img src={product.image_url} alt={product.name} className="w-10 h-10 rounded-lg object-cover" />
+                        {(product.resolved_image_url || product.image_url) ? (
+                          <img src={product.resolved_image_url || product.image_url || ''} alt={product.name} className="w-10 h-10 rounded-lg object-cover" />
                         ) : (
                           <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
                             <ImageIcon className="h-4 w-4 text-muted-foreground" />
@@ -412,8 +430,8 @@ export function AffiliateStoreProductsTab({
         }} className="space-y-6 mt-4">
               {/* Product Image & Info */}
               <div className="flex gap-4">
-                {selectedProduct.image_url ? <div className="w-24 h-24 rounded-xl overflow-hidden ring-2 ring-primary/20 flex-shrink-0">
-                    <img src={selectedProduct.image_url} alt={selectedProduct.name} className="w-full h-full object-cover" />
+                {(selectedProduct.resolved_image_url || selectedProduct.image_url) ? <div className="w-24 h-24 rounded-xl overflow-hidden ring-2 ring-primary/20 flex-shrink-0">
+                    <img src={selectedProduct.resolved_image_url || selectedProduct.image_url || ''} alt={selectedProduct.name} className="w-full h-full object-cover" />
                   </div> : <div className="w-24 h-24 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
                     <Package className="h-8 w-8 text-muted-foreground" />
                   </div>}
