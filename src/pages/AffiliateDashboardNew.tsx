@@ -41,7 +41,8 @@ import {
   Home,
   ExternalLink,
   ChevronRight,
-  Grid3X3
+  Grid3X3,
+  X,
 } from 'lucide-react';
 
 export default function AffiliateDashboardNew() {
@@ -866,6 +867,13 @@ export default function AffiliateDashboardNew() {
       {/* Modal de Detalhes da Loja */}
       <Drawer open={!!selectedStore} onOpenChange={(open) => !open && setSelectedStore(null)}>
         <DrawerContent className="h-[88vh] flex flex-col glass">
+          <button
+            onClick={() => setSelectedStore(null)}
+            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10"
+          >
+            <X className="h-5 w-5" />
+            <span className="sr-only">Fechar</span>
+          </button>
           <DrawerHeader className="flex-shrink-0">
             <div className="flex items-center gap-4">
               {selectedStore?.store_logo ? (
