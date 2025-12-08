@@ -1269,6 +1269,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                   </Button>
                 </div>
                 
+                {/* Cupons Vinculados */}
                 {formData.coupon_ids.length === 0 ? (
                   <div className="text-center py-6 text-muted-foreground border rounded-lg bg-muted/30">
                     <Tag className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -1277,37 +1278,99 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                   </div>
                 ) : (
                   <div className="space-y-2">
+                    <Label className="text-sm text-muted-foreground">Cupons Vinculados</Label>
                     {formData.coupon_ids.map(couponId => {
                       const coupon = coupons.find(c => c.id === couponId);
                       if (!coupon) return null;
                       return (
-                        <div key={couponId} className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+                        <div key={couponId} className="flex items-center justify-between p-3 border rounded-lg border-primary/50 bg-primary/5">
                           <div className="flex items-center gap-3">
-                            <Tag className="h-4 w-4 text-primary" />
+                            <Checkbox
+                              checked={true}
+                              onCheckedChange={() => {
+                                setFormData({
+                                  ...formData,
+                                  coupon_ids: formData.coupon_ids.filter(id => id !== couponId)
+                                });
+                              }}
+                            />
                             <div>
-                              <span className="font-mono font-medium">{coupon.code}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-medium">{coupon.code}</span>
+                                <Badge 
+                                  variant={coupon.is_active ? "default" : "destructive"} 
+                                  className={coupon.is_active ? "bg-green-600 text-white text-xs" : "text-xs"}
+                                >
+                                  {coupon.is_active ? "Ativo" : "Inativo"}
+                                </Badge>
+                              </div>
                               <p className="text-xs text-muted-foreground">
                                 {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : formatCurrency(coupon.discount_value)} de desconto
                               </p>
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => setFormData({
-                              ...formData,
-                              coupon_ids: formData.coupon_ids.filter(id => id !== couponId)
-                            })}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              onClick={async () => {
+                                setEditingCouponId(coupon.id);
+                                setNewCouponData({
+                                  code: coupon.code,
+                                  discount_type: coupon.discount_type,
+                                  discount_value: coupon.discount_value,
+                                  min_order_value: coupon.min_order_value || 0,
+                                  max_uses: coupon.max_uses || null,
+                                  valid_from: coupon.valid_from || new Date().toISOString().split('T')[0],
+                                  valid_until: coupon.valid_until || '',
+                                  applies_to: (coupon.applies_to as 'all' | 'category' | 'product') || 'all',
+                                  category_names: coupon.category_names || [],
+                                  product_ids: coupon.product_ids || [],
+                                });
+                                // Carregar regras de desconto do banco
+                                const { data: rules } = await supabase
+                                  .from('coupon_discount_rules')
+                                  .select('*')
+                                  .eq('coupon_id', coupon.id);
+                                if (rules && rules.length > 0) {
+                                  const productRulesArray: { product_id: string; discount_type: 'percentage' | 'fixed'; discount_value: number }[] = [];
+                                  const categoryRulesArray: { category_name: string; discount_type: 'percentage' | 'fixed'; discount_value: number }[] = [];
+                                  rules.forEach(rule => {
+                                    if (rule.rule_type === 'product' && rule.product_id) {
+                                      productRulesArray.push({
+                                        product_id: rule.product_id,
+                                        discount_type: rule.discount_type as 'percentage' | 'fixed',
+                                        discount_value: rule.discount_value
+                                      });
+                                    } else if (rule.rule_type === 'category' && rule.category_name) {
+                                      categoryRulesArray.push({
+                                        category_name: rule.category_name,
+                                        discount_type: rule.discount_type as 'percentage' | 'fixed',
+                                        discount_value: rule.discount_value
+                                      });
+                                    }
+                                  });
+                                  setCouponDiscountRules(productRulesArray);
+                                  setCouponCategoryRules(categoryRulesArray);
+                                } else {
+                                  setCouponDiscountRules([]);
+                                  setCouponCategoryRules([]);
+                                }
+                                setNewCouponDialogOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Badge variant="default" className="bg-primary text-primary-foreground">Vinculado</Badge>
+                          </div>
                         </div>
                       );
                     })}
                   </div>
                 )}
                 
+                {/* Cupons Disponíveis */}
                 {availableCoupons.filter(c => !formData.coupon_ids.includes(c.id)).length > 0 && (
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Cupons Disponíveis</Label>
@@ -1315,20 +1378,88 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                       {availableCoupons.filter(c => !formData.coupon_ids.includes(c.id)).map(coupon => (
                         <div 
                           key={coupon.id} 
-                          className="flex items-center justify-between p-2 border rounded hover:bg-muted/50 cursor-pointer"
-                          onClick={() => setFormData({
-                            ...formData,
-                            coupon_ids: [...formData.coupon_ids, coupon.id]
-                          })}
+                          className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50"
                         >
-                          <div className="flex items-center gap-2">
-                            <Tag className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-mono text-sm">{coupon.code}</span>
-                            <Badge variant="outline" className="text-xs">
-                              {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : formatCurrency(coupon.discount_value)}
-                            </Badge>
+                          <div className="flex items-center gap-3">
+                            <Checkbox
+                              checked={false}
+                              onCheckedChange={() => {
+                                setFormData({
+                                  ...formData,
+                                  coupon_ids: [...formData.coupon_ids, coupon.id]
+                                });
+                              }}
+                            />
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono font-medium">{coupon.code}</span>
+                                <Badge 
+                                  variant={coupon.is_active ? "default" : "destructive"} 
+                                  className={coupon.is_active ? "bg-green-600 text-white text-xs" : "text-xs"}
+                                >
+                                  {coupon.is_active ? "Ativo" : "Inativo"}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : formatCurrency(coupon.discount_value)} de desconto
+                              </p>
+                            </div>
                           </div>
-                          <Plus className="h-4 w-4 text-muted-foreground" />
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-8 w-8"
+                              onClick={async () => {
+                                setEditingCouponId(coupon.id);
+                                setNewCouponData({
+                                  code: coupon.code,
+                                  discount_type: coupon.discount_type,
+                                  discount_value: coupon.discount_value,
+                                  min_order_value: coupon.min_order_value || 0,
+                                  max_uses: coupon.max_uses || null,
+                                  valid_from: coupon.valid_from || new Date().toISOString().split('T')[0],
+                                  valid_until: coupon.valid_until || '',
+                                  applies_to: (coupon.applies_to as 'all' | 'category' | 'product') || 'all',
+                                  category_names: coupon.category_names || [],
+                                  product_ids: coupon.product_ids || [],
+                                });
+                                // Carregar regras de desconto do banco
+                                const { data: rules } = await supabase
+                                  .from('coupon_discount_rules')
+                                  .select('*')
+                                  .eq('coupon_id', coupon.id);
+                                if (rules && rules.length > 0) {
+                                  const productRulesArray: { product_id: string; discount_type: 'percentage' | 'fixed'; discount_value: number }[] = [];
+                                  const categoryRulesArray: { category_name: string; discount_type: 'percentage' | 'fixed'; discount_value: number }[] = [];
+                                  rules.forEach(rule => {
+                                    if (rule.rule_type === 'product' && rule.product_id) {
+                                      productRulesArray.push({
+                                        product_id: rule.product_id,
+                                        discount_type: rule.discount_type as 'percentage' | 'fixed',
+                                        discount_value: rule.discount_value
+                                      });
+                                    } else if (rule.rule_type === 'category' && rule.category_name) {
+                                      categoryRulesArray.push({
+                                        category_name: rule.category_name,
+                                        discount_type: rule.discount_type as 'percentage' | 'fixed',
+                                        discount_value: rule.discount_value
+                                      });
+                                    }
+                                  });
+                                  setCouponDiscountRules(productRulesArray);
+                                  setCouponCategoryRules(categoryRulesArray);
+                                } else {
+                                  setCouponDiscountRules([]);
+                                  setCouponCategoryRules([]);
+                                }
+                                setNewCouponDialogOpen(true);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Badge variant="outline">Não vinculado</Badge>
+                          </div>
                         </div>
                       ))}
                     </div>
