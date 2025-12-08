@@ -22,7 +22,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
-import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter } from 'lucide-react';
+import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter, ChevronDown } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 // Cores para gráfico de pizza
 const COLORS = ['hsl(var(--primary))', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
@@ -241,9 +242,8 @@ export default function AffiliateDashboardNew() {
 
   // Renderiza o conteúdo das abas do modal da loja
   const renderStoreModalContent = (store: typeof affiliateStores[0]) => <Tabs defaultValue="overview" className="mt-4 flex-1 flex flex-col min-h-0 px-4">
-      <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
+      <TabsList className="grid w-full grid-cols-2 flex-shrink-0">
         <TabsTrigger value="overview">Resumo</TabsTrigger>
-        <TabsTrigger value="products">Produtos</TabsTrigger>
         <TabsTrigger value="coupons">Cupons</TabsTrigger>
       </TabsList>
       
@@ -315,10 +315,6 @@ export default function AffiliateDashboardNew() {
         </motion.div>
       </TabsContent>
 
-      <TabsContent value="products" className="mt-4 flex-1 overflow-y-auto">
-        <AffiliateStoreProductsTab storeId={store.store_id} storeSlug={store.store_slug} storeAffiliateId={store.store_affiliate_id} defaultCommissionType={store.commission_type} defaultCommissionValue={store.commission_value} couponCode={store.coupon_code || store.coupons?.[0]?.code || ''} />
-      </TabsContent>
-
       {/* Tab Cupons */}
       <TabsContent value="coupons" className="space-y-3 mt-4 flex-1 overflow-y-auto">
         <div className="mb-4">
@@ -329,7 +325,7 @@ export default function AffiliateDashboardNew() {
             </span>
           </div>
           <p className="text-sm text-muted-foreground mt-1 ml-7">
-            O link do cupom abaixo exibe todos os itens da loja, com o seu cupom.
+            Expanda "Ver Produtos" para ver os produtos elegíveis de cada cupom.
           </p>
         </div>
         
@@ -390,6 +386,32 @@ export default function AffiliateDashboardNew() {
                     </Button>
                   </div>
                 </div>
+
+                {/* Produtos do Cupom - Expandir/Colapsar */}
+                <Collapsible className="pt-3 border-t border-primary/10">
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" className="w-full justify-between px-0 hover:bg-transparent">
+                      <span className="flex items-center gap-2 text-sm font-medium">
+                        <Package className="h-4 w-4 text-primary" />
+                        Ver Produtos
+                      </span>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 [&[data-state=open]>svg]:rotate-180" />
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="pt-3">
+                    <AffiliateStoreProductsTab 
+                      storeId={store.store_id} 
+                      storeSlug={store.store_slug} 
+                      storeAffiliateId={store.store_affiliate_id} 
+                      defaultCommissionType={store.commission_type} 
+                      defaultCommissionValue={store.commission_value} 
+                      couponCode={coupon.code}
+                      couponScope={coupon.applies_to as 'all' | 'category' | 'product' | 'categories' | 'products'}
+                      couponCategoryNames={coupon.category_names || []}
+                      couponProductIds={coupon.product_ids || []}
+                    />
+                  </CollapsibleContent>
+                </Collapsible>
               </motion.div>)}
             
             <p className="text-xs text-muted-foreground text-center py-2">

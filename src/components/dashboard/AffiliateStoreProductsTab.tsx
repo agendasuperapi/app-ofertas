@@ -34,6 +34,10 @@ interface AffiliateStoreProductsTabProps {
   defaultCommissionType: string;
   defaultCommissionValue: number;
   couponCode: string;
+  // Props para filtrar produtos conforme escopo do cupom
+  couponScope?: 'all' | 'category' | 'product' | 'categories' | 'products';
+  couponCategoryNames?: string[];
+  couponProductIds?: string[];
 }
 export function AffiliateStoreProductsTab({
   storeId,
@@ -41,7 +45,10 @@ export function AffiliateStoreProductsTab({
   storeAffiliateId,
   defaultCommissionType,
   defaultCommissionValue,
-  couponCode
+  couponCode,
+  couponScope = 'all',
+  couponCategoryNames = [],
+  couponProductIds = []
 }: AffiliateStoreProductsTabProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [commissionRules, setCommissionRules] = useState<CommissionRule[]>([]);
@@ -157,7 +164,21 @@ export function AffiliateStoreProductsTab({
     if (!product.short_id) return `https://ofertas.app/${storeSlug}`;
     return `https://ofertas.app/p/${product.short_id}?cupom=${couponCode}`;
   };
-  const filteredProducts = products.filter(product => {
+  // Filtrar produtos pelo escopo do cupom
+  const scopeFilteredProducts = products.filter(product => {
+    const normalizedScope = couponScope === 'categories' ? 'category' : couponScope === 'products' ? 'product' : couponScope;
+    
+    if (normalizedScope === 'all' || !normalizedScope) return true;
+    if (normalizedScope === 'category') {
+      return couponCategoryNames.includes(product.category);
+    }
+    if (normalizedScope === 'product') {
+      return couponProductIds.includes(product.id);
+    }
+    return true;
+  });
+
+  const filteredProducts = scopeFilteredProducts.filter(product => {
     const search = searchTerm.toLowerCase();
     return product.name.toLowerCase().includes(search) || product.category.toLowerCase().includes(search) || product.short_id && product.short_id.toLowerCase().includes(search) || product.external_code && product.external_code.toLowerCase().includes(search);
   });
