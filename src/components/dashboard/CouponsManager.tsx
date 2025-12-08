@@ -445,18 +445,18 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                     Novo Cupom
                   </Button>
                 </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px] glass max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogContent className="w-[95vw] max-w-[600px] glass max-h-[90vh] overflow-hidden flex flex-col">
             <form onSubmit={handleSubmit} className="flex flex-col h-full">
               <DialogHeader>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
-                    <Ticket className="h-5 w-5 text-white" />
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow shrink-0">
+                    <Ticket className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                   </div>
                   <div>
-                    <DialogTitle className="text-xl gradient-text">
+                    <DialogTitle className="text-base sm:text-xl gradient-text">
                       {editingCoupon ? 'Editar Cupom' : 'Criar Novo Cupom'}
                     </DialogTitle>
-                    <DialogDescription>
+                    <DialogDescription className="text-xs sm:text-sm">
                       Configure os detalhes do cupom de desconto
                     </DialogDescription>
                   </div>
@@ -465,8 +465,8 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
 
               <Tabs defaultValue="geral" className="flex-1 overflow-hidden flex flex-col mt-4">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="geral">Configurações Gerais</TabsTrigger>
-                  <TabsTrigger value="regras">Regras Específicas</TabsTrigger>
+                  <TabsTrigger value="geral" className="text-xs sm:text-sm">Configurações</TabsTrigger>
+                  <TabsTrigger value="regras" className="text-xs sm:text-sm">Regras Específicas</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="geral" className="flex-1 overflow-auto mt-4">
@@ -486,9 +486,9 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                         <p className="text-xs text-muted-foreground">Apenas letras maiúsculas e números</p>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                          <Label htmlFor="discount_type">Tipo de Desconto Padrão *</Label>
+                          <Label htmlFor="discount_type" className="text-xs sm:text-sm">Tipo de Desconto Padrão *</Label>
                           <Select
                             value={formData.discount_type}
                             onValueChange={(value: DiscountType) => setFormData({ ...formData, discount_type: value })}
@@ -504,7 +504,7 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                         </div>
 
                         <div className="grid gap-2">
-                          <Label htmlFor="discount_value">
+                          <Label htmlFor="discount_value" className="text-xs sm:text-sm">
                             Valor Padrão {formData.discount_type === 'percentage' ? '(%)' : '(R$)'} *
                           </Label>
                           <Input
@@ -519,9 +519,9 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                          <Label htmlFor="min_order_value">Pedido Mínimo (R$)</Label>
+                          <Label htmlFor="min_order_value" className="text-xs sm:text-sm">Pedido Mínimo (R$)</Label>
                           <Input
                             id="min_order_value"
                             type="number"
@@ -533,7 +533,7 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                         </div>
 
                         <div className="grid gap-2">
-                          <Label htmlFor="max_uses">Usos Máximos</Label>
+                          <Label htmlFor="max_uses" className="text-xs sm:text-sm">Usos Máximos</Label>
                           <Input
                             id="max_uses"
                             type="number"
@@ -544,9 +544,9 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="grid gap-2">
-                          <Label htmlFor="valid_from">Válido de *</Label>
+                          <Label htmlFor="valid_from" className="text-xs sm:text-sm">Válido de *</Label>
                           <Input
                             id="valid_from"
                             type="date"
@@ -557,7 +557,7 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                         </div>
 
                         <div className="grid gap-2">
-                          <Label htmlFor="valid_until">Válido até</Label>
+                          <Label htmlFor="valid_until" className="text-xs sm:text-sm">Válido até</Label>
                           <Input
                             id="valid_until"
                             type="date"
@@ -732,44 +732,46 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                 </TabsContent>
 
                 <TabsContent value="regras" className="flex-1 overflow-hidden mt-4">
-                  <ScrollArea className="h-[calc(60vh-120px)] pr-4">
+                  <div className="h-[calc(60vh-120px)] overflow-auto pr-2">
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <Settings className="h-4 w-4 text-primary" />
-                          <Label className="font-medium">Regras Específicas de Desconto</Label>
+                          <Settings className="h-4 w-4 text-primary shrink-0" />
+                          <Label className="font-medium text-xs sm:text-sm">Regras Específicas de Desconto</Label>
                         </div>
                         <div className="flex gap-2">
                           <Button 
                             type="button" 
                             size="sm"
                             variant="outline"
+                            className="text-xs px-2 sm:px-3"
                             onClick={() => setCouponCategoryRulesModalOpen(true)}
                           >
-                            <Plus className="h-4 w-4 mr-1" />
-                            Por Categoria
+                            <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                            Categoria
                           </Button>
                           <Button 
                             type="button" 
                             size="sm"
                             variant="outline"
+                            className="text-xs px-2 sm:px-3"
                             onClick={() => setCouponRulesModalOpen(true)}
                           >
-                            <Plus className="h-4 w-4 mr-1" />
-                            Por Produto
+                            <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                            Produto
                           </Button>
                         </div>
                       </div>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">
                         Defina descontos por categoria (novos produtos herdam automaticamente) ou por produto específico.
                       </p>
                       
                       {couponCategoryRules.length === 0 && couponDiscountRules.length === 0 ? (
-                        <div className="text-center py-8 text-muted-foreground text-sm border rounded-md bg-muted/30">
+                        <div className="text-center py-6 sm:py-8 text-muted-foreground text-xs sm:text-sm border rounded-md bg-muted/30">
                           Nenhuma regra específica. O desconto padrão será aplicado a todos os produtos.
                         </div>
                       ) : (
-                        <ScrollArea className="max-h-64 border rounded-md">
+                        <div className="max-h-64 overflow-auto border rounded-md">
                           <div className="divide-y">
                             {/* Regras por Categoria */}
                             {couponCategoryRules.map((rule) => {
@@ -777,31 +779,31 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                               const productsInCategory = products.filter(p => p.category === rule.category_name);
                               
                               return (
-                                <div key={`cat-${rule.category_name}`} className="flex items-center gap-2 p-2 bg-primary/5">
+                                <div key={`cat-${rule.category_name}`} className="flex flex-col sm:flex-row sm:items-center gap-2 p-2 bg-primary/5">
                                   <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2">
-                                      <Badge variant="secondary" className="text-xs shrink-0">Categoria</Badge>
-                                      <span className="text-sm font-medium truncate">{rule.category_name}</span>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <Badge variant="secondary" className="text-[10px] sm:text-xs shrink-0">Categoria</Badge>
+                                      <span className="text-xs sm:text-sm font-medium break-words">{rule.category_name}</span>
                                     </div>
-                                    <span className="text-[10px] text-muted-foreground">
-                                      {productsInCategory.length} produto(s) • Novos produtos herdam automaticamente
+                                    <span className="text-[9px] sm:text-[10px] text-muted-foreground">
+                                      {productsInCategory.length} produto(s) • Novos produtos herdam
                                     </span>
                                   </div>
                                   
                                   {isEditing ? (
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                                       <Input
                                         type="number"
                                         value={editingCouponRuleValue}
                                         onChange={(e) => setEditingCouponRuleValue(Number(e.target.value))}
-                                        className="w-16 h-7 text-sm"
+                                        className="w-14 sm:w-16 h-7 text-xs sm:text-sm"
                                         min={0}
                                       />
                                       <Select
                                         value={editingCouponRuleType}
                                         onValueChange={(v) => setEditingCouponRuleType(v as 'percentage' | 'fixed')}
                                       >
-                                        <SelectTrigger className="w-14 h-7">
+                                        <SelectTrigger className="w-12 sm:w-14 h-7 text-xs">
                                           <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -837,8 +839,8 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                                       </Button>
                                     </div>
                                   ) : (
-                                    <>
-                                      <Badge variant="outline" className="shrink-0">
+                                    <div className="flex items-center gap-1 sm:gap-2 ml-auto sm:ml-0">
+                                      <Badge variant="outline" className="shrink-0 text-[10px] sm:text-xs">
                                         {rule.discount_type === 'percentage' 
                                           ? `${rule.discount_value}%` 
                                           : `R$ ${rule.discount_value.toFixed(2)}`}
@@ -847,7 +849,7 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                        className="h-6 w-6 sm:h-7 sm:w-7 text-muted-foreground hover:text-primary"
                                         onClick={() => {
                                           setEditingCouponRuleCategoryName(rule.category_name);
                                           setEditingCouponRuleValue(rule.discount_value);
@@ -860,12 +862,12 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        className="h-7 w-7 text-destructive"
+                                        className="h-6 w-6 sm:h-7 sm:w-7 text-destructive"
                                         onClick={() => setCouponCategoryRules(rules => rules.filter(r => r.category_name !== rule.category_name))}
                                       >
                                         <Trash2 className="h-3 w-3" />
                                       </Button>
-                                    </>
+                                    </div>
                                   )}
                                 </div>
                               );
@@ -877,21 +879,21 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                               const isEditing = editingCouponRuleProductId === rule.product_id;
                               
                               return (
-                                <div key={rule.product_id} className="flex items-center gap-2 p-2">
+                                <div key={rule.product_id} className="flex flex-col sm:flex-row sm:items-center gap-2 p-2">
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 flex-wrap">
-                                      <Badge variant="outline" className="text-xs shrink-0">Produto</Badge>
-                                      <span className="text-sm break-words">{product?.name || 'Produto'}</span>
+                                      <Badge variant="outline" className="text-[10px] sm:text-xs shrink-0">Produto</Badge>
+                                      <span className="text-xs sm:text-sm break-words">{product?.name || 'Produto'}</span>
                                     </div>
                                     {(product?.short_id || product?.external_code) && (
-                                      <div className="flex items-center gap-2 mt-0.5">
+                                      <div className="flex items-center gap-1 sm:gap-2 mt-0.5 flex-wrap">
                                         {product?.short_id && (
-                                          <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                                          <span className="text-[9px] sm:text-[10px] text-muted-foreground bg-muted px-1 sm:px-1.5 py-0.5 rounded">
                                             #{product.short_id}
                                           </span>
                                         )}
                                         {product?.external_code && (
-                                          <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                                          <span className="text-[9px] sm:text-[10px] text-muted-foreground bg-muted px-1 sm:px-1.5 py-0.5 rounded">
                                             Ext: {product.external_code}
                                           </span>
                                         )}
@@ -900,19 +902,19 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                                   </div>
                                   
                                   {isEditing ? (
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                                       <Input
                                         type="number"
                                         value={editingCouponRuleValue}
                                         onChange={(e) => setEditingCouponRuleValue(Number(e.target.value))}
-                                        className="w-16 h-7 text-sm"
+                                        className="w-14 sm:w-16 h-7 text-xs sm:text-sm"
                                         min={0}
                                       />
                                       <Select
                                         value={editingCouponRuleType}
                                         onValueChange={(v) => setEditingCouponRuleType(v as 'percentage' | 'fixed')}
                                       >
-                                        <SelectTrigger className="w-14 h-7">
+                                        <SelectTrigger className="w-12 sm:w-14 h-7 text-xs">
                                           <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -948,8 +950,8 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                                       </Button>
                                     </div>
                                   ) : (
-                                    <>
-                                      <Badge variant="outline" className="shrink-0">
+                                    <div className="flex items-center gap-1 sm:gap-2 ml-auto sm:ml-0">
+                                      <Badge variant="outline" className="shrink-0 text-[10px] sm:text-xs">
                                         {rule.discount_type === 'percentage' 
                                           ? `${rule.discount_value}%` 
                                           : `R$ ${rule.discount_value.toFixed(2)}`}
@@ -958,7 +960,7 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        className="h-7 w-7 text-muted-foreground hover:text-primary"
+                                        className="h-6 w-6 sm:h-7 sm:w-7 text-muted-foreground hover:text-primary"
                                         onClick={() => {
                                           setEditingCouponRuleProductId(rule.product_id);
                                           setEditingCouponRuleValue(rule.discount_value);
@@ -971,21 +973,21 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                                         type="button"
                                         variant="ghost"
                                         size="icon"
-                                        className="h-7 w-7 text-destructive"
+                                        className="h-6 w-6 sm:h-7 sm:w-7 text-destructive"
                                         onClick={() => setCouponDiscountRules(rules => rules.filter(r => r.product_id !== rule.product_id))}
                                       >
                                         <Trash2 className="h-3 w-3" />
                                       </Button>
-                                    </>
+                                    </div>
                                   )}
                                 </div>
                               );
                             })}
                           </div>
-                        </ScrollArea>
+                        </div>
                       )}
                     </div>
-                  </ScrollArea>
+                  </div>
                 </TabsContent>
               </Tabs>
 
