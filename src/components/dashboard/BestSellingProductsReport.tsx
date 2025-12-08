@@ -6,13 +6,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ScrollableTable } from "@/components/ui/scrollable-table";
-import { Package, Download, FileText, FileSpreadsheet } from "lucide-react";
+import { Package, Download, FileText, FileSpreadsheet, ChevronLeft, ChevronRight } from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { generateBestSellersReport } from "@/lib/pdfReports";
+import { useIsMobile } from "@/hooks/use-mobile";
 import * as XLSX from 'xlsx';
 
 interface ProductReport {
@@ -34,6 +35,7 @@ export const BestSellingProductsReport = ({ storeId, storeName = "Minha Loja", d
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const isMobile = useIsMobile();
 
   const fetchProducts = async () => {
     try {
@@ -235,32 +237,26 @@ export const BestSellingProductsReport = ({ storeId, storeName = "Minha Loja", d
           <span className="hidden sm:inline">PDF</span>
         </Button>
       </CardHeader>
-        <CardContent className="p-0 sm:p-6">
-          <ScrollableTable>
-            <Table className="min-w-[700px]">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Posição</TableHead>
-                  <TableHead>Código Externo</TableHead>
-                  <TableHead>Produto</TableHead>
-                  <TableHead className="text-right">Quantidade Vendida</TableHead>
-                  <TableHead className="text-right">Pedidos</TableHead>
-                  <TableHead className="text-right">Receita</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {products.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center text-muted-foreground">
-                      Nenhum produto vendido no período selecionado
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedProducts.map((product, index) => {
-                    const globalIndex = (currentPage - 1) * itemsPerPage + index;
-                    return (
-                    <TableRow key={index}>
-                      <TableCell>
+        <CardContent className="p-3 sm:p-6">
+          {/* Mobile Cards View */}
+          {isMobile ? (
+            <div className="space-y-3">
+              {products.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Nenhum produto vendido no período selecionado
+                </div>
+              ) : (
+                paginatedProducts.map((product, index) => {
+                  const globalIndex = (currentPage - 1) * itemsPerPage + index;
+                  return (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="border rounded-lg p-4 space-y-3"
+                    >
+                      <div className="flex items-center justify-between">
                         <Badge
                           variant={globalIndex < 3 ? "default" : "secondary"}
                           className={cn(
@@ -271,60 +267,114 @@ export const BestSellingProductsReport = ({ storeId, storeName = "Minha Loja", d
                         >
                           #{globalIndex + 1}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {product.external_code || '-'}
-                      </TableCell>
-                      <TableCell className="font-medium">{product.product_name}</TableCell>
-                      <TableCell className="text-right">
+                        <span className="font-medium text-green-600">
+                          R$ {product.revenue.toFixed(2)}
+                        </span>
+                      </div>
+                      
+                      <div>
+                        <p className="font-medium text-sm">{product.product_name}</p>
+                        {product.external_code && (
+                          <p className="text-xs text-muted-foreground">Cód: {product.external_code}</p>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-sm">
                         <Badge variant="outline">{product.quantity_sold} unidades</Badge>
-                      </TableCell>
-                      <TableCell className="text-right text-muted-foreground">
-                        {product.orders_count}
-                      </TableCell>
-                      <TableCell className="text-right font-medium text-green-600">
-                        R$ {product.revenue.toFixed(2)}
+                        <span className="text-muted-foreground">{product.orders_count} pedidos</span>
+                      </div>
+                    </motion.div>
+                  );
+                })
+              )}
+            </div>
+          ) : (
+            /* Desktop Table View */
+            <ScrollableTable>
+              <Table className="min-w-[700px]">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Posição</TableHead>
+                    <TableHead>Código Externo</TableHead>
+                    <TableHead>Produto</TableHead>
+                    <TableHead className="text-right">Quantidade Vendida</TableHead>
+                    <TableHead className="text-right">Pedidos</TableHead>
+                    <TableHead className="text-right">Receita</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {products.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground">
+                        Nenhum produto vendido no período selecionado
                       </TableCell>
                     </TableRow>
-                  );
-                  })
-                )}
-              </TableBody>
+                  ) : (
+                    paginatedProducts.map((product, index) => {
+                      const globalIndex = (currentPage - 1) * itemsPerPage + index;
+                      return (
+                        <TableRow key={index}>
+                          <TableCell>
+                            <Badge
+                              variant={globalIndex < 3 ? "default" : "secondary"}
+                              className={cn(
+                                globalIndex === 0 && "bg-yellow-500 hover:bg-yellow-600",
+                                globalIndex === 1 && "bg-gray-400 hover:bg-gray-500",
+                                globalIndex === 2 && "bg-orange-600 hover:bg-orange-700"
+                              )}
+                            >
+                              #{globalIndex + 1}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {product.external_code || '-'}
+                          </TableCell>
+                          <TableCell className="font-medium">{product.product_name}</TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant="outline">{product.quantity_sold} unidades</Badge>
+                          </TableCell>
+                          <TableCell className="text-right text-muted-foreground">
+                            {product.orders_count}
+                          </TableCell>
+                          <TableCell className="text-right font-medium text-green-600">
+                            R$ {product.revenue.toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
               </Table>
             </ScrollableTable>
+          )}
 
           {/* Paginação */}
           {totalPages > 1 && (
-            <div className="mt-4">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                    />
-                  </PaginationItem>
-                  
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                    <PaginationItem key={page}>
-                      <PaginationLink
-                        onClick={() => setCurrentPage(page)}
-                        isActive={currentPage === page}
-                        className="cursor-pointer"
-                      >
-                        {page}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-
-                  <PaginationItem>
-                    <PaginationNext 
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
+            <div className="flex items-center justify-between border-t pt-4 mt-4">
+              <p className="text-xs text-muted-foreground hidden sm:block">
+                Mostrando {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, products.length)} de {products.length}
+              </p>
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-sm font-medium px-2">
+                  {currentPage} / {totalPages}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
