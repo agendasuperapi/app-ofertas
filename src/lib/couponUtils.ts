@@ -6,6 +6,16 @@ export interface CouponScope {
   productIds: string[];
 }
 
+export interface CouponDiscountRule {
+  id: string;
+  coupon_id: string;
+  rule_type: 'product' | 'category';
+  product_id?: string | null;
+  category_name?: string | null;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+}
+
 /**
  * Calcula o subtotal dos itens elegíveis baseado no escopo do cupom
  */
@@ -104,7 +114,38 @@ export const isItemEligible = (
 };
 
 /**
+ * Busca a regra de desconto específica para um item
+ * Hierarquia: regra do produto > regra da categoria > desconto padrão
+ */
+export const findItemDiscountRule = (
+  item: CartItem,
+  discountRules: CouponDiscountRule[]
+): CouponDiscountRule | null => {
+  // 1. Verificar regra específica do produto
+  const productRule = discountRules.find(
+    rule => rule.rule_type === 'product' && rule.product_id === item.productId
+  );
+  if (productRule) {
+    return productRule;
+  }
+
+  // 2. Verificar regra de categoria
+  const itemCategory = ((item as any).category || '').toLowerCase().trim();
+  const categoryRule = discountRules.find(
+    rule => rule.rule_type === 'category' && 
+    rule.category_name?.toLowerCase().trim() === itemCategory
+  );
+  if (categoryRule) {
+    return categoryRule;
+  }
+
+  // 3. Sem regra específica - usar desconto padrão
+  return null;
+};
+
+/**
  * Calcula o desconto para um item específico do carrinho
+ * Suporta regras de desconto personalizadas (coupon_discount_rules)
  */
 export const calculateItemDiscount = (
   item: CartItem,
@@ -114,9 +155,10 @@ export const calculateItemDiscount = (
   appliesTo: 'all' | 'category' | 'product',
   categoryNames: string[],
   productIds: string[],
-  allItems: CartItem[]
-): { isEligible: boolean; discount: number } => {
-  // Verificar se o item é elegível
+  allItems: CartItem[],
+  discountRules?: CouponDiscountRule[]
+): { isEligible: boolean; discount: number; usedRule?: CouponDiscountRule } => {
+  // Verificar se o item é elegível baseado no escopo do cupom
   const isEligible = isItemEligible(item, appliesTo, categoryNames, productIds);
   
   if (!isEligible) {
@@ -125,18 +167,47 @@ export const calculateItemDiscount = (
   
   const itemSubtotal = calculateItemSubtotal(item);
   
+  // Verificar se existe uma regra específica para este item
+  const specificRule = discountRules ? findItemDiscountRule(item, discountRules) : null;
+  
+  if (specificRule) {
+    // Usar a regra específica
+    if (specificRule.discount_type === 'percentage') {
+      const discount = (itemSubtotal * specificRule.discount_value) / 100;
+      return { isEligible: true, discount, usedRule: specificRule };
+    } else {
+      // Para valor fixo em regra específica, aplicar proporcional
+      const eligibleItems = allItems.filter(i => 
+        isItemEligible(i, appliesTo, categoryNames, productIds) &&
+        findItemDiscountRule(i, discountRules || [])?.id === specificRule.id
+      );
+      const totalEligibleSubtotal = eligibleItems.reduce((sum, i) => 
+        sum + calculateItemSubtotal(i), 0
+      );
+      
+      if (totalEligibleSubtotal <= 0) {
+        return { isEligible: true, discount: 0, usedRule: specificRule };
+      }
+      
+      const proportionalDiscount = (itemSubtotal / totalEligibleSubtotal) * Math.min(specificRule.discount_value, totalEligibleSubtotal);
+      return { isEligible: true, discount: proportionalDiscount, usedRule: specificRule };
+    }
+  }
+  
+  // Sem regra específica - usar desconto padrão do cupom
   // Para porcentagem: aplicar % diretamente ao subtotal do item
   if (discountType === 'percentage') {
     const discount = (itemSubtotal * discountValue) / 100;
     return { isEligible: true, discount };
   }
   
-  // Para valor fixo: distribuir proporcionalmente entre itens elegíveis
-  const eligibleItems = allItems.filter(i => 
-    isItemEligible(i, appliesTo, categoryNames, productIds)
+  // Para valor fixo: distribuir proporcionalmente entre itens elegíveis sem regras específicas
+  const eligibleItemsWithoutRules = allItems.filter(i => 
+    isItemEligible(i, appliesTo, categoryNames, productIds) &&
+    (!discountRules || !findItemDiscountRule(i, discountRules))
   );
   
-  const totalEligibleSubtotal = eligibleItems.reduce((sum, i) => 
+  const totalEligibleSubtotal = eligibleItemsWithoutRules.reduce((sum, i) => 
     sum + calculateItemSubtotal(i), 0
   );
   
@@ -148,4 +219,37 @@ export const calculateItemDiscount = (
   const proportionalDiscount = (itemSubtotal / totalEligibleSubtotal) * Math.min(discountValue, totalEligibleSubtotal);
   
   return { isEligible: true, discount: proportionalDiscount };
+};
+
+/**
+ * Calcula o desconto total considerando regras personalizadas
+ */
+export const calculateTotalDiscountWithRules = (
+  items: CartItem[],
+  scope: CouponScope,
+  defaultDiscountType: 'percentage' | 'fixed',
+  defaultDiscountValue: number,
+  discountRules: CouponDiscountRule[]
+): number => {
+  let totalDiscount = 0;
+  
+  items.forEach(item => {
+    const result = calculateItemDiscount(
+      item,
+      0, // totalDiscount não usado quando há regras
+      defaultDiscountType,
+      defaultDiscountValue,
+      scope.appliesTo,
+      scope.categoryNames,
+      scope.productIds,
+      items,
+      discountRules
+    );
+    
+    if (result.isEligible) {
+      totalDiscount += result.discount;
+    }
+  });
+  
+  return totalDiscount;
 };

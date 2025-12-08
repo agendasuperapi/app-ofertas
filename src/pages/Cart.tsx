@@ -306,7 +306,8 @@ export default function Cart() {
             result.product_ids,
             result.discount_type as 'percentage' | 'fixed',
             result.discount_value,
-            result.has_no_eligible_items
+            result.has_no_eligible_items,
+            result.discount_rules
           );
           setCouponInput("");
           
@@ -327,7 +328,8 @@ export default function Cart() {
             result.product_ids,
             result.discount_type as 'percentage' | 'fixed',
             result.discount_value,
-            true
+            true,
+            result.discount_rules
           );
           setCouponInput("");
           localStorage.removeItem(couponKey);
@@ -403,7 +405,8 @@ export default function Cart() {
               result.product_ids,
               result.discount_type as 'percentage' | 'fixed',
               result.discount_value,
-              result.has_no_eligible_items
+              result.has_no_eligible_items,
+              result.discount_rules
             );
             
             if (result.discount_amount > 0 && discountChanged) {
@@ -458,7 +461,8 @@ export default function Cart() {
           result.product_ids,
           result.discount_type as 'percentage' | 'fixed',
           result.discount_value,
-          result.has_no_eligible_items
+          result.has_no_eligible_items,
+          result.discount_rules
         );
         setCouponInput("");
         
@@ -1088,7 +1092,8 @@ export default function Cart() {
                             cart.couponAppliesTo || 'all',
                             cart.couponCategoryNames || [],
                             cart.couponProductIds || [],
-                            cart.items
+                            cart.items,
+                            cart.couponDiscountRules
                           );
                           
                           // Se não é elegível, mostrar badge cinza
@@ -1111,13 +1116,18 @@ export default function Cart() {
                             );
                           }
                           
+                          // Verificar se tem regra personalizada para mostrar % correto
+                          const usedRule = itemDiscountInfo.usedRule;
+                          const discountType = usedRule ? usedRule.discount_type : cart.couponDiscountType;
+                          const discountValue = usedRule ? usedRule.discount_value : cart.couponDiscountValue;
+                          
                           // Desconto normal
                           return (
                             <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 mb-2 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md w-fit">
                               <Tag className="w-3 h-3" />
                               <span className="font-medium">
-                                -{cart.couponDiscountType === 'percentage' ? `${cart.couponDiscountValue}%` : `R$ ${itemDiscountInfo.discount.toFixed(2)}`}
-                                {cart.couponDiscountType === 'percentage' && (
+                                -{discountType === 'percentage' ? `${discountValue}%` : `R$ ${itemDiscountInfo.discount.toFixed(2)}`}
+                                {discountType === 'percentage' && (
                                   <span className="text-muted-foreground ml-1">
                                     (R$ {itemDiscountInfo.discount.toFixed(2)})
                                   </span>
