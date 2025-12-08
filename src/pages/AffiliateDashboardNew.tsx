@@ -130,6 +130,215 @@ export default function AffiliateDashboardNew() {
     setOrderModalItems([]);
   };
 
+  // Renderiza o conteúdo das abas do modal da loja
+  const renderStoreModalContent = (store: typeof affiliateStores[0]) => (
+    <Tabs defaultValue="overview" className="mt-4 flex-1 flex flex-col min-h-0 px-4">
+      <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
+        <TabsTrigger value="overview" className="flex items-center gap-2">
+          <BarChart3 className="h-4 w-4" />
+          <span className="hidden sm:inline">Resumo</span>
+        </TabsTrigger>
+        <TabsTrigger value="products" className="flex items-center gap-2">
+          <Grid3X3 className="h-4 w-4" />
+          <span className="hidden sm:inline">Produtos</span>
+        </TabsTrigger>
+        <TabsTrigger value="coupons" className="flex items-center gap-2">
+          <Ticket className="h-4 w-4" />
+          <span className="hidden sm:inline">Cupons</span>
+        </TabsTrigger>
+      </TabsList>
+      
+      {/* Tab Resumo */}
+      <TabsContent value="overview" className="space-y-6 mt-4 flex-1 overflow-y-auto">
+        {/* Stats */}
+        <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 sm:gap-3">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="p-3 sm:p-4 bg-muted/50 rounded-lg border border-border/50 text-center"
+          >
+            <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-muted-foreground mb-1" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Total Vendas</p>
+            <p className="font-bold text-sm sm:text-lg">{formatCurrency(store.total_sales)}</p>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="p-3 sm:p-4 bg-green-500/10 rounded-lg border border-green-500/20 text-center"
+          >
+            <Wallet className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-green-600 mb-1" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Ganhos</p>
+            <p className="font-bold text-sm sm:text-lg text-green-600">{formatCurrency(store.total_commission)}</p>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="p-3 sm:p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center"
+          >
+            <Clock className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-yellow-600 mb-1" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
+            <p className="font-bold text-sm sm:text-lg text-yellow-600">{formatCurrency(store.pending_commission)}</p>
+          </motion.div>
+        </div>
+
+        {/* Commission Config */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="p-4 bg-primary/5 rounded-lg border border-primary/20"
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <BarChart3 className="h-4 w-4 text-primary" />
+            <span className="text-sm font-medium">Configuração de Comissão</span>
+          </div>
+          <p className="text-2xl font-bold gradient-text">
+            {store.commission_type === 'percentage' 
+              ? `${store.commission_value}%`
+              : formatCurrency(store.commission_value)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {store.commission_type === 'percentage' 
+              ? 'Percentual sobre cada venda'
+              : 'Valor fixo por venda'}
+          </p>
+        </motion.div>
+      </TabsContent>
+
+      <TabsContent value="products" className="mt-4 flex-1 overflow-y-auto">
+        <AffiliateStoreProductsTab
+          storeId={store.store_id}
+          storeSlug={store.store_slug}
+          storeAffiliateId={store.store_affiliate_id}
+          defaultCommissionType={store.commission_type}
+          defaultCommissionValue={store.commission_value}
+          couponCode={store.coupon_code || (store.coupons?.[0]?.code || '')}
+        />
+      </TabsContent>
+
+      {/* Tab Cupons */}
+      <TabsContent value="coupons" className="space-y-3 mt-4 flex-1 overflow-y-auto">
+        <div className="flex items-center gap-2 mb-4">
+          <Ticket className="h-5 w-5 text-primary" />
+          <span className="font-medium">
+            {(store.coupons?.length || (store.coupon_code ? 1 : 0)) > 1 
+              ? `Seus cupons de desconto (${store.coupons?.length})` 
+              : 'Seu cupom de desconto'}
+          </span>
+        </div>
+        
+        {(store.coupons && store.coupons.length > 0) || store.coupon_code ? (
+          <div className="space-y-3">
+            {(store.coupons && store.coupons.length > 0 
+              ? store.coupons 
+              : store.coupon_code 
+                ? [{ code: store.coupon_code, discount_type: store.coupon_discount_type || '', discount_value: store.coupon_discount_value || 0 }]
+                : []
+            ).map((coupon, idx) => (
+              <motion.div 
+                key={idx} 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.1 + idx * 0.1 }}
+                className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-4"
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-mono font-bold text-2xl gradient-text">{coupon.code}</p>
+                    {coupon.discount_type && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {coupon.discount_type === 'percentage' 
+                          ? `${coupon.discount_value}% de desconto`
+                          : `${formatCurrency(coupon.discount_value || 0)} de desconto`}
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      copyToClipboard(coupon.code, 'Cupom');
+                    }}
+                    className="shrink-0"
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copiar
+                  </Button>
+                </div>
+                
+                {coupon.discount_type && (
+                  <div className="text-xs text-muted-foreground">
+                    {coupon.applies_to === 'all' || !coupon.applies_to ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Geral</Badge>
+                        <span>Vale para todos os produtos</span>
+                      </span>
+                    ) : coupon.applies_to === 'categories' && coupon.category_names?.length ? (
+                      <span className="inline-flex items-center gap-1 flex-wrap">
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Categorias</Badge>
+                        <span>{coupon.category_names.join(', ')}</span>
+                      </span>
+                    ) : coupon.applies_to === 'products' && coupon.product_ids?.length ? (
+                      <span className="inline-flex items-center gap-1">
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Produtos</Badge>
+                        <span>{coupon.product_ids.length} produto(s) específico(s)</span>
+                      </span>
+                    ) : null}
+                  </div>
+                )}
+                
+                <div className="pt-3 border-t border-primary/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Link className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">Link de afiliado</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      value={`https://ofertas.app/${store.store_slug}?cupom=${coupon.code}`}
+                      readOnly
+                      className="font-mono text-xs"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        copyToClipboard(
+                          `https://ofertas.app/${store.store_slug}?cupom=${coupon.code}`,
+                          'Link de afiliado'
+                        );
+                      }}
+                      className="shrink-0"
+                    >
+                      <Copy className="h-4 w-4 mr-2" />
+                      Copiar
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+            
+            <p className="text-xs text-muted-foreground text-center py-2">
+              Compartilhe o link. O cupom será aplicado automaticamente!
+            </p>
+          </div>
+        ) : (
+          <div className="p-6 bg-muted/50 rounded-lg text-center border border-border/50">
+            <Ticket className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+            <p className="text-sm text-muted-foreground">
+              Aguardando vinculação de cupom pelo lojista
+            </p>
+          </div>
+        )}
+      </TabsContent>
+    </Tabs>
+  );
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -864,265 +1073,107 @@ export default function AffiliateDashboardNew() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de Detalhes da Loja */}
-      <Drawer open={!!selectedStore} onOpenChange={(open) => !open && setSelectedStore(null)}>
-        <DrawerContent className="h-[88vh] flex flex-col glass">
-          <button
-            onClick={() => setSelectedStore(null)}
-            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10"
-          >
-            <X className="h-5 w-5" />
-            <span className="sr-only">Fechar</span>
-          </button>
-          <DrawerHeader className="flex-shrink-0">
-            <div className="flex items-center gap-4">
-              {selectedStore?.store_logo ? (
-                <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
-                  <img
-                    src={selectedStore.store_logo}
-                    alt={selectedStore.store_name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ) : (
-                <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-glow rounded-xl flex items-center justify-center shadow-glow flex-shrink-0">
-                  <Store className="h-8 w-8 text-white" />
-                </div>
-              )}
-              <div>
-                <DrawerTitle className="text-xl gradient-text">
-                  {selectedStore?.store_name}
-                </DrawerTitle>
-                <DrawerDescription className="flex items-center gap-2 mt-1">
-                  <Badge 
-                    variant={selectedStore?.status === 'active' ? 'default' : 'secondary'}
-                    className={selectedStore?.status === 'active' ? 'bg-green-500/10 text-green-600 border-green-500/20' : ''}
-                  >
-                    {selectedStore?.status === 'active' ? 'Ativo' : 'Pendente'}
-                  </Badge>
-                  <a 
-                    href={`https://ofertas.app/${selectedStore?.store_slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Visitar loja <ExternalLink className="h-3 w-3" />
-                  </a>
-                </DrawerDescription>
-              </div>
-            </div>
-          </DrawerHeader>
-          
-          {selectedStore && (
-            <Tabs defaultValue="overview" className="mt-4 flex-1 flex flex-col min-h-0">
-              <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
-                <TabsTrigger value="overview" className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4" />
-                  <span className="hidden sm:inline">Resumo</span>
-                </TabsTrigger>
-                <TabsTrigger value="products" className="flex items-center gap-2">
-                  <Grid3X3 className="h-4 w-4" />
-                  <span className="hidden sm:inline">Produtos</span>
-                </TabsTrigger>
-                <TabsTrigger value="coupons" className="flex items-center gap-2">
-                  <Ticket className="h-4 w-4" />
-                  <span className="hidden sm:inline">Cupons</span>
-                </TabsTrigger>
-              </TabsList>
-              
-              {/* Tab Resumo */}
-              <TabsContent value="overview" className="space-y-6 mt-4 flex-1 overflow-y-auto">
-                {/* Stats */}
-                <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 sm:gap-3">
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 }}
-                    className="p-3 sm:p-4 bg-muted/50 rounded-lg border border-border/50 text-center"
-                  >
-                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-muted-foreground mb-1" />
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">Total Vendas</p>
-                    <p className="font-bold text-sm sm:text-lg">{formatCurrency(selectedStore.total_sales)}</p>
-                  </motion.div>
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="p-3 sm:p-4 bg-green-500/10 rounded-lg border border-green-500/20 text-center"
-                  >
-                    <Wallet className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-green-600 mb-1" />
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">Ganhos</p>
-                    <p className="font-bold text-sm sm:text-lg text-green-600">{formatCurrency(selectedStore.total_commission)}</p>
-                  </motion.div>
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="p-3 sm:p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center"
-                  >
-                    <Clock className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-yellow-600 mb-1" />
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
-                    <p className="font-bold text-sm sm:text-lg text-yellow-600">{formatCurrency(selectedStore.pending_commission)}</p>
-                  </motion.div>
-                </div>
-
-                {/* Commission Config */}
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="p-4 bg-primary/5 rounded-lg border border-primary/20"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <BarChart3 className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-medium">Configuração de Comissão</span>
-                  </div>
-                  <p className="text-2xl font-bold gradient-text">
-                    {selectedStore.commission_type === 'percentage' 
-                      ? `${selectedStore.commission_value}%`
-                      : formatCurrency(selectedStore.commission_value)}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {selectedStore.commission_type === 'percentage' 
-                      ? 'Percentual sobre cada venda'
-                      : 'Valor fixo por venda'}
-                  </p>
-                </motion.div>
-              </TabsContent>
-
-              <TabsContent value="products" className="mt-4 flex-1 overflow-y-auto">
-                <AffiliateStoreProductsTab
-                  storeId={selectedStore.store_id}
-                  storeSlug={selectedStore.store_slug}
-                  storeAffiliateId={selectedStore.store_affiliate_id}
-                  defaultCommissionType={selectedStore.commission_type}
-                  defaultCommissionValue={selectedStore.commission_value}
-                  couponCode={selectedStore.coupon_code || (selectedStore.coupons?.[0]?.code || '')}
-                />
-              </TabsContent>
-
-              {/* Tab Cupons */}
-              <TabsContent value="coupons" className="space-y-3 mt-4 flex-1 overflow-y-auto">
-                <div className="flex items-center gap-2 mb-4">
-                  <Ticket className="h-5 w-5 text-primary" />
-                  <span className="font-medium">
-                    {(selectedStore.coupons?.length || (selectedStore.coupon_code ? 1 : 0)) > 1 
-                      ? `Seus cupons de desconto (${selectedStore.coupons?.length})` 
-                      : 'Seu cupom de desconto'}
-                  </span>
-                </div>
-                
-                {(selectedStore.coupons && selectedStore.coupons.length > 0) || selectedStore.coupon_code ? (
-                  <div className="space-y-3">
-                    {(selectedStore.coupons && selectedStore.coupons.length > 0 
-                      ? selectedStore.coupons 
-                      : selectedStore.coupon_code 
-                        ? [{ code: selectedStore.coupon_code, discount_type: selectedStore.coupon_discount_type || '', discount_value: selectedStore.coupon_discount_value || 0 }]
-                        : []
-                    ).map((coupon, idx) => (
-                      <motion.div 
-                        key={idx} 
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.1 + idx * 0.1 }}
-                        className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-4"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-mono font-bold text-2xl gradient-text">{coupon.code}</p>
-                            {coupon.discount_type && (
-                              <p className="text-sm text-muted-foreground mt-1">
-                                {coupon.discount_type === 'percentage' 
-                                  ? `${coupon.discount_value}% de desconto`
-                                  : `${formatCurrency(coupon.discount_value || 0)} de desconto`}
-                              </p>
-                            )}
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              copyToClipboard(coupon.code, 'Cupom');
-                            }}
-                            className="shrink-0"
-                          >
-                            <Copy className="h-4 w-4 mr-2" />
-                            Copiar
-                          </Button>
-                        </div>
-                        
-                        {coupon.discount_type && (
-                          <div className="text-xs text-muted-foreground">
-                            {coupon.applies_to === 'all' || !coupon.applies_to ? (
-                              <span className="inline-flex items-center gap-1">
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Geral</Badge>
-                                <span>Vale para todos os produtos</span>
-                              </span>
-                            ) : coupon.applies_to === 'categories' && coupon.category_names?.length ? (
-                              <span className="inline-flex items-center gap-1 flex-wrap">
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Categorias</Badge>
-                                <span>{coupon.category_names.join(', ')}</span>
-                              </span>
-                            ) : coupon.applies_to === 'products' && coupon.product_ids?.length ? (
-                              <span className="inline-flex items-center gap-1">
-                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Produtos</Badge>
-                                <span>{coupon.product_ids.length} produto(s) específico(s)</span>
-                              </span>
-                            ) : null}
-                          </div>
-                        )}
-                        
-                        <div className="pt-3 border-t border-primary/10">
-                          <div className="flex items-center gap-2 mb-2">
-                            <Link className="h-4 w-4 text-primary" />
-                            <span className="text-sm font-medium">Link de afiliado</span>
-                          </div>
-                          <div className="flex gap-2">
-                            <Input
-                              value={`https://ofertas.app/${selectedStore.store_slug}?cupom=${coupon.code}`}
-                              readOnly
-                              className="font-mono text-xs"
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                            <Button
-                              variant="default"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                copyToClipboard(
-                                  `https://ofertas.app/${selectedStore.store_slug}?cupom=${coupon.code}`,
-                                  'Link de afiliado'
-                                );
-                              }}
-                              className="shrink-0"
-                            >
-                              <Copy className="h-4 w-4 mr-2" />
-                              Copiar
-                            </Button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    ))}
-                    
-                    <p className="text-xs text-muted-foreground text-center py-2">
-                      Compartilhe o link. O cupom será aplicado automaticamente!
-                    </p>
+      {/* Modal de Detalhes da Loja - Drawer em Mobile, Dialog em Desktop */}
+      {isMobile ? (
+        <Drawer open={!!selectedStore} onOpenChange={(open) => !open && setSelectedStore(null)}>
+          <DrawerContent className="h-[88vh] flex flex-col glass">
+            <button
+              onClick={() => setSelectedStore(null)}
+              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10"
+            >
+              <X className="h-5 w-5" />
+              <span className="sr-only">Fechar</span>
+            </button>
+            <DrawerHeader className="flex-shrink-0">
+              <div className="flex items-center gap-4">
+                {selectedStore?.store_logo ? (
+                  <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
+                    <img
+                      src={selectedStore.store_logo}
+                      alt={selectedStore.store_name}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 ) : (
-                  <div className="p-6 bg-muted/50 rounded-lg text-center border border-border/50">
-                    <Ticket className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Aguardando vinculação de cupom pelo lojista
-                    </p>
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-glow rounded-xl flex items-center justify-center shadow-glow flex-shrink-0">
+                    <Store className="h-8 w-8 text-white" />
                   </div>
                 )}
-              </TabsContent>
-            </Tabs>
-          )}
-        </DrawerContent>
-      </Drawer>
+                <div>
+                  <DrawerTitle className="text-xl gradient-text">
+                    {selectedStore?.store_name}
+                  </DrawerTitle>
+                  <DrawerDescription className="flex items-center gap-2 mt-1">
+                    <Badge 
+                      variant={selectedStore?.status === 'active' ? 'default' : 'secondary'}
+                      className={selectedStore?.status === 'active' ? 'bg-green-500/10 text-green-600 border-green-500/20' : ''}
+                    >
+                      {selectedStore?.status === 'active' ? 'Ativo' : 'Pendente'}
+                    </Badge>
+                    <a 
+                      href={`https://ofertas.app/${selectedStore?.store_slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Visitar loja <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </DrawerDescription>
+                </div>
+              </div>
+            </DrawerHeader>
+            
+            {selectedStore && renderStoreModalContent(selectedStore)}
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={!!selectedStore} onOpenChange={(open) => !open && setSelectedStore(null)}>
+          <DialogContent className="max-w-3xl h-[90vh] flex flex-col glass">
+            <DialogHeader className="flex-shrink-0">
+              <div className="flex items-center gap-4">
+                {selectedStore?.store_logo ? (
+                  <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
+                    <img
+                      src={selectedStore.store_logo}
+                      alt={selectedStore.store_name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-glow rounded-xl flex items-center justify-center shadow-glow flex-shrink-0">
+                    <Store className="h-8 w-8 text-white" />
+                  </div>
+                )}
+                <div>
+                  <DialogTitle className="text-xl gradient-text">
+                    {selectedStore?.store_name}
+                  </DialogTitle>
+                  <DialogDescription className="flex items-center gap-2 mt-1">
+                    <Badge 
+                      variant={selectedStore?.status === 'active' ? 'default' : 'secondary'}
+                      className={selectedStore?.status === 'active' ? 'bg-green-500/10 text-green-600 border-green-500/20' : ''}
+                    >
+                      {selectedStore?.status === 'active' ? 'Ativo' : 'Pendente'}
+                    </Badge>
+                    <a 
+                      href={`https://ofertas.app/${selectedStore?.store_slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Visitar loja <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+            
+            {selectedStore && renderStoreModalContent(selectedStore)}
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
