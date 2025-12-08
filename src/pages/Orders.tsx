@@ -22,6 +22,16 @@ import { QRCodeCanvas } from "qrcode.react";
 import { generatePixQrCode } from "@/lib/pixQrCode";
 import { supabase } from "@/integrations/supabase/client";
 
+// Interface para regra de desconto específica
+interface CouponDiscountRule {
+  id: string;
+  rule_type: 'product' | 'category';
+  product_id: string | null;
+  category_name: string | null;
+  discount_type: 'percentage' | 'fixed';
+  discount_value: number;
+}
+
 // Interface para cupom
 interface CouponData {
   id: string;
@@ -31,15 +41,30 @@ interface CouponData {
   applies_to: 'all' | 'category' | 'product';
   category_names: string[] | null;
   product_ids: string[] | null;
+  discount_rules?: CouponDiscountRule[];
 }
 
 // Interface para desconto por item
 interface ItemDiscount {
   isEligible: boolean;
   discountAmount: number;
+  ruleType?: 'product' | 'category' | 'default';
 }
 
-// Função para calcular desconto de cada item
+// Função para calcular desconto usando regra específica
+const calculateRuleDiscount = (
+  item: any,
+  rule: CouponDiscountRule
+): number => {
+  const itemSubtotal = Number(item.subtotal);
+  if (rule.discount_type === 'percentage') {
+    return (itemSubtotal * rule.discount_value) / 100;
+  }
+  // Fixed: distribuir proporcionalmente baseado na quantidade
+  return Math.min(rule.discount_value * item.quantity, itemSubtotal);
+};
+
+// Função para calcular desconto de cada item COM regras específicas
 const calculateItemDiscount = (
   item: any,
   order: any,
@@ -50,6 +75,39 @@ const calculateItemDiscount = (
     return { isEligible: false, discountAmount: 0 };
   }
 
+  const itemCategory = item.products?.category || '';
+  const discountRules = couponData.discount_rules || [];
+
+  // PRIORIDADE 1: Regra específica do produto
+  const productRule = discountRules.find(
+    r => r.rule_type === 'product' && r.product_id === item.product_id
+  );
+
+  if (productRule) {
+    const discountAmount = calculateRuleDiscount(item, productRule);
+    return {
+      isEligible: true,
+      discountAmount: Math.min(discountAmount, Number(item.subtotal)),
+      ruleType: 'product'
+    };
+  }
+
+  // PRIORIDADE 2: Regra de categoria
+  const categoryRule = discountRules.find(
+    r => r.rule_type === 'category' && 
+    r.category_name?.toLowerCase() === itemCategory.toLowerCase()
+  );
+
+  if (categoryRule) {
+    const discountAmount = calculateRuleDiscount(item, categoryRule);
+    return {
+      isEligible: true,
+      discountAmount: Math.min(discountAmount, Number(item.subtotal)),
+      ruleType: 'category'
+    };
+  }
+
+  // PRIORIDADE 3: Desconto padrão do cupom (proporcional)
   // Determinar se o item é elegível baseado no escopo
   let isEligible = false;
   
@@ -58,9 +116,8 @@ const calculateItemDiscount = (
   } else if (couponData.applies_to === 'product') {
     isEligible = (couponData.product_ids || []).includes(item.product_id);
   } else if (couponData.applies_to === 'category') {
-    const productCategory = item.products?.category || '';
     isEligible = (couponData.category_names || []).some(
-      cat => cat.toLowerCase() === productCategory.toLowerCase()
+      cat => cat.toLowerCase() === itemCategory.toLowerCase()
     );
   }
 
@@ -71,34 +128,67 @@ const calculateItemDiscount = (
   // Calcular todos os itens elegíveis do pedido para distribuição proporcional
   const allItems = order.order_items || [];
   const eligibleItems = allItems.filter((i: any) => {
+    // Verificar se tem regra específica (não entra no proporcional)
+    const hasProductRule = discountRules.some(
+      r => r.rule_type === 'product' && r.product_id === i.product_id
+    );
+    const iCategory = i.products?.category || '';
+    const hasCategoryRule = discountRules.some(
+      r => r.rule_type === 'category' && r.category_name?.toLowerCase() === iCategory.toLowerCase()
+    );
+    
+    if (hasProductRule || hasCategoryRule) return false;
+
+    // Verificar elegibilidade pelo escopo do cupom
     if (couponData.applies_to === 'all') return true;
     if (couponData.applies_to === 'product') {
       return (couponData.product_ids || []).includes(i.product_id);
     }
     if (couponData.applies_to === 'category') {
-      const cat = i.products?.category || '';
       return (couponData.category_names || []).some(
-        (c: string) => c.toLowerCase() === cat.toLowerCase()
+        (c: string) => c.toLowerCase() === iCategory.toLowerCase()
       );
     }
     return false;
   });
 
-  // Calcular subtotal elegível
+  // Calcular subtotal elegível (sem regras específicas)
   const eligibleSubtotal = eligibleItems.reduce((sum: number, i: any) => sum + Number(i.subtotal), 0);
 
-  if (eligibleSubtotal <= 0) {
-    return { isEligible: true, discountAmount: 0 };
+  // Calcular quanto já foi descontado por regras específicas
+  const rulesDiscount = allItems.reduce((sum: number, i: any) => {
+    const productRule = discountRules.find(
+      r => r.rule_type === 'product' && r.product_id === i.product_id
+    );
+    if (productRule) {
+      return sum + calculateRuleDiscount(i, productRule);
+    }
+    const iCategory = i.products?.category || '';
+    const categoryRule = discountRules.find(
+      r => r.rule_type === 'category' && r.category_name?.toLowerCase() === iCategory.toLowerCase()
+    );
+    if (categoryRule) {
+      return sum + calculateRuleDiscount(i, categoryRule);
+    }
+    return sum;
+  }, 0);
+
+  // Desconto restante para distribuir proporcionalmente
+  const remainingDiscount = Math.max(0, Number(order.coupon_discount) - rulesDiscount);
+
+  if (eligibleSubtotal <= 0 || remainingDiscount <= 0) {
+    return { isEligible: true, discountAmount: 0, ruleType: 'default' };
   }
 
-  // Distribuir desconto proporcionalmente
+  // Distribuir desconto restante proporcionalmente
   const itemSubtotal = Number(item.subtotal);
   const proportion = itemSubtotal / eligibleSubtotal;
-  const discountAmount = Number(order.coupon_discount) * proportion;
+  const discountAmount = remainingDiscount * proportion;
 
   return {
     isEligible: true,
-    discountAmount: Math.min(discountAmount, itemSubtotal)
+    discountAmount: Math.min(discountAmount, itemSubtotal),
+    ruleType: 'default'
   };
 };
 
@@ -204,7 +294,7 @@ export default function Orders() {
     });
   }, [orders, filterType, customDate, paymentFilter]);
 
-  // Buscar dados dos cupons usados nos pedidos
+  // Buscar dados dos cupons usados nos pedidos COM regras de desconto
   useEffect(() => {
     const fetchCoupons = async () => {
       if (!filteredOrders || filteredOrders.length === 0) return;
@@ -220,15 +310,33 @@ export default function Orders() {
         try {
           const { data } = await supabase
             .from('coupons')
-            .select('id, code, discount_type, discount_value, applies_to, category_names, product_ids')
+            .select(`
+              id, code, discount_type, discount_value, applies_to, category_names, product_ids,
+              coupon_discount_rules (
+                id, rule_type, product_id, category_name, discount_type, discount_value
+              )
+            `)
             .eq('store_id', order.store_id)
             .ilike('code', order.coupon_code)
             .maybeSingle();
 
           if (data) {
+            const couponData: CouponData = {
+              id: data.id,
+              code: data.code,
+              discount_type: data.discount_type,
+              discount_value: data.discount_value,
+              applies_to: data.applies_to as 'all' | 'category' | 'product',
+              category_names: data.category_names,
+              product_ids: data.product_ids,
+              discount_rules: (data.coupon_discount_rules || []) as CouponDiscountRule[]
+            };
+            
+            console.log('[ORDERS] Cupom carregado:', couponData.code, 'com', couponData.discount_rules?.length || 0, 'regras');
+            
             setCouponDataMap(prev => ({
               ...prev,
-              [couponKey]: data as CouponData
+              [couponKey]: couponData
             }));
           }
         } catch (error) {
