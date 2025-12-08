@@ -401,6 +401,9 @@ export default function AffiliateDashboardNew() {
                       <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 [&[data-state=open]>svg]:rotate-180" />
                     </Button>
                   </CollapsibleTrigger>
+                  <p className="text-xs text-muted-foreground mt-2 text-center italic">
+                    O cupom <span className="font-semibold text-primary">{coupon.code}</span> já está embutido no link dos produtos, é só divulgar que o desconto será aplicado automaticamente!
+                  </p>
                   <CollapsibleContent className="pt-3">
                     <AffiliateStoreProductsTab 
                       storeId={store.store_id} 
