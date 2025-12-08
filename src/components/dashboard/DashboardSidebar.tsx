@@ -57,6 +57,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
 
   const afiliadosSubItems = [
     { id: 'afiliados', label: 'cadastro', icon: UserPlus },
+    { id: 'afiliados-convites', label: 'convites', icon: Mail },
     { id: 'afiliados-relatorios', label: 'relatórios', icon: FileBarChart },
   ];
   
