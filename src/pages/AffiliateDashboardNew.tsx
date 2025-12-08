@@ -10,8 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollableTable } from '@/components/ui/scrollable-table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
+
 import { AffiliateDashboardSidebar } from '@/components/dashboard/AffiliateDashboardSidebar';
 import { AffiliateDashboardBottomNav } from '@/components/dashboard/AffiliateDashboardBottomNav';
 import { toast } from 'sonner';
@@ -28,6 +27,7 @@ import {
   ResponsiveDialogContent,
   ResponsiveDialogHeader,
   ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
   ResponsiveDialogFooter,
 } from '@/components/ui/responsive-dialog';
 import {
@@ -1299,17 +1299,17 @@ export default function AffiliateDashboardNew() {
       )}
 
       {/* Modal de Detalhes do Pedido */}
-      <Dialog open={!!selectedOrder} onOpenChange={(open) => !open && closeOrderModal()}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+      <ResponsiveDialog open={!!selectedOrder} onOpenChange={(open) => !open && closeOrderModal()}>
+        <ResponsiveDialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="flex items-center gap-2">
               <ShoppingBag className="h-5 w-5 text-primary" />
               Pedido #{selectedOrder?.order_number}
-            </DialogTitle>
-            <DialogDescription>
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Detalhes do pedido e comissão
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           
           {selectedOrder && (
             <div className="space-y-6 mt-4">
@@ -1462,110 +1462,55 @@ export default function AffiliateDashboardNew() {
               </div>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
-      {/* Modal de Detalhes da Loja - Drawer em Mobile, Dialog em Desktop */}
-      {isMobile ? (
-        <Drawer open={!!selectedStore} onOpenChange={(open) => !open && setSelectedStore(null)}>
-          <DrawerContent className="h-[88vh] flex flex-col glass">
-            <button
-              onClick={() => setSelectedStore(null)}
-              className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 z-10"
-            >
-              <X className="h-5 w-5" />
-              <span className="sr-only">Fechar</span>
-            </button>
-            <DrawerHeader className="flex-shrink-0">
-              <div className="flex items-center gap-4">
-                {selectedStore?.store_logo ? (
-                  <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
-                    <img
-                      src={selectedStore.store_logo}
-                      alt={selectedStore.store_name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-glow rounded-xl flex items-center justify-center shadow-glow flex-shrink-0">
-                    <Store className="h-8 w-8 text-white" />
-                  </div>
-                )}
-                <div>
-                  <DrawerTitle className="text-xl gradient-text">
-                    {selectedStore?.store_name}
-                  </DrawerTitle>
-                  <DrawerDescription className="flex items-center gap-2 mt-1">
-                    <Badge 
-                      variant={selectedStore?.status === 'active' ? 'default' : 'secondary'}
-                      className={selectedStore?.status === 'active' ? 'bg-green-500/10 text-green-600 border-green-500/20' : ''}
-                    >
-                      {selectedStore?.status === 'active' ? 'Ativo' : 'Pendente'}
-                    </Badge>
-                    <a 
-                      href={`https://ofertas.app/${selectedStore?.store_slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Visitar loja <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </DrawerDescription>
+      {/* Modal de Detalhes da Loja */}
+      <ResponsiveDialog open={!!selectedStore} onOpenChange={(open) => !open && setSelectedStore(null)}>
+        <ResponsiveDialogContent className="max-w-3xl h-[90vh] flex flex-col glass">
+          <ResponsiveDialogHeader className="flex-shrink-0">
+            <div className="flex items-center gap-4">
+              {selectedStore?.store_logo ? (
+                <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
+                  <img
+                    src={selectedStore.store_logo}
+                    alt={selectedStore.store_name}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
-              </div>
-            </DrawerHeader>
-            
-            {selectedStore && renderStoreModalContent(selectedStore)}
-          </DrawerContent>
-        </Drawer>
-      ) : (
-        <Dialog open={!!selectedStore} onOpenChange={(open) => !open && setSelectedStore(null)}>
-          <DialogContent className="max-w-3xl h-[90vh] flex flex-col glass">
-            <DialogHeader className="flex-shrink-0">
-              <div className="flex items-center gap-4">
-                {selectedStore?.store_logo ? (
-                  <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
-                    <img
-                      src={selectedStore.store_logo}
-                      alt={selectedStore.store_name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-glow rounded-xl flex items-center justify-center shadow-glow flex-shrink-0">
-                    <Store className="h-8 w-8 text-white" />
-                  </div>
-                )}
-                <div>
-                  <DialogTitle className="text-xl gradient-text">
-                    {selectedStore?.store_name}
-                  </DialogTitle>
-                  <DialogDescription className="flex items-center gap-2 mt-1">
-                    <Badge 
-                      variant={selectedStore?.status === 'active' ? 'default' : 'secondary'}
-                      className={selectedStore?.status === 'active' ? 'bg-green-500/10 text-green-600 border-green-500/20' : ''}
-                    >
-                      {selectedStore?.status === 'active' ? 'Ativo' : 'Pendente'}
-                    </Badge>
-                    <a 
-                      href={`https://ofertas.app/${selectedStore?.store_slug}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-primary hover:underline inline-flex items-center gap-1"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Visitar loja <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </DialogDescription>
+              ) : (
+                <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-glow rounded-xl flex items-center justify-center shadow-glow flex-shrink-0">
+                  <Store className="h-8 w-8 text-white" />
                 </div>
+              )}
+              <div>
+                <ResponsiveDialogTitle className="text-xl gradient-text">
+                  {selectedStore?.store_name}
+                </ResponsiveDialogTitle>
+                <ResponsiveDialogDescription className="flex items-center gap-2 mt-1">
+                  <Badge 
+                    variant={selectedStore?.status === 'active' ? 'default' : 'secondary'}
+                    className={selectedStore?.status === 'active' ? 'bg-green-500/10 text-green-600 border-green-500/20' : ''}
+                  >
+                    {selectedStore?.status === 'active' ? 'Ativo' : 'Pendente'}
+                  </Badge>
+                  <a 
+                    href={`https://ofertas.app/${selectedStore?.store_slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Visitar loja <ExternalLink className="h-3 w-3" />
+                  </a>
+                </ResponsiveDialogDescription>
               </div>
-            </DialogHeader>
-            
-            {selectedStore && renderStoreModalContent(selectedStore)}
-          </DialogContent>
-        </Dialog>
-      )}
+            </div>
+          </ResponsiveDialogHeader>
+          
+          {selectedStore && renderStoreModalContent(selectedStore)}
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {/* Custom Date Range Dialog */}
       <ResponsiveDialog 

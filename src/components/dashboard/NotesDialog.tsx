@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,15 +69,15 @@ export const NotesDialog = ({ open, onOpenChange, order, onUpdate }: NotesDialog
   if (!order) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl w-[96vw] sm:w-full max-h-[85vh] flex flex-col top-[2%] sm:top-[5%] translate-y-0 p-0">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
+      <ResponsiveDialogContent className="max-w-2xl w-[96vw] sm:w-full max-h-[85vh] flex flex-col p-0">
         <div className="px-6 pt-6">
-          <DialogHeader>
-            <DialogTitle>Notas - #{order.order_number}</DialogTitle>
-            <DialogDescription>
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Notas - #{order.order_number}</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Gerencie as notas do cliente e as notas internas da loja
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
         </div>
 
         <ScrollArea className="flex-1 px-6">
@@ -162,7 +162,7 @@ export const NotesDialog = ({ open, onOpenChange, order, onUpdate }: NotesDialog
           </div>
         </ScrollArea>
 
-        <div className="sticky bottom-0 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 p-4 border-t bg-background z-10">
+        <ResponsiveDialogFooter>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
@@ -179,8 +179,8 @@ export const NotesDialog = ({ open, onOpenChange, order, onUpdate }: NotesDialog
             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Salvar
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 };
