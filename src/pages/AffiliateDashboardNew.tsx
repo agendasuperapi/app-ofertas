@@ -885,7 +885,10 @@ export default function AffiliateDashboardNew() {
                   {selectedStore?.store_name}
                 </DialogTitle>
                 <DialogDescription className="flex items-center gap-2 mt-1">
-                  <Badge variant={selectedStore?.status === 'active' ? 'default' : 'secondary'}>
+                  <Badge 
+                    variant={selectedStore?.status === 'active' ? 'default' : 'secondary'}
+                    className={selectedStore?.status === 'active' ? 'bg-green-500/10 text-green-600 border-green-500/20' : ''}
+                  >
                     {selectedStore?.status === 'active' ? 'Ativo' : 'Pendente'}
                   </Badge>
                   <a 
