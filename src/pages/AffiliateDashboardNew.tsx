@@ -934,36 +934,36 @@ export default function AffiliateDashboardNew() {
               {/* Tab Resumo */}
               <TabsContent value="overview" className="space-y-6 mt-4 flex-1 overflow-y-auto">
                 {/* Stats */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 sm:gap-3">
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
-                    className="p-4 bg-muted/50 rounded-lg border border-border/50 text-center"
+                    className="p-3 sm:p-4 bg-muted/50 rounded-lg border border-border/50 text-center"
                   >
-                    <DollarSign className="h-5 w-5 mx-auto text-muted-foreground mb-1" />
-                    <p className="text-xs text-muted-foreground">Total Vendas</p>
-                    <p className="font-bold text-lg">{formatCurrency(selectedStore.total_sales)}</p>
+                    <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-muted-foreground mb-1" />
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Total Vendas</p>
+                    <p className="font-bold text-sm sm:text-lg">{formatCurrency(selectedStore.total_sales)}</p>
                   </motion.div>
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="p-4 bg-green-500/10 rounded-lg border border-green-500/20 text-center"
+                    className="p-3 sm:p-4 bg-green-500/10 rounded-lg border border-green-500/20 text-center"
                   >
-                    <Wallet className="h-5 w-5 mx-auto text-green-600 mb-1" />
-                    <p className="text-xs text-muted-foreground">Ganhos</p>
-                    <p className="font-bold text-lg text-green-600">{formatCurrency(selectedStore.total_commission)}</p>
+                    <Wallet className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-green-600 mb-1" />
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Ganhos</p>
+                    <p className="font-bold text-sm sm:text-lg text-green-600">{formatCurrency(selectedStore.total_commission)}</p>
                   </motion.div>
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center"
+                    className="p-3 sm:p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center"
                   >
-                    <Clock className="h-5 w-5 mx-auto text-yellow-600 mb-1" />
-                    <p className="text-xs text-muted-foreground">Pendente</p>
-                    <p className="font-bold text-lg text-yellow-600">{formatCurrency(selectedStore.pending_commission)}</p>
+                    <Clock className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-yellow-600 mb-1" />
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
+                    <p className="font-bold text-sm sm:text-lg text-yellow-600">{formatCurrency(selectedStore.pending_commission)}</p>
                   </motion.div>
                 </div>
 
