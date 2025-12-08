@@ -321,11 +321,16 @@ export default function AffiliateDashboardNew() {
 
       {/* Tab Cupons */}
       <TabsContent value="coupons" className="space-y-3 mt-4 flex-1 overflow-y-auto">
-        <div className="flex items-center gap-2 mb-4">
-          <Ticket className="h-5 w-5 text-primary" />
-          <span className="font-medium">
-            {(store.coupons?.length || (store.coupon_code ? 1 : 0)) > 1 ? `Seus cupons de desconto (${store.coupons?.length})` : 'Seu cupom de desconto'}
-          </span>
+        <div className="mb-4">
+          <div className="flex items-center gap-2">
+            <Ticket className="h-5 w-5 text-primary" />
+            <span className="font-medium">
+              {(store.coupons?.length || (store.coupon_code ? 1 : 0)) > 1 ? `Seus cupons de desconto (${store.coupons?.length})` : 'Seu cupom de desconto'}
+            </span>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1 ml-7">
+            O link do cupom abaixo exibe todos os itens da loja, com o seu cupom.
+          </p>
         </div>
         
         {store.coupons && store.coupons.length > 0 || store.coupon_code ? <div className="space-y-3">
