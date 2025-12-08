@@ -569,15 +569,6 @@ export function CouponsManager({ storeId }: CouponsManagerProps) {
                       </div>
 
 
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="is_active"
-                          checked={formData.is_active}
-                          onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                        />
-                        <Label htmlFor="is_active">Cupom ativo</Label>
-                      </div>
-
                       <p className="text-xs text-muted-foreground bg-muted/50 p-3 rounded-md">
                         O desconto padrão será aplicado a todos os produtos que não tiverem regras específicas configuradas na aba "Regras Específicas".
                       </p>
