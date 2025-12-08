@@ -35,7 +35,9 @@ import {
   Target,
   Ban,
   Calculator,
-  Home
+  Home,
+  ExternalLink,
+  ChevronRight
 } from 'lucide-react';
 
 export default function AffiliateDashboardNew() {
@@ -55,6 +57,9 @@ export default function AffiliateDashboardNew() {
   const [selectedOrder, setSelectedOrder] = useState<AffiliateOrder | null>(null);
   const [orderModalItems, setOrderModalItems] = useState<AffiliateOrderItem[]>([]);
   const [loadingModalItems, setLoadingModalItems] = useState(false);
+  
+  // Store modal state
+  const [selectedStore, setSelectedStore] = useState<typeof affiliateStores[0] | null>(null);
 
   // Extrair IDs dos store_affiliates para notificações em tempo real
   const storeAffiliateIds = useMemo(() => 
@@ -350,161 +355,68 @@ export default function AffiliateDashboardNew() {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {affiliateStores.map((store) => (
-            <Card key={store.store_affiliate_id} className="overflow-hidden">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    {store.store_logo ? (
-                      <img
-                        src={store.store_logo}
-                        alt={store.store_name}
-                        className="w-12 h-12 rounded-lg object-cover"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center">
-                        <Store className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                    )}
-                    <div>
-                      <CardTitle className="text-base">{store.store_name}</CardTitle>
-                      <CardDescription>
-                        {store.coupon_code 
-                          ? `Cupom: ${store.coupon_code}`
-                          : 'Sem cupom vinculado'}
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <Badge variant={store.status === 'active' ? 'default' : 'secondary'}>
-                    {store.status === 'active' ? 'Ativo' : 'Pendente'}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Vendas</p>
-                    <p className="font-semibold">{formatCurrency(store.total_sales)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Ganhos</p>
-                    <p className="font-semibold text-green-600">{formatCurrency(store.total_commission)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Pendente</p>
-                    <p className="font-semibold text-yellow-600">{formatCurrency(store.pending_commission)}</p>
-                  </div>
-                </div>
-
-                {(store.coupons && store.coupons.length > 0) || store.coupon_code ? (
-                  <>
-                    <Separator />
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Ticket className="h-4 w-4 text-primary" />
-                        <span className="text-sm font-medium">
-                          {(store.coupons?.length || 1) > 1 
-                            ? `Seus cupons de desconto (${store.coupons?.length})` 
-                            : 'Seu cupom de desconto'}
-                        </span>
-                      </div>
-                      
-                      {(store.coupons && store.coupons.length > 0 
-                        ? store.coupons 
-                        : store.coupon_code 
-                          ? [{ code: store.coupon_code, discount_type: store.coupon_discount_type || '', discount_value: store.coupon_discount_value || 0 }]
-                          : []
-                      ).map((coupon, idx) => (
-                        <div key={idx} className="p-3 bg-primary/5 rounded-lg border border-primary/20 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <p className="font-mono font-bold text-xl text-primary">{coupon.code}</p>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => copyToClipboard(coupon.code, 'Cupom')}
-                            >
-                              <Copy className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          
-                          {coupon.discount_type && (
-                            <div className="space-y-1">
-                              <p className="text-xs text-muted-foreground">
-                                {coupon.discount_type === 'percentage' 
-                                  ? `${coupon.discount_value}% de desconto`
-                                  : `${formatCurrency(coupon.discount_value || 0)} de desconto`}
-                              </p>
-                              <div className="text-xs text-muted-foreground/70">
-                                {coupon.applies_to === 'all' || !coupon.applies_to ? (
-                                  <span className="inline-flex items-center gap-1">
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Geral</Badge>
-                                    <span>Vale para todos os produtos</span>
-                                  </span>
-                                ) : coupon.applies_to === 'categories' && coupon.category_names?.length ? (
-                                  <span className="inline-flex items-center gap-1 flex-wrap">
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Categorias</Badge>
-                                    <span>{coupon.category_names.join(', ')}</span>
-                                  </span>
-                                ) : coupon.applies_to === 'products' && coupon.product_ids?.length ? (
-                                  <span className="inline-flex items-center gap-1">
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Produtos</Badge>
-                                    <span>{coupon.product_ids.length} produto(s) específico(s)</span>
-                                  </span>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1">
-                                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Geral</Badge>
-                                    <span>Vale para todos os produtos</span>
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                          
-                          <div className="pt-2 border-t border-primary/10">
-                            <div className="flex items-center gap-2 mb-2">
-                              <Link className="h-3 w-3 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">Link de afiliado</span>
-                            </div>
-                            <div className="flex gap-2">
-                              <Input
-                                value={`https://ofertas.app/${store.store_slug}?cupom=${coupon.code}`}
-                                readOnly
-                                className="font-mono text-xs h-8"
-                              />
-                              <Button
-                                variant="default"
-                                size="sm"
-                                className="h-8"
-                                onClick={() => copyToClipboard(
-                                  `https://ofertas.app/${store.store_slug}?cupom=${coupon.code}`,
-                                  'Link de afiliado'
-                                )}
-                              >
-                                <Copy className="h-3 w-3 mr-1" />
-                                Copiar
-                              </Button>
-                            </div>
-                          </div>
+            <motion.div
+              key={store.store_affiliate_id}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Card 
+                className="glass border-border/50 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => setSelectedStore(store)}
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3">
+                      {store.store_logo ? (
+                        <div className="w-12 h-12 rounded-lg overflow-hidden ring-2 ring-primary/20 shadow-glow">
+                          <img
+                            src={store.store_logo}
+                            alt={store.store_name}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
-                      ))}
-                      
-                      <p className="text-xs text-muted-foreground text-center">
-                        Compartilhe o link. O cupom será aplicado automaticamente!
-                      </p>
+                      ) : (
+                        <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-glow rounded-lg flex items-center justify-center shadow-glow">
+                          <Store className="h-6 w-6 text-white" />
+                        </div>
+                      )}
+                      <div>
+                        <CardTitle className="text-base">{store.store_name}</CardTitle>
+                        <CardDescription>
+                          {store.coupons?.length 
+                            ? `${store.coupons.length} cupom(s) vinculado(s)`
+                            : store.coupon_code 
+                              ? `Cupom: ${store.coupon_code}`
+                              : 'Sem cupom vinculado'}
+                        </CardDescription>
+                      </div>
                     </div>
-                  </>
-                ) : (
-                  <>
-                    <Separator />
-                    <div className="p-3 bg-muted rounded-lg text-center">
-                      <Ticket className="h-6 w-6 mx-auto text-muted-foreground mb-2" />
-                      <p className="text-sm text-muted-foreground">
-                        Aguardando vinculação de cupom pelo lojista
-                      </p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={store.status === 'active' ? 'default' : 'secondary'}>
+                        {store.status === 'active' ? 'Ativo' : 'Pendente'}
+                      </Badge>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div className="p-2 bg-muted/50 rounded-lg">
+                      <p className="text-xs text-muted-foreground">Vendas</p>
+                      <p className="font-semibold text-sm">{formatCurrency(store.total_sales)}</p>
+                    </div>
+                    <div className="p-2 bg-green-500/10 rounded-lg">
+                      <p className="text-xs text-muted-foreground">Ganhos</p>
+                      <p className="font-semibold text-sm text-green-600">{formatCurrency(store.total_commission)}</p>
+                    </div>
+                    <div className="p-2 bg-yellow-500/10 rounded-lg">
+                      <p className="text-xs text-muted-foreground">Pendente</p>
+                      <p className="font-semibold text-sm text-yellow-600">{formatCurrency(store.pending_commission)}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           ))}
         </div>
       )}
@@ -939,6 +851,229 @@ export default function AffiliateDashboardNew() {
                         </div>
                       );
                     })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Detalhes da Loja */}
+      <Dialog open={!!selectedStore} onOpenChange={(open) => !open && setSelectedStore(null)}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto glass">
+          <DialogHeader>
+            <div className="flex items-center gap-4">
+              {selectedStore?.store_logo ? (
+                <div className="w-16 h-16 rounded-xl overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
+                  <img
+                    src={selectedStore.store_logo}
+                    alt={selectedStore.store_name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-glow rounded-xl flex items-center justify-center shadow-glow flex-shrink-0">
+                  <Store className="h-8 w-8 text-white" />
+                </div>
+              )}
+              <div>
+                <DialogTitle className="text-xl gradient-text">
+                  {selectedStore?.store_name}
+                </DialogTitle>
+                <DialogDescription className="flex items-center gap-2 mt-1">
+                  <Badge variant={selectedStore?.status === 'active' ? 'default' : 'secondary'}>
+                    {selectedStore?.status === 'active' ? 'Ativo' : 'Pendente'}
+                  </Badge>
+                  <a 
+                    href={`https://ofertas.app/${selectedStore?.store_slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline inline-flex items-center gap-1"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Visitar loja <ExternalLink className="h-3 w-3" />
+                  </a>
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          
+          {selectedStore && (
+            <div className="space-y-6 mt-4">
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-3">
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="p-4 bg-muted/50 rounded-lg border border-border/50 text-center"
+                >
+                  <DollarSign className="h-5 w-5 mx-auto text-muted-foreground mb-1" />
+                  <p className="text-xs text-muted-foreground">Total Vendas</p>
+                  <p className="font-bold text-lg">{formatCurrency(selectedStore.total_sales)}</p>
+                </motion.div>
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="p-4 bg-green-500/10 rounded-lg border border-green-500/20 text-center"
+                >
+                  <Wallet className="h-5 w-5 mx-auto text-green-600 mb-1" />
+                  <p className="text-xs text-muted-foreground">Ganhos</p>
+                  <p className="font-bold text-lg text-green-600">{formatCurrency(selectedStore.total_commission)}</p>
+                </motion.div>
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center"
+                >
+                  <Clock className="h-5 w-5 mx-auto text-yellow-600 mb-1" />
+                  <p className="text-xs text-muted-foreground">Pendente</p>
+                  <p className="font-bold text-lg text-yellow-600">{formatCurrency(selectedStore.pending_commission)}</p>
+                </motion.div>
+              </div>
+
+              {/* Commission Config */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+                className="p-4 bg-primary/5 rounded-lg border border-primary/20"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium">Configuração de Comissão</span>
+                </div>
+                <p className="text-2xl font-bold gradient-text">
+                  {selectedStore.commission_type === 'percentage' 
+                    ? `${selectedStore.commission_value}%`
+                    : formatCurrency(selectedStore.commission_value)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {selectedStore.commission_type === 'percentage' 
+                    ? 'Percentual sobre cada venda'
+                    : 'Valor fixo por venda'}
+                </p>
+              </motion.div>
+
+              {/* Cupons */}
+              <Separator />
+              
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Ticket className="h-5 w-5 text-primary" />
+                  <span className="font-medium">
+                    {(selectedStore.coupons?.length || (selectedStore.coupon_code ? 1 : 0)) > 1 
+                      ? `Seus cupons de desconto (${selectedStore.coupons?.length})` 
+                      : 'Seu cupom de desconto'}
+                  </span>
+                </div>
+                
+                {(selectedStore.coupons && selectedStore.coupons.length > 0) || selectedStore.coupon_code ? (
+                  <div className="space-y-3">
+                    {(selectedStore.coupons && selectedStore.coupons.length > 0 
+                      ? selectedStore.coupons 
+                      : selectedStore.coupon_code 
+                        ? [{ code: selectedStore.coupon_code, discount_type: selectedStore.coupon_discount_type || '', discount_value: selectedStore.coupon_discount_value || 0 }]
+                        : []
+                    ).map((coupon, idx) => (
+                      <motion.div 
+                        key={idx} 
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.5 + idx * 0.1 }}
+                        className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-mono font-bold text-2xl gradient-text">{coupon.code}</p>
+                            {coupon.discount_type && (
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {coupon.discount_type === 'percentage' 
+                                  ? `${coupon.discount_value}% de desconto`
+                                  : `${formatCurrency(coupon.discount_value || 0)} de desconto`}
+                              </p>
+                            )}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(coupon.code, 'Cupom');
+                            }}
+                            className="shrink-0"
+                          >
+                            <Copy className="h-4 w-4 mr-2" />
+                            Copiar
+                          </Button>
+                        </div>
+                        
+                        {coupon.discount_type && (
+                          <div className="text-xs text-muted-foreground">
+                            {coupon.applies_to === 'all' || !coupon.applies_to ? (
+                              <span className="inline-flex items-center gap-1">
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Geral</Badge>
+                                <span>Vale para todos os produtos</span>
+                              </span>
+                            ) : coupon.applies_to === 'categories' && coupon.category_names?.length ? (
+                              <span className="inline-flex items-center gap-1 flex-wrap">
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Categorias</Badge>
+                                <span>{coupon.category_names.join(', ')}</span>
+                              </span>
+                            ) : coupon.applies_to === 'products' && coupon.product_ids?.length ? (
+                              <span className="inline-flex items-center gap-1">
+                                <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Produtos</Badge>
+                                <span>{coupon.product_ids.length} produto(s) específico(s)</span>
+                              </span>
+                            ) : null}
+                          </div>
+                        )}
+                        
+                        <div className="pt-3 border-t border-primary/10">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Link className="h-4 w-4 text-primary" />
+                            <span className="text-sm font-medium">Link de afiliado</span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Input
+                              value={`https://ofertas.app/${selectedStore.store_slug}?cupom=${coupon.code}`}
+                              readOnly
+                              className="font-mono text-xs"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyToClipboard(
+                                  `https://ofertas.app/${selectedStore.store_slug}?cupom=${coupon.code}`,
+                                  'Link de afiliado'
+                                );
+                              }}
+                              className="shrink-0"
+                            >
+                              <Copy className="h-4 w-4 mr-2" />
+                              Copiar
+                            </Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                    
+                    <p className="text-xs text-muted-foreground text-center py-2">
+                      Compartilhe o link. O cupom será aplicado automaticamente!
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-6 bg-muted/50 rounded-lg text-center border border-border/50">
+                    <Ticket className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      Aguardando vinculação de cupom pelo lojista
+                    </p>
                   </div>
                 )}
               </div>
