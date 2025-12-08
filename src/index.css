@@ -91,8 +91,8 @@ All colors MUST be HSL.
     --shadow-md: 0 4px 6px -1px hsl(222 47% 11% / 0.1), 0 2px 4px -2px hsl(222 47% 11% / 0.1);
     --shadow-lg: 0 10px 15px -3px hsl(222 47% 11% / 0.1), 0 4px 6px -4px hsl(222 47% 11% / 0.1);
     --shadow-xl: 0 20px 25px -5px hsl(222 47% 11% / 0.1), 0 8px 10px -6px hsl(222 47% 11% / 0.1);
-    --shadow-glow: 0 0 40px hsl(16 100% 50% / 0.3);
-    --shadow-glow-secondary: 0 0 40px hsl(260 70% 60% / 0.3);
+    --shadow-glow: 0 0 20px hsl(222 47% 11% / 0.15);
+    --shadow-glow-secondary: 0 0 20px hsl(222 47% 11% / 0.15);
 
     /* Glassmorphism */
     --glass-bg: hsl(0 0% 100% / 0.98);
