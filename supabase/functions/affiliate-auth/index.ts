@@ -47,6 +47,11 @@ function generateToken(): string {
   return Array.from(array).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+// Normaliza CPF removendo caracteres não numéricos
+function normalizeCpf(cpf: string): string {
+  return cpf.replace(/\D/g, '');
+}
+
 serve(async (req) => {
   // Handle CORS
   if (req.method === "OPTIONS") {
@@ -85,6 +90,7 @@ serve(async (req) => {
         console.log(`[affiliate-auth] ========== REGISTER ACTION ==========`);
         console.log(`[affiliate-auth] invite_token: ${invite_token}`);
         console.log(`[affiliate-auth] invite_token length: ${invite_token?.length}`);
+        console.log(`[affiliate-auth] cpf_cnpj received: ${cpf_cnpj}`);
 
         if (!invite_token || !password) {
           return new Response(
@@ -99,6 +105,10 @@ serve(async (req) => {
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
+
+        // Normalizar CPF se fornecido
+        const normalizedCpf = cpf_cnpj ? normalizeCpf(cpf_cnpj) : null;
+        console.log(`[affiliate-auth] Normalized CPF: ${normalizedCpf}`);
 
         // Primeiro, buscar SEM filtros restritivos para debug
         const { data: debugAffiliate, error: debugError } = await supabase
@@ -155,7 +165,7 @@ serve(async (req) => {
           .from("store_affiliates")
           .select(`
             *,
-            affiliate_accounts!inner(id, email, name, is_verified)
+            affiliate_accounts!inner(id, email, name, is_verified, cpf_cnpj)
           `)
           .eq("invite_token", invite_token)
           .single();
@@ -174,14 +184,42 @@ serve(async (req) => {
         const affiliateAccount = storeAffiliate.affiliate_accounts;
         const passwordHash = hashPassword(password);
 
-        // Atualizar conta do afiliado
+        // Verificar se CPF já está cadastrado em outra conta (se estiver sendo alterado)
+        if (normalizedCpf && normalizedCpf !== normalizeCpf(affiliateAccount.cpf_cnpj || '')) {
+          const { data: existingWithCpf } = await supabase
+            .from("affiliate_accounts")
+            .select("id")
+            .neq("id", affiliateAccount.id)
+            .not("cpf_cnpj", "is", null);
+
+          // Buscar manualmente por CPF normalizado
+          if (existingWithCpf) {
+            for (const acc of existingWithCpf) {
+              const { data: accData } = await supabase
+                .from("affiliate_accounts")
+                .select("cpf_cnpj")
+                .eq("id", acc.id)
+                .single();
+              
+              if (accData && normalizeCpf(accData.cpf_cnpj || '') === normalizedCpf) {
+                console.log(`[affiliate-auth] CPF ${normalizedCpf} already in use by account ${acc.id}`);
+                return new Response(
+                  JSON.stringify({ error: "Este CPF já está cadastrado em outra conta de afiliado" }),
+                  { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
+              }
+            }
+          }
+        }
+
+        // Atualizar conta do afiliado - CPF é o identificador principal agora
         const { error: updateAccountError } = await supabase
           .from("affiliate_accounts")
           .update({
             password_hash: passwordHash,
             name: name || affiliateAccount.name,
             phone: phone || null,
-            cpf_cnpj: cpf_cnpj || null,
+            cpf_cnpj: normalizedCpf || affiliateAccount.cpf_cnpj,
             pix_key: pix_key || null,
             is_verified: true,
             verification_token: null,
@@ -224,7 +262,7 @@ serve(async (req) => {
           expires_at: expiresAt.toISOString(),
         });
 
-        console.log(`[affiliate-auth] Registration completed for: ${affiliateAccount.email}`);
+        console.log(`[affiliate-auth] Registration completed for CPF: ${normalizedCpf}`);
 
         return new Response(
           JSON.stringify({
@@ -234,6 +272,7 @@ serve(async (req) => {
               id: affiliateAccount.id,
               email: affiliateAccount.email,
               name: name || affiliateAccount.name,
+              cpf_cnpj: normalizedCpf,
             },
           }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -241,28 +280,65 @@ serve(async (req) => {
       }
 
       case "login": {
-        const { email, password } = body;
+        // Login agora usa CPF como identificador principal
+        const { cpf, email, password } = body;
 
-        if (!email || !password) {
+        // Suportar tanto CPF quanto email para backward compatibility
+        const loginIdentifier = cpf || email;
+
+        if (!loginIdentifier || !password) {
           return new Response(
-            JSON.stringify({ error: "Email e senha são obrigatórios" }),
+            JSON.stringify({ error: "CPF e senha são obrigatórios" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        // Buscar conta do afiliado
-        const { data: account, error: accountError } = await supabase
-          .from("affiliate_accounts")
-          .select("*")
-          .eq("email", email.toLowerCase().trim())
-          .single();
+        let account;
 
-        if (accountError || !account) {
-          console.log("[affiliate-auth] Account not found:", email);
-          return new Response(
-            JSON.stringify({ error: "Email ou senha incorretos" }),
-            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
+        // Se parece com CPF (só números, 11 dígitos), buscar por CPF
+        const normalizedIdentifier = loginIdentifier.replace(/\D/g, '');
+        if (normalizedIdentifier.length === 11) {
+          // Buscar por CPF
+          console.log(`[affiliate-auth] Looking up by CPF: ${normalizedIdentifier}`);
+          
+          const { data: accounts, error: accountError } = await supabase
+            .from("affiliate_accounts")
+            .select("*")
+            .not("cpf_cnpj", "is", null);
+
+          if (accounts) {
+            for (const acc of accounts) {
+              if (normalizeCpf(acc.cpf_cnpj || '') === normalizedIdentifier) {
+                account = acc;
+                break;
+              }
+            }
+          }
+
+          if (!account) {
+            console.log("[affiliate-auth] Account not found by CPF:", normalizedIdentifier);
+            return new Response(
+              JSON.stringify({ error: "CPF ou senha incorretos" }),
+              { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+        } else {
+          // Fallback: buscar por email (backward compatibility)
+          console.log(`[affiliate-auth] Looking up by email: ${loginIdentifier}`);
+          const { data: accountData, error: accountError } = await supabase
+            .from("affiliate_accounts")
+            .select("*")
+            .eq("email", loginIdentifier.toLowerCase().trim())
+            .single();
+
+          if (accountError || !accountData) {
+            console.log("[affiliate-auth] Account not found:", loginIdentifier);
+            return new Response(
+              JSON.stringify({ error: "CPF ou senha incorretos" }),
+              { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+          account = accountData;
         }
 
         if (!account.is_active) {
@@ -282,9 +358,9 @@ serve(async (req) => {
         // Verificar senha (supports both legacy SHA-256 and new bcrypt)
         const isValidPassword = await verifyPassword(password, account.password_hash);
         if (!isValidPassword) {
-          console.log("[affiliate-auth] Invalid password for:", email);
+          console.log("[affiliate-auth] Invalid password for:", account.email);
           return new Response(
-            JSON.stringify({ error: "Email ou senha incorretos" }),
+            JSON.stringify({ error: "CPF ou senha incorretos" }),
             { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
@@ -296,7 +372,7 @@ serve(async (req) => {
             .from("affiliate_accounts")
             .update({ password_hash: newHash, updated_at: new Date().toISOString() })
             .eq("id", account.id);
-          console.log(`[affiliate-auth] Upgraded password hash for: ${email}`);
+          console.log(`[affiliate-auth] Upgraded password hash for: ${account.email}`);
         }
 
         // Criar nova sessão
@@ -325,7 +401,7 @@ serve(async (req) => {
           .update({ last_login: new Date().toISOString() })
           .eq("id", account.id);
 
-        console.log(`[affiliate-auth] Login successful for: ${email}`);
+        console.log(`[affiliate-auth] Login successful for CPF: ${normalizeCpf(account.cpf_cnpj || '')}`);
 
         return new Response(
           JSON.stringify({
@@ -337,6 +413,7 @@ serve(async (req) => {
               name: account.name,
               phone: account.phone,
               avatar_url: account.avatar_url,
+              cpf_cnpj: account.cpf_cnpj,
             },
           }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -403,6 +480,7 @@ serve(async (req) => {
               phone: account?.phone,
               avatar_url: account?.avatar_url,
               pix_key: account?.pix_key,
+              cpf_cnpj: account?.cpf_cnpj,
             },
           }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -410,22 +488,46 @@ serve(async (req) => {
       }
 
       case "forgot-password": {
-        const { email } = body;
+        // Forgot password agora aceita CPF ou email
+        const { email, cpf } = body;
+        const identifier = cpf || email;
 
-        if (!email) {
+        if (!identifier) {
           return new Response(
-            JSON.stringify({ error: "Email é obrigatório" }),
+            JSON.stringify({ error: "CPF ou email é obrigatório" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        const { data: account } = await supabase
-          .from("affiliate_accounts")
-          .select("id, email, name")
-          .eq("email", email.toLowerCase().trim())
-          .single();
+        let account;
+        const normalizedIdentifier = identifier.replace(/\D/g, '');
 
-        // Sempre retornar sucesso para não revelar se o email existe
+        if (normalizedIdentifier.length === 11) {
+          // Buscar por CPF
+          const { data: accounts } = await supabase
+            .from("affiliate_accounts")
+            .select("id, email, name, cpf_cnpj")
+            .not("cpf_cnpj", "is", null);
+
+          if (accounts) {
+            for (const acc of accounts) {
+              if (normalizeCpf(acc.cpf_cnpj || '') === normalizedIdentifier) {
+                account = acc;
+                break;
+              }
+            }
+          }
+        } else {
+          // Buscar por email
+          const { data: accountData } = await supabase
+            .from("affiliate_accounts")
+            .select("id, email, name")
+            .eq("email", identifier.toLowerCase().trim())
+            .single();
+          account = accountData;
+        }
+
+        // Sempre retornar sucesso para não revelar se o CPF/email existe
         if (account) {
           const resetToken = generateToken();
           const resetExpires = new Date();
@@ -439,14 +541,14 @@ serve(async (req) => {
             })
             .eq("id", account.id);
 
-          console.log(`[affiliate-auth] Password reset requested for: ${email}`);
+          console.log(`[affiliate-auth] Password reset requested for: ${account.email}`);
           // TODO: Enviar email com link de reset
         }
 
         return new Response(
           JSON.stringify({ 
             success: true, 
-            message: "Se o email existir, você receberá um link para redefinir sua senha" 
+            message: "Se o CPF/email existir, você receberá um link para redefinir sua senha" 
           }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -471,11 +573,11 @@ serve(async (req) => {
           );
         }
 
+        // Buscar conta pelo reset token
         const { data: account, error: accountError } = await supabase
           .from("affiliate_accounts")
-          .select("id")
+          .select("*")
           .eq("reset_token", resetToken)
-          .gt("reset_token_expires", new Date().toISOString())
           .single();
 
         if (accountError || !account) {
@@ -485,9 +587,20 @@ serve(async (req) => {
           );
         }
 
-        const passwordHash = hashPassword(newPassword);
+        // Verificar se token expirou
+        if (account.reset_token_expires) {
+          const expiresAt = new Date(account.reset_token_expires);
+          if (expiresAt < new Date()) {
+            return new Response(
+              JSON.stringify({ error: "Token expirado. Solicite um novo link de recuperação." }),
+              { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+        }
 
-        await supabase
+        // Atualizar senha
+        const passwordHash = hashPassword(newPassword);
+        const { error: updateError } = await supabase
           .from("affiliate_accounts")
           .update({
             password_hash: passwordHash,
@@ -497,19 +610,24 @@ serve(async (req) => {
           })
           .eq("id", account.id);
 
-        // Invalidar todas as sessões existentes
-        await supabase.from("affiliate_sessions").delete().eq("affiliate_account_id", account.id);
+        if (updateError) {
+          console.error("[affiliate-auth] Password update error:", updateError);
+          return new Response(
+            JSON.stringify({ error: "Erro ao atualizar senha" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
 
-        console.log(`[affiliate-auth] Password reset completed for account: ${account.id}`);
+        console.log(`[affiliate-auth] Password reset completed for: ${account.email}`);
 
         return new Response(
-          JSON.stringify({ success: true, message: "Senha alterada com sucesso" }),
+          JSON.stringify({ success: true, message: "Senha atualizada com sucesso" }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
 
       case "update-profile": {
-        const { token, name, phone, cpf_cnpj, pix_key, avatar_url } = body;
+        const { token, name, phone, pix_key, avatar_url, cpf_cnpj } = body;
 
         if (!token) {
           return new Response(
@@ -532,13 +650,34 @@ serve(async (req) => {
 
         const affiliateId = validation[0].affiliate_id;
 
+        // Se estiver atualizando CPF, verificar se já existe
+        if (cpf_cnpj) {
+          const normalizedCpf = normalizeCpf(cpf_cnpj);
+          const { data: accounts } = await supabase
+            .from("affiliate_accounts")
+            .select("id, cpf_cnpj")
+            .neq("id", affiliateId)
+            .not("cpf_cnpj", "is", null);
+
+          if (accounts) {
+            for (const acc of accounts) {
+              if (normalizeCpf(acc.cpf_cnpj || '') === normalizedCpf) {
+                return new Response(
+                  JSON.stringify({ error: "Este CPF já está cadastrado em outra conta" }),
+                  { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+                );
+              }
+            }
+          }
+        }
+
         // Atualizar perfil
-        const updateData: Record<string, unknown> = { updated_at: new Date().toISOString() };
+        const updateData: Record<string, any> = { updated_at: new Date().toISOString() };
         if (name !== undefined) updateData.name = name;
         if (phone !== undefined) updateData.phone = phone;
-        if (cpf_cnpj !== undefined) updateData.cpf_cnpj = cpf_cnpj;
         if (pix_key !== undefined) updateData.pix_key = pix_key;
         if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
+        if (cpf_cnpj !== undefined) updateData.cpf_cnpj = normalizeCpf(cpf_cnpj);
 
         const { error: updateError } = await supabase
           .from("affiliate_accounts")
@@ -546,7 +685,7 @@ serve(async (req) => {
           .eq("id", affiliateId);
 
         if (updateError) {
-          console.error("[affiliate-auth] Update profile error:", updateError);
+          console.error("[affiliate-auth] Profile update error:", updateError);
           return new Response(
             JSON.stringify({ error: "Erro ao atualizar perfil" }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -560,8 +699,6 @@ serve(async (req) => {
           .eq("id", affiliateId)
           .single();
 
-        console.log(`[affiliate-auth] Profile updated for: ${affiliateId}`);
-
         return new Response(
           JSON.stringify({
             success: true,
@@ -570,9 +707,9 @@ serve(async (req) => {
               email: updatedAccount?.email,
               name: updatedAccount?.name,
               phone: updatedAccount?.phone,
-              cpf_cnpj: updatedAccount?.cpf_cnpj,
-              pix_key: updatedAccount?.pix_key,
               avatar_url: updatedAccount?.avatar_url,
+              pix_key: updatedAccount?.pix_key,
+              cpf_cnpj: updatedAccount?.cpf_cnpj,
             },
           }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -584,7 +721,7 @@ serve(async (req) => {
 
         if (!token || !current_password || !new_password) {
           return new Response(
-            JSON.stringify({ error: "Token, senha atual e nova senha são obrigatórios" }),
+            JSON.stringify({ error: "Dados incompletos" }),
             { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
@@ -611,20 +748,20 @@ serve(async (req) => {
         const affiliateId = validation[0].affiliate_id;
 
         // Buscar conta
-        const { data: account } = await supabase
+        const { data: account, error: accountError } = await supabase
           .from("affiliate_accounts")
-          .select("password_hash")
+          .select("*")
           .eq("id", affiliateId)
           .single();
 
-        if (!account) {
+        if (accountError || !account) {
           return new Response(
             JSON.stringify({ error: "Conta não encontrada" }),
             { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
 
-        // Verificar senha atual (supports both legacy and bcrypt)
+        // Verificar senha atual
         const isValidPassword = await verifyPassword(current_password, account.password_hash);
         if (!isValidPassword) {
           return new Response(
@@ -633,17 +770,24 @@ serve(async (req) => {
           );
         }
 
-        // Atualizar senha com bcrypt
-        const newPasswordHash = hashPassword(new_password);
-        await supabase
+        // Atualizar senha
+        const newHash = hashPassword(new_password);
+        const { error: updateError } = await supabase
           .from("affiliate_accounts")
           .update({
-            password_hash: newPasswordHash,
+            password_hash: newHash,
             updated_at: new Date().toISOString(),
           })
           .eq("id", affiliateId);
 
-        console.log(`[affiliate-auth] Password changed for: ${affiliateId}`);
+        if (updateError) {
+          return new Response(
+            JSON.stringify({ error: "Erro ao atualizar senha" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        console.log(`[affiliate-auth] Password changed for: ${account.email}`);
 
         return new Response(
           JSON.stringify({ success: true, message: "Senha alterada com sucesso" }),

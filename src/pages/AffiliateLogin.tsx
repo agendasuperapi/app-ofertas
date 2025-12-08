@@ -2,29 +2,37 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAffiliateAuth } from '@/hooks/useAffiliateAuth';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { CPFInput, isValidCPF } from '@/components/ui/cpf-input';
+import { PasswordInput } from '@/components/ui/password-input';
 import { toast } from 'sonner';
 import { Loader2, Users, ArrowLeft } from 'lucide-react';
 
 export default function AffiliateLogin() {
   const navigate = useNavigate();
   const { affiliateLogin, isLoading: authLoading } = useAffiliateAuth();
-  const [email, setEmail] = useState('');
+  const [cpf, setCpf] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !password) {
+    if (!cpf || !password) {
       toast.error('Preencha todos os campos');
       return;
     }
 
+    // Validar CPF
+    const cpfNumbers = cpf.replace(/\D/g, '');
+    if (cpfNumbers.length !== 11 || !isValidCPF(cpfNumbers)) {
+      toast.error('CPF inválido');
+      return;
+    }
+
     setIsLoading(true);
-    const result = await affiliateLogin(email, password);
+    const result = await affiliateLogin(cpfNumbers, password);
     setIsLoading(false);
 
     if (result.success) {
@@ -68,22 +76,19 @@ export default function AffiliateLogin() {
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                <Label htmlFor="cpf">CPF</Label>
+                <CPFInput
+                  id="cpf"
+                  value={cpf}
+                  onChange={setCpf}
                   disabled={isLoading}
                 />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">Senha</Label>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
