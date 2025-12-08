@@ -252,9 +252,9 @@ export function AffiliateStoreProductsTab({
                   </div>
 
                   {/* Você Ganha - destaque */}
-                  <div className="bg-green-500/10 rounded-lg p-3 text-center">
+                  <div className="bg-green-500/10 rounded-lg p-2.5 text-center">
                     <span className="text-xs text-muted-foreground">Você Ganha: </span>
-                    <span className="font-bold text-lg text-green-600">{formatCurrency(commissionAmount)}</span>
+                    <span className="font-bold text-base text-green-600">{formatCurrency(commissionAmount)}</span>
                   </div>
 
                   {/* Botão Copiar Link */}
