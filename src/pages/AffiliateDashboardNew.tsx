@@ -499,7 +499,7 @@ export default function AffiliateDashboardNew() {
       {/* Tab Resumo */}
       <TabsContent value="overview" className="space-y-6 mt-4 flex-1 overflow-y-auto">
         {/* Stats */}
-        <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           <motion.div initial={{
           opacity: 0,
           y: 10
@@ -520,11 +520,11 @@ export default function AffiliateDashboardNew() {
           opacity: 1,
           y: 0
         }} transition={{
-          delay: 0.2
-        }} className="p-3 sm:p-4 bg-green-500/10 rounded-lg border border-green-500/20 text-center">
-            <Wallet className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-green-600 mb-1" />
-            <p className="text-[10px] sm:text-xs text-muted-foreground">Ganhos</p>
-            <p className="font-bold text-sm sm:text-lg text-green-600">{formatCurrency(store.total_commission)}</p>
+          delay: 0.15
+        }} className="p-3 sm:p-4 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center">
+            <Wallet className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-emerald-600 mb-1" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Disponível Saque</p>
+            <p className="font-bold text-sm sm:text-lg text-emerald-600">{formatCurrency(store.total_commission)}</p>
           </motion.div>
           <motion.div initial={{
           opacity: 0,
@@ -533,7 +533,7 @@ export default function AffiliateDashboardNew() {
           opacity: 1,
           y: 0
         }} transition={{
-          delay: 0.3
+          delay: 0.25
         }} className="p-3 sm:p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center">
             <Clock className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-yellow-600 mb-1" />
             <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
@@ -546,7 +546,7 @@ export default function AffiliateDashboardNew() {
           opacity: 1,
           y: 0
         }} transition={{
-          delay: 0.4
+          delay: 0.3
         }} className="p-3 sm:p-4 bg-red-500/10 rounded-lg border border-red-500/20 text-center">
             <XCircle className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-red-600 mb-1" />
             <p className="text-[10px] sm:text-xs text-muted-foreground">Cancelados</p>
