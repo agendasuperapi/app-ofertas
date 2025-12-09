@@ -24,7 +24,7 @@ import { InviteAffiliateDialog } from './InviteAffiliateDialog';
 import { 
   Users, Plus, Edit, Trash2, DollarSign, TrendingUp, 
   Copy, Check, Tag, Percent, Settings, Eye, 
-  Clock, CheckCircle, XCircle, CreditCard, Loader2, AlertCircle, Search, Mail, Link2, Package, ChevronDown, ChevronRight, Pencil, X, Save, UserCheck, UserX
+  Clock, CheckCircle, XCircle, CreditCard, Loader2, AlertCircle, Search, Mail, Link2, Package, ChevronDown, ChevronRight, Pencil, X, Save, UserCheck, UserX, Lock
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
@@ -1329,18 +1329,26 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                     {formData.coupon_ids.map(couponId => {
                       const coupon = coupons.find(c => c.id === couponId);
                       if (!coupon) return null;
+                      // Check if this coupon was already linked before editing (for existing affiliates)
+                      const wasAlreadyLinked = editingAffiliate?.affiliate_coupons?.some(ac => ac.coupon_id === couponId);
                       return (
                         <div key={couponId} className="flex items-center justify-between p-3 border rounded-lg border-primary/50 bg-primary/5">
                           <div className="flex items-center gap-3">
-                            <Checkbox
-                              checked={true}
-                              onCheckedChange={() => {
-                                setFormData({
-                                  ...formData,
-                                  coupon_ids: formData.coupon_ids.filter(id => id !== couponId)
-                                });
-                              }}
-                            />
+                            {wasAlreadyLinked ? (
+                              <div className="flex items-center justify-center h-4 w-4 text-primary" title="Cupom vinculado permanentemente">
+                                <Lock className="h-4 w-4" />
+                              </div>
+                            ) : (
+                              <Checkbox
+                                checked={true}
+                                onCheckedChange={() => {
+                                  setFormData({
+                                    ...formData,
+                                    coupon_ids: formData.coupon_ids.filter(id => id !== couponId)
+                                  });
+                                }}
+                              />
+                            )}
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="font-mono font-medium">{coupon.code}</span>
@@ -1350,6 +1358,11 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                 >
                                   {coupon.is_active ? "Ativo" : "Inativo"}
                                 </Badge>
+                                {wasAlreadyLinked && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Permanente
+                                  </Badge>
+                                )}
                               </div>
                               <p className="text-xs text-muted-foreground">
                                 {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : formatCurrency(coupon.discount_value)} de desconto
@@ -3044,43 +3057,47 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                 className={`flex items-center justify-between p-3 border rounded-lg ${isLinked ? 'border-primary/50 bg-primary/5' : ''}`}
                               >
                                 <div className="flex items-center gap-3">
-                                  <Checkbox
-                                    id={`detail-coupon-${coupon.id}`}
-                                    checked={isLinked}
-                                    onCheckedChange={async (checked) => {
-                                      if (!selectedAffiliate) return;
-                                      const currentIds = selectedAffiliate?.affiliate_coupons?.map(ac => ac.coupon_id) || [];
-                                      const newCouponIds = checked 
-                                        ? [...currentIds, coupon.id]
-                                        : currentIds.filter(id => id !== coupon.id);
-                                      
-                                      await updateAffiliate(selectedAffiliate.id, { coupon_ids: newCouponIds });
-                                      
-                                      // Update local state with new affiliate_coupons structure
-                                      const newAffiliateCoupons = newCouponIds.map(id => {
-                                        const existingCoupon = availableCoupons.find(c => c.id === id);
-                                        return {
-                                          coupon_id: id,
-                                          coupon: existingCoupon ? {
-                                            id: existingCoupon.id,
-                                            code: existingCoupon.code,
-                                            discount_type: existingCoupon.discount_type,
-                                            discount_value: existingCoupon.discount_value,
-                                          } : { id, code: '', discount_type: 'percentage', discount_value: 0 }
-                                        };
-                                      });
-                                      
-                                      setSelectedAffiliate({ 
-                                        ...selectedAffiliate, 
-                                        affiliate_coupons: newAffiliateCoupons 
-                                      });
-                                      
-                                      toast({
-                                        title: checked ? 'Cupom vinculado' : 'Cupom desvinculado',
-                                        description: `${coupon.code} foi ${checked ? 'vinculado ao' : 'desvinculado do'} afiliado.`,
-                                      });
-                                    }}
-                                  />
+                                  {isLinked ? (
+                                    <div className="flex items-center justify-center h-4 w-4 text-primary" title="Cupom vinculado permanentemente">
+                                      <Lock className="h-4 w-4" />
+                                    </div>
+                                  ) : (
+                                    <Checkbox
+                                      id={`detail-coupon-${coupon.id}`}
+                                      checked={false}
+                                      onCheckedChange={async (checked) => {
+                                        if (!selectedAffiliate || !checked) return;
+                                        const currentIds = selectedAffiliate?.affiliate_coupons?.map(ac => ac.coupon_id) || [];
+                                        const newCouponIds = [...currentIds, coupon.id];
+                                        
+                                        await updateAffiliate(selectedAffiliate.id, { coupon_ids: newCouponIds });
+                                        
+                                        // Update local state with new affiliate_coupons structure
+                                        const newAffiliateCoupons = newCouponIds.map(id => {
+                                          const existingCoupon = availableCoupons.find(c => c.id === id);
+                                          return {
+                                            coupon_id: id,
+                                            coupon: existingCoupon ? {
+                                              id: existingCoupon.id,
+                                              code: existingCoupon.code,
+                                              discount_type: existingCoupon.discount_type,
+                                              discount_value: existingCoupon.discount_value,
+                                            } : { id, code: '', discount_type: 'percentage', discount_value: 0 }
+                                          };
+                                        });
+                                        
+                                        setSelectedAffiliate({ 
+                                          ...selectedAffiliate, 
+                                          affiliate_coupons: newAffiliateCoupons 
+                                        });
+                                        
+                                        toast({
+                                          title: 'Cupom vinculado',
+                                          description: `${coupon.code} foi vinculado ao afiliado.`,
+                                        });
+                                      }}
+                                    />
+                                  )}
                                   <div>
                                     <div className="flex items-center gap-2">
                                       <p className="font-medium">{coupon.code}</p>
@@ -3090,6 +3107,11 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                       >
                                         {coupon.is_active ? "Ativo" : "Inativo"}
                                       </Badge>
+                                      {isLinked && (
+                                        <Badge variant="secondary" className="text-xs">
+                                          Permanente
+                                        </Badge>
+                                      )}
                                     </div>
                                     <p className="text-sm text-muted-foreground">
                                       {coupon.discount_type === 'percentage' 
