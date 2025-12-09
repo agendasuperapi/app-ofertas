@@ -192,10 +192,6 @@ export const AffiliateInvitesManager = ({ storeId, storeName = 'Loja' }: Affilia
             Gerencie os convites enviados para afiliados
           </p>
         </div>
-        <Button className="bg-gradient-primary shadow-glow hover-lift" onClick={() => setInviteDialogOpen(true)}>
-          <Mail className="h-4 w-4 mr-2" />
-          Convidar Afiliado
-        </Button>
       </motion.div>
 
       {/* Invite Dialog */}
