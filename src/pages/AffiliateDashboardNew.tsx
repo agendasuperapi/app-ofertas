@@ -1153,18 +1153,26 @@ export default function AffiliateDashboardNew() {
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0">
-                  <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="grid grid-cols-5 gap-2 text-center">
                     <div className="p-2 bg-muted/50 rounded-lg">
-                      <p className="text-xs text-muted-foreground">Vendas</p>
-                      <p className="font-semibold text-sm">{formatCurrency(store.total_sales)}</p>
+                      <p className="text-[10px] text-muted-foreground">Total Vendas</p>
+                      <p className="font-semibold text-xs">{formatCurrency(store.total_sales)}</p>
                     </div>
-                    <div className="p-2 bg-green-500/10 rounded-lg">
-                      <p className="text-xs text-muted-foreground">Ganhos</p>
-                      <p className="font-semibold text-sm text-green-600">{formatCurrency(store.total_commission)}</p>
+                    <div className="p-2 bg-purple-500/10 rounded-lg">
+                      <p className="text-[10px] text-muted-foreground">Total Ganhos</p>
+                      <p className="font-semibold text-xs text-purple-600">{formatCurrency(getStorePaidWithdrawals(store.store_id))}</p>
                     </div>
                     <div className="p-2 bg-yellow-500/10 rounded-lg">
-                      <p className="text-xs text-muted-foreground">Pendente</p>
-                      <p className="font-semibold text-sm text-yellow-600">{formatCurrency(store.pending_commission)}</p>
+                      <p className="text-[10px] text-muted-foreground">Pendente</p>
+                      <p className="font-semibold text-xs text-yellow-600">{formatCurrency(store.pending_commission)}</p>
+                    </div>
+                    <div className="p-2 bg-emerald-500/10 rounded-lg">
+                      <p className="text-[10px] text-muted-foreground">Disp. Saque</p>
+                      <p className="font-semibold text-xs text-emerald-600">{formatCurrency(store.total_commission)}</p>
+                    </div>
+                    <div className="p-2 bg-red-500/10 rounded-lg">
+                      <p className="text-[10px] text-muted-foreground">Cancelados</p>
+                      <p className="font-semibold text-xs text-red-600">{formatCurrency(getStoreCancelledCommission(store.store_affiliate_id))}</p>
                     </div>
                   </div>
                 </CardContent>
