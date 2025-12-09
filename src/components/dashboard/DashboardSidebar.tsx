@@ -46,6 +46,8 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
       : []),
     // Funcionários só são visíveis para donos de loja
     ...(!isEmployee ? [{ id: 'funcionarios', label: 'funcionários', icon: UserCog }] : []),
+    // Convites de afiliados - só visíveis para donos de loja com permissão de afiliados
+    ...(hasPermission('affiliates', 'enabled') && !isEmployee ? [{ id: 'afiliados-convites', label: 'convites', icon: Mail }] : []),
   ];
 
   const relatoriosSubItems = [
@@ -57,7 +59,6 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
 
   const afiliadosSubItems = [
     { id: 'afiliados', label: 'cadastro', icon: UserPlus },
-    { id: 'afiliados-convites', label: 'convites', icon: Mail },
     { id: 'afiliados-saques', label: 'saques', icon: Wallet },
     { id: 'afiliados-relatorios', label: 'relatórios', icon: FileBarChart },
   ];
