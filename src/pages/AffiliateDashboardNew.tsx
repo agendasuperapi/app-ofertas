@@ -1905,9 +1905,22 @@ export default function AffiliateDashboardNew() {
           <Separator />
 
           <div>
-            <h4 className="font-medium mb-3">Por Loja</h4>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+              <h4 className="font-medium">Por Loja</h4>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar loja..."
+                  className="pl-9 w-full sm:w-64"
+                  value={storesSearch}
+                  onChange={(e) => setStoresSearch(e.target.value)}
+                />
+              </div>
+            </div>
             <div className="space-y-2">
-              {affiliateStores.map(store => <div key={store.store_affiliate_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
+              {affiliateStores
+                .filter(store => store.store_name.toLowerCase().includes(storesSearch.toLowerCase()))
+                .map(store => <div key={store.store_affiliate_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
                   setActiveTab('stores');
                   setSelectedStore(store);
                 }}>
@@ -1921,6 +1934,9 @@ export default function AffiliateDashboardNew() {
                     {formatCurrency(store.total_commission)}
                   </span>
                 </div>)}
+              {affiliateStores.filter(store => store.store_name.toLowerCase().includes(storesSearch.toLowerCase())).length === 0 && (
+                <p className="text-center text-muted-foreground py-4">Nenhuma loja encontrada</p>
+              )}
             </div>
           </div>
         </div>
