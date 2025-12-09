@@ -23,11 +23,10 @@ import { useCategories } from '@/hooks/useCategories';
 import { useProducts } from '@/hooks/useProducts';
 import { InviteAffiliateDialog } from './InviteAffiliateDialog';
 import { AffiliateInvitesManager } from './AffiliateInvitesManager';
-import { AffiliateMaturitySettings } from './AffiliateMaturitySettings';
 import { 
   Users, Plus, Edit, Trash2, DollarSign, TrendingUp, 
   Copy, Check, Tag, Percent, Settings, Eye, 
-  Clock, CheckCircle, XCircle, CreditCard, Loader2, AlertCircle, Search, Mail, Link2, Package, ChevronDown, ChevronRight, Pencil, X, Save, UserCheck, UserX, Lock
+  Clock, CheckCircle, XCircle, CreditCard, Loader2, AlertCircle, Search, Mail, Link2, Package, ChevronDown, ChevronRight, Pencil, X, Save, UserCheck, UserX, Lock, Calendar
 } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
@@ -123,6 +122,10 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const [defaultCommissionType, setDefaultCommissionType] = useState<'percentage' | 'fixed'>('percentage');
   const [defaultCommissionValue, setDefaultCommissionValue] = useState(0);
   const [savingDefaultCommission, setSavingDefaultCommission] = useState(false);
+  
+  // Maturity days state
+  const [affiliateMaturityDays, setAffiliateMaturityDays] = useState<number>(7);
+  const [savingMaturity, setSavingMaturity] = useState(false);
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [inviteLinkDialogOpen, setInviteLinkDialogOpen] = useState(false);
   const [productsModalOpen, setProductsModalOpen] = useState(false);
@@ -438,6 +441,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     setDefaultCommissionEnabled(affiliate.use_default_commission ?? true);
     setDefaultCommissionType(affiliate.default_commission_type || 'percentage');
     setDefaultCommissionValue(affiliate.default_commission_value || 0);
+    setAffiliateMaturityDays(affiliate.commission_maturity_days ?? 7);
     
     const [rules, earnings, stats] = await Promise.all([
       getCommissionRules(affiliate.id),
@@ -929,9 +933,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
         </TabsContent>
 
         <TabsContent value="gerenciar" className="space-y-6 mt-0">
-          {/* Configuração de Carência */}
-          <AffiliateMaturitySettings storeId={storeId} />
-          
           {/* Botão Novo Afiliado */}
           <div className="flex justify-end">
             <Button className="bg-gradient-primary shadow-glow hover-lift" onClick={() => handleOpenDialog()}>
@@ -2481,6 +2482,73 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                       </div>
                     </CardContent>
                   )}
+                </Card>
+
+                {/* Seção Carência para Liberação de Saque */}
+                <Card className="border-amber-500/20 bg-amber-50/30">
+                  <CardHeader className="py-2 px-3">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-amber-600" />
+                      <CardTitle className="text-sm">Carência para Liberação de Saque</CardTitle>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Após a entrega do pedido, a comissão ficará disponível para saque após este período
+                    </p>
+                  </CardHeader>
+                  <CardContent className="pt-0 px-3 pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="90"
+                            value={affiliateMaturityDays}
+                            onChange={(e) => setAffiliateMaturityDays(Math.min(90, Math.max(0, Number(e.target.value))))}
+                            className="h-8 w-20 text-sm"
+                          />
+                          <span className="text-sm text-muted-foreground">dias</span>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        className="h-8"
+                        disabled={savingMaturity}
+                        onClick={async () => {
+                          if (!selectedAffiliate) return;
+                          setSavingMaturity(true);
+                          try {
+                            await updateAffiliate(selectedAffiliate.id, {
+                              commission_maturity_days: affiliateMaturityDays
+                            });
+                            setSelectedAffiliate({ ...selectedAffiliate, commission_maturity_days: affiliateMaturityDays });
+                            toast({
+                              title: 'Carência atualizada',
+                              description: `Período de carência definido para ${affiliateMaturityDays} dias.`,
+                            });
+                          } catch (error) {
+                            toast({
+                              title: 'Erro ao salvar',
+                              description: 'Não foi possível atualizar a carência.',
+                              variant: 'destructive',
+                            });
+                          } finally {
+                            setSavingMaturity(false);
+                          }
+                        }}
+                      >
+                        {savingMaturity ? (
+                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        ) : (
+                          <Save className="h-3 w-3 mr-1" />
+                        )}
+                        Salvar
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Valor entre 0 e 90 dias. Padrão: 7 dias.
+                    </p>
+                  </CardContent>
                 </Card>
               </TabsContent>
               

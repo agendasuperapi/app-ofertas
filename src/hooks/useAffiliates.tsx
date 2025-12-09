@@ -24,6 +24,7 @@ export interface Affiliate {
   default_commission_type: 'percentage' | 'fixed';
   default_commission_value: number;
   use_default_commission: boolean; // When true, applies default commission to products without specific rules
+  commission_maturity_days: number; // Days before commission becomes available for withdrawal
   created_at: string;
   updated_at: string;
   coupon?: {
@@ -158,6 +159,7 @@ export const useAffiliates = (storeId?: string) => {
           default_commission_type: rest.default_commission_type || 'percentage',
           default_commission_value: rest.default_commission_value || 0,
           use_default_commission: rest.use_default_commission ?? true,
+          commission_maturity_days: rest.commission_maturity_days ?? 7,
         })
         .select()
         .single();
@@ -198,7 +200,8 @@ export const useAffiliates = (storeId?: string) => {
                 coupon_id: coupon_ids[0],
                 default_commission_type: rest.default_commission_type || 'percentage',
                 default_commission_value: rest.default_commission_value || 0,
-                use_default_commission: rest.use_default_commission ?? true
+                use_default_commission: rest.use_default_commission ?? true,
+                commission_maturity_days: rest.commission_maturity_days ?? 7
               })
               .eq('id', storeAffiliate.id);
 
@@ -287,7 +290,8 @@ export const useAffiliates = (storeId?: string) => {
                 coupon_id: coupon_ids[0] || null,
                 default_commission_type: rest.default_commission_type || data.default_commission_type || 'percentage',
                 default_commission_value: rest.default_commission_value ?? data.default_commission_value ?? 0,
-                use_default_commission: rest.use_default_commission ?? data.use_default_commission ?? true
+                use_default_commission: rest.use_default_commission ?? data.use_default_commission ?? true,
+                commission_maturity_days: rest.commission_maturity_days ?? data.commission_maturity_days ?? 7
               })
               .eq('id', storeAffiliate.id);
 
