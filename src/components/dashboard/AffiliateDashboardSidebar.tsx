@@ -1,4 +1,4 @@
-import { Home, Store, ShoppingBag, BarChart3, User, LogOut } from "lucide-react";
+import { Home, Store, ShoppingBag, BarChart3, User, LogOut, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ const menuItems = [
   { id: "stores", label: "Lojas", icon: Store },
   { id: "orders", label: "Pedidos", icon: ShoppingBag },
   { id: "commissions", label: "Comissões", icon: BarChart3 },
+  { id: "withdrawals", label: "Saques", icon: Wallet },
   { id: "profile", label: "Perfil", icon: User },
 ];
 
