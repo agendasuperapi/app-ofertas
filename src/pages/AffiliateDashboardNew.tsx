@@ -1449,7 +1449,10 @@ export default function AffiliateDashboardNew() {
                   <div className="space-y-2">
                     {affiliateStores.slice(0, 3).map(store => <motion.div key={store.store_affiliate_id} whileHover={{
                   scale: 1.01
-                }} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border/50">
+                }} whileTap={{ scale: 0.98 }} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
+                  setActiveTab('stores');
+                  setSelectedStore(store);
+                }}>
                         <div className="flex items-center gap-3">
                           {store.store_logo ? <img src={store.store_logo} alt={store.store_name} className="w-8 h-8 rounded object-cover" /> : <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
                               <Store className="h-4 w-4 text-muted-foreground" />
