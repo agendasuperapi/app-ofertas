@@ -1904,14 +1904,7 @@ export default function AffiliateDashboardNew() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
-            <div className="p-3 sm:p-4 bg-muted rounded-lg">
-              <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <TrendingUp className="h-4 w-4 shrink-0" />
-                <span className="text-xs sm:text-sm truncate">Total Pedidos</span>
-              </div>
-              <p className="text-xl sm:text-2xl font-bold">{affiliateStats?.total_orders || 0}</p>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4">
             <div className="p-3 sm:p-4 bg-muted rounded-lg">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <CheckCircle className="h-4 w-4 shrink-0" />
