@@ -134,18 +134,72 @@ export function useWithdrawalRequests(options: UseWithdrawalRequestsOptions = {}
   // Marcar como pago (lojista)
   const markAsPaid = async (requestId: string, adminNotes?: string, paymentProof?: string) => {
     try {
-      const { error } = await supabase
+      // Buscar a solicitação para obter store_affiliate_id
+      const request = requests.find(r => r.id === requestId);
+      if (!request) {
+        toast.error('Solicitação não encontrada');
+        return false;
+      }
+
+      const paidAt = new Date().toISOString();
+
+      // 1. Atualizar a solicitação de saque
+      const { error: withdrawalError } = await supabase
         .from('affiliate_withdrawal_requests')
         .update({
           status: 'paid',
-          paid_at: new Date().toISOString(),
-          processed_at: new Date().toISOString(),
+          paid_at: paidAt,
+          processed_at: paidAt,
           admin_notes: adminNotes || null,
           payment_proof: paymentProof || null,
         })
         .eq('id', requestId);
 
-      if (error) throw error;
+      if (withdrawalError) throw withdrawalError;
+
+      // 2. Marcar as comissões elegíveis como pagas
+      // Buscar comissões de pedidos entregues que ainda estão pendentes
+      const { data: eligibleEarnings, error: fetchError } = await supabase
+        .from('affiliate_earnings')
+        .select('id, order_id')
+        .eq('store_affiliate_id', request.store_affiliate_id)
+        .eq('status', 'pending');
+
+      if (fetchError) {
+        console.error('[useWithdrawalRequests] Erro ao buscar comissões:', fetchError);
+      } else if (eligibleEarnings && eligibleEarnings.length > 0) {
+        // Buscar quais desses pedidos estão entregues
+        const orderIds = eligibleEarnings.map(e => e.order_id);
+        const { data: deliveredOrders } = await supabase
+          .from('orders')
+          .select('id, status')
+          .in('id', orderIds);
+
+        // Filtrar apenas pedidos entregues (cast para string para evitar erros de tipo)
+        const filteredDeliveredOrders = (deliveredOrders || []).filter(
+          o => (o.status as string) === 'entregue' || (o.status as string) === 'delivered'
+        );
+
+        if (deliveredOrders && deliveredOrders.length > 0) {
+          const deliveredOrderIds = deliveredOrders.map(o => o.id);
+          const earningsToUpdate = eligibleEarnings
+            .filter(e => deliveredOrderIds.includes(e.order_id))
+            .map(e => e.id);
+
+          if (earningsToUpdate.length > 0) {
+            const { error: updateError } = await supabase
+              .from('affiliate_earnings')
+              .update({ status: 'paid', paid_at: paidAt })
+              .in('id', earningsToUpdate);
+
+            if (updateError) {
+              console.error('[useWithdrawalRequests] Erro ao atualizar comissões:', updateError);
+            } else {
+              console.log(`[useWithdrawalRequests] ${earningsToUpdate.length} comissões marcadas como pagas`);
+            }
+          }
+        }
+      }
 
       toast.success('Saque marcado como pago!');
       await fetchRequests();
