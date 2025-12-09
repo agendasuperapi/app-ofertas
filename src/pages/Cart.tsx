@@ -21,7 +21,7 @@ import { useDeliveryZones } from "@/hooks/useDeliveryZones";
 import { usePickupLocations } from "@/hooks/usePickupLocations";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
-import { Minus, Plus, Trash2, ShoppingBag, Clock, Store, Pencil, ArrowLeft, Package, Tag, X, Loader2, Search, MapPin, Eye, EyeOff, CheckCircle, Percent, AlertTriangle } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, Clock, Store, Pencil, ArrowLeft, Package, Tag, X, Loader2, Search, MapPin, Eye, EyeOff, CheckCircle, Percent, AlertTriangle, ShoppingCart } from "lucide-react";
 import { calculateItemDiscount, calculateItemSubtotal } from "@/lib/couponUtils";
 import { toast } from "@/hooks/use-toast";
 import { isStoreOpen, getStoreStatusText } from "@/lib/storeUtils";
@@ -1045,13 +1045,19 @@ export default function Cart() {
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex gap-4">
-                      {item.imageUrl && (
-                        <img
-                          src={item.imageUrl}
-                          alt={item.productName}
-                          className="w-24 h-24 object-cover rounded-lg"
-                        />
-                      )}
+                      <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.productName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <ShoppingCart className="w-8 h-8 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1">
                         <h3 className="font-semibold mb-1">{item.productName}</h3>
                         {item.size && (
