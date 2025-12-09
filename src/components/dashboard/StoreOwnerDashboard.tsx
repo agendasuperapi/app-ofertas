@@ -5769,7 +5769,7 @@ export const StoreOwnerDashboard = ({
       {isMobile && <DashboardBottomNav activeTab={activeTab} onTabChange={setActiveTab} onMenuClick={() => {
         setOpenRelatoriosMenu(false);
         setIsMobileSidebarOpen(true);
-      }} pendingOrdersCount={pendingOrdersCount} />}
+      }} onSignOut={onSignOut} pendingOrdersCount={pendingOrdersCount} />}
     </div>
     </div>;
 };

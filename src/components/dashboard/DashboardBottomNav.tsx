@@ -1,17 +1,29 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Package, TrendingUp, Menu, Home, Users } from "lucide-react";
+import { ShoppingBag, Package, TrendingUp, Menu, Home, Users, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface DashboardBottomNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   onMenuClick: () => void;
+  onSignOut?: () => void;
   pendingOrdersCount?: number;
 }
 
-export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendingOrdersCount = 0 }: DashboardBottomNavProps) => {
+export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, onSignOut, pendingOrdersCount = 0 }: DashboardBottomNavProps) => {
   const [showRelatoriosMenu, setShowRelatoriosMenu] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const relatoriosButtonRef = useRef<HTMLButtonElement>(null);
 
   const navItems = [
@@ -20,6 +32,7 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendin
     { id: "pedidos", label: "Pedidos", icon: ShoppingBag },
     { id: "relatorios", label: "Relatórios", icon: TrendingUp, isRelatorios: true },
     { id: "menu", label: "Menu", icon: Menu, isMenu: true },
+    ...(onSignOut ? [{ id: "sair", label: "Sair", icon: LogOut, isLogout: true }] : []),
   ];
 
   const relatoriosSubmenus = [
@@ -30,13 +43,20 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendin
   ];
 
   const handleClick = (item: typeof navItems[0]) => {
-    if (item.isMenu) {
+    if ((item as any).isLogout) {
+      setShowLogoutConfirm(true);
+    } else if (item.isMenu) {
       onMenuClick();
     } else if (item.isRelatorios) {
       setShowRelatoriosMenu(!showRelatoriosMenu);
     } else {
       onTabChange(item.id);
     }
+  };
+
+  const handleConfirmLogout = () => {
+    setShowLogoutConfirm(false);
+    onSignOut?.();
   };
 
   const handleRelatorioClick = (id: string) => {
@@ -61,8 +81,36 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendin
     };
   }, [showRelatoriosMenu]);
 
+  const gridCols = onSignOut ? "grid-cols-6" : "grid-cols-5";
+
   return (
     <>
+      {/* Dialog de confirmação de logout */}
+      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <AlertDialogContent className="max-w-[90vw] sm:max-w-md rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-full bg-destructive/10">
+                <LogOut className="w-5 h-5 text-destructive" />
+              </div>
+              Sair da conta
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja sair? Você precisará fazer login novamente para acessar o painel.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-2 sm:gap-0">
+            <AlertDialogCancel className="flex-1 sm:flex-none mt-0">Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmLogout}
+              className="flex-1 sm:flex-none bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              Sair
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Menu popup de Relatórios */}
       <AnimatePresence>
         {showRelatoriosMenu && (
@@ -116,12 +164,13 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendin
         className="fixed bottom-4 left-4 right-4 z-50"
       >
         <div className="bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden">
-          <div className="grid grid-cols-5 h-16 px-1">
+          <div className={cn("grid h-16 px-1", gridCols)}>
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id || 
                 (item.isRelatorios && activeTab.startsWith("relatorio-"));
-              const isSpecialItem = item.isMenu || item.isRelatorios;
+              const isSpecialItem = item.isMenu || item.isRelatorios || (item as any).isLogout;
+              const isLogout = (item as any).isLogout;
 
               return (
                 <motion.button
@@ -132,7 +181,7 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendin
                   className="flex flex-col items-center justify-center gap-1 relative py-2"
                 >
                   {/* Pill de fundo ativo */}
-                  {isActive && !item.isMenu && (
+                  {isActive && !item.isMenu && !isLogout && (
                     <motion.div
                       layoutId="activeTabPill"
                       className="absolute inset-1.5 bg-primary/10 rounded-xl"
@@ -143,7 +192,7 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendin
                   {/* Ícone com animação e badge */}
                   <motion.div
                     animate={{
-                      scale: isActive && !item.isMenu ? 1.1 : 1,
+                      scale: isActive && !item.isMenu && !isLogout ? 1.1 : 1,
                     }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     className="relative z-10"
@@ -151,9 +200,11 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendin
                     <Icon 
                       className={cn(
                         "w-5 h-5 transition-all duration-200",
-                        isActive && !item.isMenu 
-                          ? "text-primary stroke-[2.5]" 
-                          : "text-muted-foreground"
+                        isLogout 
+                          ? "text-destructive" 
+                          : isActive && !item.isMenu 
+                            ? "text-primary stroke-[2.5]" 
+                            : "text-muted-foreground"
                       )} 
                     />
                     
@@ -180,9 +231,11 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, pendin
                   <span 
                     className={cn(
                       "text-[10px] font-medium transition-all duration-200 z-10",
-                      isActive && !item.isMenu 
-                        ? "text-primary font-semibold" 
-                        : "text-muted-foreground"
+                      isLogout 
+                        ? "text-destructive font-semibold" 
+                        : isActive && !item.isMenu 
+                          ? "text-primary font-semibold" 
+                          : "text-muted-foreground"
                     )}
                   >
                     {item.label}
