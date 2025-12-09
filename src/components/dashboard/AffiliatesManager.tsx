@@ -852,16 +852,10 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
             Gerencie seus afiliados e comissões
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="hover-lift" onClick={() => setInviteDialogOpen(true)}>
-            <Mail className="h-4 w-4 mr-2" />
-            Convidar Afiliado
-          </Button>
-          <Button className="bg-gradient-primary shadow-glow hover-lift" onClick={() => handleOpenDialog()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Afiliado
-          </Button>
-        </div>
+        <Button className="bg-gradient-primary shadow-glow hover-lift" onClick={() => handleOpenDialog()}>
+          <Plus className="h-4 w-4 mr-2" />
+          Novo Afiliado
+        </Button>
       </motion.div>
       
       {/* Invite Dialog */}
