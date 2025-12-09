@@ -68,6 +68,9 @@ export default function AffiliateDashboardNew() {
   const [withdrawalsPage, setWithdrawalsPage] = useState<Record<string, number>>({});
   const [withdrawalsSearch, setWithdrawalsSearch] = useState<Record<string, string>>({});
   const [withdrawalsStatusFilter, setWithdrawalsStatusFilter] = useState<Record<string, string>>({});
+  const [storesSearch, setStoresSearch] = useState('');
+  const [storesStatusFilter, setStoresStatusFilter] = useState('all');
+  const [storesSortBy, setStoresSortBy] = useState('name');
 
   // Buscar affiliate_id do banco
   useEffect(() => {
@@ -1487,6 +1490,51 @@ export default function AffiliateDashboardNew() {
         </div>}
     </motion.div>;
 
+  // Filtered and sorted stores
+  const filteredStores = useMemo(() => {
+    let result = [...affiliateStores];
+    
+    // Apply search filter
+    if (storesSearch.trim()) {
+      const searchLower = storesSearch.toLowerCase();
+      result = result.filter(store => 
+        store.store_name.toLowerCase().includes(searchLower) ||
+        store.coupon_code?.toLowerCase().includes(searchLower) ||
+        store.coupons?.some(c => c.code.toLowerCase().includes(searchLower))
+      );
+    }
+    
+    // Apply status filter
+    if (storesStatusFilter !== 'all') {
+      result = result.filter(store => store.status === storesStatusFilter);
+    }
+    
+    // Apply sorting
+    result.sort((a, b) => {
+      switch (storesSortBy) {
+        case 'name':
+          return a.store_name.localeCompare(b.store_name);
+        case 'sales':
+          return b.total_sales - a.total_sales;
+        case 'commission':
+          return b.total_commission - a.total_commission;
+        case 'pending':
+          return b.pending_commission - a.pending_commission;
+        default:
+          return 0;
+      }
+    });
+    
+    return result;
+  }, [affiliateStores, storesSearch, storesStatusFilter, storesSortBy]);
+
+  const totalStoresCommission = useMemo(() => 
+    filteredStores.reduce((sum, store) => sum + store.total_commission, 0), 
+    [filteredStores]
+  );
+
+  const hasStoresFilters = storesSearch.trim() || storesStatusFilter !== 'all' || storesSortBy !== 'name';
+
   // Stores Tab Content
   const renderStoresContent = () => <div className="space-y-4">
       <Card className="glass border-border/50">
@@ -1499,6 +1547,78 @@ export default function AffiliateDashboardNew() {
             Lojas parceiras onde você é afiliado
           </CardDescription>
         </CardHeader>
+        
+        {/* Search and Filters */}
+        {affiliateStores.length > 0 && (
+          <CardContent className="pt-0 pb-4">
+            <div className="space-y-4">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nome da loja ou cupom..."
+                  value={storesSearch}
+                  onChange={(e) => setStoresSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              
+              {/* Filters Row */}
+              <div className="flex flex-wrap gap-2">
+                <Select value={storesStatusFilter} onValueChange={setStoresStatusFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os status</SelectItem>
+                    <SelectItem value="active">Ativas</SelectItem>
+                    <SelectItem value="pending">Pendentes</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Select value={storesSortBy} onValueChange={setStoresSortBy}>
+                  <SelectTrigger className="w-[160px]">
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Ordenar por" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="name">Nome A-Z</SelectItem>
+                    <SelectItem value="sales">Maior Vendas</SelectItem>
+                    <SelectItem value="commission">Maior Comissão</SelectItem>
+                    <SelectItem value="pending">Maior Pendente</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                {hasStoresFilters && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setStoresSearch('');
+                      setStoresStatusFilter('all');
+                      setStoresSortBy('name');
+                    }}
+                    className="gap-2"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Limpar filtros
+                  </Button>
+                )}
+              </div>
+              
+              {/* Results Counter */}
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {filteredStores.length} {filteredStores.length === 1 ? 'loja encontrada' : 'lojas encontradas'}
+                </span>
+                <span className="font-medium text-emerald-600">
+                  Total disponível: {formatCurrency(totalStoresCommission)}
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        )}
       </Card>
 
       {affiliateStores.length === 0 ? <Card>
@@ -1509,8 +1629,16 @@ export default function AffiliateDashboardNew() {
               Aguarde um convite de uma loja parceira para começar a ganhar comissões.
             </p>
           </CardContent>
+        </Card> : filteredStores.length === 0 ? <Card>
+          <CardContent className="py-12 text-center">
+            <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Nenhuma loja encontrada</h3>
+            <p className="text-muted-foreground">
+              Tente ajustar os filtros ou o termo de busca.
+            </p>
+          </CardContent>
         </Card> : <div className="grid gap-4 md:grid-cols-2">
-          {affiliateStores.map(store => <motion.div key={store.store_affiliate_id} whileHover={{
+          {filteredStores.map(store => <motion.div key={store.store_affiliate_id} whileHover={{
         scale: 1.02
       }} whileTap={{
         scale: 0.98
