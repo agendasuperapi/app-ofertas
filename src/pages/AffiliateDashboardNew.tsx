@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useAffiliateAuth, AffiliateOrderItem, AffiliateOrder } from '@/hooks/useAffiliateAuth';
 import { useAffiliateEarningsNotification } from '@/hooks/useAffiliateEarningsNotification';
+import { useAffiliateOrderStatusNotification } from '@/hooks/useAffiliateOrderStatusNotification';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -69,6 +70,18 @@ export default function AffiliateDashboardNew() {
   useAffiliateEarningsNotification({
     storeAffiliateIds,
     onNewEarning: handleNewEarning
+  });
+
+  // Extrair order_ids dos pedidos do afiliado para monitorar mudanças de status
+  const affiliateOrderIds = useMemo(() => 
+    affiliateOrders?.map(o => o.order_id).filter(Boolean) || [], 
+    [affiliateOrders]
+  );
+
+  // Hook de notificação de mudança de status do pedido (atualiza dashboard quando lojista muda status)
+  useAffiliateOrderStatusNotification({
+    orderIds: affiliateOrderIds,
+    onStatusChange: refreshData
   });
 
   // Filtered orders based on period and store
