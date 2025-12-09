@@ -1045,18 +1045,24 @@ export default function Cart() {
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex gap-4">
-                      <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
-                        {item.imageUrl ? (
+                      <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-muted relative">
+                        {item.imageUrl && (
                           <img
                             src={item.imageUrl}
                             alt={item.productName}
                             className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              (e.currentTarget.nextElementSibling as HTMLElement)?.style.setProperty('display', 'flex');
+                            }}
                           />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <ShoppingCart className="w-8 h-8 text-muted-foreground" />
-                          </div>
                         )}
+                        <div 
+                          className="w-full h-full items-center justify-center absolute inset-0"
+                          style={{ display: item.imageUrl ? 'none' : 'flex' }}
+                        >
+                          <ShoppingCart className="w-8 h-8 text-muted-foreground" />
+                        </div>
                       </div>
                       <div className="flex-1">
                         <h3 className="font-semibold mb-1">{item.productName}</h3>

@@ -735,7 +735,10 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       // Buscar produtos usando storeIdToValidate (não activeStoreId)
       const { data: products, error } = await supabase
         .from('products')
-        .select('id, name, price, promotional_price, is_available, image_url')
+        .select(`
+          id, name, price, promotional_price, is_available, image_url,
+          product_images!left(id, image_url, is_primary)
+        `)
         .eq('store_id', storeIdToValidate)
         .eq('is_available', true);
 
@@ -771,9 +774,13 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             item.promotionalPrice = product.promotional_price || undefined;
           }
 
-          // Atualizar imagem se mudou
-          if (product.image_url !== item.imageUrl) {
-            item.imageUrl = product.image_url || undefined;
+          // Resolver imagem usando product_images primeiro (prioridade sobre image_url antiga)
+          const images = (product as any).product_images || [];
+          const primaryImage = images.find((img: any) => img.is_primary) || images[0];
+          const resolvedImageUrl = primaryImage?.image_url || product.image_url;
+          
+          if (resolvedImageUrl !== item.imageUrl) {
+            item.imageUrl = resolvedImageUrl || undefined;
             hasChanges = true;
           }
 
