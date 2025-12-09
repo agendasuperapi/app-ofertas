@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { CartItem } from '@/contexts/CartContext';
@@ -38,38 +38,35 @@ export interface CouponValidation {
   discount_rules?: CouponDiscountRule[];
 }
 
+// Query keys for cache management
+export const couponKeys = {
+  all: ['coupons'] as const,
+  lists: () => [...couponKeys.all, 'list'] as const,
+  list: (storeId: string) => [...couponKeys.lists(), storeId] as const,
+};
+
+const fetchCouponsFromDB = async (storeId: string): Promise<Coupon[]> => {
+  const { data, error } = await supabase
+    .from('coupons' as any)
+    .select('*')
+    .eq('store_id', storeId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as unknown as Coupon[]) || [];
+};
+
 export const useCoupons = (storeId: string | undefined) => {
-  const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Load coupons when store ID is available
-  useEffect(() => {
-    if (storeId) {
-      fetchCoupons();
-    }
-  }, [storeId]);
-
-  const fetchCoupons = async () => {
-    if (!storeId) return;
-    
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .from('coupons' as any)
-        .select('*')
-        .eq('store_id', storeId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setCoupons((data as unknown as Coupon[]) || []);
-    } catch (error: any) {
-      console.warn('Cupons table not available yet. Please run create_coupons_system.sql migration.');
-      setCoupons([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Use React Query for fetching coupons
+  const { data: coupons = [], isLoading, refetch: fetchCoupons } = useQuery({
+    queryKey: couponKeys.list(storeId || ''),
+    queryFn: () => fetchCouponsFromDB(storeId!),
+    enabled: !!storeId,
+    staleTime: 30000, // Consider data stale after 30 seconds
+  });
 
   /**
    * Validação de cupom com escopo (categoria/produto)
@@ -441,8 +438,9 @@ export const useCoupons = (storeId: string | undefined) => {
     }
   };
 
-  const createCoupon = async (couponData: Omit<Coupon, 'id' | 'created_at' | 'updated_at' | 'used_count'>) => {
-    try {
+  // Create coupon mutation
+  const createCouponMutation = useMutation({
+    mutationFn: async (couponData: Omit<Coupon, 'id' | 'created_at' | 'updated_at' | 'used_count'>) => {
       console.log('Creating coupon with data:', couponData);
       
       const { data, error } = await supabase
@@ -456,31 +454,32 @@ export const useCoupons = (storeId: string | undefined) => {
         throw error;
       }
 
+      return data;
+    },
+    onSuccess: (data, variables) => {
       toast({
         title: 'Cupom criado com sucesso',
-        description: `O cupom ${couponData.code} foi criado`,
+        description: `O cupom ${variables.code} foi criado`,
       });
-
-      await fetchCoupons();
-      return data;
-    } catch (error: any) {
+      // Invalidate coupons query to refetch
+      queryClient.invalidateQueries({ queryKey: couponKeys.list(storeId!) });
+      // Also invalidate affiliates to update available coupons
+      queryClient.invalidateQueries({ queryKey: ['affiliates'] });
+    },
+    onError: (error: any) => {
       console.error('Error creating coupon:', error);
-      
       const errorMessage = error.message || error.hint || 'Erro desconhecido';
-      
       toast({
         title: 'Erro ao criar cupom',
         description: errorMessage,
         variant: 'destructive',
       });
-      throw error;
-    }
-  };
+    },
+  });
 
-  const updateCoupon = async (id: string, updates: Partial<Coupon>) => {
-    try {
-      console.log('Updating coupon:', id, updates);
-      
+  // Update coupon mutation
+  const updateCouponMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Coupon> }) => {
       const { data, error } = await supabase
         .from('coupons' as any)
         .update(updates)
@@ -488,68 +487,126 @@ export const useCoupons = (storeId: string | undefined) => {
         .select()
         .single();
 
-      if (error) {
-        console.error('Supabase error updating coupon:', error);
-        throw error;
-      }
-
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
       toast({
         title: 'Cupom atualizado',
-        description: 'As alterações foram salvas com sucesso',
+        description: 'As alterações foram salvas',
       });
-
-      await fetchCoupons();
-      return data;
-    } catch (error: any) {
-      console.error('Error updating coupon:', error);
-      
-      const errorMessage = error.message || error.hint || 'Erro desconhecido';
-      
+      queryClient.invalidateQueries({ queryKey: couponKeys.list(storeId!) });
+      queryClient.invalidateQueries({ queryKey: ['affiliates'] });
+    },
+    onError: (error: any) => {
       toast({
         title: 'Erro ao atualizar cupom',
-        description: errorMessage,
+        description: error.message,
         variant: 'destructive',
       });
-      throw error;
-    }
-  };
+    },
+  });
 
-  const deleteCoupon = async (id: string) => {
-    try {
-      console.log('Deleting coupon:', id);
-      
+  // Delete coupon mutation
+  const deleteCouponMutation = useMutation({
+    mutationFn: async (id: string) => {
       const { error } = await supabase
         .from('coupons' as any)
         .delete()
         .eq('id', id);
 
-      if (error) {
-        console.error('Supabase error deleting coupon:', error);
-        throw error;
-      }
-
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
       toast({
-        title: 'Cupom excluído',
-        description: 'O cupom foi removido com sucesso',
+        title: 'Cupom removido',
+        description: 'O cupom foi excluído com sucesso',
       });
-
-      await fetchCoupons();
-    } catch (error: any) {
-      console.error('Error deleting coupon:', error);
-      
-      const errorMessage = error.message || error.hint || 'Erro desconhecido';
-      
+      queryClient.invalidateQueries({ queryKey: couponKeys.list(storeId!) });
+      queryClient.invalidateQueries({ queryKey: ['affiliates'] });
+    },
+    onError: (error: any) => {
       toast({
-        title: 'Erro ao excluir cupom',
-        description: errorMessage,
+        title: 'Erro ao remover cupom',
+        description: error.message,
         variant: 'destructive',
       });
-      throw error;
+    },
+  });
+
+  // Toggle coupon status mutation
+  const toggleCouponStatusMutation = useMutation({
+    mutationFn: async ({ id, isActive }: { id: string; isActive: boolean }) => {
+      const { data, error } = await supabase
+        .from('coupons' as any)
+        .update({ is_active: isActive })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: variables.isActive ? 'Cupom ativado' : 'Cupom desativado',
+        description: `O status do cupom foi alterado`,
+      });
+      queryClient.invalidateQueries({ queryKey: couponKeys.list(storeId!) });
+      queryClient.invalidateQueries({ queryKey: ['affiliates'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: 'Erro ao alterar status',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Wrapper functions to maintain backwards compatibility
+  const createCoupon = async (couponData: Omit<Coupon, 'id' | 'created_at' | 'updated_at' | 'used_count'>) => {
+    try {
+      const result = await createCouponMutation.mutateAsync(couponData);
+      return result;
+    } catch {
+      return null;
+    }
+  };
+
+  const updateCoupon = async (id: string, updates: Partial<Coupon>) => {
+    try {
+      const result = await updateCouponMutation.mutateAsync({ id, updates });
+      return result;
+    } catch {
+      return null;
+    }
+  };
+
+  const deleteCoupon = async (id: string) => {
+    try {
+      await deleteCouponMutation.mutateAsync(id);
+      return true;
+    } catch {
+      return false;
     }
   };
 
   const toggleCouponStatus = async (id: string, isActive: boolean) => {
-    return updateCoupon(id, { is_active: isActive });
+    try {
+      const result = await toggleCouponStatusMutation.mutateAsync({ id, isActive });
+      return result;
+    } catch {
+      return null;
+    }
+  };
+
+  // Function to invalidate queries (for external use)
+  const invalidateCoupons = () => {
+    if (storeId) {
+      queryClient.invalidateQueries({ queryKey: couponKeys.list(storeId) });
+    }
   };
 
   return {
@@ -562,5 +619,6 @@ export const useCoupons = (storeId: string | undefined) => {
     updateCoupon,
     deleteCoupon,
     toggleCouponStatus,
+    invalidateCoupons,
   };
 };
