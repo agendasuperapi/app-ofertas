@@ -538,6 +538,7 @@ export type Database = {
       }
       affiliates: {
         Row: {
+          affiliate_account_id: string | null
           commission_enabled: boolean
           coupon_id: string | null
           cpf_cnpj: string | null
@@ -556,6 +557,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          affiliate_account_id?: string | null
           commission_enabled?: boolean
           coupon_id?: string | null
           cpf_cnpj?: string | null
@@ -574,6 +576,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          affiliate_account_id?: string | null
           commission_enabled?: boolean
           coupon_id?: string | null
           cpf_cnpj?: string | null
@@ -592,6 +595,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "affiliates_affiliate_account_id_fkey"
+            columns: ["affiliate_account_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "affiliates_coupon_id_fkey"
             columns: ["coupon_id"]
