@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, Resp
 import { toast } from 'sonner';
 import { Loader2, Copy, ExternalLink, Package, Search, Target, Calculator, Ban, Link, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useCouponDiscountRulesNotification, useCouponChangesNotification } from '@/hooks/useCouponDiscountRulesNotification';
 
 const PRODUCTS_PER_PAGE = 10;
 
@@ -37,6 +38,7 @@ interface AffiliateStoreProductsTabProps {
   defaultCommissionType: string;
   defaultCommissionValue: number;
   couponCode: string;
+  couponId?: string;
   // Props para filtrar produtos conforme escopo do cupom
   couponScope?: 'all' | 'category' | 'product' | 'categories' | 'products';
   couponCategoryNames?: string[];
@@ -49,6 +51,7 @@ export function AffiliateStoreProductsTab({
   defaultCommissionType,
   defaultCommissionValue,
   couponCode,
+  couponId,
   couponScope = 'all',
   couponCategoryNames = [],
   couponProductIds = []
@@ -60,6 +63,30 @@ export function AffiliateStoreProductsTab({
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const isMobile = useIsMobile();
+
+  // Memoize couponIds array
+  const couponIds = couponId ? [couponId] : [];
+
+  // Callback for realtime updates
+  const handleRulesChange = useCallback(() => {
+    console.log('[Realtime] Discount rules changed, refreshing data...');
+    fetchData();
+    toast.info('Regras de desconto atualizadas');
+  }, [storeId, storeAffiliateId]);
+
+  // Subscribe to realtime changes
+  useCouponDiscountRulesNotification({
+    couponIds,
+    onRulesChange: handleRulesChange,
+    enabled: couponIds.length > 0
+  });
+
+  useCouponChangesNotification({
+    couponIds,
+    onCouponChange: handleRulesChange,
+    enabled: couponIds.length > 0
+  });
+
   useEffect(() => {
     fetchData();
   }, [storeId, storeAffiliateId]);
