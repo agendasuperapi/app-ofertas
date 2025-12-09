@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { CPFInput } from '@/components/ui/cpf-input';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { useAffiliates, Affiliate, AffiliateEarning, AffiliateCommissionRule, AffiliateStats } from '@/hooks/useAffiliates';
 import { useCoupons } from '@/hooks/useCoupons';
 import { useCategories } from '@/hooks/useCategories';
@@ -1142,46 +1144,10 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <Label>CPF/CNPJ *</Label>
-                  <Input
+                  <CPFInput
                     value={formData.cpf_cnpj}
-                    onChange={(e) => {
-                      let value = e.target.value.replace(/\D/g, '');
-                      if (value.length > 14) value = value.slice(0, 14);
-                      if (value.length <= 11) {
-                        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                        value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-                      } else {
-                        value = value.replace(/^(\d{2})(\d)/, '$1.$2');
-                        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
-                        value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
-                        value = value.replace(/(\d{4})(\d)/, '$1-$2');
-                      }
-                      setFormData({ ...formData, cpf_cnpj: value });
-                    }}
-                    placeholder="000.000.000-00"
-                    maxLength={18}
+                    onChange={(value) => setFormData({ ...formData, cpf_cnpj: value })}
                   />
-                  {formData.cpf_cnpj && (() => {
-                    const digits = formData.cpf_cnpj.replace(/\D/g, '');
-                    if (digits.length > 0 && digits.length < 11) {
-                      return (
-                        <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          CPF incompleto
-                        </p>
-                      );
-                    }
-                    if (digits.length > 11 && digits.length < 14) {
-                      return (
-                        <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                          <AlertCircle className="h-3 w-3" />
-                          CNPJ incompleto
-                        </p>
-                      );
-                    }
-                    return null;
-                  })()}
                 </div>
                 <div className="col-span-2">
                   <Label>Nome *</Label>
@@ -1202,26 +1168,10 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                 </div>
                 <div className="col-span-2">
                   <Label>Telefone</Label>
-                  <Input
+                  <PhoneInput
                     value={formData.phone}
-                    onChange={(e) => {
-                      let value = e.target.value.replace(/\D/g, '');
-                      if (value.length > 11) value = value.slice(0, 11);
-                      if (value.length > 0) {
-                        value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
-                        value = value.replace(/(\d{5})(\d)/, '$1-$2');
-                      }
-                      setFormData({ ...formData, phone: value });
-                    }}
-                    placeholder="(00) 00000-0000"
-                    maxLength={15}
+                    onChange={(value) => setFormData({ ...formData, phone: value })}
                   />
-                  {formData.phone && formData.phone.replace(/\D/g, '').length > 0 && formData.phone.replace(/\D/g, '').length < 10 && (
-                    <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      Telefone incompleto
-                    </p>
-                  )}
                 </div>
                 <div className="col-span-2">
                   <Label>Chave PIX</Label>
