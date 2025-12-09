@@ -2300,37 +2300,15 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                       <div className="col-span-2">
                         <Label>Chave PIX</Label>
                         <Input
-                          value={selectedAffiliate.pix_key || selectedAffiliate.cpf_cnpj || ''}
-                          onChange={(e) => setSelectedAffiliate({ ...selectedAffiliate, pix_key: e.target.value })}
-                          onBlur={async () => {
-                            const pixKey = selectedAffiliate.pix_key || selectedAffiliate.cpf_cnpj || '';
-                            await updateAffiliate(selectedAffiliate.id, { pix_key: pixKey });
-                            if (!selectedAffiliate.pix_key && selectedAffiliate.cpf_cnpj) {
-                              setSelectedAffiliate({ ...selectedAffiliate, pix_key: selectedAffiliate.cpf_cnpj });
-                            }
-                          }}
-                          placeholder="CPF, CNPJ, Email, Telefone ou Chave Aleatória"
+                          value={selectedAffiliate.cpf_cnpj || ''}
+                          disabled
+                          className="bg-muted cursor-not-allowed"
+                          placeholder="CPF/CNPJ do afiliado"
                         />
-                        {selectedAffiliate.pix_key && (() => {
-                          const validation = validatePixKey(selectedAffiliate.pix_key);
-                          if (validation.type === 'invalid') {
-                            return (
-                              <p className="text-xs text-destructive mt-1 flex items-center gap-1">
-                                <XCircle className="h-3 w-3" />
-                                {validation.message}
-                              </p>
-                            );
-                          }
-                          if (validation.type !== 'empty') {
-                            return (
-                              <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                                <CheckCircle className="h-3 w-3" />
-                                {validation.message}
-                              </p>
-                            );
-                          }
-                          return null;
-                        })()}
+                        <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                          <CheckCircle className="h-3 w-3 text-green-600" />
+                          Chave PIX do tipo CPF
+                        </p>
                       </div>
                     </div>
                     
