@@ -125,6 +125,74 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_commission_adjustments: {
+        Row: {
+          adjustment_type: string
+          amount: number
+          created_at: string | null
+          earning_id: string
+          id: string
+          new_order_status: string | null
+          order_id: string | null
+          previous_order_status: string | null
+          reason: string
+          store_affiliate_id: string | null
+        }
+        Insert: {
+          adjustment_type: string
+          amount: number
+          created_at?: string | null
+          earning_id: string
+          id?: string
+          new_order_status?: string | null
+          order_id?: string | null
+          previous_order_status?: string | null
+          reason: string
+          store_affiliate_id?: string | null
+        }
+        Update: {
+          adjustment_type?: string
+          amount?: number
+          created_at?: string | null
+          earning_id?: string
+          id?: string
+          new_order_status?: string | null
+          order_id?: string | null
+          previous_order_status?: string | null
+          reason?: string
+          store_affiliate_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_commission_adjustments_earning_id_fkey"
+            columns: ["earning_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_earnings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commission_adjustments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order_complete_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commission_adjustments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commission_adjustments_store_affiliate_id_fkey"
+            columns: ["store_affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "store_affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_commission_rules: {
         Row: {
           affiliate_id: string
