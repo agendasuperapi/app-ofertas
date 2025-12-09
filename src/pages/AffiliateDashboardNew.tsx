@@ -62,6 +62,7 @@ export default function AffiliateDashboardNew() {
   const [affiliateDbId, setAffiliateDbId] = useState<string | null>(null);
   const [withdrawalRequests, setWithdrawalRequests] = useState<any[]>([]);
   const [loadingWithdrawals, setLoadingWithdrawals] = useState(false);
+  const [ordersPage, setOrdersPage] = useState<Record<string, number>>({});
 
   // Buscar affiliate_id do banco
   useEffect(() => {
@@ -695,6 +696,10 @@ export default function AffiliateDashboardNew() {
       <TabsContent value="orders" className="space-y-4 mt-4 flex-1 overflow-y-auto">
         {(() => {
           const storeOrders = affiliateOrders.filter(order => order.store_id === store.store_id);
+          const ORDERS_PER_PAGE = 10;
+          const currentPage = ordersPage[store.store_id] || 1;
+          const totalPages = Math.ceil(storeOrders.length / ORDERS_PER_PAGE);
+          const paginatedOrders = storeOrders.slice((currentPage - 1) * ORDERS_PER_PAGE, currentPage * ORDERS_PER_PAGE);
           
           if (storeOrders.length === 0) {
             return (
@@ -709,7 +714,7 @@ export default function AffiliateDashboardNew() {
           
           return (
             <div className="space-y-3">
-              {storeOrders.map(order => (
+              {paginatedOrders.map(order => (
                 <div 
                   key={order.earning_id} 
                   className="p-3 bg-muted/30 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
@@ -746,6 +751,31 @@ export default function AffiliateDashboardNew() {
                   )}
                 </div>
               ))}
+              
+              {/* Paginação */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === 1}
+                    onClick={() => setOrdersPage(prev => ({ ...prev, [store.store_id]: currentPage - 1 }))}
+                  >
+                    Anterior
+                  </Button>
+                  <span className="text-xs text-muted-foreground">
+                    Página {currentPage} de {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setOrdersPage(prev => ({ ...prev, [store.store_id]: currentPage + 1 }))}
+                  >
+                    Próxima
+                  </Button>
+                </div>
+              )}
             </div>
           );
         })()}
