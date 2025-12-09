@@ -88,8 +88,10 @@ export interface AffiliateStats {
   totalEarnings: number;
   pendingEarnings: number;
   paidEarnings: number;
+  cancelledEarnings: number;
   totalSales: number;
   totalOrders: number;
+  cancelledOrders: number;
 }
 
 // Query keys for cache management
@@ -485,16 +487,20 @@ export const useAffiliates = (storeId?: string) => {
         .select('commission_amount, order_total, order:orders(status)')
         .eq('affiliate_id', affiliateId);
 
-      const stats: AffiliateStats = { totalEarnings: 0, pendingEarnings: 0, paidEarnings: 0, totalSales: 0, totalOrders: 0 };
+      const stats: AffiliateStats = { totalEarnings: 0, pendingEarnings: 0, paidEarnings: 0, cancelledEarnings: 0, totalSales: 0, totalOrders: 0, cancelledOrders: 0 };
       earnings?.forEach((e: any) => {
         const orderStatus = e.order?.status;
+        const amount = Number(e.commission_amount) || 0;
         
-        // Ignora pedidos cancelados
-        if (orderStatus === 'cancelado' || orderStatus === 'cancelled') return;
+        // Pedidos cancelados
+        if (orderStatus === 'cancelado' || orderStatus === 'cancelled') {
+          stats.cancelledOrders += 1;
+          stats.cancelledEarnings += amount;
+          return;
+        }
         
         stats.totalOrders += 1;
         stats.totalSales += Number(e.order_total) || 0;
-        const amount = Number(e.commission_amount) || 0;
         
         if (orderStatus === 'entregue' || orderStatus === 'delivered') {
           // Concluído - pedidos entregues
@@ -506,7 +512,7 @@ export const useAffiliates = (storeId?: string) => {
         }
       });
       return stats;
-    } catch { return { totalEarnings: 0, pendingEarnings: 0, paidEarnings: 0, totalSales: 0, totalOrders: 0 }; }
+    } catch { return { totalEarnings: 0, pendingEarnings: 0, paidEarnings: 0, cancelledEarnings: 0, totalSales: 0, totalOrders: 0, cancelledOrders: 0 }; }
   };
 
   const getAllStoreEarnings = async () => {
@@ -563,7 +569,7 @@ export const useMyAffiliateData = () => {
       if (!affiliateId) return [];
       const { data, error } = await (supabase as any)
         .from('affiliate_earnings')
-        .select(`*, order:orders(order_number, customer_name, total, created_at)`)
+        .select(`*, order:orders(order_number, customer_name, total, created_at, status)`)
         .eq('affiliate_id', affiliateId)
         .order('created_at', { ascending: false });
       if (error) throw error;
@@ -593,16 +599,32 @@ export const useMyAffiliateData = () => {
     totalEarnings: 0,
     pendingEarnings: 0,
     paidEarnings: 0,
+    cancelledEarnings: 0,
     totalSales: 0,
-    totalOrders: earnings?.length || 0,
+    totalOrders: 0,
+    cancelledOrders: 0,
   };
 
   earnings?.forEach((e: any) => {
-    stats.totalSales += Number(e.order_total) || 0;
+    const orderStatus = e.order?.status;
     const amount = Number(e.commission_amount) || 0;
-    stats.totalEarnings += amount;
-    if (e.status === 'pending' || e.status === 'approved') stats.pendingEarnings += amount;
-    else if (e.status === 'paid') stats.paidEarnings += amount;
+    
+    // Pedidos cancelados
+    if (orderStatus === 'cancelado' || orderStatus === 'cancelled') {
+      stats.cancelledOrders += 1;
+      stats.cancelledEarnings += amount;
+      return;
+    }
+    
+    stats.totalOrders += 1;
+    stats.totalSales += Number(e.order_total) || 0;
+    
+    if (orderStatus === 'entregue' || orderStatus === 'delivered') {
+      stats.totalEarnings += amount;
+      stats.paidEarnings += amount;
+    } else {
+      stats.pendingEarnings += amount;
+    }
   });
 
   const queryClient = useQueryClient();
