@@ -323,56 +323,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   };
 
   const handleSubmit = async () => {
-    if (editingAffiliate) {
-      // Editando afiliado existente - manter lógica atual
-      if (!formData.name || !formData.cpf_cnpj) {
-        toast({
-          title: 'Campos obrigatórios',
-          description: 'Nome e CPF são obrigatórios.',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      const affiliateData = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        cpf_cnpj: formData.cpf_cnpj,
-        pix_key: formData.pix_key,
-        coupon_ids: formData.coupon_ids,
-        commission_enabled: formData.commission_enabled,
-        default_commission_type: formData.default_commission_type,
-        default_commission_value: formData.default_commission_value,
-        use_default_commission: formData.commission_enabled && formData.default_commission_value > 0,
-      };
-
-      const result = await updateAffiliate(editingAffiliate.id, affiliateData);
-
-      if (result && formData.commission_enabled) {
-        const existingRules = await getCommissionRules(editingAffiliate.id);
-        for (const rule of existingRules) {
-          await deleteCommissionRule(rule.id);
-        }
-        
-        for (const product of formData.commission_products) {
-          await createCommissionRule({
-            affiliate_id: result.id,
-            commission_type: product.type,
-            commission_value: product.value,
-            applies_to: 'product',
-            category_name: null,
-            product_id: product.id,
-          });
-        }
-      }
-
-      setDialogOpen(false);
-      resetForm();
-      return;
-    }
-
-    // Novo afiliado - apenas gerar link de convite
     if (!formData.name || !formData.cpf_cnpj) {
       toast({
         title: 'Campos obrigatórios',
@@ -382,59 +332,96 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
       return;
     }
 
-    try {
-      // Remove formatação do CPF antes de enviar
-      const cpfNumbers = formData.cpf_cnpj?.replace(/\D/g, '') || '';
-      const couponId = formData.coupon_ids[0] || null;
-      
-      const { data, error } = await supabase.functions.invoke('affiliate-invite', {
-        body: {
-          action: 'send',
-          store_id: storeId,
-          store_name: storeName,
-          cpf: cpfNumbers,
-          email: formData.email,
-          name: formData.name,
-          coupon_id: couponId,
-          // Enviar dados de comissão para o convite
-          commission_enabled: formData.commission_enabled,
-          default_commission_type: formData.default_commission_type,
-          default_commission_value: formData.default_commission_value,
-          commission_products: formData.commission_products,
-        }
-      });
-
-      if (error) {
-        console.error('Error generating invite:', error);
-        toast({
-          title: 'Erro ao gerar convite',
-          description: error.message || 'Erro ao gerar link de convite',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      if (data?.success && data?.invite_token) {
-        const link = `${window.location.origin}/afiliado/cadastro?token=${data.invite_token}`;
-        setGeneratedInviteLink(link);
-        setCreatedAffiliateName(formData.name);
-        setDialogOpen(false);
-        resetForm();
-        setInviteLinkDialogOpen(true);
-      } else {
-        toast({
-          title: 'Erro ao gerar convite',
-          description: data?.message || 'Não foi possível gerar o link de convite',
-          variant: 'destructive',
-        });
-      }
-    } catch (err) {
-      console.error('Error generating invite link:', err);
+    // Validar valor da comissão padrão se estiver habilitada
+    if (formData.commission_enabled && formData.default_commission_value <= 0 && formData.commission_products.length === 0) {
       toast({
-        title: 'Erro',
-        description: 'Ocorreu um erro ao gerar o convite',
+        title: 'Configuração de comissão incompleta',
+        description: 'Defina um valor para a comissão padrão ou adicione regras específicas por produto.',
         variant: 'destructive',
       });
+      return;
+    }
+
+    const affiliateData = {
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      cpf_cnpj: formData.cpf_cnpj,
+      pix_key: formData.pix_key,
+      coupon_ids: formData.coupon_ids,
+      commission_enabled: formData.commission_enabled,
+      default_commission_type: formData.default_commission_type,
+      default_commission_value: formData.default_commission_value,
+      use_default_commission: formData.commission_enabled && formData.default_commission_value > 0,
+    };
+
+    let result;
+    const isNewAffiliate = !editingAffiliate;
+    if (editingAffiliate) {
+      result = await updateAffiliate(editingAffiliate.id, affiliateData);
+    } else {
+      result = await createAffiliate(affiliateData);
+    }
+
+    // Se a comissão é por categoria ou produto, criar regra específica
+    if (result && formData.commission_enabled) {
+      // Delete existing rules first when editing
+      if (editingAffiliate) {
+        const existingRules = await getCommissionRules(editingAffiliate.id);
+        for (const rule of existingRules) {
+          await deleteCommissionRule(rule.id);
+        }
+      }
+      
+      // Criar regra para cada produto com sua comissão específica
+      for (const product of formData.commission_products) {
+        await createCommissionRule({
+          affiliate_id: result.id,
+          commission_type: product.type,
+          commission_value: product.value,
+          applies_to: 'product',
+          category_name: null,
+          product_id: product.id,
+        });
+      }
+    }
+
+    // Salvar dados antes de resetar o form
+    const affiliateName = formData.name;
+    const affiliateEmail = formData.email;
+    const affiliateCpf = formData.cpf_cnpj;
+    const affiliateCouponId = formData.coupon_ids[0] || null;
+
+    setDialogOpen(false);
+    resetForm();
+
+    // Gerar link de convite automaticamente para novos afiliados
+    if (isNewAffiliate && result) {
+      try {
+        // Remove formatação do CPF antes de enviar
+        const cpfNumbers = affiliateCpf?.replace(/\D/g, '') || '';
+        
+        const { data, error } = await supabase.functions.invoke('affiliate-invite', {
+          body: {
+            action: 'send',
+            store_id: storeId,
+            store_name: storeName,
+            cpf: cpfNumbers,
+            email: affiliateEmail,
+            name: affiliateName,
+            coupon_id: affiliateCouponId,
+          }
+        });
+
+        if (data?.success && data?.invite_token) {
+          const link = `${window.location.origin}/afiliado/cadastro?token=${data.invite_token}`;
+          setGeneratedInviteLink(link);
+          setCreatedAffiliateName(affiliateName);
+          setInviteLinkDialogOpen(true);
+        }
+      } catch (err) {
+        console.error('Error generating invite link:', err);
+      }
     }
   };
 
@@ -1643,7 +1630,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               Cancelar
             </Button>
             <Button onClick={handleSubmit} className="bg-gradient-primary">
-              {editingAffiliate ? 'Salvar' : 'Gerar Convite'}
+              {editingAffiliate ? 'Salvar' : 'Cadastrar'}
             </Button>
           </DialogFooter>
         </DialogContent>
