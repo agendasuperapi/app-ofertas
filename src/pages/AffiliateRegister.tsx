@@ -20,6 +20,8 @@ export default function AffiliateRegister() {
   
   const [isVerifying, setIsVerifying] = useState(true);
   const [isValidToken, setIsValidToken] = useState(false);
+  const [alreadyVerified, setAlreadyVerified] = useState(false);
+  const [linkedStoreName, setLinkedStoreName] = useState<string>('');
   const [inviteData, setInviteData] = useState<{
     email: string;
     cpf_cnpj?: string;
@@ -53,6 +55,11 @@ export default function AffiliateRegister() {
       if (error || !data?.valid) {
         setIsValidToken(false);
         setErrorMessage(data?.error || 'Link de convite inválido');
+      } else if (data?.already_verified) {
+        // Afiliado já cadastrado - loja foi auto-ativada
+        setIsValidToken(true);
+        setAlreadyVerified(true);
+        setLinkedStoreName(data.store?.name || '');
       } else {
         setIsValidToken(true);
         setInviteData({
@@ -154,6 +161,35 @@ export default function AffiliateRegister() {
           <CardFooter className="flex flex-col gap-4">
             <Button asChild className="w-full">
               <Link to="/afiliado/login">Ir para Login</Link>
+            </Button>
+            <Button asChild variant="outline" className="w-full">
+              <Link to="/">Voltar ao Início</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  // Afiliado já cadastrado - loja foi adicionada automaticamente
+  if (alreadyVerified) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
+        <Card className="w-full max-w-md border-2 border-primary/50">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle className="h-8 w-8 text-primary" />
+            </div>
+            <CardTitle className="text-2xl">Loja Adicionada!</CardTitle>
+            <CardDescription className="text-base">
+              A loja <span className="font-semibold text-foreground">{linkedStoreName}</span> foi adicionada à sua conta de afiliado.
+              <br /><br />
+              Faça login para acessar todas as suas lojas.
+            </CardDescription>
+          </CardHeader>
+          <CardFooter className="flex flex-col gap-4">
+            <Button asChild className="w-full">
+              <Link to="/afiliado/login">Fazer Login</Link>
             </Button>
             <Button asChild variant="outline" className="w-full">
               <Link to="/">Voltar ao Início</Link>
