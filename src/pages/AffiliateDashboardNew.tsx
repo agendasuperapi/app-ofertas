@@ -67,12 +67,9 @@ export default function AffiliateDashboardNew() {
   useEffect(() => {
     const fetchAffiliateId = async () => {
       if (!affiliateUser?.email) return;
-      const { data } = await supabase
-        .from('affiliates')
-        .select('id')
-        .eq('email', affiliateUser.email)
-        .limit(1)
-        .maybeSingle();
+      const {
+        data
+      } = await supabase.from('affiliates').select('id').eq('email', affiliateUser.email).limit(1).maybeSingle();
       if (data) setAffiliateDbId(data.id);
     };
     fetchAffiliateId();
@@ -83,18 +80,17 @@ export default function AffiliateDashboardNew() {
     if (!affiliateDbId) return;
     setLoadingWithdrawals(true);
     try {
-      const { data } = await supabase
-        .from('affiliate_withdrawal_requests')
-        .select(`
+      const {
+        data
+      } = await supabase.from('affiliate_withdrawal_requests').select(`
           *,
           stores!inner(name)
-        `)
-        .eq('affiliate_id', affiliateDbId)
-        .order('requested_at', { ascending: false });
-      
+        `).eq('affiliate_id', affiliateDbId).order('requested_at', {
+        ascending: false
+      });
       const formatted = (data || []).map((req: any) => ({
         ...req,
-        store_name: req.stores?.name,
+        store_name: req.stores?.name
       }));
       setWithdrawalRequests(formatted);
     } catch (err) {
@@ -103,7 +99,6 @@ export default function AffiliateDashboardNew() {
       setLoadingWithdrawals(false);
     }
   }, [affiliateDbId]);
-
   useEffect(() => {
     if (affiliateDbId) {
       fetchWithdrawalRequests();
@@ -121,35 +116,26 @@ export default function AffiliateDashboardNew() {
   }) => {
     try {
       // Verificar se já existe pendente
-      const { data: existing } = await supabase
-        .from('affiliate_withdrawal_requests')
-        .select('id')
-        .eq('affiliate_id', data.affiliate_id)
-        .eq('store_id', data.store_id)
-        .eq('status', 'pending')
-        .maybeSingle();
-
+      const {
+        data: existing
+      } = await supabase.from('affiliate_withdrawal_requests').select('id').eq('affiliate_id', data.affiliate_id).eq('store_id', data.store_id).eq('status', 'pending').maybeSingle();
       if (existing) {
         toast.error('Já existe uma solicitação pendente para esta loja');
         return null;
       }
-
-      const { data: newRequest, error } = await supabase
-        .from('affiliate_withdrawal_requests')
-        .insert({
-          affiliate_id: data.affiliate_id,
-          store_affiliate_id: data.store_affiliate_id || null,
-          store_id: data.store_id,
-          amount: data.amount,
-          pix_key: data.pix_key || null,
-          notes: data.notes || null,
-          status: 'pending',
-        })
-        .select()
-        .single();
-
+      const {
+        data: newRequest,
+        error
+      } = await supabase.from('affiliate_withdrawal_requests').insert({
+        affiliate_id: data.affiliate_id,
+        store_affiliate_id: data.store_affiliate_id || null,
+        store_id: data.store_id,
+        amount: data.amount,
+        pix_key: data.pix_key || null,
+        notes: data.notes || null,
+        status: 'pending'
+      }).select().single();
       if (error) throw error;
-
       toast.success('Solicitação de saque enviada!');
       await fetchWithdrawalRequests();
       setWithdrawalDialogOpen(false);
@@ -191,10 +177,7 @@ export default function AffiliateDashboardNew() {
   });
 
   // Extrair order_ids dos pedidos do afiliado para monitorar mudanças de status
-  const affiliateOrderIds = useMemo(() => 
-    affiliateOrders?.map(o => o.order_id).filter(Boolean) || [], 
-    [affiliateOrders]
-  );
+  const affiliateOrderIds = useMemo(() => affiliateOrders?.map(o => o.order_id).filter(Boolean) || [], [affiliateOrders]);
 
   // Hook de notificação de mudança de status do pedido (atualiza dashboard quando lojista muda status)
   useAffiliateOrderStatusNotification({
@@ -277,41 +260,32 @@ export default function AffiliateDashboardNew() {
   // Filtered stats based on filtered orders - Baseado no status do PEDIDO (não da comissão)
   const filteredStats = useMemo(() => {
     // Pedidos válidos: não cancelados
-    const validOrders = filteredAffiliateOrders.filter(
-      order => order.order_status !== 'cancelado' && order.order_status !== 'cancelled'
-    );
-    
+    const validOrders = filteredAffiliateOrders.filter(order => order.order_status !== 'cancelado' && order.order_status !== 'cancelled');
+
     // Pedidos cancelados
-    const cancelledOrders = filteredAffiliateOrders.filter(
-      order => order.order_status === 'cancelado' || order.order_status === 'cancelled'
-    );
-    
+    const cancelledOrders = filteredAffiliateOrders.filter(order => order.order_status === 'cancelado' || order.order_status === 'cancelled');
     const totalOrders = validOrders.length;
     const totalSales = validOrders.reduce((sum, order) => sum + (order.order_total || 0), 0);
-    
+
     // Ganhos: SOMENTE pedidos ENTREGUES
-    const earnedCommission = validOrders
-      .filter(order => order.order_status === 'entregue' || order.order_status === 'delivered')
-      .reduce((sum, order) => sum + (order.commission_amount || 0), 0);
-    
+    const earnedCommission = validOrders.filter(order => order.order_status === 'entregue' || order.order_status === 'delivered').reduce((sum, order) => sum + (order.commission_amount || 0), 0);
+
     // Pendente: pedidos que NÃO são "entregue" nem "cancelado"
-    const pendingCommission = validOrders
-      .filter(order => {
-        const status = order.order_status;
-        return status !== 'entregue' && status !== 'delivered' && 
-               status !== 'cancelado' && status !== 'cancelled';
-      })
-      .reduce((sum, order) => sum + (order.commission_amount || 0), 0);
-    
+    const pendingCommission = validOrders.filter(order => {
+      const status = order.order_status;
+      return status !== 'entregue' && status !== 'delivered' && status !== 'cancelado' && status !== 'cancelled';
+    }).reduce((sum, order) => sum + (order.commission_amount || 0), 0);
     const cancelledCount = cancelledOrders.length;
     const cancelledCommission = cancelledOrders.reduce((sum, order) => sum + (order.commission_amount || 0), 0);
-    
     return {
       total_orders: totalOrders,
       total_sales: totalSales,
-      total_commission: earnedCommission, // Apenas entregues
-      pending_commission: pendingCommission, // Em processamento
-      paid_commission: earnedCommission, // Alias para compatibilidade
+      total_commission: earnedCommission,
+      // Apenas entregues
+      pending_commission: pendingCommission,
+      // Em processamento
+      paid_commission: earnedCommission,
+      // Alias para compatibilidade
       cancelled_count: cancelledCount,
       cancelled_commission: cancelledCommission
     };
@@ -320,12 +294,9 @@ export default function AffiliateDashboardNew() {
   // Dados para gráficos - Comissões ao longo do tempo (excluindo cancelados)
   const commissionsOverTime = useMemo(() => {
     if (!filteredAffiliateOrders || filteredAffiliateOrders.length === 0) return [];
-    
+
     // Filtrar pedidos não cancelados para os gráficos
-    const validOrdersForChart = filteredAffiliateOrders.filter(
-      order => order.order_status !== 'cancelado' && order.order_status !== 'cancelled'
-    );
-    
+    const validOrdersForChart = filteredAffiliateOrders.filter(order => order.order_status !== 'cancelado' && order.order_status !== 'cancelled');
     const ordersByDate: Record<string, {
       pedidos: number;
       comissao: number;
@@ -355,12 +326,9 @@ export default function AffiliateDashboardNew() {
   // Dados para gráfico de pizza - Comissões por loja (apenas pedidos entregues)
   const commissionsByStore = useMemo(() => {
     if (!filteredAffiliateOrders || filteredAffiliateOrders.length === 0) return [];
-    
+
     // Filtrar apenas pedidos entregues para comissões
-    const deliveredOrders = filteredAffiliateOrders.filter(
-      order => order.order_status === 'entregue' || order.order_status === 'delivered'
-    );
-    
+    const deliveredOrders = filteredAffiliateOrders.filter(order => order.order_status === 'entregue' || order.order_status === 'delivered');
     const storeCommissions: Record<string, {
       name: string;
       value: number;
@@ -381,31 +349,25 @@ export default function AffiliateDashboardNew() {
   // Helper para obter badge de status do pedido
   const getOrderStatusBadge = (order: AffiliateOrder) => {
     const status = order.order_status;
-    
+
     // Concluído: pedidos entregues
     if (status === 'entregue' || status === 'delivered') {
-      return (
-        <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+      return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
           <CheckCircle className="h-3 w-3 mr-1" /> Concluído
-        </Badge>
-      );
+        </Badge>;
     }
-    
+
     // Cancelado
     if (status === 'cancelado' || status === 'cancelled') {
-      return (
-        <Badge className="bg-red-500/10 text-red-600 border-red-500/20">
+      return <Badge className="bg-red-500/10 text-red-600 border-red-500/20">
           <Ban className="h-3 w-3 mr-1" /> Cancelado
-        </Badge>
-      );
+        </Badge>;
     }
-    
+
     // Pendente: todos os outros status
-    return (
-      <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+    return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
         <Clock className="h-3 w-3 mr-1" /> Pendente
-      </Badge>
-    );
+      </Badge>;
   };
 
   // Helper para exibir ganhos condicionalmente baseado no status
@@ -413,29 +375,21 @@ export default function AffiliateDashboardNew() {
     const status = order.order_status;
     const isDelivered = status === 'entregue' || status === 'delivered';
     const isCancelled = status === 'cancelado' || status === 'cancelled';
-    
     if (isDelivered) {
-      return (
-        <span className="font-semibold text-green-600">
+      return <span className="font-semibold text-green-600">
           {formatCurrency(order.commission_amount)}
-        </span>
-      );
+        </span>;
     }
-    
     if (isCancelled) {
-      return (
-        <span className="text-muted-foreground line-through">
+      return <span className="text-muted-foreground line-through">
           {formatCurrency(order.commission_amount)}
-        </span>
-      );
+        </span>;
     }
-    
+
     // Pendente: mostrar valor em amarelo
-    return (
-      <span className="font-medium text-yellow-600">
+    return <span className="font-medium text-yellow-600">
         {formatCurrency(order.commission_amount)}
-      </span>
-    );
+      </span>;
   };
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -481,19 +435,12 @@ export default function AffiliateDashboardNew() {
 
   // Calcula comissões canceladas por loja
   const getStoreCancelledCommission = useCallback((storeAffiliateId: string) => {
-    return affiliateOrders
-      .filter(order => 
-        order.store_affiliate_id === storeAffiliateId && 
-        (order.order_status === 'cancelado' || order.order_status === 'cancelled')
-      )
-      .reduce((sum, order) => sum + (order.commission_amount || 0), 0);
+    return affiliateOrders.filter(order => order.store_affiliate_id === storeAffiliateId && (order.order_status === 'cancelado' || order.order_status === 'cancelled')).reduce((sum, order) => sum + (order.commission_amount || 0), 0);
   }, [affiliateOrders]);
 
   // Calcula total de saques pagos por loja
   const getStorePaidWithdrawals = useCallback((storeId: string) => {
-    return withdrawalRequests
-      .filter(req => req.store_id === storeId && req.status === 'paid')
-      .reduce((sum, req) => sum + (req.amount || 0), 0);
+    return withdrawalRequests.filter(req => req.store_id === storeId && req.status === 'paid').reduce((sum, req) => sum + (req.amount || 0), 0);
   }, [withdrawalRequests]);
 
   // Renderiza o conteúdo das abas do modal da loja
@@ -595,7 +542,7 @@ export default function AffiliateDashboardNew() {
             {store.commission_type === 'percentage' ? 'Percentual sobre cada venda' : 'Valor fixo por venda'}
           </p>
           <p className="text-xs text-foreground/60 mt-3 italic">
-            Visualize as comissões específicas dos produtos clicando em <span className="font-medium text-primary">Cupons</span> e <span className="font-medium text-primary">Produtos</span>.
+            Visualize as comissões específicas dos produtos clicando em <span className="font-medium text-primary">Ver Produtos</span> e <span className="font-medium text-primary">Produtos</span>.
           </p>
         </motion.div>
 
@@ -623,24 +570,16 @@ export default function AffiliateDashboardNew() {
               </p>
             </div>
             <div>
-              {hasPendingWithdrawal(store.store_id) ? (
-                <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+              {hasPendingWithdrawal(store.store_id) ? <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
                   <Clock className="h-3 w-3 mr-1" />
                   Saque Pendente
-                </Badge>
-              ) : (
-                <Button
-                  onClick={() => {
-                    setWithdrawalStore(store);
-                    setWithdrawalDialogOpen(true);
-                  }}
-                  disabled={store.total_commission <= 0}
-                  className="bg-green-600 hover:bg-green-700"
-                >
+                </Badge> : <Button onClick={() => {
+              setWithdrawalStore(store);
+              setWithdrawalDialogOpen(true);
+            }} disabled={store.total_commission <= 0} className="bg-green-600 hover:bg-green-700">
                   <Wallet className="h-4 w-4 mr-2" />
                   Solicitar Saque
-                </Button>
-              )}
+                </Button>}
             </div>
           </div>
         </motion.div>
@@ -677,11 +616,9 @@ export default function AffiliateDashboardNew() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-mono font-bold text-2xl gradient-text">{coupon.code}</p>
-                    {coupon.discount_type && (
-                      <Badge variant="secondary" className="mt-1">
+                    {coupon.discount_type && <Badge variant="secondary" className="mt-1">
                         {coupon.discount_type === 'percentage' ? `${coupon.discount_value}% OFF` : `R$ ${coupon.discount_value} OFF`}
-                      </Badge>
-                    )}
+                      </Badge>}
                   </div>
                   <Button variant="outline" size="sm" onClick={e => {
               e.stopPropagation();
@@ -724,10 +661,7 @@ export default function AffiliateDashboardNew() {
                 {/* Produtos do Cupom - Expandir/Colapsar */}
                 <Collapsible className="pt-3 border-t border-border">
                   <CollapsibleTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-between bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20 hover:border-primary/40 hover:from-primary/10 hover:to-primary/20 transition-all duration-300"
-                    >
+                    <Button variant="outline" className="w-full justify-between bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20 hover:border-primary/40 hover:from-primary/10 hover:to-primary/20 transition-all duration-300">
                       <span className="flex items-center gap-2 text-sm font-semibold text-primary">
                         <Package className="h-4 w-4" />
                         Ver Produtos
@@ -739,20 +673,7 @@ export default function AffiliateDashboardNew() {
                     O cupom <span className="font-semibold text-primary">{coupon.code}</span> já está embutido no link dos produtos, é só divulgar que o desconto será aplicado automaticamente!
                   </p>
                   <CollapsibleContent className="pt-3">
-                    <AffiliateStoreProductsTab 
-                      storeId={store.store_id} 
-                      storeSlug={store.store_slug} 
-                      storeAffiliateId={store.store_affiliate_id} 
-                      defaultCommissionType={store.commission_type} 
-                      defaultCommissionValue={store.commission_value} 
-                      couponCode={coupon.code}
-                      couponId={coupon.id}
-                      couponDiscountType={coupon.discount_type}
-                      couponDiscountValue={coupon.discount_value}
-                      couponScope={coupon.applies_to as 'all' | 'category' | 'product' | 'categories' | 'products'}
-                      couponCategoryNames={coupon.category_names || []}
-                      couponProductIds={coupon.product_ids || []}
-                    />
+                    <AffiliateStoreProductsTab storeId={store.store_id} storeSlug={store.store_slug} storeAffiliateId={store.store_affiliate_id} defaultCommissionType={store.commission_type} defaultCommissionValue={store.commission_value} couponCode={coupon.code} couponId={coupon.id} couponDiscountType={coupon.discount_type} couponDiscountValue={coupon.discount_value} couponScope={coupon.applies_to as 'all' | 'category' | 'product' | 'categories' | 'products'} couponCategoryNames={coupon.category_names || []} couponProductIds={coupon.product_ids || []} />
                   </CollapsibleContent>
                 </Collapsible>
               </motion.div>)}
@@ -1423,18 +1344,11 @@ export default function AffiliateDashboardNew() {
       case 'commissions':
         return renderCommissionsContent();
       case 'invites':
-        return (
-          <div className="space-y-6">
-            <AffiliatePendingInvites
-              invites={pendingInvites}
-              onAccept={acceptInvite}
-              onReject={rejectInvite}
-            />
-          </div>
-        );
+        return <div className="space-y-6">
+            <AffiliatePendingInvites invites={pendingInvites} onAccept={acceptInvite} onReject={rejectInvite} />
+          </div>;
       case 'withdrawals':
-        return (
-          <div className="space-y-6">
+        return <div className="space-y-6">
             <div className="flex items-center gap-3">
               <Wallet className="h-6 w-6 text-primary" />
               <div>
@@ -1443,8 +1357,7 @@ export default function AffiliateDashboardNew() {
               </div>
             </div>
             <AffiliateWithdrawalHistory requests={withdrawalRequests} isLoading={loadingWithdrawals} stores={affiliateStores} />
-          </div>
-        );
+          </div>;
       case 'profile':
         return renderProfileContent();
       default:
@@ -1472,13 +1385,7 @@ export default function AffiliateDashboardNew() {
 
       <div className="flex h-full w-full">
         {/* Desktop Sidebar */}
-        <AffiliateDashboardSidebar 
-          activeTab={activeTab} 
-          onTabChange={setActiveTab} 
-          affiliateName={affiliateUser?.name} 
-          onSignOut={handleLogout}
-          pendingInvitesCount={pendingInvites.length}
-        />
+        <AffiliateDashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} affiliateName={affiliateUser?.name} onSignOut={handleLogout} pendingInvitesCount={pendingInvites.length} />
 
         {/* Main Content */}
         <main className="flex-1 w-full max-w-full overflow-x-hidden px-2 sm:px-4 py-4 sm:py-6 pb-24 md:pb-6">
@@ -1720,18 +1627,6 @@ export default function AffiliateDashboardNew() {
       </ResponsiveDialog>
 
       {/* Dialog de Solicitação de Saque */}
-      {withdrawalStore && affiliateDbId && (
-        <RequestWithdrawalDialog
-          open={withdrawalDialogOpen}
-          onOpenChange={setWithdrawalDialogOpen}
-          affiliateId={affiliateDbId}
-          storeAffiliateId={withdrawalStore.store_affiliate_id}
-          storeId={withdrawalStore.store_id}
-          storeName={withdrawalStore.store_name}
-          availableAmount={withdrawalStore.total_commission}
-          defaultPixKey={affiliateUser?.cpf_cnpj || affiliateUser?.pix_key || ''}
-          onSubmit={handleCreateWithdrawal}
-        />
-      )}
+      {withdrawalStore && affiliateDbId && <RequestWithdrawalDialog open={withdrawalDialogOpen} onOpenChange={setWithdrawalDialogOpen} affiliateId={affiliateDbId} storeAffiliateId={withdrawalStore.store_affiliate_id} storeId={withdrawalStore.store_id} storeName={withdrawalStore.store_name} availableAmount={withdrawalStore.total_commission} defaultPixKey={affiliateUser?.cpf_cnpj || affiliateUser?.pix_key || ''} onSubmit={handleCreateWithdrawal} />}
     </div>;
 }
