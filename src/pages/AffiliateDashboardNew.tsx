@@ -724,6 +724,8 @@ export default function AffiliateDashboardNew() {
                       defaultCommissionValue={store.commission_value} 
                       couponCode={coupon.code}
                       couponId={coupon.id}
+                      couponDiscountType={coupon.discount_type}
+                      couponDiscountValue={coupon.discount_value}
                       couponScope={coupon.applies_to as 'all' | 'category' | 'product' | 'categories' | 'products'}
                       couponCategoryNames={coupon.category_names || []}
                       couponProductIds={coupon.product_ids || []}
