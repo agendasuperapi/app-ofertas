@@ -2214,62 +2214,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="col-span-2">
-                        <Label>Nome *</Label>
-                        <Input
-                          value={selectedAffiliate.name}
-                          onChange={async (e) => {
-                            const newName = e.target.value;
-                            setSelectedAffiliate({ ...selectedAffiliate, name: newName });
-                          }}
-                          onBlur={async () => {
-                            await updateAffiliate(selectedAffiliate.id, { name: selectedAffiliate.name });
-                          }}
-                          placeholder="Nome completo"
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <Label>Email *</Label>
-                        <Input
-                          type="email"
-                          value={selectedAffiliate.email}
-                          onChange={async (e) => {
-                            const newEmail = e.target.value;
-                            setSelectedAffiliate({ ...selectedAffiliate, email: newEmail });
-                          }}
-                          onBlur={async () => {
-                            await updateAffiliate(selectedAffiliate.id, { email: selectedAffiliate.email });
-                          }}
-                          placeholder="email@exemplo.com"
-                        />
-                      </div>
-                      <div>
-                        <Label>Telefone</Label>
-                        <Input
-                          value={selectedAffiliate.phone || ''}
-                          onChange={(e) => {
-                            let value = e.target.value.replace(/\D/g, '');
-                            if (value.length > 11) value = value.slice(0, 11);
-                            if (value.length > 0) {
-                              value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
-                              value = value.replace(/(\d{5})(\d)/, '$1-$2');
-                            }
-                            setSelectedAffiliate({ ...selectedAffiliate, phone: value });
-                          }}
-                          onBlur={async () => {
-                            await updateAffiliate(selectedAffiliate.id, { phone: selectedAffiliate.phone });
-                          }}
-                          placeholder="(00) 00000-0000"
-                          maxLength={15}
-                        />
-                        {selectedAffiliate.phone && selectedAffiliate.phone.replace(/\D/g, '').length > 0 && selectedAffiliate.phone.replace(/\D/g, '').length < 10 && (
-                          <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                            <AlertCircle className="h-3 w-3" />
-                            Telefone incompleto
-                          </p>
-                        )}
-                      </div>
-                      <div>
-                        <Label>CPF/CNPJ</Label>
+                        <Label>CPF/CNPJ *</Label>
                         <Input
                           value={selectedAffiliate.cpf_cnpj || ''}
                           onChange={(e) => {
@@ -2313,6 +2258,61 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                           }
                           return null;
                         })()}
+                      </div>
+                      <div className="col-span-2">
+                        <Label>Nome *</Label>
+                        <Input
+                          value={selectedAffiliate.name}
+                          onChange={async (e) => {
+                            const newName = e.target.value;
+                            setSelectedAffiliate({ ...selectedAffiliate, name: newName });
+                          }}
+                          onBlur={async () => {
+                            await updateAffiliate(selectedAffiliate.id, { name: selectedAffiliate.name });
+                          }}
+                          placeholder="Nome completo"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <Label>Email</Label>
+                        <Input
+                          type="email"
+                          value={selectedAffiliate.email}
+                          onChange={async (e) => {
+                            const newEmail = e.target.value;
+                            setSelectedAffiliate({ ...selectedAffiliate, email: newEmail });
+                          }}
+                          onBlur={async () => {
+                            await updateAffiliate(selectedAffiliate.id, { email: selectedAffiliate.email });
+                          }}
+                          placeholder="email@exemplo.com"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <Label>Telefone</Label>
+                        <Input
+                          value={selectedAffiliate.phone || ''}
+                          onChange={(e) => {
+                            let value = e.target.value.replace(/\D/g, '');
+                            if (value.length > 11) value = value.slice(0, 11);
+                            if (value.length > 0) {
+                              value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
+                              value = value.replace(/(\d{5})(\d)/, '$1-$2');
+                            }
+                            setSelectedAffiliate({ ...selectedAffiliate, phone: value });
+                          }}
+                          onBlur={async () => {
+                            await updateAffiliate(selectedAffiliate.id, { phone: selectedAffiliate.phone });
+                          }}
+                          placeholder="(00) 00000-0000"
+                          maxLength={15}
+                        />
+                        {selectedAffiliate.phone && selectedAffiliate.phone.replace(/\D/g, '').length > 0 && selectedAffiliate.phone.replace(/\D/g, '').length < 10 && (
+                          <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                            <AlertCircle className="h-3 w-3" />
+                            Telefone incompleto
+                          </p>
+                        )}
                       </div>
                       <div className="col-span-2">
                         <Label>Chave PIX</Label>
