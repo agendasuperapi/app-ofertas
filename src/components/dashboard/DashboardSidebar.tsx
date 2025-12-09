@@ -112,7 +112,19 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
           
         if (item.hasSubmenu) {
             const isOpen = item.id === 'cadastros' ? cadastrosOpen : item.id === 'afiliados-menu' ? afiliadosOpen : relatoriosOpen;
-            const setOpen = item.id === 'cadastros' ? setCadastrosOpen : item.id === 'afiliados-menu' ? setAfiliadosOpen : setRelatoriosOpen;
+            const setOpen = (open: boolean) => {
+              if (open) {
+                // Fechar todos os outros menus ao abrir um
+                setCadastrosOpen(item.id === 'cadastros');
+                setAfiliadosOpen(item.id === 'afiliados-menu');
+                setRelatoriosOpen(item.id === 'relatorios');
+              } else {
+                // Apenas fechar o menu atual
+                if (item.id === 'cadastros') setCadastrosOpen(false);
+                else if (item.id === 'afiliados-menu') setAfiliadosOpen(false);
+                else setRelatoriosOpen(false);
+              }
+            };
             const subItems = item.id === 'cadastros' ? cadastrosSubItems : item.id === 'afiliados-menu' ? afiliadosSubItems : relatoriosSubItems;
             
             return (
