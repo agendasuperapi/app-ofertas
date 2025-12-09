@@ -1133,7 +1133,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               <TabsList className="w-max justify-start glass mb-2">
                 <TabsTrigger value="dados" className="text-xs sm:text-sm px-2 sm:px-3">Dados</TabsTrigger>
                 <TabsTrigger value="cupons" className="text-xs sm:text-sm px-2 sm:px-3">Cupons</TabsTrigger>
-                <TabsTrigger value="comissao" className="text-xs sm:text-sm px-2 sm:px-3">Comissão Padrão</TabsTrigger>
                 <TabsTrigger value="regras" className="text-xs sm:text-sm px-2 sm:px-3">Regras Específicas</TabsTrigger>
               </TabsList>
             </div>
@@ -1250,8 +1249,93 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                       );
                     }
                     return null;
-                  })()}
+                })()}
                 </div>
+              </div>
+              
+              {/* Seção Comissão Padrão */}
+              <div className="pt-4 border-t border-border/50">
+                <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg">
+                  <div>
+                    <Label className="font-semibold">Comissão Padrão Ativada</Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Aplicar comissão automática para produtos sem regra específica
+                    </p>
+                  </div>
+                  <Switch
+                    checked={formData.commission_enabled}
+                    onCheckedChange={(checked) => setFormData({ ...formData, commission_enabled: checked })}
+                  />
+                </div>
+                
+                {formData.commission_enabled && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-4 mt-4"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Tipo de Comissão</Label>
+                        <Select
+                          value={formData.default_commission_type}
+                          onValueChange={(value: 'percentage' | 'fixed') => 
+                            setFormData({ ...formData, default_commission_type: value })
+                          }
+                        >
+                          <SelectTrigger className="glass">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="percentage">
+                              <div className="flex items-center gap-2">
+                                <Percent className="h-4 w-4" />
+                                Porcentagem (%)
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="fixed">
+                              <div className="flex items-center gap-2">
+                                <DollarSign className="h-4 w-4" />
+                                Valor Fixo (R$)
+                              </div>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Valor</Label>
+                        <div className="relative">
+                          <Input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={formData.default_commission_value || ''}
+                            onChange={(e) => setFormData({ 
+                              ...formData, 
+                              default_commission_value: Number(e.target.value) 
+                            })}
+                            className={`pr-8 glass ${!formData.default_commission_value && formData.commission_enabled ? 'border-destructive' : ''}`}
+                            placeholder="0"
+                          />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                            {formData.default_commission_type === 'percentage' ? '%' : 'R$'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-3 bg-muted/50 rounded-lg border border-border/50">
+                      <p className="text-sm text-muted-foreground">
+                        <strong>Como funciona:</strong> Produtos sem regra de comissão específica receberão automaticamente{' '}
+                        {formData.default_commission_type === 'percentage' 
+                          ? `${formData.default_commission_value || 0}% de comissão`
+                          : formatCurrency(formData.default_commission_value || 0) + ' de comissão'
+                        }.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
               </div>
             </TabsContent>
             
@@ -1480,95 +1564,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                   </div>
                 )}
               </div>
-            </TabsContent>
-            
-            {/* Aba Comissão Padrão */}
-            <TabsContent value="comissao" className="flex-1 overflow-auto mt-2 space-y-4">
-              <Card className="glass-card">
-                <CardContent className="pt-6 space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg">
-                    <div>
-                      <Label className="font-semibold">Comissão Padrão Ativada</Label>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Aplicar comissão automática para produtos sem regra específica
-                      </p>
-                    </div>
-                    <Switch
-                      checked={formData.commission_enabled}
-                      onCheckedChange={(checked) => setFormData({ ...formData, commission_enabled: checked })}
-                    />
-                  </div>
-                  
-                  {formData.commission_enabled && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="space-y-4"
-                    >
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Tipo de Comissão</Label>
-                          <Select
-                            value={formData.default_commission_type}
-                            onValueChange={(value: 'percentage' | 'fixed') => 
-                              setFormData({ ...formData, default_commission_type: value })
-                            }
-                          >
-                            <SelectTrigger className="glass">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="percentage">
-                                <div className="flex items-center gap-2">
-                                  <Percent className="h-4 w-4" />
-                                  Porcentagem (%)
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="fixed">
-                                <div className="flex items-center gap-2">
-                                  <DollarSign className="h-4 w-4" />
-                                  Valor Fixo (R$)
-                                </div>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label>Valor</Label>
-                          <div className="relative">
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={formData.default_commission_value || ''}
-                              onChange={(e) => setFormData({ 
-                                ...formData, 
-                                default_commission_value: Number(e.target.value) 
-                              })}
-                              className={`pr-8 glass ${!formData.default_commission_value && formData.commission_enabled ? 'border-destructive' : ''}`}
-                              placeholder="0"
-                            />
-                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                              {formData.default_commission_type === 'percentage' ? '%' : 'R$'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="p-3 bg-muted/50 rounded-lg border border-border/50">
-                        <p className="text-sm text-muted-foreground">
-                          <strong>Como funciona:</strong> Produtos sem regra de comissão específica receberão automaticamente{' '}
-                          {formData.default_commission_type === 'percentage' 
-                            ? `${formData.default_commission_value || 0}% de comissão`
-                            : formatCurrency(formData.default_commission_value || 0) + ' de comissão'
-                          }.
-                        </p>
-                      </div>
-                    </motion.div>
-                  )}
-                </CardContent>
-              </Card>
             </TabsContent>
             
             {/* Aba Regras Específicas */}
