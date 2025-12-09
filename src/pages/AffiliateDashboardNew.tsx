@@ -1704,7 +1704,7 @@ export default function AffiliateDashboardNew() {
           storeId={withdrawalStore.store_id}
           storeName={withdrawalStore.store_name}
           availableAmount={withdrawalStore.total_commission}
-          defaultPixKey={affiliateUser?.pix_key || ''}
+          defaultPixKey={affiliateUser?.cpf_cnpj || affiliateUser?.pix_key || ''}
           onSubmit={handleCreateWithdrawal}
         />
       )}
