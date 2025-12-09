@@ -406,6 +406,50 @@ export default function AffiliateDashboardNew() {
       currency: 'BRL'
     }).format(value || 0);
   };
+
+  // Formatar e validar chave PIX
+  const formatPixKey = (key: string | null | undefined): { formatted: string; type: string; isValid: boolean } => {
+    if (!key) return { formatted: '', type: '', isValid: false };
+    
+    const cleanKey = key.replace(/\D/g, '');
+    
+    // CPF: 11 dígitos
+    if (cleanKey.length === 11 && /^\d{11}$/.test(cleanKey)) {
+      const formatted = cleanKey.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+      return { formatted, type: 'CPF', isValid: true };
+    }
+    
+    // CNPJ: 14 dígitos
+    if (cleanKey.length === 14 && /^\d{14}$/.test(cleanKey)) {
+      const formatted = cleanKey.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+      return { formatted, type: 'CNPJ', isValid: true };
+    }
+    
+    // Telefone: 10 ou 11 dígitos
+    if ((cleanKey.length === 10 || cleanKey.length === 11) && /^\d+$/.test(cleanKey)) {
+      if (cleanKey.length === 11) {
+        const formatted = cleanKey.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+        return { formatted, type: 'Telefone', isValid: true };
+      } else {
+        const formatted = cleanKey.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+        return { formatted, type: 'Telefone', isValid: true };
+      }
+    }
+    
+    // Email
+    if (key.includes('@') && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(key)) {
+      return { formatted: key, type: 'E-mail', isValid: true };
+    }
+    
+    // Chave aleatória (32 caracteres hexadecimais com hifens)
+    if (/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(key)) {
+      return { formatted: key, type: 'Chave Aleatória', isValid: true };
+    }
+    
+    // Formato não reconhecido
+    return { formatted: key, type: 'Desconhecido', isValid: false };
+  };
+
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast.success(`${label} copiado!`);
@@ -1846,14 +1890,34 @@ export default function AffiliateDashboardNew() {
 
         <div>
           <p className="text-sm text-muted-foreground mb-1">Chave PIX para recebimento</p>
-          {(affiliateUser?.pix_key || affiliateUser?.cpf_cnpj) ? <div className="flex items-center gap-2">
-              <code className="flex-1 p-2 bg-muted rounded text-sm font-mono">
-                {affiliateUser.pix_key || affiliateUser.cpf_cnpj}
-              </code>
-              <Button variant="outline" size="sm" onClick={() => copyToClipboard(affiliateUser.pix_key || affiliateUser.cpf_cnpj || '', 'Chave PIX')}>
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div> : <p className="text-muted-foreground italic">Nenhuma chave PIX cadastrada</p>}
+          {(() => {
+            const rawPixKey = affiliateUser?.pix_key || affiliateUser?.cpf_cnpj;
+            if (!rawPixKey) {
+              return <p className="text-muted-foreground italic">Nenhuma chave PIX cadastrada</p>;
+            }
+            const pixInfo = formatPixKey(rawPixKey);
+            return (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 p-2 bg-muted rounded text-sm font-mono">
+                    {pixInfo.formatted}
+                  </code>
+                  <Button variant="outline" size="sm" onClick={() => copyToClipboard(rawPixKey, 'Chave PIX')}>
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={pixInfo.isValid ? 'default' : 'destructive'} className={pixInfo.isValid ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : ''}>
+                    {pixInfo.isValid ? (
+                      <><CheckCircle className="h-3 w-3 mr-1" /> {pixInfo.type}</>
+                    ) : (
+                      <><XCircle className="h-3 w-3 mr-1" /> Formato inválido</>
+                    )}
+                  </Badge>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </CardContent>
     </Card>;
