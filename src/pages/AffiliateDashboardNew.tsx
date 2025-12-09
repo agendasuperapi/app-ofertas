@@ -71,6 +71,7 @@ export default function AffiliateDashboardNew() {
   const [storesSearch, setStoresSearch] = useState('');
   const [storesStatusFilter, setStoresStatusFilter] = useState('all');
   const [storesSortBy, setStoresSortBy] = useState('name');
+  const [storesSubTab, setStoresSubTab] = useState('stores');
 
   // Buscar affiliate_id do banco
   useEffect(() => {
@@ -1639,166 +1640,195 @@ export default function AffiliateDashboardNew() {
   const hasStoresFilters = storesSearch.trim() || storesStatusFilter !== 'all' || storesSortBy !== 'name';
 
   // Stores Tab Content
-  const renderStoresContent = () => <div className="space-y-4">
+  const renderStoresContent = () => (
+    <div className="space-y-4">
       <Card className="glass border-border/50">
-        <CardHeader className="p-4 sm:p-6">
+        <CardHeader className="p-4 sm:p-6 pb-0 sm:pb-0">
           <CardTitle className="flex items-center gap-2">
             <Store className="h-5 w-5 text-primary" />
-            Minhas Lojas
+            Lojas & Convites
           </CardTitle>
           <CardDescription>
-            Lojas parceiras onde você é afiliado
+            Gerencie suas lojas parceiras e convites pendentes
           </CardDescription>
         </CardHeader>
-        
-        {/* Search and Filters */}
-        {affiliateStores.length > 0 && (
-          <CardContent className="pt-0 pb-4">
-            <div className="space-y-4">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nome da loja ou cupom..."
-                  value={storesSearch}
-                  onChange={(e) => setStoresSearch(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              
-              {/* Filters Row */}
-              <div className="flex flex-wrap gap-2">
-                <Select value={storesStatusFilter} onValueChange={setStoresStatusFilter}>
-                  <SelectTrigger className="w-[140px]">
-                    <Filter className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os status</SelectItem>
-                    <SelectItem value="active">Ativas</SelectItem>
-                    <SelectItem value="pending">Pendentes</SelectItem>
-                    <SelectItem value="with_commission">Com saldo disponível</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                <Select value={storesSortBy} onValueChange={setStoresSortBy}>
-                  <SelectTrigger className="w-[160px]">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    <SelectValue placeholder="Ordenar por" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="name">Nome A-Z</SelectItem>
-                    <SelectItem value="sales">Maior Vendas</SelectItem>
-                    <SelectItem value="commission">Maior Comissão</SelectItem>
-                    <SelectItem value="pending">Maior Pendente</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                {hasStoresFilters && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => {
-                      setStoresSearch('');
-                      setStoresStatusFilter('all');
-                      setStoresSortBy('name');
-                    }}
-                    className="gap-2"
-                  >
-                    <XCircle className="h-4 w-4" />
-                    Limpar filtros
-                  </Button>
+        <CardContent className="p-4 sm:p-6 pt-4">
+          <Tabs value={storesSubTab} onValueChange={setStoresSubTab} className="w-full">
+            <TabsList className="w-full grid grid-cols-2 mb-4">
+              <TabsTrigger value="stores" className="gap-2">
+                <Store className="h-4 w-4" />
+                Lojas
+              </TabsTrigger>
+              <TabsTrigger value="invites" className="gap-2">
+                <Users className="h-4 w-4" />
+                Convites
+                {pendingInvites.length > 0 && (
+                  <Badge variant="destructive" className="ml-1 h-5 min-w-5 px-1 text-[10px]">
+                    {pendingInvites.length}
+                  </Badge>
                 )}
-              </div>
-              
-              {/* Results Counter */}
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {filteredStores.length} {filteredStores.length === 1 ? 'loja encontrada' : 'lojas encontradas'}
-                </span>
-                <span className="font-medium text-emerald-600">
-                  Total disponível: {formatCurrency(totalStoresCommission)}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        )}
-      </Card>
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="stores" className="mt-0 space-y-4">
+              {/* Search and Filters */}
+              {affiliateStores.length > 0 && (
+                <div className="space-y-4">
+                  {/* Search */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por nome da loja ou cupom..."
+                      value={storesSearch}
+                      onChange={(e) => setStoresSearch(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                  
+                  {/* Filters Row */}
+                  <div className="flex flex-wrap gap-2">
+                    <Select value={storesStatusFilter} onValueChange={setStoresStatusFilter}>
+                      <SelectTrigger className="w-[140px]">
+                        <Filter className="h-4 w-4 mr-2" />
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos os status</SelectItem>
+                        <SelectItem value="active">Ativas</SelectItem>
+                        <SelectItem value="pending">Pendentes</SelectItem>
+                        <SelectItem value="with_commission">Com saldo disponível</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    <Select value={storesSortBy} onValueChange={setStoresSortBy}>
+                      <SelectTrigger className="w-[160px]">
+                        <TrendingUp className="h-4 w-4 mr-2" />
+                        <SelectValue placeholder="Ordenar por" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="name">Nome A-Z</SelectItem>
+                        <SelectItem value="sales">Maior Vendas</SelectItem>
+                        <SelectItem value="commission">Maior Comissão</SelectItem>
+                        <SelectItem value="pending">Maior Pendente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    
+                    {hasStoresFilters && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setStoresSearch('');
+                          setStoresStatusFilter('all');
+                          setStoresSortBy('name');
+                        }}
+                        className="gap-2"
+                      >
+                        <XCircle className="h-4 w-4" />
+                        Limpar filtros
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Results Counter */}
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {filteredStores.length} {filteredStores.length === 1 ? 'loja encontrada' : 'lojas encontradas'}
+                    </span>
+                    <span className="font-medium text-emerald-600">
+                      Total disponível: {formatCurrency(totalStoresCommission)}
+                    </span>
+                  </div>
+                </div>
+              )}
 
-      {affiliateStores.length === 0 ? <Card>
-          <CardContent className="py-12 text-center">
-            <Store className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhuma loja vinculada</h3>
-            <p className="text-muted-foreground">
-              Aguarde um convite de uma loja parceira para começar a ganhar comissões.
-            </p>
-          </CardContent>
-        </Card> : filteredStores.length === 0 ? <Card>
-          <CardContent className="py-12 text-center">
-            <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Nenhuma loja encontrada</h3>
-            <p className="text-muted-foreground">
-              Tente ajustar os filtros ou o termo de busca.
-            </p>
-          </CardContent>
-        </Card> : <div className="grid gap-4 md:grid-cols-2">
-          {filteredStores.map(store => <motion.div key={store.store_affiliate_id} whileHover={{
-        scale: 1.02
-      }} whileTap={{
-        scale: 0.98
-      }}>
-              <Card className="glass border-border/50 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setSelectedStore(store)}>
-                <CardHeader className="pb-3 p-3 sm:p-6 sm:pb-3">
-                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                    <div className="flex items-center gap-3">
-                      {store.store_logo ? <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
-                          <img src={store.store_logo} alt={store.store_name} className="w-full h-full object-cover" />
-                        </div> : <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary to-primary-glow rounded-lg flex items-center justify-center shadow-glow flex-shrink-0">
-                          <Store className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                        </div>}
-                      <div className="min-w-0 flex-1">
-                        <CardTitle className="text-sm sm:text-base truncate">{store.store_name}</CardTitle>
-                        <CardDescription className="text-xs sm:text-sm truncate">
-                          {store.coupons?.length ? `${store.coupons.length} cupom(s)` : store.coupon_code ? `Cupom: ${store.coupon_code}` : 'Sem cupom'}
-                        </CardDescription>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 self-end sm:self-auto">
-                      <Badge className={`text-[10px] sm:text-xs ${store.status === 'active' ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : ''}`} variant={store.status === 'active' ? 'default' : 'secondary'}>
-                        {store.status === 'active' ? 'Ativo' : 'Pendente'}
-                      </Badge>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0 p-3 sm:p-6 sm:pt-0">
-                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2 text-center">
-                    <div className="p-1.5 sm:p-2 bg-muted/50 rounded-lg">
-                      <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-tight">Vendas</p>
-                      <p className="font-semibold text-[10px] sm:text-xs">{formatCurrency(store.total_sales)}</p>
-                    </div>
-                    <div className="p-1.5 sm:p-2 bg-purple-500/10 rounded-lg">
-                      <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-tight">Ganhos</p>
-                      <p className="font-semibold text-[10px] sm:text-xs text-purple-600">{formatCurrency(getStorePaidWithdrawals(store.store_id))}</p>
-                    </div>
-                    <div className="p-1.5 sm:p-2 bg-yellow-500/10 rounded-lg">
-                      <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-tight">Pendente</p>
-                      <p className="font-semibold text-[10px] sm:text-xs text-yellow-600">{formatCurrency(store.pending_commission)}</p>
-                    </div>
-                    <div className="p-1.5 sm:p-2 bg-emerald-500/10 rounded-lg col-span-1.5 sm:col-span-1">
-                      <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-tight">Saque</p>
-                      <p className="font-semibold text-[10px] sm:text-xs text-emerald-600">{formatCurrency(store.total_commission)}</p>
-                    </div>
-                    <div className="p-1.5 sm:p-2 bg-red-500/10 rounded-lg col-span-1.5 sm:col-span-1">
-                      <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-tight">Cancelados</p>
-                      <p className="font-semibold text-[10px] sm:text-xs text-red-600">{formatCurrency(getStoreCancelledCommission(store.store_affiliate_id))}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>)}
-        </div>}
-    </div>;
+              {affiliateStores.length === 0 ? (
+                <div className="py-12 text-center">
+                  <Store className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Nenhuma loja vinculada</h3>
+                  <p className="text-muted-foreground">
+                    Aguarde um convite de uma loja parceira para começar a ganhar comissões.
+                  </p>
+                </div>
+              ) : filteredStores.length === 0 ? (
+                <div className="py-12 text-center">
+                  <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">Nenhuma loja encontrada</h3>
+                  <p className="text-muted-foreground">
+                    Tente ajustar os filtros ou o termo de busca.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {filteredStores.map(store => (
+                    <motion.div key={store.store_affiliate_id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                      <Card className="glass border-border/50 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setSelectedStore(store)}>
+                        <CardHeader className="pb-3 p-3 sm:p-6 sm:pb-3">
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                            <div className="flex items-center gap-3">
+                              {store.store_logo ? (
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
+                                  <img src={store.store_logo} alt={store.store_name} className="w-full h-full object-cover" />
+                                </div>
+                              ) : (
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary to-primary-glow rounded-lg flex items-center justify-center shadow-glow flex-shrink-0">
+                                  <Store className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <CardTitle className="text-sm sm:text-base truncate">{store.store_name}</CardTitle>
+                                <CardDescription className="text-xs sm:text-sm truncate">
+                                  {store.coupons?.length ? `${store.coupons.length} cupom(s)` : store.coupon_code ? `Cupom: ${store.coupon_code}` : 'Sem cupom'}
+                                </CardDescription>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 self-end sm:self-auto">
+                              <Badge className={`text-[10px] sm:text-xs ${store.status === 'active' ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : ''}`} variant={store.status === 'active' ? 'default' : 'secondary'}>
+                                {store.status === 'active' ? 'Ativo' : 'Pendente'}
+                              </Badge>
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-0 p-3 sm:p-6 sm:pt-0">
+                          <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2 text-center">
+                            <div className="p-1.5 sm:p-2 bg-muted/50 rounded-lg">
+                              <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-tight">Vendas</p>
+                              <p className="font-semibold text-[10px] sm:text-xs">{formatCurrency(store.total_sales)}</p>
+                            </div>
+                            <div className="p-1.5 sm:p-2 bg-purple-500/10 rounded-lg">
+                              <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-tight">Ganhos</p>
+                              <p className="font-semibold text-[10px] sm:text-xs text-purple-600">{formatCurrency(getStorePaidWithdrawals(store.store_id))}</p>
+                            </div>
+                            <div className="p-1.5 sm:p-2 bg-yellow-500/10 rounded-lg">
+                              <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-tight">Pendente</p>
+                              <p className="font-semibold text-[10px] sm:text-xs text-yellow-600">{formatCurrency(store.pending_commission)}</p>
+                            </div>
+                            <div className="p-1.5 sm:p-2 bg-emerald-500/10 rounded-lg col-span-1.5 sm:col-span-1">
+                              <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-tight">Saque</p>
+                              <p className="font-semibold text-[10px] sm:text-xs text-emerald-600">{formatCurrency(store.total_commission)}</p>
+                            </div>
+                            <div className="p-1.5 sm:p-2 bg-red-500/10 rounded-lg col-span-1.5 sm:col-span-1">
+                              <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-tight">Cancelados</p>
+                              <p className="font-semibold text-[10px] sm:text-xs text-red-600">{formatCurrency(getStoreCancelledCommission(store.store_affiliate_id))}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="invites" className="mt-0">
+              <AffiliatePendingInvites invites={pendingInvites} onAccept={acceptInvite} onReject={rejectInvite} />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  );
 
   // Orders Tab Content
   const renderOrdersContent = () => <Card>
@@ -2028,10 +2058,6 @@ export default function AffiliateDashboardNew() {
         return renderOrdersContent();
       case 'commissions':
         return renderCommissionsContent();
-      case 'invites':
-        return <div className="space-y-6">
-            <AffiliatePendingInvites invites={pendingInvites} onAccept={acceptInvite} onReject={rejectInvite} />
-          </div>;
       case 'withdrawals':
         return <div className="space-y-6">
             <div className="flex items-center gap-3">
