@@ -1889,7 +1889,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
       {/* Dialog: Detalhes do Afiliado */}
       <Dialog open={detailsModalOpen} onOpenChange={setDetailsModalOpen}>
         <DialogContent className="w-[95vw] max-w-4xl h-[90vh] overflow-hidden flex flex-col glass p-3 sm:p-6">
-          <DialogHeader className="space-y-3">
+          <DialogHeader className="space-y-3 pr-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 {selectedAffiliate && (
@@ -1911,7 +1911,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                 </div>
               </div>
               {selectedAffiliate && (
-                <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg flex-shrink-0">
+                <div className="flex items-center gap-2 p-2 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-lg flex-shrink-0 mr-4 sm:mr-0">
                   <Switch
                     checked={selectedAffiliate.commission_enabled}
                     onCheckedChange={async (checked) => {
