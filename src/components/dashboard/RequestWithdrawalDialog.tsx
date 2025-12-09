@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
-import { Wallet, Key, FileText, Loader2, AlertCircle } from 'lucide-react';
+import { Wallet, Key, FileText, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { validatePixKey } from '@/lib/pixValidation';
 
 interface RequestWithdrawalDialogProps {
   open: boolean;
@@ -47,6 +48,8 @@ export function RequestWithdrawalDialog({
     }
   }, [open, defaultPixKey]);
 
+  const pixValidation = useMemo(() => validatePixKey(pixKey), [pixKey]);
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
@@ -74,7 +77,7 @@ export function RequestWithdrawalDialog({
     }
   };
 
-  const canSubmit = availableAmount > 0 && pixKey.trim().length > 0;
+  const canSubmit = availableAmount > 0 && pixKey.trim().length > 0 && pixValidation.isValid;
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
@@ -120,10 +123,23 @@ export function RequestWithdrawalDialog({
               placeholder="Digite sua chave PIX"
               value={pixKey}
               onChange={(e) => setPixKey(e.target.value)}
+              className={pixKey && !pixValidation.isValid ? 'border-destructive' : pixValidation.isValid && pixValidation.type !== 'empty' ? 'border-emerald-500' : ''}
             />
-            <p className="text-xs text-muted-foreground">
-              CPF, CNPJ, E-mail, Telefone ou Chave Aleatória
-            </p>
+            {pixKey && pixValidation.type !== 'empty' && (
+              <p className={`text-xs flex items-center gap-1 ${pixValidation.isValid ? 'text-emerald-600' : 'text-destructive'}`}>
+                {pixValidation.isValid ? (
+                  <CheckCircle2 className="h-3 w-3" />
+                ) : (
+                  <AlertCircle className="h-3 w-3" />
+                )}
+                {pixValidation.message}
+              </p>
+            )}
+            {(!pixKey || pixValidation.type === 'empty') && (
+              <p className="text-xs text-muted-foreground">
+                CPF, CNPJ, E-mail, Telefone ou Chave Aleatória
+              </p>
+            )}
           </div>
 
           {/* Observações */}
