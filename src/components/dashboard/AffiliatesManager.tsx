@@ -2217,26 +2217,9 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                         <Label>CPF/CNPJ *</Label>
                         <Input
                           value={selectedAffiliate.cpf_cnpj || ''}
-                          onChange={(e) => {
-                            let value = e.target.value.replace(/\D/g, '');
-                            if (value.length > 14) value = value.slice(0, 14);
-                            if (value.length <= 11) {
-                              value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                              value = value.replace(/(\d{3})(\d)/, '$1.$2');
-                              value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
-                            } else {
-                              value = value.replace(/^(\d{2})(\d)/, '$1.$2');
-                              value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
-                              value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
-                              value = value.replace(/(\d{4})(\d)/, '$1-$2');
-                            }
-                            setSelectedAffiliate({ ...selectedAffiliate, cpf_cnpj: value });
-                          }}
-                          onBlur={async () => {
-                            await updateAffiliate(selectedAffiliate.id, { cpf_cnpj: selectedAffiliate.cpf_cnpj });
-                          }}
+                          disabled
+                          className="bg-muted cursor-not-allowed"
                           placeholder="000.000.000-00"
-                          maxLength={18}
                         />
                         {selectedAffiliate.cpf_cnpj && (() => {
                           const digits = selectedAffiliate.cpf_cnpj.replace(/\D/g, '');
