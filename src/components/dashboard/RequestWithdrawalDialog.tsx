@@ -85,9 +85,9 @@ export function RequestWithdrawalDialog({
 
         <div className="space-y-4 py-4">
           {/* Valor disponível */}
-          <div className="p-4 bg-primary/10 rounded-lg text-center border border-primary/20">
+          <div className="p-4 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg text-center border border-emerald-200 dark:border-emerald-800">
             <p className="text-sm text-muted-foreground mb-1">Valor Disponível para Saque</p>
-            <p className="text-3xl font-bold text-primary">{formatCurrency(availableAmount)}</p>
+            <p className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(availableAmount)}</p>
             <p className="text-xs text-muted-foreground mt-2">
               * O valor total disponível será solicitado
             </p>
