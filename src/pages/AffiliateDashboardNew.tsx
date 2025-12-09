@@ -1846,11 +1846,11 @@ export default function AffiliateDashboardNew() {
 
         <div>
           <p className="text-sm text-muted-foreground mb-1">Chave PIX para recebimento</p>
-          {affiliateUser?.pix_key ? <div className="flex items-center gap-2">
+          {(affiliateUser?.pix_key || affiliateUser?.cpf_cnpj) ? <div className="flex items-center gap-2">
               <code className="flex-1 p-2 bg-muted rounded text-sm font-mono">
-                {affiliateUser.pix_key}
+                {affiliateUser.pix_key || affiliateUser.cpf_cnpj}
               </code>
-              <Button variant="outline" size="sm" onClick={() => copyToClipboard(affiliateUser.pix_key!, 'Chave PIX')}>
+              <Button variant="outline" size="sm" onClick={() => copyToClipboard(affiliateUser.pix_key || affiliateUser.cpf_cnpj || '', 'Chave PIX')}>
                 <Copy className="h-4 w-4" />
               </Button>
             </div> : <p className="text-muted-foreground italic">Nenhuma chave PIX cadastrada</p>}
