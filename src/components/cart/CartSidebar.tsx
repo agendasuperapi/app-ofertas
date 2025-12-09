@@ -81,13 +81,19 @@ export const CartSidebar = ({ inDrawer = false, onClose, storeId }: CartSidebarP
                     className="bg-card border rounded-lg p-3 shadow-sm"
                   >
                     <div className="flex gap-3">
-                      {item.imageUrl && (
-                        <img
-                          src={item.imageUrl}
-                          alt={item.productName}
-                          className="w-20 h-20 object-cover rounded-lg"
-                        />
-                      )}
+                      <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-muted">
+                        {item.imageUrl ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={item.productName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <ShoppingCart className="w-8 h-8 text-muted-foreground" />
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-semibold text-sm truncate">
                           {item.productName}
