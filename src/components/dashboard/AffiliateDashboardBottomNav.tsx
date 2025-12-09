@@ -1,23 +1,26 @@
-import { Home, Store, ShoppingBag, BarChart3, User, Wallet } from "lucide-react";
+import { Home, Store, ShoppingBag, BarChart3, User, Wallet, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface AffiliateDashboardBottomNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  pendingInvitesCount?: number;
 }
 
 const navItems = [
   { id: "home", label: "Início", icon: Home },
   { id: "stores", label: "Lojas", icon: Store },
+  { id: "invites", label: "Convites", icon: Mail },
   { id: "withdrawals", label: "Saques", icon: Wallet },
-  { id: "commissions", label: "Comissões", icon: BarChart3 },
   { id: "profile", label: "Perfil", icon: User },
 ];
 
 export function AffiliateDashboardBottomNav({
   activeTab,
   onTabChange,
+  pendingInvitesCount = 0,
 }: AffiliateDashboardBottomNavProps) {
   const handleClick = (tabId: string) => {
     onTabChange(tabId);
@@ -38,6 +41,7 @@ export function AffiliateDashboardBottomNav({
             {navItems.map((item) => {
               const isActive = activeTab === item.id;
               const Icon = item.icon;
+              const showBadge = item.id === "invites" && pendingInvitesCount > 0;
 
               return (
                 <motion.button
@@ -71,6 +75,13 @@ export function AffiliateDashboardBottomNav({
                           : "text-muted-foreground"
                       )} 
                     />
+                    {showBadge && (
+                      <Badge 
+                        className="absolute -top-2 -right-2 h-4 min-w-4 px-1 text-[10px] bg-destructive text-destructive-foreground border-0"
+                      >
+                        {pendingInvitesCount > 9 ? "9+" : pendingInvitesCount}
+                      </Badge>
+                    )}
                   </motion.div>
 
                   {/* Label */}

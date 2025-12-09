@@ -16,6 +16,7 @@ import { AffiliateDashboardSidebar } from '@/components/dashboard/AffiliateDashb
 import { AffiliateDashboardBottomNav } from '@/components/dashboard/AffiliateDashboardBottomNav';
 import { RequestWithdrawalDialog } from '@/components/dashboard/RequestWithdrawalDialog';
 import { AffiliateWithdrawalHistory } from '@/components/dashboard/AffiliateWithdrawalHistory';
+import { AffiliatePendingInvites } from '@/components/dashboard/AffiliatePendingInvites';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AffiliateStoreProductsTab } from '@/components/dashboard/AffiliateStoreProductsTab';
@@ -38,10 +39,13 @@ export default function AffiliateDashboardNew() {
     affiliateStores,
     affiliateStats,
     affiliateOrders,
+    pendingInvites,
     isLoading,
     affiliateLogout,
     refreshData,
-    fetchOrderItems
+    fetchOrderItems,
+    acceptInvite,
+    rejectInvite
   } = useAffiliateAuth();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('home');
@@ -1393,6 +1397,16 @@ export default function AffiliateDashboardNew() {
         return renderOrdersContent();
       case 'commissions':
         return renderCommissionsContent();
+      case 'invites':
+        return (
+          <div className="space-y-6">
+            <AffiliatePendingInvites
+              invites={pendingInvites}
+              onAccept={acceptInvite}
+              onReject={rejectInvite}
+            />
+          </div>
+        );
       case 'withdrawals':
         return (
           <div className="space-y-6">
@@ -1433,7 +1447,13 @@ export default function AffiliateDashboardNew() {
 
       <div className="flex h-full w-full">
         {/* Desktop Sidebar */}
-        <AffiliateDashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} affiliateName={affiliateUser?.name} onSignOut={handleLogout} />
+        <AffiliateDashboardSidebar 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab} 
+          affiliateName={affiliateUser?.name} 
+          onSignOut={handleLogout}
+          pendingInvitesCount={pendingInvites.length}
+        />
 
         {/* Main Content */}
         <main className="flex-1 w-full max-w-full overflow-x-hidden px-2 sm:px-4 py-4 sm:py-6 pb-24 md:pb-6">
@@ -1442,7 +1462,7 @@ export default function AffiliateDashboardNew() {
       </div>
 
       {/* Mobile Bottom Nav */}
-      {isMobile && <AffiliateDashboardBottomNav activeTab={activeTab} onTabChange={setActiveTab} />}
+      {isMobile && <AffiliateDashboardBottomNav activeTab={activeTab} onTabChange={setActiveTab} pendingInvitesCount={pendingInvites.length} />}
 
       {/* Modal de Detalhes do Pedido */}
       <ResponsiveDialog open={!!selectedOrder} onOpenChange={open => !open && closeOrderModal()}>
