@@ -482,16 +482,28 @@ export const useAffiliates = (storeId?: string) => {
     try {
       const { data: earnings } = await (supabase as any)
         .from('affiliate_earnings')
-        .select('commission_amount, status, order_total')
+        .select('commission_amount, order_total, order:orders(status)')
         .eq('affiliate_id', affiliateId);
 
-      const stats: AffiliateStats = { totalEarnings: 0, pendingEarnings: 0, paidEarnings: 0, totalSales: 0, totalOrders: earnings?.length || 0 };
+      const stats: AffiliateStats = { totalEarnings: 0, pendingEarnings: 0, paidEarnings: 0, totalSales: 0, totalOrders: 0 };
       earnings?.forEach((e: any) => {
+        const orderStatus = e.order?.status;
+        
+        // Ignora pedidos cancelados
+        if (orderStatus === 'cancelado' || orderStatus === 'cancelled') return;
+        
+        stats.totalOrders += 1;
         stats.totalSales += Number(e.order_total) || 0;
         const amount = Number(e.commission_amount) || 0;
-        stats.totalEarnings += amount;
-        if (e.status === 'pending' || e.status === 'approved') stats.pendingEarnings += amount;
-        else if (e.status === 'paid') stats.paidEarnings += amount;
+        
+        if (orderStatus === 'entregue' || orderStatus === 'delivered') {
+          // Concluído - pedidos entregues
+          stats.totalEarnings += amount;
+          stats.paidEarnings += amount;
+        } else {
+          // Pendente - todos os outros status
+          stats.pendingEarnings += amount;
+        }
       });
       return stats;
     } catch { return { totalEarnings: 0, pendingEarnings: 0, paidEarnings: 0, totalSales: 0, totalOrders: 0 }; }
