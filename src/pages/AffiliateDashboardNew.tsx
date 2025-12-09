@@ -1137,7 +1137,7 @@ export default function AffiliateDashboardNew() {
     // Determine if we should show filtered data or all data
     const showFilteredData = periodFilter !== 'all' || storeFilter !== 'all';
     const displayStats = showFilteredData ? filteredStats : affiliateStats;
-    return <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5 sm:gap-4">
+    return <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-1.5 sm:gap-4">
         <motion.div initial={{
         opacity: 0,
         y: 20
