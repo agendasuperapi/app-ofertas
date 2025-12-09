@@ -608,6 +608,7 @@ export type Database = {
         Row: {
           affiliate_account_id: string | null
           commission_enabled: boolean
+          commission_maturity_days: number | null
           coupon_id: string | null
           cpf_cnpj: string | null
           created_at: string
@@ -627,6 +628,7 @@ export type Database = {
         Insert: {
           affiliate_account_id?: string | null
           commission_enabled?: boolean
+          commission_maturity_days?: number | null
           coupon_id?: string | null
           cpf_cnpj?: string | null
           created_at?: string
@@ -646,6 +648,7 @@ export type Database = {
         Update: {
           affiliate_account_id?: string | null
           commission_enabled?: boolean
+          commission_maturity_days?: number | null
           coupon_id?: string | null
           cpf_cnpj?: string | null
           created_at?: string
@@ -2372,6 +2375,7 @@ export type Database = {
           accepted_at: string | null
           affiliate_account_id: string
           commission_enabled: boolean | null
+          commission_maturity_days: number | null
           coupon_id: string | null
           created_at: string | null
           default_commission_type: string
@@ -2390,6 +2394,7 @@ export type Database = {
           accepted_at?: string | null
           affiliate_account_id: string
           commission_enabled?: boolean | null
+          commission_maturity_days?: number | null
           coupon_id?: string | null
           created_at?: string | null
           default_commission_type?: string
@@ -2408,6 +2413,7 @@ export type Database = {
           accepted_at?: string | null
           affiliate_account_id?: string
           commission_enabled?: boolean | null
+          commission_maturity_days?: number | null
           coupon_id?: string | null
           created_at?: string | null
           default_commission_type?: string
