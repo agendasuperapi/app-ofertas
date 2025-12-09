@@ -28,6 +28,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
 import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter, ChevronDown, XCircle, Search, Banknote, Camera } from 'lucide-react';
+import { AvatarCropDialog } from '@/components/dashboard/AvatarCropDialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -49,6 +50,8 @@ export default function AffiliateDashboardNew() {
     updateAvatarUrl
   } = useAffiliateAuth();
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
+  const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('home');
   const [selectedOrder, setSelectedOrder] = useState<AffiliateOrder | null>(null);
@@ -1983,8 +1986,8 @@ export default function AffiliateDashboardNew() {
       </CardContent>
     </Card>;
 
-  // Handle avatar upload
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle avatar file selection - opens crop dialog
+  const handleAvatarSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !affiliateUser) return;
 
@@ -2000,26 +2003,43 @@ export default function AffiliateDashboardNew() {
       return;
     }
 
+    // Create object URL for cropping
+    const objectUrl = URL.createObjectURL(file);
+    setTempImageUrl(objectUrl);
+    setCropDialogOpen(true);
+    
+    // Reset input
+    event.target.value = '';
+  };
+
+  // Handle cropped image upload
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!affiliateUser) return;
+
     setUploadingAvatar(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${affiliateUser.id}.${fileExt}`;
+      const fileName = `${affiliateUser.id}.jpg`;
       const filePath = `${fileName}`;
 
       // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('affiliate-avatars')
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, croppedBlob, { 
+          upsert: true,
+          contentType: 'image/jpeg'
+        });
 
       if (uploadError) throw uploadError;
 
-      // Get public URL
+      // Get public URL with cache buster
       const { data: { publicUrl } } = supabase.storage
         .from('affiliate-avatars')
         .getPublicUrl(filePath);
 
+      const urlWithCacheBuster = `${publicUrl}?t=${Date.now()}`;
+
       // Update affiliate account
-      const result = await updateAvatarUrl(publicUrl);
+      const result = await updateAvatarUrl(urlWithCacheBuster);
       if (result.success) {
         toast.success('Foto atualizada com sucesso!');
       } else {
@@ -2030,6 +2050,10 @@ export default function AffiliateDashboardNew() {
       toast.error('Erro ao enviar foto: ' + error.message);
     } finally {
       setUploadingAvatar(false);
+      if (tempImageUrl) {
+        URL.revokeObjectURL(tempImageUrl);
+        setTempImageUrl(null);
+      }
     }
   };
 
@@ -2069,12 +2093,28 @@ export default function AffiliateDashboardNew() {
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={handleAvatarUpload}
+                onChange={handleAvatarSelect}
                 disabled={uploadingAvatar}
               />
             </label>
           </div>
           <p className="text-sm text-muted-foreground">Clique no ícone para alterar a foto</p>
+          
+          {/* Avatar Crop Dialog */}
+          {tempImageUrl && (
+            <AvatarCropDialog
+              open={cropDialogOpen}
+              onOpenChange={(open) => {
+                setCropDialogOpen(open);
+                if (!open && tempImageUrl) {
+                  URL.revokeObjectURL(tempImageUrl);
+                  setTempImageUrl(null);
+                }
+              }}
+              imageUrl={tempImageUrl}
+              onCropComplete={handleCropComplete}
+            />
+          )}
         </div>
 
         <Separator />
