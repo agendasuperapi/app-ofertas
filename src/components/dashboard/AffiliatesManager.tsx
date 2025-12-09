@@ -803,15 +803,12 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     }).format(value);
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-      pending: { label: 'Pendente', variant: 'outline' },
-      approved: { label: 'Aprovada', variant: 'secondary' },
-      paid: { label: 'Paga', variant: 'default' },
-      cancelled: { label: 'Cancelada', variant: 'destructive' },
-    };
-    const config = statusConfig[status] || statusConfig.pending;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+  const getStatusBadge = (orderStatus: string) => {
+    // Concluído = delivered, Pendente = todos os outros (exceto cancelled que não aparece)
+    if (orderStatus === 'delivered') {
+      return <Badge className="bg-green-500/10 text-green-600 border-green-500/20">Concluído</Badge>;
+    }
+    return <Badge variant="outline" className="text-yellow-600 border-yellow-500/30">Pendente</Badge>;
   };
 
   // Calculate totals for summary cards
@@ -2902,7 +2899,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                 <TableCell className="font-semibold text-green-600">
                                   {formatCurrency(earning.commission_amount)}
                                 </TableCell>
-                                <TableCell>{getStatusBadge(earning.status)}</TableCell>
+                                <TableCell>{getStatusBadge(earning.order?.status || 'pending')}</TableCell>
                               </TableRow>
                             ))}
                             {affiliateEarnings.length === 0 && (

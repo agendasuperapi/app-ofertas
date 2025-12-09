@@ -69,6 +69,7 @@ export interface AffiliateEarning {
     customer_name: string;
     total: number;
     created_at: string;
+    status: string;
   } | null;
 }
 
@@ -416,7 +417,7 @@ export const useAffiliates = (storeId?: string) => {
     try {
       const { data, error } = await (supabase as any)
         .from('affiliate_earnings')
-        .select(`*, order:orders(order_number, customer_name, total, created_at)`)
+        .select(`*, order:orders(order_number, customer_name, total, created_at, status)`)
         .eq('affiliate_id', affiliateId)
         .order('created_at', { ascending: false });
       if (error) throw error;
