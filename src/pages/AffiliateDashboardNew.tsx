@@ -27,7 +27,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
-import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter, ChevronDown, XCircle, Search, Banknote } from 'lucide-react';
+import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter, ChevronDown, XCircle, Search, Banknote, Camera } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -45,8 +45,10 @@ export default function AffiliateDashboardNew() {
     refreshData,
     fetchOrderItems,
     acceptInvite,
-    rejectInvite
+    rejectInvite,
+    updateAvatarUrl
   } = useAffiliateAuth();
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('home');
   const [selectedOrder, setSelectedOrder] = useState<AffiliateOrder | null>(null);
@@ -1981,15 +1983,102 @@ export default function AffiliateDashboardNew() {
       </CardContent>
     </Card>;
 
+  // Handle avatar upload
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !affiliateUser) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor, selecione uma imagem');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('A imagem deve ter no máximo 5MB');
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${affiliateUser.id}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('affiliate-avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('affiliate-avatars')
+        .getPublicUrl(filePath);
+
+      // Update affiliate account
+      const result = await updateAvatarUrl(publicUrl);
+      if (result.success) {
+        toast.success('Foto atualizada com sucesso!');
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error: any) {
+      console.error('Error uploading avatar:', error);
+      toast.error('Erro ao enviar foto: ' + error.message);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   // Profile Tab Content
-  const renderProfileContent = () => <Card>
+  const renderProfileContent = () => (
+    <Card>
       <CardHeader>
         <CardTitle>Meus Dados</CardTitle>
         <CardDescription>
           Informações da sua conta de afiliado
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
+        {/* Avatar Upload Section */}
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-24 h-24 rounded-full overflow-hidden bg-muted ring-2 ring-primary/20">
+              {affiliateUser?.avatar_url ? (
+                <img 
+                  src={affiliateUser.avatar_url} 
+                  alt="Avatar" 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-primary/60">
+                  <User className="h-10 w-10 text-white" />
+                </div>
+              )}
+            </div>
+            <label className="absolute bottom-0 right-0 p-2 bg-primary rounded-full cursor-pointer hover:bg-primary/90 transition-colors shadow-lg">
+              {uploadingAvatar ? (
+                <Loader2 className="h-4 w-4 text-white animate-spin" />
+              ) : (
+                <Camera className="h-4 w-4 text-white" />
+              )}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarUpload}
+                disabled={uploadingAvatar}
+              />
+            </label>
+          </div>
+          <p className="text-sm text-muted-foreground">Clique no ícone para alterar a foto</p>
+        </div>
+
+        <Separator />
+
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <p className="text-sm text-muted-foreground">Nome</p>
@@ -2038,7 +2127,8 @@ export default function AffiliateDashboardNew() {
           })()}
         </div>
       </CardContent>
-    </Card>;
+    </Card>
+  );
 
   // Render content based on active tab
   const renderContent = () => {

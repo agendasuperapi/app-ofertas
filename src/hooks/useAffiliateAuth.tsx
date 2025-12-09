@@ -112,6 +112,7 @@ interface AffiliateAuthContextType {
   fetchPendingInvites: () => Promise<void>;
   acceptInvite: (storeAffiliateId: string) => Promise<{ success: boolean; error?: string }>;
   rejectInvite: (storeAffiliateId: string) => Promise<{ success: boolean; error?: string }>;
+  updateAvatarUrl: (avatarUrl: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AffiliateAuthContext = createContext<AffiliateAuthContextType | undefined>(undefined);
@@ -371,6 +372,28 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateAvatarUrl = async (avatarUrl: string): Promise<{ success: boolean; error?: string }> => {
+    const token = getStoredToken();
+    if (!token || !affiliateUser) {
+      return { success: false, error: 'Não autenticado' };
+    }
+
+    try {
+      const { error } = await supabase
+        .from('affiliate_accounts')
+        .update({ avatar_url: avatarUrl })
+        .eq('id', affiliateUser.id);
+
+      if (error) throw error;
+
+      setAffiliateUser(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error updating avatar:', err);
+      return { success: false, error: err.message || 'Erro ao atualizar avatar' };
+    }
+  };
+
   return (
     <AffiliateAuthContext.Provider
       value={{
@@ -389,7 +412,8 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
         fetchOrderItems,
         fetchPendingInvites,
         acceptInvite,
-        rejectInvite
+        rejectInvite,
+        updateAvatarUrl
       }}
     >
       {children}
