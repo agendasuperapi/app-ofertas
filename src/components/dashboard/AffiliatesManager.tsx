@@ -134,7 +134,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const [createdAffiliateName, setCreatedAffiliateName] = useState<string>('');
   const [newCouponDialogOpen, setNewCouponDialogOpen] = useState(false);
   const [affiliateSearchTerm, setAffiliateSearchTerm] = useState('');
-  const [affiliateStatusFilter, setAffiliateStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [affiliateStatusFilter, setAffiliateStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [toggleStatusAffiliate, setToggleStatusAffiliate] = useState<Affiliate | null>(null);
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
   const [couponProductsModalOpen, setCouponProductsModalOpen] = useState(false);
