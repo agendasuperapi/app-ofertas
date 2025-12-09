@@ -27,7 +27,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
-import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter, ChevronDown, XCircle, Search } from 'lucide-react';
+import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter, ChevronDown, XCircle, Search, Banknote } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -1137,7 +1137,7 @@ export default function AffiliateDashboardNew() {
     // Determine if we should show filtered data or all data
     const showFilteredData = periodFilter !== 'all' || storeFilter !== 'all';
     const displayStats = showFilteredData ? filteredStats : affiliateStats;
-    return <div className="grid grid-cols-2 md:grid-cols-4 gap-1.5 sm:gap-4">
+    return <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5 sm:gap-4">
         <motion.div initial={{
         opacity: 0,
         y: 20
@@ -1184,7 +1184,7 @@ export default function AffiliateDashboardNew() {
                   <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Vendas</p>
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Total Vendas</p>
                   <p className="text-sm sm:text-base md:text-2xl font-bold text-green-600 truncate">{formatCurrency(displayStats?.total_sales || 0)}</p>
                 </div>
               </div>
@@ -1204,15 +1204,15 @@ export default function AffiliateDashboardNew() {
         scale: 1.02
       }}>
           <Card className="glass border-border/50 overflow-hidden relative h-full">
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
             <CardContent className="p-2.5 sm:p-4 md:pt-6 md:px-6 relative">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-yellow-500 to-amber-600 shadow-[0_0_20px_hsl(45_93%_47%/0.4)]">
-                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-primary to-primary-glow shadow-glow">
+                  <Wallet className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Pendente</p>
-                  <p className="text-sm sm:text-base md:text-2xl font-bold text-yellow-600 truncate">{formatCurrency(displayStats?.pending_commission || 0)}</p>
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Total Ganhos</p>
+                  <p className="text-sm sm:text-base md:text-2xl font-bold gradient-text truncate">{formatCurrency(displayStats?.total_commission || 0)}</p>
                 </div>
               </div>
             </CardContent>
@@ -1231,15 +1231,69 @@ export default function AffiliateDashboardNew() {
         scale: 1.02
       }}>
           <Card className="glass border-border/50 overflow-hidden relative h-full">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent pointer-events-none" />
             <CardContent className="p-2.5 sm:p-4 md:pt-6 md:px-6 relative">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-primary to-primary-glow shadow-glow">
-                  <Wallet className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-yellow-500 to-amber-600 shadow-[0_0_20px_hsl(45_93%_47%/0.4)]">
+                  <Clock className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Ganhos</p>
-                  <p className="text-sm sm:text-base md:text-2xl font-bold gradient-text truncate">{formatCurrency(displayStats?.total_commission || 0)}</p>
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Pendentes</p>
+                  <p className="text-sm sm:text-base md:text-2xl font-bold text-yellow-600 truncate">{formatCurrency(displayStats?.pending_commission || 0)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.5
+      }} whileHover={{
+        scale: 1.02
+      }}>
+          <Card className="glass border-border/50 overflow-hidden relative h-full">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent pointer-events-none" />
+            <CardContent className="p-2.5 sm:p-4 md:pt-6 md:px-6 relative">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-orange-500 to-orange-600 shadow-[0_0_20px_hsl(25_95%_53%/0.4)]">
+                  <Banknote className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Disponível Saque</p>
+                  <p className="text-sm sm:text-base md:text-2xl font-bold text-orange-600 truncate">{formatCurrency((displayStats as any)?.total_commission || 0)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.6
+      }} whileHover={{
+        scale: 1.02
+      }}>
+          <Card className="glass border-border/50 overflow-hidden relative h-full">
+            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent pointer-events-none" />
+            <CardContent className="p-2.5 sm:p-4 md:pt-6 md:px-6 relative">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-red-500 to-red-600 shadow-[0_0_20px_hsl(0_84%_60%/0.4)]">
+                  <XCircle className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Cancelados</p>
+                  <p className="text-sm sm:text-base md:text-2xl font-bold text-red-600 truncate">{formatCurrency((displayStats as any)?.cancelled_commission || 0)}</p>
                 </div>
               </div>
             </CardContent>
