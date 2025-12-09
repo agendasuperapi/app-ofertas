@@ -2599,6 +2599,7 @@ export type Database = {
           accepts_pickup: boolean | null
           accepts_pix: boolean | null
           address: string | null
+          affiliate_commission_maturity_days: number | null
           allow_orders_when_closed: boolean | null
           avg_delivery_time: number | null
           banner_url: string | null
@@ -2661,6 +2662,7 @@ export type Database = {
           accepts_pickup?: boolean | null
           accepts_pix?: boolean | null
           address?: string | null
+          affiliate_commission_maturity_days?: number | null
           allow_orders_when_closed?: boolean | null
           avg_delivery_time?: number | null
           banner_url?: string | null
@@ -2723,6 +2725,7 @@ export type Database = {
           accepts_pickup?: boolean | null
           accepts_pix?: boolean | null
           address?: string | null
+          affiliate_commission_maturity_days?: number | null
           allow_orders_when_closed?: boolean | null
           avg_delivery_time?: number | null
           banner_url?: string | null
@@ -3179,11 +3182,13 @@ export type Database = {
         Args: { p_affiliate_account_id: string }
         Returns: {
           commission_amount: number
+          commission_available_at: string
           commission_status: string
           coupon_code: string
           coupon_discount: number
           customer_name: string
           earning_id: string
+          maturity_days: number
           order_date: string
           order_id: string
           order_number: string
@@ -3203,6 +3208,8 @@ export type Database = {
           coupon_discount_type: string
           coupon_discount_value: number
           coupons: Json
+          maturing_commission: number
+          maturity_days: number
           pending_commission: number
           status: string
           store_affiliate_id: string

@@ -16,6 +16,8 @@ interface RequestWithdrawalDialogProps {
   storeId: string;
   storeName: string;
   availableAmount: number;
+  maturingAmount?: number;
+  maturityDays?: number;
   defaultPixKey?: string;
   onSubmit: (data: {
     affiliate_id: string;
@@ -35,6 +37,8 @@ export function RequestWithdrawalDialog({
   storeId,
   storeName,
   availableAmount,
+  maturingAmount = 0,
+  maturityDays = 7,
   defaultPixKey,
   onSubmit,
 }: RequestWithdrawalDialogProps) {
@@ -105,12 +109,26 @@ export function RequestWithdrawalDialog({
             </p>
           </div>
 
+          {/* Valor em maturação */}
+          {maturingAmount > 0 && (
+            <div className="p-4 bg-gradient-to-br from-orange-100 via-amber-50 to-yellow-50 dark:from-orange-700/30 dark:via-amber-600/20 dark:to-yellow-500/10 rounded-xl text-center border border-orange-200/50 dark:border-orange-600/30">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/50 backdrop-blur-sm rounded-full mb-2">
+                <AlertCircle className="h-4 w-4 text-orange-500" />
+                <p className="text-sm font-medium text-orange-600">Em Período de Carência</p>
+              </div>
+              <p className="text-2xl font-bold text-orange-600">{formatCurrency(maturingAmount)}</p>
+              <p className="text-xs text-orange-600/70 mt-2">
+                Será liberado após {maturityDays} dias da entrega
+              </p>
+            </div>
+          )}
+
           {availableAmount <= 0 && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
                 Você não possui comissões disponíveis para saque nesta loja. 
-                As comissões ficam disponíveis após os pedidos serem entregues.
+                As comissões ficam disponíveis {maturityDays} dias após os pedidos serem entregues.
               </AlertDescription>
             </Alert>
           )}
