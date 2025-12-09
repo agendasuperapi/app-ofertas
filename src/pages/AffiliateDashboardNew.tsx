@@ -1905,27 +1905,27 @@ export default function AffiliateDashboardNew() {
           <Separator />
 
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-              <h4 className="font-medium">Por Loja</h4>
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <div className="flex flex-col gap-3 mb-3">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium">Por Loja</h4>
+                <label className="flex items-center gap-2 text-xs sm:text-sm cursor-pointer whitespace-nowrap">
                   <input 
                     type="checkbox" 
                     checked={storesStatusFilter === 'available'}
                     onChange={(e) => setStoresStatusFilter(e.target.checked ? 'available' : 'all')}
                     className="h-4 w-4 rounded border-border"
                   />
-                  <span className="text-muted-foreground">Somente Saldo Disponível</span>
+                  <span className="text-muted-foreground">Só c/ Saldo</span>
                 </label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar loja..."
-                    className="pl-9 w-full sm:w-64"
-                    value={storesSearch}
-                    onChange={(e) => setStoresSearch(e.target.value)}
-                  />
-                </div>
+              </div>
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar loja..."
+                  className="pl-9 w-full"
+                  value={storesSearch}
+                  onChange={(e) => setStoresSearch(e.target.value)}
+                />
               </div>
             </div>
             <div className="space-y-2">
