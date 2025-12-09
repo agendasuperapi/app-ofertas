@@ -82,6 +82,11 @@ export default function AffiliateDashboardNew() {
   const [storesStatusFilter, setStoresStatusFilter] = useState('all');
   const [storesSortBy, setStoresSortBy] = useState('name');
   const [storesSubTab, setStoresSubTab] = useState('stores');
+  
+  // Withdrawal orders modal state
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<any | null>(null);
+  const [withdrawalOrders, setWithdrawalOrders] = useState<any[]>([]);
+  const [loadingWithdrawalOrders, setLoadingWithdrawalOrders] = useState(false);
 
   // Buscar affiliate_id do banco
   useEffect(() => {
@@ -170,6 +175,60 @@ export default function AffiliateDashboardNew() {
   // Verificar se tem solicitação pendente para uma loja
   const hasPendingWithdrawal = (storeId: string) => {
     return withdrawalRequests.some(r => r.store_id === storeId && r.status === 'pending');
+  };
+
+  // Buscar pedidos relacionados a um saque (comissões pagas no período do saque)
+  const fetchWithdrawalOrders = useCallback(async (withdrawal: any) => {
+    if (!withdrawal || !affiliateDbId) return;
+    setLoadingWithdrawalOrders(true);
+    try {
+      // Buscar affiliate_earnings com status 'paid' e paid_at no período do saque
+      const { data: earnings, error } = await supabase
+        .from('affiliate_earnings')
+        .select(`
+          id,
+          order_id,
+          commission_amount,
+          order_total,
+          paid_at,
+          orders!inner(
+            order_number,
+            customer_name,
+            created_at,
+            total,
+            status
+          )
+        `)
+        .eq('affiliate_id', affiliateDbId)
+        .eq('status', 'paid')
+        .gte('paid_at', withdrawal.requested_at)
+        .lte('paid_at', withdrawal.paid_at || new Date().toISOString());
+
+      if (error) throw error;
+
+      const formattedOrders = (earnings || []).map((e: any) => ({
+        order_id: e.order_id,
+        order_number: e.orders?.order_number,
+        customer_name: e.orders?.customer_name,
+        order_date: e.orders?.created_at,
+        order_total: e.order_total,
+        commission_amount: e.commission_amount,
+        order_status: e.orders?.status
+      }));
+
+      setWithdrawalOrders(formattedOrders);
+    } catch (err) {
+      console.error('Erro ao buscar pedidos do saque:', err);
+      setWithdrawalOrders([]);
+    } finally {
+      setLoadingWithdrawalOrders(false);
+    }
+  }, [affiliateDbId]);
+
+  // Abrir modal do saque com pedidos
+  const handleOpenWithdrawalDetails = (withdrawal: any) => {
+    setSelectedWithdrawal(withdrawal);
+    fetchWithdrawalOrders(withdrawal);
   };
 
   // Filter states
@@ -416,6 +475,20 @@ export default function AffiliateDashboardNew() {
       style: 'currency',
       currency: 'BRL'
     }).format(value || 0);
+  };
+
+  // Helper function para badge de status do saque
+  const getWithdrawalStatusBadge = (status: string) => {
+    switch (status) {
+      case 'paid':
+        return <Badge className="bg-green-500/10 text-green-600 border-green-500/20"><CheckCircle className="h-3 w-3 mr-1" />Pago</Badge>;
+      case 'pending':
+        return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20"><Clock className="h-3 w-3 mr-1" />Pendente</Badge>;
+      case 'rejected':
+        return <Badge className="bg-red-500/10 text-red-600 border-red-500/20"><XCircle className="h-3 w-3 mr-1" />Rejeitado</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
   };
 
   // Formatar e validar chave PIX
@@ -948,19 +1021,6 @@ export default function AffiliateDashboardNew() {
           const searchTerm = (withdrawalsSearch[store.store_id] || '').toLowerCase();
           const statusFilter = withdrawalsStatusFilter[store.store_id] || 'all';
           
-          const getWithdrawalStatusBadge = (status: string) => {
-            switch (status) {
-              case 'paid':
-                return <Badge className="bg-green-500/10 text-green-600 border-green-500/20"><CheckCircle className="h-3 w-3 mr-1" />Pago</Badge>;
-              case 'pending':
-                return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20"><Clock className="h-3 w-3 mr-1" />Pendente</Badge>;
-              case 'rejected':
-                return <Badge className="bg-red-500/10 text-red-600 border-red-500/20"><XCircle className="h-3 w-3 mr-1" />Rejeitado</Badge>;
-              default:
-                return <Badge variant="outline">{status}</Badge>;
-            }
-          };
-          
           // Filtrar saques
           const storeWithdrawals = withdrawalRequests
             .filter(req => req.store_id === store.store_id)
@@ -1070,7 +1130,8 @@ export default function AffiliateDashboardNew() {
                   {paginatedWithdrawals.map(withdrawal => (
                     <div 
                       key={withdrawal.id} 
-                      className="p-3 bg-muted/30 rounded-lg border border-border/50"
+                      className="p-3 bg-muted/30 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => handleOpenWithdrawalDetails(withdrawal)}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-bold text-lg text-emerald-600">{formatCurrency(withdrawal.amount)}</span>
@@ -2533,5 +2594,102 @@ export default function AffiliateDashboardNew() {
 
       {/* Dialog de Solicitação de Saque */}
       {withdrawalStore && affiliateDbId && <RequestWithdrawalDialog open={withdrawalDialogOpen} onOpenChange={setWithdrawalDialogOpen} affiliateId={affiliateDbId} storeAffiliateId={withdrawalStore.store_affiliate_id} storeId={withdrawalStore.store_id} storeName={withdrawalStore.store_name} availableAmount={withdrawalStore.total_commission} defaultPixKey={affiliateUser?.cpf_cnpj || affiliateUser?.pix_key || ''} onSubmit={handleCreateWithdrawal} />}
+
+      {/* Modal de Detalhes do Saque */}
+      <ResponsiveDialog open={!!selectedWithdrawal} onOpenChange={(open) => !open && setSelectedWithdrawal(null)}>
+        <ResponsiveDialogContent className="max-w-lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="flex items-center gap-2">
+              <Banknote className="h-5 w-5 text-emerald-600" />
+              Detalhes do Saque
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              {selectedWithdrawal && (
+                <div className="flex items-center justify-between mt-2">
+                  <span className="font-bold text-xl text-emerald-600">{formatCurrency(selectedWithdrawal.amount)}</span>
+                  {getWithdrawalStatusBadge(selectedWithdrawal.status)}
+                </div>
+              )}
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+
+          {selectedWithdrawal && (
+            <div className="space-y-4">
+              {/* Informações do saque */}
+              <div className="grid grid-cols-2 gap-3 text-sm bg-muted/30 p-3 rounded-lg">
+                <div>
+                  <span className="text-muted-foreground text-xs">Solicitado em:</span>
+                  <p className="font-medium">{formatDate(selectedWithdrawal.requested_at)}</p>
+                </div>
+                {selectedWithdrawal.paid_at && (
+                  <div>
+                    <span className="text-muted-foreground text-xs">Pago em:</span>
+                    <p className="font-medium">{formatDate(selectedWithdrawal.paid_at)}</p>
+                  </div>
+                )}
+                {selectedWithdrawal.pix_key && (
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground text-xs">Chave PIX:</span>
+                    <p className="font-medium font-mono">{selectedWithdrawal.pix_key}</p>
+                  </div>
+                )}
+                {selectedWithdrawal.admin_notes && (
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground text-xs">Observação:</span>
+                    <p className="text-sm">{selectedWithdrawal.admin_notes}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Lista de pedidos do saque */}
+              <div>
+                <h4 className="font-semibold text-sm mb-2 flex items-center gap-2">
+                  <ShoppingBag className="h-4 w-4" />
+                  Pedidos incluídos neste saque
+                </h4>
+                
+                {loadingWithdrawalOrders ? (
+                  <div className="flex items-center justify-center py-6">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : withdrawalOrders.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground text-sm bg-muted/20 rounded-lg">
+                    Nenhum pedido encontrado para este saque
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {withdrawalOrders.map((order, idx) => (
+                      <div key={order.order_id || idx} className="flex items-center justify-between p-2 bg-muted/20 rounded-lg text-sm">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate">#{order.order_number}</p>
+                          <p className="text-xs text-muted-foreground truncate">{order.customer_name}</p>
+                        </div>
+                        <div className="text-right ml-2">
+                          <p className="font-medium text-emerald-600">{formatCurrency(order.commission_amount)}</p>
+                          <p className="text-xs text-muted-foreground">{formatCurrency(order.order_total)}</p>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Total */}
+                    <div className="flex items-center justify-between p-2 bg-emerald-500/10 rounded-lg text-sm border border-emerald-500/20">
+                      <span className="font-semibold">Total Comissões</span>
+                      <span className="font-bold text-emerald-600">
+                        {formatCurrency(withdrawalOrders.reduce((sum, o) => sum + (o.commission_amount || 0), 0))}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <ResponsiveDialogFooter>
+            <Button variant="outline" onClick={() => setSelectedWithdrawal(null)}>
+              Fechar
+            </Button>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>;
 }
