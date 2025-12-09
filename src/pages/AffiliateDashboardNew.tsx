@@ -594,6 +594,9 @@ export default function AffiliateDashboardNew() {
           <p className="text-xs text-muted-foreground mt-1">
             {store.commission_type === 'percentage' ? 'Percentual sobre cada venda' : 'Valor fixo por venda'}
           </p>
+          <p className="text-xs text-muted-foreground/70 mt-3 italic">
+            Visualize as comissões específicas dos produtos clicando em <span className="font-medium text-primary">Cupons</span> e <span className="font-medium text-primary">Produtos</span>.
+          </p>
         </motion.div>
 
         {/* Solicitar Saque */}
