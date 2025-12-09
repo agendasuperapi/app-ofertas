@@ -1133,7 +1133,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               <TabsList className="w-max justify-start glass mb-2">
                 <TabsTrigger value="dados" className="text-xs sm:text-sm px-2 sm:px-3">Dados</TabsTrigger>
                 <TabsTrigger value="cupons" className="text-xs sm:text-sm px-2 sm:px-3">Cupons</TabsTrigger>
-                <TabsTrigger value="regras" className="text-xs sm:text-sm px-2 sm:px-3">Regras Específicas</TabsTrigger>
+                <TabsTrigger value="regras" className="text-xs sm:text-sm px-2 sm:px-3">Regras Comissões</TabsTrigger>
               </TabsList>
             </div>
             
