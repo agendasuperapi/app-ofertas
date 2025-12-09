@@ -2887,7 +2887,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                               <TableHead>Valor Venda</TableHead>
                               <TableHead>Comissão</TableHead>
                               <TableHead>Status</TableHead>
-                              <TableHead>Ações</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
@@ -2904,27 +2903,11 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                                   {formatCurrency(earning.commission_amount)}
                                 </TableCell>
                                 <TableCell>{getStatusBadge(earning.status)}</TableCell>
-                                <TableCell>
-                                  <Select
-                                    value={earning.status}
-                                    onValueChange={(value) => updateEarningStatus(earning.id, value as any)}
-                                  >
-                                    <SelectTrigger className="w-[120px] h-8">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="pending">Pendente</SelectItem>
-                                      <SelectItem value="approved">Aprovada</SelectItem>
-                                      <SelectItem value="paid">Paga</SelectItem>
-                                      <SelectItem value="cancelled">Cancelada</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </TableCell>
                               </TableRow>
                             ))}
                             {affiliateEarnings.length === 0 && (
                               <TableRow>
-                                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
                                   Nenhuma comissão registrada
                                 </TableCell>
                               </TableRow>
