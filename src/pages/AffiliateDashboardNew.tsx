@@ -1898,14 +1898,9 @@ export default function AffiliateDashboardNew() {
             const pixInfo = formatPixKey(rawPixKey);
             return (
               <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 p-2 bg-muted rounded text-sm font-mono">
-                    {pixInfo.formatted}
-                  </code>
-                  <Button variant="outline" size="sm" onClick={() => copyToClipboard(rawPixKey, 'Chave PIX')}>
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </div>
+                <code className="p-2 bg-muted rounded text-sm font-mono">
+                  {pixInfo.formatted}
+                </code>
                 <div className="flex items-center gap-2">
                   <Badge variant={pixInfo.isValid ? 'default' : 'destructive'} className={pixInfo.isValid ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : ''}>
                     {pixInfo.isValid ? (
