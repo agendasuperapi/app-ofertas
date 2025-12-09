@@ -1898,7 +1898,10 @@ export default function AffiliateDashboardNew() {
           <div>
             <h4 className="font-medium mb-3">Por Loja</h4>
             <div className="space-y-2">
-              {affiliateStores.map(store => <div key={store.store_affiliate_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              {affiliateStores.map(store => <div key={store.store_affiliate_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
+                  setActiveTab('stores');
+                  setSelectedStore(store);
+                }}>
                   <div className="flex items-center gap-3">
                     {store.store_logo ? <img src={store.store_logo} alt={store.store_name} className="w-8 h-8 rounded object-cover" /> : <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
                         <Store className="h-4 w-4 text-muted-foreground" />
