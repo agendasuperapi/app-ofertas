@@ -2004,6 +2004,23 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                         </CardContent>
                       </Card>
                     </motion.div>
+                    <motion.div whileHover={{ y: -4, scale: 1.02 }} transition={{ type: "spring", stiffness: 400, damping: 17 }}>
+                      <Card className="glass-card overflow-hidden border-red-500/10 hover:border-red-500/30 transition-all">
+                        <CardContent className="p-3 sm:pt-4 relative">
+                          <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent pointer-events-none" />
+                          <div className="flex items-center justify-between relative gap-2">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs sm:text-sm text-muted-foreground font-medium">Cancelados</p>
+                              <p className="text-lg sm:text-2xl font-bold text-red-600 truncate">{formatCurrency(affiliateStats.cancelledEarnings || 0)}</p>
+                              <p className="text-xs text-muted-foreground">{affiliateStats.cancelledOrders || 0} pedido(s)</p>
+                            </div>
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-red-500/20 to-red-500/5 flex items-center justify-center flex-shrink-0">
+                              <XCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
                   </motion.div>
                 )}
                 
