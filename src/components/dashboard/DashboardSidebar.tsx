@@ -249,6 +249,24 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
           );
         })}
       </nav>
+
+      {/* Botão Sair - fixo na parte inferior */}
+      {onSignOut && (
+        <div className="px-2 pb-4 pt-2 mt-auto flex-shrink-0 w-full">
+          <div className="h-px bg-primary/20 mb-2" />
+          <motion.button
+            onClick={onSignOut}
+            whileHover={{ scale: 1.03, y: -1 }}
+            whileTap={{ scale: 0.97 }}
+            className="w-full flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl text-destructive hover:bg-destructive/10 transition-all duration-300"
+          >
+            <LogOut className="w-5 h-5" />
+            <span className="text-[11px] font-semibold uppercase tracking-wide">
+              sair
+            </span>
+          </motion.button>
+        </div>
+      )}
     </motion.div>
   );
 };
