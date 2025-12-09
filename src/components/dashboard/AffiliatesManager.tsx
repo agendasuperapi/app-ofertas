@@ -2262,12 +2262,8 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                         <Label>Nome *</Label>
                         <Input
                           value={selectedAffiliate.name}
-                          onChange={async (e) => {
-                            const newName = e.target.value;
-                            setSelectedAffiliate({ ...selectedAffiliate, name: newName });
-                          }}
-                          onBlur={async () => {
-                            await updateAffiliate(selectedAffiliate.id, { name: selectedAffiliate.name });
+                          onChange={(e) => {
+                            setSelectedAffiliate({ ...selectedAffiliate, name: e.target.value });
                           }}
                           placeholder="Nome completo"
                         />
@@ -2277,12 +2273,8 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                         <Input
                           type="email"
                           value={selectedAffiliate.email}
-                          onChange={async (e) => {
-                            const newEmail = e.target.value;
-                            setSelectedAffiliate({ ...selectedAffiliate, email: newEmail });
-                          }}
-                          onBlur={async () => {
-                            await updateAffiliate(selectedAffiliate.id, { email: selectedAffiliate.email });
+                          onChange={(e) => {
+                            setSelectedAffiliate({ ...selectedAffiliate, email: e.target.value });
                           }}
                           placeholder="email@exemplo.com"
                         />
@@ -2299,9 +2291,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                               value = value.replace(/(\d{5})(\d)/, '$1-$2');
                             }
                             setSelectedAffiliate({ ...selectedAffiliate, phone: value });
-                          }}
-                          onBlur={async () => {
-                            await updateAffiliate(selectedAffiliate.id, { phone: selectedAffiliate.phone });
                           }}
                           placeholder="(00) 00000-0000"
                           maxLength={15}
@@ -2326,51 +2315,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                           Chave PIX do tipo CPF
                         </p>
                       </div>
-                    </div>
-                    
-                    <div className="flex justify-end pt-2">
-                      <Button 
-                        onClick={async () => {
-                          if (!selectedAffiliate.name) {
-                            toast({
-                              title: 'Campo obrigatório',
-                              description: 'Nome é obrigatório.',
-                              variant: 'destructive',
-                            });
-                            return;
-                          }
-                          setSavingData(true);
-                          try {
-                            await updateAffiliate(selectedAffiliate.id, {
-                              name: selectedAffiliate.name,
-                              email: selectedAffiliate.email,
-                              phone: selectedAffiliate.phone,
-                              pix_key: selectedAffiliate.pix_key || selectedAffiliate.cpf_cnpj || '',
-                            });
-                            toast({
-                              title: 'Dados salvos',
-                              description: 'Os dados do afiliado foram atualizados.',
-                            });
-                          } catch (error) {
-                            toast({
-                              title: 'Erro ao salvar',
-                              description: 'Não foi possível salvar os dados.',
-                              variant: 'destructive',
-                            });
-                          } finally {
-                            setSavingData(false);
-                          }
-                        }}
-                        disabled={savingData || !selectedAffiliate.name}
-                        size="sm"
-                      >
-                        {savingData ? (
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        ) : (
-                          <Save className="h-4 w-4 mr-2" />
-                        )}
-                        Salvar Alterações
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -2441,19 +2385,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                           />
                         </div>
                         
-                        <Button 
-                          onClick={handleSaveDefaultCommission}
-                          disabled={savingDefaultCommission}
-                          size="sm"
-                          className="self-end h-8"
-                        >
-                          {savingDefaultCommission ? (
-                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                          ) : (
-                            <Check className="h-3 w-3 mr-1" />
-                          )}
-                          Salvar
-                        </Button>
                       </div>
                       
                       {/* Overview Stats - compact */}
@@ -2510,46 +2441,83 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                           <span className="text-sm text-muted-foreground">dias</span>
                         </div>
                       </div>
-                      <Button
-                        size="sm"
-                        className="h-8"
-                        disabled={savingMaturity}
-                        onClick={async () => {
-                          if (!selectedAffiliate) return;
-                          setSavingMaturity(true);
-                          try {
-                            await updateAffiliate(selectedAffiliate.id, {
-                              commission_maturity_days: affiliateMaturityDays
-                            });
-                            setSelectedAffiliate({ ...selectedAffiliate, commission_maturity_days: affiliateMaturityDays });
-                            toast({
-                              title: 'Carência atualizada',
-                              description: `Período de carência definido para ${affiliateMaturityDays} dias.`,
-                            });
-                          } catch (error) {
-                            toast({
-                              title: 'Erro ao salvar',
-                              description: 'Não foi possível atualizar a carência.',
-                              variant: 'destructive',
-                            });
-                          } finally {
-                            setSavingMaturity(false);
-                          }
-                        }}
-                      >
-                        {savingMaturity ? (
-                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                        ) : (
-                          <Save className="h-3 w-3 mr-1" />
-                        )}
-                        Salvar
-                      </Button>
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
                       Valor entre 0 e 90 dias. Padrão: 7 dias.
                     </p>
                   </CardContent>
                 </Card>
+                
+                {/* Botão único de salvar todas as alterações */}
+                <div className="flex justify-end pt-4 border-t mt-4">
+                  <Button 
+                    onClick={async () => {
+                      if (!selectedAffiliate) return;
+                      
+                      if (!selectedAffiliate.name) {
+                        toast({
+                          title: 'Campo obrigatório',
+                          description: 'Nome é obrigatório.',
+                          variant: 'destructive',
+                        });
+                        return;
+                      }
+                      
+                      if (defaultCommissionEnabled && defaultCommissionValue <= 0) {
+                        toast({
+                          title: 'Valor inválido',
+                          description: 'O valor da comissão deve ser maior que zero.',
+                          variant: 'destructive',
+                        });
+                        return;
+                      }
+                      
+                      setSavingData(true);
+                      try {
+                        await updateAffiliate(selectedAffiliate.id, {
+                          name: selectedAffiliate.name,
+                          email: selectedAffiliate.email,
+                          phone: selectedAffiliate.phone,
+                          pix_key: selectedAffiliate.pix_key || selectedAffiliate.cpf_cnpj || '',
+                          use_default_commission: defaultCommissionEnabled,
+                          default_commission_type: defaultCommissionType,
+                          default_commission_value: defaultCommissionValue,
+                          commission_maturity_days: affiliateMaturityDays
+                        });
+                        
+                        setSelectedAffiliate({ 
+                          ...selectedAffiliate, 
+                          use_default_commission: defaultCommissionEnabled,
+                          default_commission_type: defaultCommissionType,
+                          default_commission_value: defaultCommissionValue,
+                          commission_maturity_days: affiliateMaturityDays
+                        });
+                        
+                        toast({
+                          title: 'Alterações salvas',
+                          description: 'Todos os dados do afiliado foram atualizados com sucesso.',
+                        });
+                      } catch (error) {
+                        toast({
+                          title: 'Erro ao salvar',
+                          description: 'Não foi possível salvar as alterações.',
+                          variant: 'destructive',
+                        });
+                      } finally {
+                        setSavingData(false);
+                      }
+                    }}
+                    disabled={savingData || !selectedAffiliate?.name}
+                    className="bg-gradient-to-r from-primary to-primary/80 shadow-lg hover:shadow-xl transition-shadow"
+                  >
+                    {savingData ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    Salvar Alterações
+                  </Button>
+                </div>
               </TabsContent>
               
               {/* Aba Cupons */}
