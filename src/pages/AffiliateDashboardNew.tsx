@@ -245,14 +245,16 @@ export default function AffiliateDashboardNew() {
   const getOrderStatusBadge = (order: AffiliateOrder) => {
     const status = order.order_status;
     
+    // Concluído: pedidos entregues
     if (status === 'entregue' || status === 'delivered') {
       return (
         <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
-          <CheckCircle className="h-3 w-3 mr-1" /> Entregue
+          <CheckCircle className="h-3 w-3 mr-1" /> Concluído
         </Badge>
       );
     }
     
+    // Cancelado
     if (status === 'cancelado' || status === 'cancelled') {
       return (
         <Badge className="bg-red-500/10 text-red-600 border-red-500/20">
@@ -261,11 +263,42 @@ export default function AffiliateDashboardNew() {
       );
     }
     
-    // Outros status = em processamento (pendente)
+    // Pendente: todos os outros status
     return (
       <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
-        <Clock className="h-3 w-3 mr-1" /> Em andamento
+        <Clock className="h-3 w-3 mr-1" /> Pendente
       </Badge>
+    );
+  };
+
+  // Helper para exibir ganhos condicionalmente baseado no status
+  const getCommissionDisplay = (order: AffiliateOrder) => {
+    const status = order.order_status;
+    const isDelivered = status === 'entregue' || status === 'delivered';
+    const isCancelled = status === 'cancelado' || status === 'cancelled';
+    
+    if (isDelivered) {
+      return (
+        <span className="font-semibold text-green-600">
+          {formatCurrency(order.commission_amount)}
+        </span>
+      );
+    }
+    
+    if (isCancelled) {
+      return (
+        <span className="text-muted-foreground line-through">
+          {formatCurrency(order.commission_amount)}
+        </span>
+      );
+    }
+    
+    // Pendente: mostrar valor em amarelo com indicador
+    return (
+      <span className="font-medium text-yellow-600">
+        {formatCurrency(order.commission_amount)}
+        <span className="text-xs ml-1 opacity-70">(aguardando)</span>
+      </span>
     );
   };
   const formatCurrency = (value: number) => {
@@ -1039,8 +1072,8 @@ export default function AffiliateDashboardNew() {
                     <TableCell className="text-right whitespace-nowrap">
                       {formatCurrency(order.order_total)}
                     </TableCell>
-                    <TableCell className="text-right font-semibold text-green-600 whitespace-nowrap">
-                      {formatCurrency(order.commission_amount)}
+                    <TableCell className="text-right whitespace-nowrap">
+                      {getCommissionDisplay(order)}
                     </TableCell>
                     <TableCell>
                       {getOrderStatusBadge(order)}
