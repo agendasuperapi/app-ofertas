@@ -2264,55 +2264,49 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
 
                 {/* Seção Comissão Padrão */}
                 <Card className="border-primary/20 bg-primary/5">
-                  <CardHeader className="pb-3">
+                  <CardHeader className="py-2 px-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <DollarSign className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-base">Comissão Padrão</CardTitle>
+                        <DollarSign className="h-4 w-4 text-primary" />
+                        <CardTitle className="text-sm">Comissão Padrão</CardTitle>
                       </div>
                       <Switch
                         checked={defaultCommissionEnabled}
                         onCheckedChange={setDefaultCommissionEnabled}
                       />
                     </div>
-                    <CardDescription>
+                    <p className="text-xs text-muted-foreground">
                       {defaultCommissionEnabled 
-                        ? 'Aplicada automaticamente a todos os produtos sem regra específica'
-                        : 'Desativada - apenas produtos com regra específica terão comissão'}
-                    </CardDescription>
+                        ? 'Aplicada a produtos sem regra específica'
+                        : 'Desativada'}
+                    </p>
                   </CardHeader>
                   
                   {defaultCommissionEnabled && (
-                    <CardContent className="space-y-4">
-                      <div className="flex flex-col sm:flex-row gap-4">
+                    <CardContent className="pt-0 px-3 pb-3 space-y-2">
+                      <div className="flex gap-2">
                         <div className="flex-1">
-                          <Label className="text-sm">Tipo de Comissão</Label>
+                          <Label className="text-xs">Tipo</Label>
                           <Select
                             value={defaultCommissionType}
                             onValueChange={(v) => setDefaultCommissionType(v as 'percentage' | 'fixed')}
                           >
-                            <SelectTrigger className="mt-1.5">
+                            <SelectTrigger className="h-8 mt-1 text-xs">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="percentage">
-                                <div className="flex items-center gap-2">
-                                  <Percent className="h-4 w-4" />
-                                  Porcentagem (%)
-                                </div>
+                                <span className="text-xs">Porcentagem (%)</span>
                               </SelectItem>
                               <SelectItem value="fixed">
-                                <div className="flex items-center gap-2">
-                                  <DollarSign className="h-4 w-4" />
-                                  Valor Fixo (R$)
-                                </div>
+                                <span className="text-xs">Valor Fixo (R$)</span>
                               </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         
                         <div className="flex-1">
-                          <Label className="text-sm">
+                          <Label className="text-xs">
                             Valor {defaultCommissionType === 'percentage' ? '(%)' : '(R$)'}
                           </Label>
                           <Input
@@ -2325,74 +2319,52 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                               setDefaultCommissionValue(Number(e.target.value));
                               setDefaultCommissionValueError(false);
                             }}
-                            className={`mt-1.5 transition-all ${
+                            className={`h-8 mt-1 text-xs ${
                               defaultCommissionValueError 
-                                ? 'border-destructive ring-2 ring-destructive/50 animate-pulse' 
+                                ? 'border-destructive ring-2 ring-destructive/50' 
                                 : ''
                             }`}
                             placeholder={defaultCommissionType === 'percentage' ? '10' : '5.00'}
                           />
-                          {defaultCommissionValueError && (
-                            <p className="text-xs text-destructive animate-pulse mt-1">Digite o valor da comissão</p>
+                        </div>
+                        
+                        <Button 
+                          onClick={handleSaveDefaultCommission}
+                          disabled={savingDefaultCommission}
+                          size="sm"
+                          className="self-end h-8"
+                        >
+                          {savingDefaultCommission ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Check className="h-3 w-3" />
                           )}
-                        </div>
+                        </Button>
                       </div>
                       
-                      {/* Overview Stats */}
-                      <div className="grid grid-cols-3 gap-3 p-3 bg-background rounded-lg border">
+                      {/* Overview Stats - compact */}
+                      <div className="flex items-center justify-between text-xs p-2 bg-background rounded border">
                         <div className="text-center">
-                          <p className="text-2xl font-bold text-primary">{products.length}</p>
-                          <p className="text-xs text-muted-foreground">Total Produtos</p>
+                          <span className="font-bold text-primary">{products.length}</span>
+                          <span className="text-muted-foreground ml-1">Total</span>
                         </div>
-                        <div className="text-center border-x">
-                          <p className="text-2xl font-bold text-amber-600">{commissionRules.length}</p>
-                          <p className="text-xs text-muted-foreground">Com Regra Específica</p>
+                        <div className="text-center border-x px-3">
+                          <span className="font-bold text-amber-600">{commissionRules.length}</span>
+                          <span className="text-muted-foreground ml-1">Específica</span>
                         </div>
                         <div className="text-center">
-                          <p className="text-2xl font-bold text-emerald-600">
-                            {Math.max(0, products.length - commissionRules.length)}
-                          </p>
-                          <p className="text-xs text-muted-foreground">Usando Padrão</p>
+                          <span className="font-bold text-emerald-600">{Math.max(0, products.length - commissionRules.length)}</span>
+                          <span className="text-muted-foreground ml-1">Padrão</span>
                         </div>
                       </div>
-                      
-                      <Button 
-                        onClick={handleSaveDefaultCommission}
-                        disabled={savingDefaultCommission}
-                        className="w-full"
-                      >
-                        {savingDefaultCommission ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                            Salvando...
-                          </>
-                        ) : (
-                          <>
-                            <Check className="h-4 w-4 mr-2" />
-                            Salvar Comissão Padrão
-                          </>
-                        )}
-                      </Button>
                     </CardContent>
                   )}
                   
                   {!defaultCommissionEnabled && (
-                    <CardContent>
-                      <div className="flex items-center justify-center py-4 text-center">
-                        <div>
-                          <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                          <p className="text-sm text-muted-foreground">
-                            Ative para aplicar comissão em produtos sem regra específica
-                          </p>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="mt-2"
-                            onClick={() => setDefaultCommissionEnabled(true)}
-                          >
-                            Ativar Comissão Padrão
-                          </Button>
-                        </div>
+                    <CardContent className="py-2 px-3">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <AlertCircle className="h-4 w-4" />
+                        <span>Ative para aplicar comissão em produtos sem regra específica</span>
                       </div>
                     </CardContent>
                   )}
