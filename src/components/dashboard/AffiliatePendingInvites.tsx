@@ -89,29 +89,41 @@ export function AffiliatePendingInvites({
 
   if (invites.length === 0) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col items-center justify-center py-12 text-center"
-      >
-        <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-          <Mail className="h-8 w-8 text-muted-foreground" />
+      <div className="space-y-4">
+        <div className="mb-6">
+          <h2 className="text-xl font-bold gradient-text mb-1">Convites</h2>
+          <p className="text-sm text-muted-foreground">Gerencie os convites de lojas para se tornar afiliado</p>
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-2">
-          Nenhum convite pendente
-        </h3>
-        <p className="text-muted-foreground max-w-sm">
-          Quando uma loja enviar um convite para você, ele aparecerá aqui para você aceitar ou recusar.
-        </p>
-      </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center justify-center py-12 text-center"
+        >
+          <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+            <Mail className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            Nenhum convite pendente
+          </h3>
+          <p className="text-muted-foreground max-w-sm">
+            Quando uma loja enviar um convite para você, ele aparecerá aqui para você aceitar ou recusar.
+          </p>
+        </motion.div>
+      </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2 mb-6">
+      <div className="mb-6">
+        <h2 className="text-xl font-bold gradient-text mb-1">Convites</h2>
+        <p className="text-sm text-muted-foreground">Gerencie os convites de lojas para se tornar afiliado</p>
+      </div>
+      
+      <div className="flex items-center gap-2 mb-4">
         <Mail className="h-5 w-5 text-primary" />
-        <h2 className="text-lg font-semibold">Convites Pendentes</h2>
+        <h3 className="text-lg font-semibold">Convites Pendentes</h3>
         <Badge variant="secondary" className="ml-auto">
           {invites.length} {invites.length === 1 ? 'convite' : 'convites'}
         </Badge>
