@@ -489,6 +489,13 @@ export default function AffiliateDashboardNew() {
       .reduce((sum, order) => sum + (order.commission_amount || 0), 0);
   }, [affiliateOrders]);
 
+  // Calcula total de saques pagos por loja
+  const getStorePaidWithdrawals = useCallback((storeId: string) => {
+    return withdrawalRequests
+      .filter(req => req.store_id === storeId && req.status === 'paid')
+      .reduce((sum, req) => sum + (req.amount || 0), 0);
+  }, [withdrawalRequests]);
+
   // Renderiza o conteúdo das abas do modal da loja
   const renderStoreModalContent = (store: typeof affiliateStores[0]) => <Tabs defaultValue="overview" className="mt-4 flex-1 flex flex-col min-h-0 px-4">
       <TabsList className="grid w-full grid-cols-2 flex-shrink-0">
@@ -499,7 +506,7 @@ export default function AffiliateDashboardNew() {
       {/* Tab Resumo */}
       <TabsContent value="overview" className="space-y-6 mt-4 flex-1 overflow-y-auto">
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
           <motion.div initial={{
           opacity: 0,
           y: 10
@@ -525,6 +532,19 @@ export default function AffiliateDashboardNew() {
             <Wallet className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-emerald-600 mb-1" />
             <p className="text-[10px] sm:text-xs text-muted-foreground">Disponível Saque</p>
             <p className="font-bold text-sm sm:text-lg text-emerald-600">{formatCurrency(store.total_commission)}</p>
+          </motion.div>
+          <motion.div initial={{
+          opacity: 0,
+          y: 10
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: 0.2
+        }} className="p-3 sm:p-4 bg-purple-500/10 rounded-lg border border-purple-500/20 text-center">
+            <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-purple-600 mb-1" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Total Ganhos</p>
+            <p className="font-bold text-sm sm:text-lg text-purple-600">{formatCurrency(getStorePaidWithdrawals(store.store_id))}</p>
           </motion.div>
           <motion.div initial={{
           opacity: 0,
