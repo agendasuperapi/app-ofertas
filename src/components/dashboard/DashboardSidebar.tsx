@@ -158,7 +158,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
                   </motion.button>
                 </CollapsibleTrigger>
                 
-                <CollapsibleContent className="mt-1 ml-1 pl-2 border-l-2 border-primary/25 space-y-0.5">
+                <CollapsibleContent className="mt-1 space-y-0.5">
                   <AnimatePresence>
                     {subItems.map((subItem) => {
                       const SubIcon = subItem.icon;
