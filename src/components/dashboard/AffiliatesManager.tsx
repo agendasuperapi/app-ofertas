@@ -1889,7 +1889,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
 
       {/* Dialog: Detalhes do Afiliado */}
       <ResponsiveDialog open={detailsModalOpen} onOpenChange={setDetailsModalOpen}>
-        <ResponsiveDialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-hidden flex flex-col glass p-3 sm:p-6">
+        <ResponsiveDialogContent className="w-full sm:w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col glass p-3 sm:p-6">
           <ResponsiveDialogHeader className="space-y-3 pr-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
