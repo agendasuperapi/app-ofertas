@@ -3271,11 +3271,6 @@ export const StoreOwnerDashboard = ({
             <AffiliatesManager storeId={myStore.id} storeName={myStore.name} />
           </div>}
 
-        {/* Afiliados Convites Tab */}
-        {myStore?.id && <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8", activeTab !== 'afiliados-convites' && 'hidden')}>
-            <AffiliateInvitesManager storeId={myStore.id} storeName={myStore.name} />
-          </div>}
-
         {/* Afiliados Relatórios Tab */}
         {myStore?.id && <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8", activeTab !== 'afiliados-relatorios' && 'hidden')}>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
