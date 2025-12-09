@@ -24,10 +24,8 @@ import { InviteAffiliateDialog } from './InviteAffiliateDialog';
 import { 
   Users, Plus, Edit, Trash2, DollarSign, TrendingUp, 
   Copy, Check, Tag, Percent, Settings, Eye, 
-  Clock, CheckCircle, XCircle, CreditCard, Loader2, AlertCircle, Search, Mail, Link2, Package, ChevronDown, ChevronRight, Pencil, X, Save, UserCheck, UserX, Lock, ChevronUp, User, FileText
+  Clock, CheckCircle, XCircle, CreditCard, Loader2, AlertCircle, Search, Mail, Link2, Package, ChevronDown, ChevronRight, Pencil, X, Save, UserCheck, UserX, Lock
 } from 'lucide-react';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -132,18 +130,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const [affiliateStatusFilter, setAffiliateStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [toggleStatusAffiliate, setToggleStatusAffiliate] = useState<Affiliate | null>(null);
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
-  // Mobile tabs drawer state
-  const isMobile = useIsMobile();
-  const [tabDrawerOpen, setTabDrawerOpen] = useState(false);
-  const [activeDetailsTab, setActiveDetailsTab] = useState('resumo');
-
-  const detailsTabs = [
-    { value: 'resumo', label: 'Resumo', icon: TrendingUp },
-    { value: 'dados', label: 'Dados', icon: User },
-    { value: 'cupons', label: 'Cupons', icon: Tag },
-    { value: 'regras-especificas', label: 'Regras Comissões', icon: Percent },
-    { value: 'historico', label: 'Histórico', icon: FileText },
-  ];
+  const [couponProductsModalOpen, setCouponProductsModalOpen] = useState(false);
 
   const [newCouponData, setNewCouponData] = useState({
     code: '',
@@ -441,7 +428,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const handleViewDetails = async (affiliate: Affiliate) => {
     setSelectedAffiliate(affiliate);
     setDetailsModalOpen(true);
-    setActiveDetailsTab('resumo'); // Reset to first tab when opening
     
     // Load default commission settings
     setDefaultCommissionEnabled(affiliate.use_default_commission ?? true);
@@ -1941,65 +1927,17 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
             </div>
           </DialogHeader>
           
-{selectedAffiliate && (
-            <Tabs value={activeDetailsTab} onValueChange={setActiveDetailsTab} className="flex-1 flex flex-col overflow-hidden">
-              {isMobile ? (
-                <>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setTabDrawerOpen(true)}
-                    className="w-full justify-between glass mb-2"
-                  >
-                    <span className="flex items-center gap-2">
-                      {(() => {
-                        const tab = detailsTabs.find(t => t.value === activeDetailsTab);
-                        const Icon = tab?.icon || TrendingUp;
-                        return (
-                          <>
-                            <Icon className="h-4 w-4" />
-                            {tab?.label || 'Resumo'}
-                          </>
-                        );
-                      })()}
-                    </span>
-                    <ChevronUp className="h-4 w-4" />
-                  </Button>
-                  
-                  <Drawer open={tabDrawerOpen} onOpenChange={setTabDrawerOpen}>
-                    <DrawerContent className="glass-card">
-                      <DrawerHeader>
-                        <DrawerTitle className="text-center">Selecionar Seção</DrawerTitle>
-                      </DrawerHeader>
-                      <div className="p-4 space-y-2 pb-8">
-                        {detailsTabs.map((tab) => (
-                          <Button 
-                            key={tab.value}
-                            variant={activeDetailsTab === tab.value ? 'default' : 'ghost'}
-                            className={`w-full justify-start ${activeDetailsTab === tab.value ? 'bg-primary text-primary-foreground' : ''}`}
-                            onClick={() => {
-                              setActiveDetailsTab(tab.value);
-                              setTabDrawerOpen(false);
-                            }}
-                          >
-                            <tab.icon className="h-4 w-4 mr-2" />
-                            {tab.label}
-                          </Button>
-                        ))}
-                      </div>
-                    </DrawerContent>
-                  </Drawer>
-                </>
-              ) : (
-                <div className="w-full overflow-x-auto pb-2">
-                  <TabsList className="w-max justify-start glass mb-2">
-                    <TabsTrigger value="resumo" className="text-xs sm:text-sm px-2 sm:px-3">Resumo</TabsTrigger>
-                    <TabsTrigger value="dados" className="text-xs sm:text-sm px-2 sm:px-3">Dados</TabsTrigger>
-                    <TabsTrigger value="cupons" className="text-xs sm:text-sm px-2 sm:px-3">Cupons</TabsTrigger>
-                    <TabsTrigger value="regras-especificas" className="text-xs sm:text-sm px-2 sm:px-3">Regras Comissões</TabsTrigger>
-                    <TabsTrigger value="historico" className="text-xs sm:text-sm px-2 sm:px-3">Histórico</TabsTrigger>
-                  </TabsList>
-                </div>
-              )}
+          {selectedAffiliate && (
+            <Tabs defaultValue="resumo" className="flex-1 flex flex-col overflow-hidden">
+              <div className="w-full overflow-x-auto pb-2">
+                <TabsList className="w-max justify-start glass mb-2">
+                  <TabsTrigger value="resumo" className="text-xs sm:text-sm px-2 sm:px-3">Resumo</TabsTrigger>
+                  <TabsTrigger value="dados" className="text-xs sm:text-sm px-2 sm:px-3">Dados</TabsTrigger>
+                  <TabsTrigger value="cupons" className="text-xs sm:text-sm px-2 sm:px-3">Cupons</TabsTrigger>
+                  <TabsTrigger value="regras-especificas" className="text-xs sm:text-sm px-2 sm:px-3">Regras Comissões</TabsTrigger>
+                  <TabsTrigger value="historico" className="text-xs sm:text-sm px-2 sm:px-3">Histórico</TabsTrigger>
+                </TabsList>
+              </div>
               
               {/* Aba Resumo */}
               <TabsContent value="resumo" className="flex-1 overflow-auto mt-4 space-y-4">
