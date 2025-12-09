@@ -1874,29 +1874,29 @@ export default function AffiliateDashboardNew() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="p-4 bg-muted rounded-lg">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
+            <div className="p-3 sm:p-4 bg-muted rounded-lg">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <TrendingUp className="h-4 w-4" />
-                <span className="text-sm">Total de Pedidos</span>
+                <TrendingUp className="h-4 w-4 shrink-0" />
+                <span className="text-xs sm:text-sm truncate">Total Pedidos</span>
               </div>
-              <p className="text-2xl font-bold">{affiliateStats?.total_orders || 0}</p>
+              <p className="text-xl sm:text-2xl font-bold">{affiliateStats?.total_orders || 0}</p>
             </div>
-            <div className="p-4 bg-muted rounded-lg">
+            <div className="p-3 sm:p-4 bg-muted rounded-lg">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <CheckCircle className="h-4 w-4" />
-                <span className="text-sm">Total Pago</span>
+                <CheckCircle className="h-4 w-4 shrink-0" />
+                <span className="text-xs sm:text-sm truncate">Total Pago</span>
               </div>
-              <p className="text-2xl font-bold text-green-600">
+              <p className="text-xl sm:text-2xl font-bold text-green-600">
                 {formatCurrency(affiliateStats?.paid_commission || 0)}
               </p>
             </div>
-            <div className="p-4 bg-muted rounded-lg">
+            <div className="p-3 sm:p-4 bg-muted rounded-lg">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <Banknote className="h-4 w-4" />
-                <span className="text-sm">Total Disponível</span>
+                <Banknote className="h-4 w-4 shrink-0" />
+                <span className="text-xs sm:text-sm truncate">Disponível</span>
               </div>
-              <p className="text-2xl font-bold text-orange-600">
+              <p className="text-xl sm:text-2xl font-bold text-orange-600">
                 {formatCurrency(affiliateStats?.total_commission || 0)}
               </p>
             </div>
