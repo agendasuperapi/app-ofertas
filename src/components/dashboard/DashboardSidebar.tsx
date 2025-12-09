@@ -158,7 +158,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
                   </motion.button>
                 </CollapsibleTrigger>
                 
-                <CollapsibleContent className="mt-1 ml-1 pl-2 border-l-2 border-primary/15 space-y-0.5">
+                <CollapsibleContent className="mt-1 ml-1 pl-2 border-l-2 border-primary/25 space-y-0.5">
                   <AnimatePresence>
                     {subItems.map((subItem) => {
                       const SubIcon = subItem.icon;
@@ -171,22 +171,22 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -10 }}
                           onClick={() => handleTabChange(subItem.id)}
-                          whileHover={{ scale: 1.01, x: 2 }}
-                          whileTap={{ scale: 0.98 }}
+                          whileHover={{ scale: 1.02, x: 3, backgroundColor: "hsl(var(--primary) / 0.1)" }}
+                          whileTap={{ scale: 0.94, backgroundColor: "hsl(var(--primary) / 0.2)" }}
                           className={cn(
-                            "w-full flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-md relative transition-all duration-200",
+                            "w-full flex flex-col items-center gap-0.5 py-2 px-1 rounded-lg relative transition-all duration-200",
                             isSubActive 
-                              ? "bg-muted/50 text-primary/80" 
-                              : "text-muted-foreground/60 hover:bg-muted/30 hover:text-muted-foreground"
+                              ? "bg-primary/15 text-primary border border-primary/25 shadow-sm" 
+                              : "text-muted-foreground hover:text-foreground"
                           )}
                         >
                           <SubIcon className={cn(
-                            "w-3 h-3 relative z-10 transition-colors",
-                            isSubActive ? "text-primary/70" : "text-muted-foreground/50"
+                            "w-4 h-4 relative z-10 transition-colors",
+                            isSubActive ? "text-primary" : "text-muted-foreground/80"
                           )} />
                           <span className={cn(
-                            "text-[8px] relative z-10 transition-colors text-center leading-tight uppercase tracking-wide",
-                            isSubActive ? "font-medium text-primary/80" : "font-normal"
+                            "text-[10px] relative z-10 transition-colors text-center leading-tight uppercase tracking-wide",
+                            isSubActive ? "font-semibold text-primary" : "font-medium"
                           )}>
                             {subItem.label}
                           </span>
