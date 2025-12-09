@@ -27,7 +27,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
-import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter, ChevronDown, XCircle } from 'lucide-react';
+import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter, ChevronDown, XCircle, Search } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -63,6 +63,8 @@ export default function AffiliateDashboardNew() {
   const [withdrawalRequests, setWithdrawalRequests] = useState<any[]>([]);
   const [loadingWithdrawals, setLoadingWithdrawals] = useState(false);
   const [ordersPage, setOrdersPage] = useState<Record<string, number>>({});
+  const [ordersSearch, setOrdersSearch] = useState<Record<string, string>>({});
+  const [ordersStatusFilter, setOrdersStatusFilter] = useState<Record<string, string>>({});
 
   // Buscar affiliate_id do banco
   useEffect(() => {
@@ -695,86 +697,184 @@ export default function AffiliateDashboardNew() {
       {/* Tab Pedidos */}
       <TabsContent value="orders" className="space-y-4 mt-4 flex-1 overflow-y-auto">
         {(() => {
-          const storeOrders = affiliateOrders.filter(order => order.store_id === store.store_id);
+          const searchTerm = (ordersSearch[store.store_id] || '').toLowerCase();
+          const statusFilter = ordersStatusFilter[store.store_id] || 'all';
+          
+          // Filtrar pedidos
+          const storeOrders = affiliateOrders
+            .filter(order => order.store_id === store.store_id)
+            .filter(order => {
+              if (!searchTerm) return true;
+              return (
+                order.order_number?.toLowerCase().includes(searchTerm) ||
+                order.customer_name?.toLowerCase().includes(searchTerm) ||
+                order.coupon_code?.toLowerCase().includes(searchTerm)
+              );
+            })
+            .filter(order => {
+              if (statusFilter === 'all') return true;
+              const orderStatus = order.order_status?.toLowerCase() || '';
+              if (statusFilter === 'pending') return orderStatus === 'pendente' || orderStatus === 'pending';
+              if (statusFilter === 'delivered') return orderStatus === 'entregue' || orderStatus === 'delivered';
+              if (statusFilter === 'cancelled') return orderStatus === 'cancelado' || orderStatus === 'cancelled';
+              if (statusFilter === 'processing') return !['pendente', 'pending', 'entregue', 'delivered', 'cancelado', 'cancelled'].includes(orderStatus);
+              return true;
+            });
+          
           const ORDERS_PER_PAGE = 10;
           const currentPage = ordersPage[store.store_id] || 1;
           const totalPages = Math.ceil(storeOrders.length / ORDERS_PER_PAGE);
           const paginatedOrders = storeOrders.slice((currentPage - 1) * ORDERS_PER_PAGE, currentPage * ORDERS_PER_PAGE);
           
-          if (storeOrders.length === 0) {
-            return (
-              <div className="p-6 bg-muted/50 rounded-lg text-center border border-border/50">
-                <ShoppingBag className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  Nenhum pedido realizado ainda nesta loja
-                </p>
-              </div>
-            );
-          }
+          const totalOrders = affiliateOrders.filter(order => order.store_id === store.store_id).length;
           
           return (
             <div className="space-y-3">
-              {paginatedOrders.map(order => (
-                <div 
-                  key={order.earning_id} 
-                  className="p-3 bg-muted/30 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
-                  onClick={() => openOrderModal(order)}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-mono font-medium text-sm">#{order.order_number}</span>
-                    {getOrderStatusBadge(order)}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="text-muted-foreground">Cliente:</span>
-                      <p className="font-medium truncate">{order.customer_name}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Data:</span>
-                      <p className="font-medium">{formatDate(order.order_date)}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Valor:</span>
-                      <p className="font-medium">{formatCurrency(order.order_total)}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Comissão:</span>
-                      <p className="font-medium">{getCommissionDisplay(order)}</p>
-                    </div>
-                  </div>
-                  {order.coupon_code && (
-                    <div className="mt-2 pt-2 border-t border-border/50">
-                      <Badge variant="outline" className="font-mono text-xs">
-                        {order.coupon_code}
-                      </Badge>
-                    </div>
+              {/* Filtros e Busca */}
+              <div className="p-3 bg-muted/30 rounded-lg border border-border/50 space-y-3">
+                {/* Busca */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por número, cliente ou cupom..."
+                    value={ordersSearch[store.store_id] || ''}
+                    onChange={(e) => {
+                      setOrdersSearch(prev => ({ ...prev, [store.store_id]: e.target.value }));
+                      setOrdersPage(prev => ({ ...prev, [store.store_id]: 1 }));
+                    }}
+                    className="pl-9 h-9 text-sm"
+                  />
+                </div>
+                
+                {/* Filtros */}
+                <div className="flex flex-wrap gap-2">
+                  <Select 
+                    value={statusFilter} 
+                    onValueChange={(value) => {
+                      setOrdersStatusFilter(prev => ({ ...prev, [store.store_id]: value }));
+                      setOrdersPage(prev => ({ ...prev, [store.store_id]: 1 }));
+                    }}
+                  >
+                    <SelectTrigger className="w-[160px] h-8 text-xs">
+                      <Filter className="h-3 w-3 mr-1.5" />
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os status</SelectItem>
+                      <SelectItem value="pending">Pendentes</SelectItem>
+                      <SelectItem value="processing">Em processamento</SelectItem>
+                      <SelectItem value="delivered">Concluídos</SelectItem>
+                      <SelectItem value="cancelled">Cancelados</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  {(searchTerm || statusFilter !== 'all') && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        setOrdersSearch(prev => ({ ...prev, [store.store_id]: '' }));
+                        setOrdersStatusFilter(prev => ({ ...prev, [store.store_id]: 'all' }));
+                        setOrdersPage(prev => ({ ...prev, [store.store_id]: 1 }));
+                      }}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Limpar filtros
+                    </Button>
                   )}
                 </div>
-              ))}
-              
-              {/* Paginação */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentPage === 1}
-                    onClick={() => setOrdersPage(prev => ({ ...prev, [store.store_id]: currentPage - 1 }))}
-                  >
-                    Anterior
-                  </Button>
-                  <span className="text-xs text-muted-foreground">
-                    Página {currentPage} de {totalPages}
+                
+                {/* Contador de resultados */}
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>
+                    {storeOrders.length === totalOrders 
+                      ? `${totalOrders} pedido${totalOrders !== 1 ? 's' : ''}` 
+                      : `${storeOrders.length} de ${totalOrders} pedidos`}
                   </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentPage === totalPages}
-                    onClick={() => setOrdersPage(prev => ({ ...prev, [store.store_id]: currentPage + 1 }))}
-                  >
-                    Próxima
-                  </Button>
+                  {storeOrders.length > 0 && (
+                    <span className="text-emerald-600 font-medium">
+                      Total: {formatCurrency(storeOrders.reduce((sum, o) => sum + (o.order_total || 0), 0))}
+                    </span>
+                  )}
                 </div>
+              </div>
+              
+              {/* Lista de pedidos */}
+              {storeOrders.length === 0 ? (
+                <div className="p-6 bg-muted/50 rounded-lg text-center border border-border/50">
+                  <ShoppingBag className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    {totalOrders === 0 
+                      ? 'Nenhum pedido realizado ainda nesta loja'
+                      : 'Nenhum pedido encontrado com os filtros selecionados'}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {paginatedOrders.map(order => (
+                    <div 
+                      key={order.earning_id} 
+                      className="p-3 bg-muted/30 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => openOrderModal(order)}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-mono font-medium text-sm">#{order.order_number}</span>
+                        {getOrderStatusBadge(order)}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">Cliente:</span>
+                          <p className="font-medium truncate">{order.customer_name}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Data:</span>
+                          <p className="font-medium">{formatDate(order.order_date)}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Valor:</span>
+                          <p className="font-medium">{formatCurrency(order.order_total)}</p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Comissão:</span>
+                          <p className="font-medium">{getCommissionDisplay(order)}</p>
+                        </div>
+                      </div>
+                      {order.coupon_code && (
+                        <div className="mt-2 pt-2 border-t border-border/50">
+                          <Badge variant="outline" className="font-mono text-xs">
+                            {order.coupon_code}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {/* Paginação */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPage === 1}
+                        onClick={() => setOrdersPage(prev => ({ ...prev, [store.store_id]: currentPage - 1 }))}
+                      >
+                        Anterior
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        Página {currentPage} de {totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPage === totalPages}
+                        onClick={() => setOrdersPage(prev => ({ ...prev, [store.store_id]: currentPage + 1 }))}
+                      >
+                        Próxima
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           );
