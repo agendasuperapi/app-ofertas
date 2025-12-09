@@ -94,13 +94,13 @@ export function RequestWithdrawalDialog({
 
         <div className="space-y-4 py-4">
           {/* Valor disponível */}
-          <div className="p-5 bg-gradient-to-br from-amber-400 via-orange-300 to-yellow-300 dark:from-amber-500 dark:via-orange-400 dark:to-yellow-400 rounded-xl text-center border border-amber-300/30 shadow-lg shadow-amber-500/20">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/30 backdrop-blur-sm rounded-full mb-3">
-              <Wallet className="h-4 w-4 text-amber-800" />
-              <p className="text-sm font-medium text-amber-900">Valor Disponível para Saque</p>
+          <div className="p-5 bg-gradient-to-br from-orange-200 via-amber-100 to-yellow-100 dark:from-orange-300/80 dark:via-amber-200/80 dark:to-yellow-200/80 rounded-xl text-center border border-orange-200/50 shadow-lg shadow-orange-300/20">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/50 backdrop-blur-sm rounded-full mb-3">
+              <Wallet className="h-4 w-4 text-orange-600" />
+              <p className="text-sm font-medium text-orange-700">Valor Disponível para Saque</p>
             </div>
-            <p className="text-4xl font-bold text-amber-900 drop-shadow-sm">{formatCurrency(availableAmount)}</p>
-            <p className="text-xs text-amber-800/80 mt-3">
+            <p className="text-4xl font-bold text-orange-600 drop-shadow-sm">{formatCurrency(availableAmount)}</p>
+            <p className="text-xs text-orange-600/70 mt-3">
               * O valor total disponível será solicitado
             </p>
           </div>
