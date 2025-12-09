@@ -1116,18 +1116,18 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
       </motion.div>
 
       {/* Dialog: Criar/Editar Afiliado */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-3xl h-[90vh] overflow-hidden flex flex-col glass p-3 sm:p-6">
-          <DialogHeader>
+      <ResponsiveDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <ResponsiveDialogContent className="w-[95vw] max-w-3xl sm:h-[90vh] overflow-hidden flex flex-col glass p-3 sm:p-6">
+          <ResponsiveDialogHeader>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+              <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
                 <Users className="h-5 w-5 text-white" />
               </div>
-              <DialogTitle className="text-xl gradient-text">
+              <ResponsiveDialogTitle className="text-xl gradient-text">
                 {editingAffiliate ? 'Editar Afiliado' : 'Novo Afiliado'}
-              </DialogTitle>
+              </ResponsiveDialogTitle>
             </div>
-          </DialogHeader>
+          </ResponsiveDialogHeader>
           
           <Tabs defaultValue="dados" className="flex-1 flex flex-col overflow-hidden mt-4">
             <div className="w-full overflow-x-auto pb-2">
@@ -1626,16 +1626,16 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
             </TabsContent>
           </Tabs>
           
-          <DialogFooter className="mt-4">
+          <ResponsiveDialogFooter className="mt-4">
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
             <Button onClick={handleSubmit} className="bg-gradient-primary">
               {editingAffiliate ? 'Salvar' : 'Cadastrar'}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
       {/* Dialog: Registrar Pagamento */}
       <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
         <DialogContent className="max-w-md glass">
