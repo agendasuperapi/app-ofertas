@@ -1,4 +1,4 @@
-import { Home, Store, ShoppingBag, BarChart3, User, LogOut, Wallet, Mail } from "lucide-react";
+import { Home, Store, ShoppingBag, BarChart3, User, LogOut, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,6 @@ interface AffiliateDashboardSidebarProps {
 const menuItems = [
   { id: "home", label: "Início", icon: Home },
   { id: "stores", label: "Lojas", icon: Store },
-  { id: "invites", label: "Convites", icon: Mail },
   { id: "orders", label: "Pedidos", icon: ShoppingBag },
   { id: "commissions", label: "Comissões Disponível", icon: BarChart3 },
   { id: "withdrawals", label: "Saques", icon: Wallet },

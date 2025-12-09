@@ -1,4 +1,4 @@
-import { Home, Store, ShoppingBag, BarChart3, User, Wallet, Mail } from "lucide-react";
+import { Home, Store, User, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,6 @@ interface AffiliateDashboardBottomNavProps {
 const navItems = [
   { id: "home", label: "Início", icon: Home },
   { id: "stores", label: "Lojas", icon: Store },
-  { id: "invites", label: "Convites", icon: Mail },
   { id: "withdrawals", label: "Saques", icon: Wallet },
   { id: "profile", label: "Perfil", icon: User },
 ];
@@ -37,7 +36,7 @@ export function AffiliateDashboardBottomNav({
         className="md:hidden fixed bottom-4 left-4 right-4 z-50"
       >
         <div className="bg-background/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] overflow-hidden">
-          <div className="grid grid-cols-5 h-16 px-1">
+          <div className="grid grid-cols-4 h-16 px-1">
             {navItems.map((item) => {
               const isActive = activeTab === item.id;
               const Icon = item.icon;
