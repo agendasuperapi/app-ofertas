@@ -6,6 +6,16 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { EmployeePermissions } from "@/hooks/useStoreEmployees";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface DashboardSidebarProps {
   activeTab: string;
@@ -21,6 +31,12 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
   const [cadastrosOpen, setCadastrosOpen] = useState(false);
   const [relatoriosOpen, setRelatoriosOpen] = useState(false);
   const [afiliadosOpen, setAfiliadosOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleConfirmLogout = () => {
+    setShowLogoutConfirm(false);
+    onSignOut?.();
+  };
 
   const handleTabChange = (tab: string) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -255,7 +271,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
         <div className="px-2 pb-4 pt-2 mt-auto flex-shrink-0 w-full">
           <div className="h-px bg-primary/20 mb-2" />
           <motion.button
-            onClick={onSignOut}
+            onClick={() => setShowLogoutConfirm(true)}
             whileHover={{ scale: 1.03, y: -1 }}
             whileTap={{ scale: 0.97 }}
             className="w-full flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl text-destructive hover:bg-destructive/10 transition-all duration-300"
@@ -267,6 +283,32 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
           </motion.button>
         </div>
       )}
+
+      {/* Dialog de confirmação de logout */}
+      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <AlertDialogContent className="max-w-[90vw] sm:max-w-md rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-full bg-destructive/10">
+                <LogOut className="w-5 h-5 text-destructive" />
+              </div>
+              Sair da conta
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja sair? Você precisará fazer login novamente para acessar o painel.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-row gap-2 sm:gap-0">
+            <AlertDialogCancel className="flex-1 sm:flex-none mt-0">Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmLogout}
+              className="flex-1 sm:flex-none bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            >
+              Sair
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 };
