@@ -156,6 +156,11 @@ export const StoreOwnerDashboard = ({
     timestamp: Date.now()
   });
 
+  // Load custom order statuses - DEVE vir antes das funções que usam customStatuses
+  const {
+    statuses: customStatuses
+  } = useOrderStatuses(myStore?.id);
+
   // Função helper para verificar permissões
   const hasPermission = (module: string, action: string): boolean => {
     // Se não é funcionário (é dono), tem todas as permissões
@@ -268,10 +273,6 @@ export const StoreOwnerDashboard = ({
     reorderCategories
   } = useCategories(myStore?.id);
 
-  // Load custom order statuses
-  const {
-    statuses: customStatuses
-  } = useOrderStatuses(myStore?.id);
   const [productForm, setProductForm] = useState({
     name: '',
     description: '',
