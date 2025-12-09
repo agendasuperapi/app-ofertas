@@ -445,9 +445,10 @@ export default function AffiliateDashboardNew() {
 
   // Renderiza o conteúdo das abas do modal da loja
   const renderStoreModalContent = (store: typeof affiliateStores[0]) => <Tabs defaultValue="overview" className="mt-4 flex-1 flex flex-col min-h-0 px-4">
-      <TabsList className="grid w-full grid-cols-2 flex-shrink-0">
+      <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
         <TabsTrigger value="overview">Resumo</TabsTrigger>
         <TabsTrigger value="coupons">Cupons</TabsTrigger>
+        <TabsTrigger value="orders">Pedidos</TabsTrigger>
       </TabsList>
       
       {/* Tab Resumo */}
@@ -687,6 +688,66 @@ export default function AffiliateDashboardNew() {
               Aguardando vinculação de cupom pelo lojista
             </p>
           </div>}
+      </TabsContent>
+      
+      {/* Tab Pedidos */}
+      <TabsContent value="orders" className="space-y-4 mt-4 flex-1 overflow-y-auto">
+        {(() => {
+          const storeOrders = affiliateOrders.filter(order => order.store_id === store.store_id);
+          
+          if (storeOrders.length === 0) {
+            return (
+              <div className="p-6 bg-muted/50 rounded-lg text-center border border-border/50">
+                <ShoppingBag className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Nenhum pedido realizado ainda nesta loja
+                </p>
+              </div>
+            );
+          }
+          
+          return (
+            <div className="space-y-3">
+              {storeOrders.map(order => (
+                <div 
+                  key={order.earning_id} 
+                  className="p-3 bg-muted/30 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
+                  onClick={() => openOrderModal(order)}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-mono font-medium text-sm">#{order.order_number}</span>
+                    {getOrderStatusBadge(order)}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Cliente:</span>
+                      <p className="font-medium truncate">{order.customer_name}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Data:</span>
+                      <p className="font-medium">{formatDate(order.order_date)}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Valor:</span>
+                      <p className="font-medium">{formatCurrency(order.order_total)}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Comissão:</span>
+                      <p className="font-medium">{getCommissionDisplay(order)}</p>
+                    </div>
+                  </div>
+                  {order.coupon_code && (
+                    <div className="mt-2 pt-2 border-t border-border/50">
+                      <Badge variant="outline" className="font-mono text-xs">
+                        {order.coupon_code}
+                      </Badge>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
       </TabsContent>
     </Tabs>;
   if (isLoading) {
