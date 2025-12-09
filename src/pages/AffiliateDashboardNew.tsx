@@ -22,7 +22,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
-import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter, ChevronDown } from 'lucide-react';
+import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter, ChevronDown, XCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 // Cores para gráfico de pizza
@@ -343,6 +343,16 @@ export default function AffiliateDashboardNew() {
     setOrderModalItems([]);
   };
 
+  // Calcula comissões canceladas por loja
+  const getStoreCancelledCommission = useCallback((storeAffiliateId: string) => {
+    return affiliateOrders
+      .filter(order => 
+        order.store_affiliate_id === storeAffiliateId && 
+        (order.order_status === 'cancelado' || order.order_status === 'cancelled')
+      )
+      .reduce((sum, order) => sum + (order.commission_amount || 0), 0);
+  }, [affiliateOrders]);
+
   // Renderiza o conteúdo das abas do modal da loja
   const renderStoreModalContent = (store: typeof affiliateStores[0]) => <Tabs defaultValue="overview" className="mt-4 flex-1 flex flex-col min-h-0 px-4">
       <TabsList className="grid w-full grid-cols-2 flex-shrink-0">
@@ -353,7 +363,7 @@ export default function AffiliateDashboardNew() {
       {/* Tab Resumo */}
       <TabsContent value="overview" className="space-y-6 mt-4 flex-1 overflow-y-auto">
         {/* Stats */}
-        <div className="grid grid-cols-1 xs:grid-cols-3 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 xs:grid-cols-4 gap-2 sm:gap-3">
           <motion.div initial={{
           opacity: 0,
           y: 10
@@ -392,6 +402,19 @@ export default function AffiliateDashboardNew() {
             <Clock className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-yellow-600 mb-1" />
             <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
             <p className="font-bold text-sm sm:text-lg text-yellow-600">{formatCurrency(store.pending_commission)}</p>
+          </motion.div>
+          <motion.div initial={{
+          opacity: 0,
+          y: 10
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: 0.4
+        }} className="p-3 sm:p-4 bg-red-500/10 rounded-lg border border-red-500/20 text-center">
+            <XCircle className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-red-600 mb-1" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Cancelados</p>
+            <p className="font-bold text-sm sm:text-lg text-red-600">{formatCurrency(getStoreCancelledCommission(store.store_affiliate_id))}</p>
           </motion.div>
         </div>
 
