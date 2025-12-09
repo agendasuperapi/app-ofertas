@@ -2317,10 +2317,14 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                       <div className="col-span-2">
                         <Label>Chave PIX</Label>
                         <Input
-                          value={selectedAffiliate.pix_key || ''}
+                          value={selectedAffiliate.pix_key || selectedAffiliate.cpf_cnpj || ''}
                           onChange={(e) => setSelectedAffiliate({ ...selectedAffiliate, pix_key: e.target.value })}
                           onBlur={async () => {
-                            await updateAffiliate(selectedAffiliate.id, { pix_key: selectedAffiliate.pix_key });
+                            const pixKey = selectedAffiliate.pix_key || selectedAffiliate.cpf_cnpj || '';
+                            await updateAffiliate(selectedAffiliate.id, { pix_key: pixKey });
+                            if (!selectedAffiliate.pix_key && selectedAffiliate.cpf_cnpj) {
+                              setSelectedAffiliate({ ...selectedAffiliate, pix_key: selectedAffiliate.cpf_cnpj });
+                            }
                           }}
                           placeholder="CPF, CNPJ, Email, Telefone ou Chave Aleatória"
                         />
