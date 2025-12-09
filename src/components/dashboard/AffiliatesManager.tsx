@@ -66,6 +66,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const products = productsQuery.data || [];
 
   const [activeTab, setActiveTab] = useState('gerenciar');
+  const [mainTab, setMainTab] = useState<'gerenciar' | 'convites'>('gerenciar');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [editingAffiliate, setEditingAffiliate] = useState<Affiliate | null>(null);
@@ -886,8 +887,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
       </div>
     );
   }
-
-  const [mainTab, setMainTab] = useState<'gerenciar' | 'convites'>('gerenciar');
 
   return (
     <div className="space-y-6">
