@@ -12,6 +12,7 @@ interface AffiliateUser {
 }
 
 interface AffiliateCoupon {
+  id?: string;
   code: string;
   discount_type: string;
   discount_value: number;
