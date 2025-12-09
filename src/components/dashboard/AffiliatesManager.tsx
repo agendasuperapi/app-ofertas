@@ -1086,9 +1086,6 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                         <Eye className="h-4 w-4 mr-1" />
                         Detalhes
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => handleOpenDialog(affiliate)}>
-                        <Edit className="h-4 w-4" />
-                      </Button>
                       <Button 
                         variant="outline" 
                         size="sm" 
