@@ -27,7 +27,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
-import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter, ChevronDown, XCircle, Search, Banknote, Camera } from 'lucide-react';
+import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter, ChevronDown, XCircle, Search, Banknote, Camera, Pencil, Save } from 'lucide-react';
 import { AvatarCropDialog } from '@/components/dashboard/AvatarCropDialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,11 +47,16 @@ export default function AffiliateDashboardNew() {
     fetchOrderItems,
     acceptInvite,
     rejectInvite,
-    updateAvatarUrl
+    updateAvatarUrl,
+    updateProfile
   } = useAffiliateAuth();
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [tempImageUrl, setTempImageUrl] = useState<string | null>(null);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [editEmail, setEditEmail] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState('home');
   const [selectedOrder, setSelectedOrder] = useState<AffiliateOrder | null>(null);
@@ -2119,6 +2124,55 @@ export default function AffiliateDashboardNew() {
 
         <Separator />
 
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-sm text-muted-foreground">Dados do Perfil</span>
+          {!editingProfile ? (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => {
+                setEditEmail(affiliateUser?.email || '');
+                setEditPhone(affiliateUser?.phone || '');
+                setEditingProfile(true);
+              }}
+              className="gap-2"
+            >
+              <Pencil className="h-4 w-4" />
+              Editar
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setEditingProfile(false)}
+                disabled={savingProfile}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={async () => {
+                  setSavingProfile(true);
+                  const result = await updateProfile({ email: editEmail, phone: editPhone });
+                  if (result.success) {
+                    toast.success('Perfil atualizado com sucesso!');
+                    setEditingProfile(false);
+                  } else {
+                    toast.error(result.error || 'Erro ao atualizar perfil');
+                  }
+                  setSavingProfile(false);
+                }}
+                disabled={savingProfile}
+                className="gap-2"
+              >
+                {savingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                Salvar
+              </Button>
+            </div>
+          )}
+        </div>
+
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <p className="text-sm text-muted-foreground">Nome</p>
@@ -2126,11 +2180,28 @@ export default function AffiliateDashboardNew() {
           </div>
           <div>
             <p className="text-sm text-muted-foreground">E-mail</p>
-            <p className="font-medium">{affiliateUser?.email || '-'}</p>
+            {editingProfile ? (
+              <Input 
+                value={editEmail} 
+                onChange={(e) => setEditEmail(e.target.value)} 
+                placeholder="seu@email.com"
+                type="email"
+              />
+            ) : (
+              <p className="font-medium">{affiliateUser?.email || '-'}</p>
+            )}
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Telefone</p>
-            <p className="font-medium">{affiliateUser?.phone || '-'}</p>
+            {editingProfile ? (
+              <Input 
+                value={editPhone} 
+                onChange={(e) => setEditPhone(e.target.value)} 
+                placeholder="(00) 00000-0000"
+              />
+            ) : (
+              <p className="font-medium">{affiliateUser?.phone || '-'}</p>
+            )}
           </div>
           <div>
             <p className="text-sm text-muted-foreground">CPF/CNPJ</p>
