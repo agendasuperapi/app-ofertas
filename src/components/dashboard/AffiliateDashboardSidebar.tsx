@@ -17,7 +17,7 @@ const menuItems = [
   { id: "stores", label: "Lojas", icon: Store },
   { id: "invites", label: "Convites", icon: Mail },
   { id: "orders", label: "Pedidos", icon: ShoppingBag },
-  { id: "commissions", label: "Comissões", icon: BarChart3 },
+  { id: "commissions", label: "Disponível", icon: BarChart3 },
   { id: "withdrawals", label: "Saques", icon: Wallet },
   { id: "profile", label: "Perfil", icon: User },
 ];
