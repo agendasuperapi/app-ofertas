@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useAffiliateAuth, AffiliateOrderItem, AffiliateOrder } from '@/hooks/useAffiliateAuth';
 import { useAffiliateEarningsNotification } from '@/hooks/useAffiliateEarningsNotification';
 import { useAffiliateOrderStatusNotification } from '@/hooks/useAffiliateOrderStatusNotification';
-import { useWithdrawalRequests } from '@/hooks/useWithdrawalRequests';
+import { useWithdrawalNotification } from '@/hooks/useWithdrawalNotification';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -196,6 +196,12 @@ export default function AffiliateDashboardNew() {
   useAffiliateOrderStatusNotification({
     orderIds: affiliateOrderIds,
     onStatusChange: refreshData
+  });
+
+  // Hook de notificação de status de saque (notifica quando lojista aprova ou rejeita)
+  useWithdrawalNotification({
+    affiliateId: affiliateDbId,
+    onStatusChange: fetchWithdrawalRequests
   });
 
   // Filtered orders based on period and store
@@ -565,6 +571,52 @@ export default function AffiliateDashboardNew() {
           <p className="text-xs text-muted-foreground mt-1">
             {store.commission_type === 'percentage' ? 'Percentual sobre cada venda' : 'Valor fixo por venda'}
           </p>
+        </motion.div>
+
+        {/* Solicitar Saque */}
+        <motion.div initial={{
+        opacity: 0,
+        y: 10
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.5
+      }} className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Wallet className="h-4 w-4 text-green-600" />
+                <span className="text-sm font-medium">Saque de Comissões</span>
+              </div>
+              <p className="text-2xl font-bold text-green-600">
+                {formatCurrency(store.total_commission)}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Disponível para saque
+              </p>
+            </div>
+            <div>
+              {hasPendingWithdrawal(store.store_id) ? (
+                <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+                  <Clock className="h-3 w-3 mr-1" />
+                  Saque Pendente
+                </Badge>
+              ) : (
+                <Button
+                  onClick={() => {
+                    setWithdrawalStore(store);
+                    setWithdrawalDialogOpen(true);
+                  }}
+                  disabled={store.total_commission <= 0}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Solicitar Saque
+                </Button>
+              )}
+            </div>
+          </div>
         </motion.div>
       </TabsContent>
 
@@ -1621,5 +1673,20 @@ export default function AffiliateDashboardNew() {
           </ResponsiveDialogFooter>
         </ResponsiveDialogContent>
       </ResponsiveDialog>
+
+      {/* Dialog de Solicitação de Saque */}
+      {withdrawalStore && affiliateDbId && (
+        <RequestWithdrawalDialog
+          open={withdrawalDialogOpen}
+          onOpenChange={setWithdrawalDialogOpen}
+          affiliateId={affiliateDbId}
+          storeAffiliateId={withdrawalStore.store_affiliate_id}
+          storeId={withdrawalStore.store_id}
+          storeName={withdrawalStore.store_name}
+          availableAmount={withdrawalStore.total_commission}
+          defaultPixKey={affiliateUser?.pix_key || ''}
+          onSubmit={handleCreateWithdrawal}
+        />
+      )}
     </div>;
 }
