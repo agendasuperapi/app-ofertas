@@ -886,7 +886,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               <div className="flex items-center justify-between relative">
                 <div>
                   <p className="text-sm text-muted-foreground font-medium">Total</p>
-                  <p className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">{totalAffiliates}</p>
+                  <p className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">{totalAffiliates}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
                   <Users className="h-6 w-6 text-primary" />
@@ -902,7 +902,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               <div className="flex items-center justify-between relative">
                 <div>
                   <p className="text-sm text-muted-foreground font-medium">Ativos</p>
-                  <p className="text-3xl font-bold text-green-600">{activeAffiliates}</p>
+                  <p className="text-xl font-bold text-green-600">{activeAffiliates}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center">
                   <CheckCircle className="h-6 w-6 text-green-600" />
@@ -918,7 +918,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               <div className="flex items-center justify-between relative">
                 <div>
                   <p className="text-sm text-muted-foreground font-medium">Pendente</p>
-                  <p className="text-3xl font-bold text-amber-600">{formatCurrency(totalPendingEarnings)}</p>
+                  <p className="text-xl font-bold text-amber-600">{formatCurrency(totalPendingEarnings)}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center">
                   <Clock className="h-6 w-6 text-amber-600" />
@@ -934,7 +934,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               <div className="flex items-center justify-between relative">
                 <div>
                   <p className="text-sm text-muted-foreground font-medium">Pago</p>
-                  <p className="text-3xl font-bold text-green-600">{formatCurrency(totalPaidEarnings)}</p>
+                  <p className="text-xl font-bold text-green-600">{formatCurrency(totalPaidEarnings)}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center">
                   <DollarSign className="h-6 w-6 text-green-600" />
