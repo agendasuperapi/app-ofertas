@@ -1962,11 +1962,11 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                           <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />
                           <div className="flex items-center justify-between relative gap-2">
                             <div className="min-w-0 flex-1">
-                              <p className="text-xs sm:text-sm text-muted-foreground font-medium">Total Comissões</p>
+                              <p className="text-xs sm:text-sm text-muted-foreground font-medium">Concluído</p>
                               <p className="text-lg sm:text-2xl font-bold text-green-600 truncate">{formatCurrency(affiliateStats.totalEarnings)}</p>
                             </div>
                             <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center flex-shrink-0">
-                              <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                              <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
                             </div>
                           </div>
                         </CardContent>
