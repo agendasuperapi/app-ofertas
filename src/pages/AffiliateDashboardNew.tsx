@@ -393,12 +393,15 @@ export default function AffiliateDashboardNew() {
                 {/* Produtos do Cupom - Expandir/Colapsar */}
                 <Collapsible className="pt-3 border-t border-border">
                   <CollapsibleTrigger asChild>
-                    <Button variant="ghost" className="w-full justify-between px-0 hover:bg-transparent">
-                      <span className="flex items-center gap-2 text-sm font-medium">
-                        <Package className="h-4 w-4 text-primary" />
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-between bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20 hover:border-primary/40 hover:from-primary/10 hover:to-primary/20 transition-all duration-300"
+                    >
+                      <span className="flex items-center gap-2 text-sm font-semibold text-primary">
+                        <Package className="h-4 w-4" />
                         Ver Produtos
                       </span>
-                      <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 [&[data-state=open]>svg]:rotate-180" />
+                      <ChevronDown className="h-4 w-4 text-primary transition-transform duration-200" />
                     </Button>
                   </CollapsibleTrigger>
                   <p className="text-xs text-muted-foreground mt-2 text-center italic">
