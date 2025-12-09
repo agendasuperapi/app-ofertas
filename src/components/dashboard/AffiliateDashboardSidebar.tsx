@@ -1,6 +1,6 @@
 import { Home, Store, ShoppingBag, BarChart3, User, LogOut, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -8,6 +8,7 @@ interface AffiliateDashboardSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   affiliateName?: string;
+  affiliateAvatarUrl?: string;
   onSignOut: () => void;
   pendingInvitesCount?: number;
 }
@@ -25,6 +26,7 @@ export function AffiliateDashboardSidebar({
   activeTab,
   onTabChange,
   affiliateName,
+  affiliateAvatarUrl,
   onSignOut,
   pendingInvitesCount = 0,
 }: AffiliateDashboardSidebarProps) {
@@ -52,6 +54,7 @@ export function AffiliateDashboardSidebar({
       {/* Avatar */}
       <div className="flex flex-col items-center justify-center py-6 border-b border-border/50">
         <Avatar className="h-14 w-14 ring-2 ring-primary/20">
+          <AvatarImage src={affiliateAvatarUrl} alt={affiliateName} />
           <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground font-semibold">
             {getInitials(affiliateName)}
           </AvatarFallback>
