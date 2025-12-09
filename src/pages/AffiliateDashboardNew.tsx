@@ -430,11 +430,10 @@ export default function AffiliateDashboardNew() {
       );
     }
     
-    // Pendente: mostrar valor em amarelo com indicador
+    // Pendente: mostrar valor em amarelo
     return (
       <span className="font-medium text-yellow-600">
         {formatCurrency(order.commission_amount)}
-        <span className="text-xs ml-1 opacity-70">(aguardando)</span>
       </span>
     );
   };
