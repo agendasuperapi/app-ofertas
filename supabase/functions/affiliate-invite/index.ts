@@ -559,11 +559,43 @@ serve(async (req) => {
           now: new Date().toISOString()
         });
 
-        // Verificar se já está verificado
+        // Verificar se já está verificado - auto-ativar afiliação com nova loja
         if (storeAffiliate.affiliate_accounts.is_verified) {
-          console.log(`[affiliate-invite] Affiliate already verified - should login instead`);
+          console.log(`[affiliate-invite] Affiliate already verified - auto-activating store affiliation`);
+          
+          // Auto-ativar a afiliação da nova loja
+          const { error: activateError } = await supabase
+            .from("store_affiliates")
+            .update({
+              status: "active",
+              is_active: true,
+              accepted_at: new Date().toISOString(),
+              invite_token: null,
+              invite_expires: null,
+            })
+            .eq("id", storeAffiliate.id);
+
+          if (activateError) {
+            console.error(`[affiliate-invite] Error auto-activating store affiliation:`, activateError);
+            return new Response(
+              JSON.stringify({ valid: false, error: "Erro ao ativar afiliação. Tente novamente." }),
+              { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+
+          console.log(`[affiliate-invite] Store affiliation auto-activated for verified affiliate`);
+          
           return new Response(
-            JSON.stringify({ valid: false, error: "Este convite já foi utilizado. Faça login na sua conta de afiliado." }),
+            JSON.stringify({ 
+              valid: true,
+              already_verified: true,
+              message: "Loja adicionada à sua conta com sucesso! Faça login para acessar.",
+              store: {
+                id: storeAffiliate.stores.id,
+                name: storeAffiliate.stores.name,
+                logo_url: storeAffiliate.stores.logo_url,
+              }
+            }),
             { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
           );
         }
