@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -1887,9 +1888,9 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
       </Dialog>
 
       {/* Dialog: Detalhes do Afiliado */}
-      <Dialog open={detailsModalOpen} onOpenChange={setDetailsModalOpen}>
-        <DialogContent className="w-[95vw] max-w-4xl h-[90vh] overflow-hidden flex flex-col glass p-3 sm:p-6">
-          <DialogHeader className="space-y-3 pr-8">
+      <ResponsiveDialog open={detailsModalOpen} onOpenChange={setDetailsModalOpen}>
+        <ResponsiveDialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-hidden flex flex-col glass p-3 sm:p-6">
+          <ResponsiveDialogHeader className="space-y-3 pr-8">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
                 {selectedAffiliate && (
@@ -1900,13 +1901,13 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <DialogTitle className="text-lg sm:text-xl gradient-text truncate">Detalhes do Afiliado</DialogTitle>
+                  <ResponsiveDialogTitle className="text-lg sm:text-xl gradient-text truncate">Detalhes do Afiliado</ResponsiveDialogTitle>
                   {selectedAffiliate && (
-                    <DialogDescription className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2 text-xs sm:text-sm truncate">
+                    <ResponsiveDialogDescription className="flex flex-col sm:flex-row sm:items-center gap-0 sm:gap-2 text-xs sm:text-sm truncate">
                       <span className="truncate">{selectedAffiliate.name}</span>
                       <span className="hidden sm:inline">-</span>
                       <span className="truncate text-muted-foreground">{selectedAffiliate.email}</span>
-                    </DialogDescription>
+                    </ResponsiveDialogDescription>
                   )}
                 </div>
               </div>
@@ -1925,7 +1926,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                 </div>
               )}
             </div>
-          </DialogHeader>
+          </ResponsiveDialogHeader>
           
           {selectedAffiliate && (
             <Tabs defaultValue="resumo" className="flex-1 flex flex-col overflow-hidden">
@@ -2944,7 +2945,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
             </Tabs>
           )}
           
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <Button variant="outline" onClick={() => handleShowInviteLink(selectedAffiliate!)}>
               <Link2 className="h-4 w-4 mr-1" />
               Link de Convite
@@ -2952,9 +2953,9 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
             <Button onClick={() => setDetailsModalOpen(false)}>
               Fechar
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {/* Dialog: Adicionar Regra de Comissão - Movido para o final para ficar acima do modal de detalhes */}
       <Dialog open={ruleDialogOpen} onOpenChange={(open) => {
