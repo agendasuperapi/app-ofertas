@@ -65,6 +65,9 @@ export default function AffiliateDashboardNew() {
   const [ordersPage, setOrdersPage] = useState<Record<string, number>>({});
   const [ordersSearch, setOrdersSearch] = useState<Record<string, string>>({});
   const [ordersStatusFilter, setOrdersStatusFilter] = useState<Record<string, string>>({});
+  const [withdrawalsPage, setWithdrawalsPage] = useState<Record<string, number>>({});
+  const [withdrawalsSearch, setWithdrawalsSearch] = useState<Record<string, string>>({});
+  const [withdrawalsStatusFilter, setWithdrawalsStatusFilter] = useState<Record<string, string>>({});
 
   // Buscar affiliate_id do banco
   useEffect(() => {
@@ -884,18 +887,8 @@ export default function AffiliateDashboardNew() {
       {/* Tab Saques */}
       <TabsContent value="withdrawals" className="space-y-4 mt-4 flex-1 overflow-y-auto">
         {(() => {
-          const storeWithdrawals = withdrawalRequests.filter(req => req.store_id === store.store_id);
-          
-          if (storeWithdrawals.length === 0) {
-            return (
-              <div className="p-6 bg-muted/50 rounded-lg text-center border border-border/50">
-                <Wallet className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  Nenhum saque solicitado ainda nesta loja
-                </p>
-              </div>
-            );
-          }
+          const searchTerm = (withdrawalsSearch[store.store_id] || '').toLowerCase();
+          const statusFilter = withdrawalsStatusFilter[store.store_id] || 'all';
           
           const getWithdrawalStatusBadge = (status: string) => {
             switch (status) {
@@ -910,43 +903,174 @@ export default function AffiliateDashboardNew() {
             }
           };
           
+          // Filtrar saques
+          const storeWithdrawals = withdrawalRequests
+            .filter(req => req.store_id === store.store_id)
+            .filter(req => {
+              if (!searchTerm) return true;
+              return (
+                req.pix_key?.toLowerCase().includes(searchTerm) ||
+                req.admin_notes?.toLowerCase().includes(searchTerm) ||
+                formatCurrency(req.amount).toLowerCase().includes(searchTerm)
+              );
+            })
+            .filter(req => {
+              if (statusFilter === 'all') return true;
+              return req.status === statusFilter;
+            });
+          
+          const WITHDRAWALS_PER_PAGE = 10;
+          const currentPage = withdrawalsPage[store.store_id] || 1;
+          const totalPages = Math.ceil(storeWithdrawals.length / WITHDRAWALS_PER_PAGE);
+          const paginatedWithdrawals = storeWithdrawals.slice((currentPage - 1) * WITHDRAWALS_PER_PAGE, currentPage * WITHDRAWALS_PER_PAGE);
+          
+          const totalWithdrawals = withdrawalRequests.filter(req => req.store_id === store.store_id).length;
+          
           return (
             <div className="space-y-3">
-              {storeWithdrawals.map(withdrawal => (
-                <div 
-                  key={withdrawal.id} 
-                  className="p-3 bg-muted/30 rounded-lg border border-border/50"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-lg text-emerald-600">{formatCurrency(withdrawal.amount)}</span>
-                    {getWithdrawalStatusBadge(withdrawal.status)}
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="text-muted-foreground">Solicitado em:</span>
-                      <p className="font-medium">{formatDate(withdrawal.requested_at)}</p>
-                    </div>
-                    {withdrawal.paid_at && (
-                      <div>
-                        <span className="text-muted-foreground">Pago em:</span>
-                        <p className="font-medium">{formatDate(withdrawal.paid_at)}</p>
-                      </div>
-                    )}
-                    {withdrawal.pix_key && (
-                      <div className="col-span-2">
-                        <span className="text-muted-foreground">Chave PIX:</span>
-                        <p className="font-medium font-mono">{withdrawal.pix_key}</p>
-                      </div>
-                    )}
-                  </div>
-                  {withdrawal.admin_notes && (
-                    <div className="mt-2 pt-2 border-t border-border/50">
-                      <span className="text-xs text-muted-foreground">Observação:</span>
-                      <p className="text-xs">{withdrawal.admin_notes}</p>
-                    </div>
+              {/* Filtros e Busca */}
+              <div className="p-3 bg-muted/30 rounded-lg border border-border/50 space-y-3">
+                {/* Busca */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por valor ou chave PIX..."
+                    value={withdrawalsSearch[store.store_id] || ''}
+                    onChange={(e) => {
+                      setWithdrawalsSearch(prev => ({ ...prev, [store.store_id]: e.target.value }));
+                      setWithdrawalsPage(prev => ({ ...prev, [store.store_id]: 1 }));
+                    }}
+                    className="pl-9 h-9 text-sm"
+                  />
+                </div>
+                
+                {/* Filtros */}
+                <div className="flex flex-wrap gap-2">
+                  <Select 
+                    value={statusFilter} 
+                    onValueChange={(value) => {
+                      setWithdrawalsStatusFilter(prev => ({ ...prev, [store.store_id]: value }));
+                      setWithdrawalsPage(prev => ({ ...prev, [store.store_id]: 1 }));
+                    }}
+                  >
+                    <SelectTrigger className="w-[160px] h-8 text-xs">
+                      <Filter className="h-3 w-3 mr-1.5" />
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os status</SelectItem>
+                      <SelectItem value="pending">Pendentes</SelectItem>
+                      <SelectItem value="paid">Pagos</SelectItem>
+                      <SelectItem value="rejected">Rejeitados</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  
+                  {(searchTerm || statusFilter !== 'all') && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => {
+                        setWithdrawalsSearch(prev => ({ ...prev, [store.store_id]: '' }));
+                        setWithdrawalsStatusFilter(prev => ({ ...prev, [store.store_id]: 'all' }));
+                        setWithdrawalsPage(prev => ({ ...prev, [store.store_id]: 1 }));
+                      }}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Limpar filtros
+                    </Button>
                   )}
                 </div>
-              ))}
+                
+                {/* Contador de resultados */}
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>
+                    {storeWithdrawals.length === totalWithdrawals 
+                      ? `${totalWithdrawals} saque${totalWithdrawals !== 1 ? 's' : ''}` 
+                      : `${storeWithdrawals.length} de ${totalWithdrawals} saques`}
+                  </span>
+                  {storeWithdrawals.length > 0 && (
+                    <span className="text-emerald-600 font-medium">
+                      Total: {formatCurrency(storeWithdrawals.reduce((sum, w) => sum + (w.amount || 0), 0))}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              {/* Lista de saques */}
+              {storeWithdrawals.length === 0 ? (
+                <div className="p-6 bg-muted/50 rounded-lg text-center border border-border/50">
+                  <Wallet className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">
+                    {totalWithdrawals === 0 
+                      ? 'Nenhum saque solicitado ainda nesta loja'
+                      : 'Nenhum saque encontrado com os filtros selecionados'}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {paginatedWithdrawals.map(withdrawal => (
+                    <div 
+                      key={withdrawal.id} 
+                      className="p-3 bg-muted/30 rounded-lg border border-border/50"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-bold text-lg text-emerald-600">{formatCurrency(withdrawal.amount)}</span>
+                        {getWithdrawalStatusBadge(withdrawal.status)}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">Solicitado em:</span>
+                          <p className="font-medium">{formatDate(withdrawal.requested_at)}</p>
+                        </div>
+                        {withdrawal.paid_at && (
+                          <div>
+                            <span className="text-muted-foreground">Pago em:</span>
+                            <p className="font-medium">{formatDate(withdrawal.paid_at)}</p>
+                          </div>
+                        )}
+                        {withdrawal.pix_key && (
+                          <div className="col-span-2">
+                            <span className="text-muted-foreground">Chave PIX:</span>
+                            <p className="font-medium font-mono">{withdrawal.pix_key}</p>
+                          </div>
+                        )}
+                      </div>
+                      {withdrawal.admin_notes && (
+                        <div className="mt-2 pt-2 border-t border-border/50">
+                          <span className="text-xs text-muted-foreground">Observação:</span>
+                          <p className="text-xs">{withdrawal.admin_notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {/* Paginação */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPage === 1}
+                        onClick={() => setWithdrawalsPage(prev => ({ ...prev, [store.store_id]: currentPage - 1 }))}
+                      >
+                        Anterior
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        Página {currentPage} de {totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPage === totalPages}
+                        onClick={() => setWithdrawalsPage(prev => ({ ...prev, [store.store_id]: currentPage + 1 }))}
+                      >
+                        Próxima
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           );
         })()}
