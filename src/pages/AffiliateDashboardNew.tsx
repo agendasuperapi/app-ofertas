@@ -445,10 +445,11 @@ export default function AffiliateDashboardNew() {
 
   // Renderiza o conteúdo das abas do modal da loja
   const renderStoreModalContent = (store: typeof affiliateStores[0]) => <Tabs defaultValue="overview" className="mt-4 flex-1 flex flex-col min-h-0 px-4">
-      <TabsList className="grid w-full grid-cols-3 flex-shrink-0">
+      <TabsList className="grid w-full grid-cols-4 flex-shrink-0">
         <TabsTrigger value="overview">Resumo</TabsTrigger>
         <TabsTrigger value="coupons">Cupons</TabsTrigger>
         <TabsTrigger value="orders">Pedidos</TabsTrigger>
+        <TabsTrigger value="withdrawals">Saques</TabsTrigger>
       </TabsList>
       
       {/* Tab Resumo */}
@@ -741,6 +742,77 @@ export default function AffiliateDashboardNew() {
                       <Badge variant="outline" className="font-mono text-xs">
                         {order.coupon_code}
                       </Badge>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          );
+        })()}
+      </TabsContent>
+      
+      {/* Tab Saques */}
+      <TabsContent value="withdrawals" className="space-y-4 mt-4 flex-1 overflow-y-auto">
+        {(() => {
+          const storeWithdrawals = withdrawalRequests.filter(req => req.store_id === store.store_id);
+          
+          if (storeWithdrawals.length === 0) {
+            return (
+              <div className="p-6 bg-muted/50 rounded-lg text-center border border-border/50">
+                <Wallet className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Nenhum saque solicitado ainda nesta loja
+                </p>
+              </div>
+            );
+          }
+          
+          const getWithdrawalStatusBadge = (status: string) => {
+            switch (status) {
+              case 'paid':
+                return <Badge className="bg-green-500/10 text-green-600 border-green-500/20"><CheckCircle className="h-3 w-3 mr-1" />Pago</Badge>;
+              case 'pending':
+                return <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20"><Clock className="h-3 w-3 mr-1" />Pendente</Badge>;
+              case 'rejected':
+                return <Badge className="bg-red-500/10 text-red-600 border-red-500/20"><XCircle className="h-3 w-3 mr-1" />Rejeitado</Badge>;
+              default:
+                return <Badge variant="outline">{status}</Badge>;
+            }
+          };
+          
+          return (
+            <div className="space-y-3">
+              {storeWithdrawals.map(withdrawal => (
+                <div 
+                  key={withdrawal.id} 
+                  className="p-3 bg-muted/30 rounded-lg border border-border/50"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-lg text-emerald-600">{formatCurrency(withdrawal.amount)}</span>
+                    {getWithdrawalStatusBadge(withdrawal.status)}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <span className="text-muted-foreground">Solicitado em:</span>
+                      <p className="font-medium">{formatDate(withdrawal.requested_at)}</p>
+                    </div>
+                    {withdrawal.paid_at && (
+                      <div>
+                        <span className="text-muted-foreground">Pago em:</span>
+                        <p className="font-medium">{formatDate(withdrawal.paid_at)}</p>
+                      </div>
+                    )}
+                    {withdrawal.pix_key && (
+                      <div className="col-span-2">
+                        <span className="text-muted-foreground">Chave PIX:</span>
+                        <p className="font-medium font-mono">{withdrawal.pix_key}</p>
+                      </div>
+                    )}
+                  </div>
+                  {withdrawal.admin_notes && (
+                    <div className="mt-2 pt-2 border-t border-border/50">
+                      <span className="text-xs text-muted-foreground">Observação:</span>
+                      <p className="text-xs">{withdrawal.admin_notes}</p>
                     </div>
                   )}
                 </div>
