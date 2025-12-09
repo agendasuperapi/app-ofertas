@@ -1647,50 +1647,50 @@ export default function AffiliateDashboardNew() {
         scale: 0.98
       }}>
               <Card className="glass border-border/50 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setSelectedStore(store)}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
+                <CardHeader className="pb-3 p-3 sm:p-6 sm:pb-3">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      {store.store_logo ? <div className="w-12 h-12 rounded-lg overflow-hidden ring-2 ring-primary/20 shadow-glow">
+                      {store.store_logo ? <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
                           <img src={store.store_logo} alt={store.store_name} className="w-full h-full object-cover" />
-                        </div> : <div className="w-12 h-12 bg-gradient-to-br from-primary to-primary-glow rounded-lg flex items-center justify-center shadow-glow">
-                          <Store className="h-6 w-6 text-white" />
+                        </div> : <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary to-primary-glow rounded-lg flex items-center justify-center shadow-glow flex-shrink-0">
+                          <Store className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                         </div>}
-                      <div>
-                        <CardTitle className="text-base">{store.store_name}</CardTitle>
-                        <CardDescription>
-                          {store.coupons?.length ? `${store.coupons.length} cupom(s) vinculado(s)` : store.coupon_code ? `Cupom: ${store.coupon_code}` : 'Sem cupom vinculado'}
+                      <div className="min-w-0 flex-1">
+                        <CardTitle className="text-sm sm:text-base truncate">{store.store_name}</CardTitle>
+                        <CardDescription className="text-xs sm:text-sm truncate">
+                          {store.coupons?.length ? `${store.coupons.length} cupom(s)` : store.coupon_code ? `Cupom: ${store.coupon_code}` : 'Sem cupom'}
                         </CardDescription>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={store.status === 'active' ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : ''} variant={store.status === 'active' ? 'default' : 'secondary'}>
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
+                      <Badge className={`text-[10px] sm:text-xs ${store.status === 'active' ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : ''}`} variant={store.status === 'active' ? 'default' : 'secondary'}>
                         {store.status === 'active' ? 'Ativo' : 'Pendente'}
                       </Badge>
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="grid grid-cols-5 gap-2 text-center">
-                    <div className="p-2 bg-muted/50 rounded-lg">
-                      <p className="text-[10px] text-muted-foreground">Total Vendas</p>
-                      <p className="font-semibold text-xs">{formatCurrency(store.total_sales)}</p>
+                <CardContent className="pt-0 p-3 sm:p-6 sm:pt-0">
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 sm:gap-2 text-center">
+                    <div className="p-1.5 sm:p-2 bg-muted/50 rounded-lg">
+                      <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-tight">Vendas</p>
+                      <p className="font-semibold text-[10px] sm:text-xs">{formatCurrency(store.total_sales)}</p>
                     </div>
-                    <div className="p-2 bg-purple-500/10 rounded-lg">
-                      <p className="text-[10px] text-muted-foreground">Total Ganhos</p>
-                      <p className="font-semibold text-xs text-purple-600">{formatCurrency(getStorePaidWithdrawals(store.store_id))}</p>
+                    <div className="p-1.5 sm:p-2 bg-purple-500/10 rounded-lg">
+                      <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-tight">Ganhos</p>
+                      <p className="font-semibold text-[10px] sm:text-xs text-purple-600">{formatCurrency(getStorePaidWithdrawals(store.store_id))}</p>
                     </div>
-                    <div className="p-2 bg-yellow-500/10 rounded-lg">
-                      <p className="text-[10px] text-muted-foreground">Pendente</p>
-                      <p className="font-semibold text-xs text-yellow-600">{formatCurrency(store.pending_commission)}</p>
+                    <div className="p-1.5 sm:p-2 bg-yellow-500/10 rounded-lg">
+                      <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-tight">Pendente</p>
+                      <p className="font-semibold text-[10px] sm:text-xs text-yellow-600">{formatCurrency(store.pending_commission)}</p>
                     </div>
-                    <div className="p-2 bg-emerald-500/10 rounded-lg">
-                      <p className="text-[10px] text-muted-foreground">Disp. Saque</p>
-                      <p className="font-semibold text-xs text-emerald-600">{formatCurrency(store.total_commission)}</p>
+                    <div className="p-1.5 sm:p-2 bg-emerald-500/10 rounded-lg col-span-1.5 sm:col-span-1">
+                      <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-tight">Saque</p>
+                      <p className="font-semibold text-[10px] sm:text-xs text-emerald-600">{formatCurrency(store.total_commission)}</p>
                     </div>
-                    <div className="p-2 bg-red-500/10 rounded-lg">
-                      <p className="text-[10px] text-muted-foreground">Cancelados</p>
-                      <p className="font-semibold text-xs text-red-600">{formatCurrency(getStoreCancelledCommission(store.store_affiliate_id))}</p>
+                    <div className="p-1.5 sm:p-2 bg-red-500/10 rounded-lg col-span-1.5 sm:col-span-1">
+                      <p className="text-[8px] sm:text-[10px] text-muted-foreground leading-tight">Cancelados</p>
+                      <p className="font-semibold text-[10px] sm:text-xs text-red-600">{formatCurrency(getStoreCancelledCommission(store.store_affiliate_id))}</p>
                     </div>
                   </div>
                 </CardContent>
