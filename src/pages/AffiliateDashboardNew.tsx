@@ -1148,7 +1148,7 @@ export default function AffiliateDashboardNew() {
     // Determine if we should show filtered data or all data
     const showFilteredData = periodFilter !== 'all' || storeFilter !== 'all';
     const displayStats = showFilteredData ? filteredStats : affiliateStats;
-    return <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-1.5 sm:gap-4">
+    return <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
         <motion.div initial={{
         opacity: 0,
         y: 20
@@ -1196,7 +1196,7 @@ export default function AffiliateDashboardNew() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Total Vendas</p>
-                  <p className="text-sm sm:text-base md:text-2xl font-bold text-green-600 truncate">{formatCurrency(displayStats?.total_sales || 0)}</p>
+                  <p className="text-xs sm:text-sm md:text-lg lg:text-xl font-bold text-green-600">{formatCurrency(displayStats?.total_sales || 0)}</p>
                 </div>
               </div>
             </CardContent>
@@ -1223,7 +1223,7 @@ export default function AffiliateDashboardNew() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Total Ganhos</p>
-                  <p className="text-sm sm:text-base md:text-2xl font-bold gradient-text truncate">{formatCurrency(displayStats?.total_commission || 0)}</p>
+                  <p className="text-xs sm:text-sm md:text-lg lg:text-xl font-bold gradient-text">{formatCurrency(displayStats?.total_commission || 0)}</p>
                 </div>
               </div>
             </CardContent>
@@ -1250,7 +1250,7 @@ export default function AffiliateDashboardNew() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Pendentes</p>
-                  <p className="text-sm sm:text-base md:text-2xl font-bold text-yellow-600 truncate">{formatCurrency(displayStats?.pending_commission || 0)}</p>
+                  <p className="text-xs sm:text-sm md:text-lg lg:text-xl font-bold text-yellow-600">{formatCurrency(displayStats?.pending_commission || 0)}</p>
                 </div>
               </div>
             </CardContent>
@@ -1277,7 +1277,7 @@ export default function AffiliateDashboardNew() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Disponível Saque</p>
-                  <p className="text-sm sm:text-base md:text-2xl font-bold text-orange-600 truncate">{formatCurrency((displayStats as any)?.total_commission || 0)}</p>
+                  <p className="text-xs sm:text-sm md:text-lg lg:text-xl font-bold text-orange-600">{formatCurrency((displayStats as any)?.total_commission || 0)}</p>
                 </div>
               </div>
             </CardContent>
@@ -1304,7 +1304,7 @@ export default function AffiliateDashboardNew() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Cancelados</p>
-                  <p className="text-sm sm:text-base md:text-2xl font-bold text-red-600 truncate">{formatCurrency((displayStats as any)?.cancelled_commission || 0)}</p>
+                  <p className="text-xs sm:text-sm md:text-lg lg:text-xl font-bold text-red-600">{formatCurrency((displayStats as any)?.cancelled_commission || 0)}</p>
                 </div>
               </div>
             </CardContent>
