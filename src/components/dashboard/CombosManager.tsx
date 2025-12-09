@@ -153,9 +153,9 @@ export const CombosManager = ({ storeId, products }: CombosManagerProps) => {
     >
       <Card className="glass-card">
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow">
+              <div className="w-10 h-10 rounded-full bg-gradient-primary flex items-center justify-center shadow-glow flex-shrink-0">
                 <Package className="h-5 w-5 text-white" />
               </div>
               <div>
@@ -166,7 +166,7 @@ export const CombosManager = ({ storeId, products }: CombosManagerProps) => {
               </div>
             </div>
             <ResponsiveDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <Button onClick={() => handleOpenDialog()} className="bg-gradient-primary shadow-glow hover-lift">
+              <Button onClick={() => handleOpenDialog()} className="bg-gradient-primary shadow-glow hover-lift w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Combo
               </Button>
