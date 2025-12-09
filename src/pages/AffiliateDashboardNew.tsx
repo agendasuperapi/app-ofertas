@@ -1505,7 +1505,9 @@ export default function AffiliateDashboardNew() {
     }
     
     // Apply status filter
-    if (storesStatusFilter !== 'all') {
+    if (storesStatusFilter === 'with_commission') {
+      result = result.filter(store => store.total_commission > 0);
+    } else if (storesStatusFilter !== 'all') {
       result = result.filter(store => store.status === storesStatusFilter);
     }
     
@@ -1574,6 +1576,7 @@ export default function AffiliateDashboardNew() {
                     <SelectItem value="all">Todos os status</SelectItem>
                     <SelectItem value="active">Ativas</SelectItem>
                     <SelectItem value="pending">Pendentes</SelectItem>
+                    <SelectItem value="with_commission">Com saldo disponível</SelectItem>
                   </SelectContent>
                 </Select>
                 
