@@ -320,10 +320,10 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   };
 
   const handleSubmit = async () => {
-    if (!formData.name || !formData.email) {
+    if (!formData.name || !formData.cpf_cnpj) {
       toast({
         title: 'Campos obrigatórios',
-        description: 'Nome e email são obrigatórios.',
+        description: 'Nome e CPF são obrigatórios.',
         variant: 'destructive',
       });
       return;
@@ -386,6 +386,8 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     // Salvar dados antes de resetar o form
     const affiliateName = formData.name;
     const affiliateEmail = formData.email;
+    const affiliateCpf = formData.cpf_cnpj;
+    const affiliateCouponId = formData.coupon_ids[0] || null;
 
     setDialogOpen(false);
     resetForm();
@@ -393,14 +395,18 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     // Gerar link de convite automaticamente para novos afiliados
     if (isNewAffiliate && result) {
       try {
+        // Remove formatação do CPF antes de enviar
+        const cpfNumbers = affiliateCpf?.replace(/\D/g, '') || '';
+        
         const { data, error } = await supabase.functions.invoke('affiliate-invite', {
           body: {
             action: 'send',
             store_id: storeId,
             store_name: storeName,
+            cpf: cpfNumbers,
             email: affiliateEmail,
             name: affiliateName,
-            coupon_id: formData.coupon_ids[0] || null,
+            coupon_id: affiliateCouponId,
           }
         });
 
