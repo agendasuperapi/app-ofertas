@@ -94,7 +94,7 @@ export function RequestWithdrawalDialog({
 
         <div className="space-y-4 py-4">
           {/* Valor disponível */}
-          <div className="p-5 bg-gradient-to-br from-orange-200 via-amber-100 to-yellow-100 dark:from-orange-300/80 dark:via-amber-200/80 dark:to-yellow-200/80 rounded-xl text-center border border-orange-200/50 shadow-lg shadow-orange-300/20">
+          <div className="p-5 bg-gradient-to-br from-gray-100 via-gray-50 to-white dark:from-gray-700/50 dark:via-gray-600/30 dark:to-gray-500/20 rounded-xl text-center border border-gray-200/50 dark:border-gray-600/30 shadow-lg shadow-gray-300/20">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/50 backdrop-blur-sm rounded-full mb-3">
               <Wallet className="h-4 w-4 text-emerald-600" />
               <p className="text-sm font-medium text-emerald-600">Valor Disponível para Saque</p>
