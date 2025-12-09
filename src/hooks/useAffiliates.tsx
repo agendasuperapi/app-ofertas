@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -90,37 +91,46 @@ export interface AffiliateStats {
   totalOrders: number;
 }
 
+// Query keys for cache management
+export const affiliateKeys = {
+  all: ['affiliates'] as const,
+  lists: () => [...affiliateKeys.all, 'list'] as const,
+  list: (storeId: string) => [...affiliateKeys.lists(), storeId] as const,
+};
+
+const fetchAffiliatesFromDB = async (storeId: string): Promise<Affiliate[]> => {
+  const { data, error } = await (supabase as any)
+    .from('affiliates')
+    .select(`*, coupon:coupons(id, code, discount_type, discount_value), affiliate_coupons(coupon_id, coupon:coupons(id, code, discount_type, discount_value))`)
+    .eq('store_id', storeId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+};
+
 export const useAffiliates = (storeId?: string) => {
-  const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const fetchAffiliates = useCallback(async () => {
-    if (!storeId) return;
-    
-    setIsLoading(true);
-    try {
-      const { data, error } = await (supabase as any)
-        .from('affiliates')
-        .select(`*, coupon:coupons(id, code, discount_type, discount_value), affiliate_coupons(coupon_id, coupon:coupons(id, code, discount_type, discount_value))`)
-        .eq('store_id', storeId)
-        .order('created_at', { ascending: false });
+  // Use React Query for fetching affiliates
+  const { data: affiliates = [], isLoading, refetch } = useQuery({
+    queryKey: affiliateKeys.list(storeId || ''),
+    queryFn: () => fetchAffiliatesFromDB(storeId!),
+    enabled: !!storeId,
+    staleTime: 30000,
+  });
 
-      if (error) throw error;
-      setAffiliates(data || []);
-    } catch (error: any) {
-      console.error('Error fetching affiliates:', error);
-    } finally {
-      setIsLoading(false);
+  const fetchAffiliates = useCallback(() => {
+    if (storeId) {
+      refetch();
     }
-  }, [storeId]);
+  }, [storeId, refetch]);
 
-  useEffect(() => {
-    fetchAffiliates();
-  }, [fetchAffiliates]);
-
-  const createAffiliate = async (affiliateData: Partial<Affiliate> & { coupon_ids?: string[] }) => {
-    if (!storeId) return null;
-    try {
+  // Create affiliate mutation
+  const createAffiliateMutation = useMutation({
+    mutationFn: async (affiliateData: Partial<Affiliate> & { coupon_ids?: string[] }) => {
+      if (!storeId) throw new Error('Store ID required');
+      
       const { coupon_ids, ...rest } = affiliateData;
       const { data, error } = await (supabase as any)
         .from('affiliates')
@@ -131,7 +141,7 @@ export const useAffiliates = (storeId?: string) => {
           phone: rest.phone,
           cpf_cnpj: rest.cpf_cnpj,
           pix_key: rest.pix_key,
-          coupon_id: coupon_ids?.[0] || rest.coupon_id, // Keep legacy field for backwards compatibility
+          coupon_id: coupon_ids?.[0] || rest.coupon_id,
           is_active: rest.is_active ?? true,
           commission_enabled: rest.commission_enabled ?? true,
           default_commission_type: rest.default_commission_type || 'percentage',
@@ -167,7 +177,6 @@ export const useAffiliates = (storeId?: string) => {
             .maybeSingle();
 
           if (storeAffiliate) {
-            // Update legacy coupon_id field AND sync commission values
             await (supabase as any)
               .from('store_affiliates')
               .update({ 
@@ -178,48 +187,50 @@ export const useAffiliates = (storeId?: string) => {
               })
               .eq('id', storeAffiliate.id);
 
-            // Sync store_affiliate_coupons junction table
             const storeAffiliateInserts = coupon_ids.map(couponId => ({
               store_affiliate_id: storeAffiliate.id,
               coupon_id: couponId,
             }));
             await (supabase as any).from('store_affiliate_coupons').insert(storeAffiliateInserts);
-            console.log('✅ Synced coupons and commission to store_affiliates:', { coupon_ids, commission_type: rest.default_commission_type, commission_value: rest.default_commission_value, use_default: rest.use_default_commission });
+            console.log('✅ Synced coupons and commission to store_affiliates');
           }
         }
       }
 
-      toast({ title: 'Afiliado criado!' });
-      await fetchAffiliates();
       return data;
-    } catch (error: any) {
+    },
+    onSuccess: () => {
+      toast({ title: 'Afiliado criado!' });
+      queryClient.invalidateQueries({ queryKey: affiliateKeys.list(storeId!) });
+      // Invalidate coupons to update available coupons list
+      queryClient.invalidateQueries({ queryKey: ['coupons'] });
+    },
+    onError: (error: any) => {
       toast({ title: 'Erro ao criar afiliado', description: error.message, variant: 'destructive' });
-      return null;
-    }
-  };
+    },
+  });
 
-  const updateAffiliate = async (id: string, updates: Partial<Affiliate> & { coupon_ids?: string[] }) => {
-    try {
+  // Update affiliate mutation
+  const updateAffiliateMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Affiliate> & { coupon_ids?: string[] } }) => {
       const { coupon_ids, ...rest } = updates;
       const updateData = { ...rest };
       if (coupon_ids) {
-        updateData.coupon_id = coupon_ids[0] || null; // Keep legacy field
+        updateData.coupon_id = coupon_ids[0] || null;
       }
       
       const { data, error } = await (supabase as any)
         .from('affiliates')
         .update(updateData)
         .eq('id', id)
-        .select('*, email')
+        .select('*, email, store_id')
         .single();
 
       if (error) throw error;
 
       // Update junction table if coupon_ids provided
       if (coupon_ids !== undefined) {
-        // Remove existing from affiliate_coupons
         await (supabase as any).from('affiliate_coupons').delete().eq('affiliate_id', id);
-        // Insert new into affiliate_coupons
         if (coupon_ids.length > 0) {
           const couponInserts = coupon_ids.map(couponId => ({
             affiliate_id: id,
@@ -228,7 +239,7 @@ export const useAffiliates = (storeId?: string) => {
           await (supabase as any).from('affiliate_coupons').insert(couponInserts);
         }
 
-        // Sync with store_affiliates table AND store_affiliate_coupons junction table
+        // Sync with store_affiliates table
         if (data?.email) {
           const { data: affiliateAccount } = await supabase
             .from('affiliate_accounts')
@@ -237,7 +248,6 @@ export const useAffiliates = (storeId?: string) => {
             .single();
 
           if (affiliateAccount && data?.store_id) {
-            // Get the store_affiliate record
             const { data: storeAffiliate } = await (supabase as any)
               .from('store_affiliates')
               .select('id')
@@ -246,7 +256,6 @@ export const useAffiliates = (storeId?: string) => {
               .single();
 
             if (storeAffiliate) {
-              // Update legacy coupon_id field AND sync commission values
               await (supabase as any)
                 .from('store_affiliates')
                 .update({ 
@@ -257,19 +266,11 @@ export const useAffiliates = (storeId?: string) => {
                 })
                 .eq('id', storeAffiliate.id);
 
-              console.log('✅ Synced commission to store_affiliates:', { 
-                commission_type: rest.default_commission_type || data.default_commission_type, 
-                commission_value: rest.default_commission_value ?? data.default_commission_value,
-                use_default: rest.use_default_commission ?? data.use_default_commission
-              });
-
-              // Clear old store_affiliate_coupons entries
               await (supabase as any)
                 .from('store_affiliate_coupons')
                 .delete()
                 .eq('store_affiliate_id', storeAffiliate.id);
 
-              // Insert new store_affiliate_coupons entries
               if (coupon_ids.length > 0) {
                 const storeAffiliateInserts = coupon_ids.map(couponId => ({
                   store_affiliate_id: storeAffiliate.id,
@@ -282,24 +283,59 @@ export const useAffiliates = (storeId?: string) => {
         }
       }
 
-      toast({ title: 'Afiliado atualizado!' });
-      await fetchAffiliates();
       return data;
-    } catch (error: any) {
+    },
+    onSuccess: () => {
+      toast({ title: 'Afiliado atualizado!' });
+      queryClient.invalidateQueries({ queryKey: affiliateKeys.list(storeId!) });
+      // Invalidate coupons to update available coupons list
+      queryClient.invalidateQueries({ queryKey: ['coupons'] });
+    },
+    onError: (error: any) => {
       toast({ title: 'Erro ao atualizar', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  // Delete affiliate mutation
+  const deleteAffiliateMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await (supabase as any).from('affiliates').delete().eq('id', id);
+      if (error) throw error;
+      return true;
+    },
+    onSuccess: () => {
+      toast({ title: 'Afiliado removido!' });
+      queryClient.invalidateQueries({ queryKey: affiliateKeys.list(storeId!) });
+      // Invalidate coupons to update available coupons list
+      queryClient.invalidateQueries({ queryKey: ['coupons'] });
+    },
+    onError: (error: any) => {
+      toast({ title: 'Erro ao remover', description: error.message, variant: 'destructive' });
+    },
+  });
+
+  // Wrapper functions for backwards compatibility
+  const createAffiliate = async (affiliateData: Partial<Affiliate> & { coupon_ids?: string[] }) => {
+    try {
+      return await createAffiliateMutation.mutateAsync(affiliateData);
+    } catch {
+      return null;
+    }
+  };
+
+  const updateAffiliate = async (id: string, updates: Partial<Affiliate> & { coupon_ids?: string[] }) => {
+    try {
+      return await updateAffiliateMutation.mutateAsync({ id, updates });
+    } catch {
       return null;
     }
   };
 
   const deleteAffiliate = async (id: string) => {
     try {
-      const { error } = await (supabase as any).from('affiliates').delete().eq('id', id);
-      if (error) throw error;
-      toast({ title: 'Afiliado removido!' });
-      await fetchAffiliates();
+      await deleteAffiliateMutation.mutateAsync(id);
       return true;
-    } catch (error: any) {
-      toast({ title: 'Erro ao remover', description: error.message, variant: 'destructive' });
+    } catch {
       return false;
     }
   };
@@ -469,66 +505,105 @@ export const useAffiliates = (storeId?: string) => {
     } catch { return []; }
   };
 
+  // Function to invalidate queries (for external use)
+  const invalidateAffiliates = () => {
+    if (storeId) {
+      queryClient.invalidateQueries({ queryKey: affiliateKeys.list(storeId) });
+    }
+  };
+
   return {
     affiliates, isLoading, fetchAffiliates, createAffiliate, updateAffiliate, deleteAffiliate,
     toggleAffiliateStatus, toggleCommission, getCommissionRules, createCommissionRule, deleteCommissionRule,
-    updateCommissionRule, getAffiliateEarnings, updateEarningStatus, getAffiliatePayments, createPayment, getAffiliateStats, getAllStoreEarnings,
+    updateCommissionRule, getAffiliateEarnings, updateEarningStatus, getAffiliatePayments, createPayment, 
+    getAffiliateStats, getAllStoreEarnings, invalidateAffiliates,
   };
 };
 
 export const useMyAffiliateData = () => {
-  const [affiliate, setAffiliate] = useState<Affiliate | null>(null);
-  const [earnings, setEarnings] = useState<AffiliateEarning[]>([]);
-  const [payments, setPayments] = useState<AffiliatePayment[]>([]);
-  const [stats, setStats] = useState<AffiliateStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: affiliate = null, isLoading: affiliateLoading } = useQuery({
+    queryKey: ['myAffiliate'],
+    queryFn: async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return null;
 
-  const fetchMyData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setIsLoading(false); return; }
-
-      const { data: affiliateData } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from('affiliates')
         .select(`*, coupon:coupons(id, code, discount_type, discount_value)`)
-        .eq('user_id', user.id)
-        .single();
+        .eq('user_id', session.user.id)
+        .maybeSingle();
 
-      if (!affiliateData) { setIsLoading(false); return; }
-      setAffiliate(affiliateData);
+      if (error) throw error;
+      return data as Affiliate | null;
+    },
+    staleTime: 60000,
+  });
 
-      const { data: earningsData } = await (supabase as any)
+  const affiliateId = affiliate?.id;
+
+  const { data: earnings = [] } = useQuery({
+    queryKey: ['myAffiliateEarnings', affiliateId],
+    queryFn: async () => {
+      if (!affiliateId) return [];
+      const { data, error } = await (supabase as any)
         .from('affiliate_earnings')
         .select(`*, order:orders(order_number, customer_name, total, created_at)`)
-        .eq('affiliate_id', affiliateData.id)
+        .eq('affiliate_id', affiliateId)
         .order('created_at', { ascending: false });
-      setEarnings(earningsData || []);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!affiliateId,
+    staleTime: 30000,
+  });
 
-      const { data: paymentsData } = await (supabase as any)
+  const { data: payments = [] } = useQuery({
+    queryKey: ['myAffiliatePayments', affiliateId],
+    queryFn: async () => {
+      if (!affiliateId) return [];
+      const { data, error } = await (supabase as any)
         .from('affiliate_payments')
         .select('*')
-        .eq('affiliate_id', affiliateData.id)
+        .eq('affiliate_id', affiliateId)
         .order('paid_at', { ascending: false });
-      setPayments(paymentsData || []);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!affiliateId,
+    staleTime: 30000,
+  });
 
-      const calculatedStats: AffiliateStats = { totalEarnings: 0, pendingEarnings: 0, paidEarnings: 0, totalSales: 0, totalOrders: earningsData?.length || 0 };
-      earningsData?.forEach((e: any) => {
-        calculatedStats.totalSales += Number(e.order_total) || 0;
-        const amount = Number(e.commission_amount) || 0;
-        calculatedStats.totalEarnings += amount;
-        if (e.status === 'pending' || e.status === 'approved') calculatedStats.pendingEarnings += amount;
-        else if (e.status === 'paid') calculatedStats.paidEarnings += amount;
-      });
-      setStats(calculatedStats);
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setIsLoading(false);
+  const stats: AffiliateStats = {
+    totalEarnings: 0,
+    pendingEarnings: 0,
+    paidEarnings: 0,
+    totalSales: 0,
+    totalOrders: earnings?.length || 0,
+  };
+
+  earnings?.forEach((e: any) => {
+    stats.totalSales += Number(e.order_total) || 0;
+    const amount = Number(e.commission_amount) || 0;
+    stats.totalEarnings += amount;
+    if (e.status === 'pending' || e.status === 'approved') stats.pendingEarnings += amount;
+    else if (e.status === 'paid') stats.paidEarnings += amount;
+  });
+
+  const queryClient = useQueryClient();
+  const refetch = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['myAffiliate'] });
+    if (affiliateId) {
+      queryClient.invalidateQueries({ queryKey: ['myAffiliateEarnings', affiliateId] });
+      queryClient.invalidateQueries({ queryKey: ['myAffiliatePayments', affiliateId] });
     }
-  }, []);
+  }, [queryClient, affiliateId]);
 
-  useEffect(() => { fetchMyData(); }, [fetchMyData]);
-
-  return { affiliate, earnings, payments, stats, isLoading, refetch: fetchMyData };
+  return {
+    affiliate,
+    earnings,
+    payments,
+    stats,
+    isLoading: affiliateLoading,
+    refetch,
+  };
 };
