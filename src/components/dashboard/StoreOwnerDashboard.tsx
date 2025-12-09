@@ -2270,10 +2270,6 @@ export const StoreOwnerDashboard = ({
                       <Badge className={`${storeStatus.color} text-white text-xs px-3 py-1`}>
                         {storeStatus.label}
                       </Badge>
-                      {onSignOut && <Button size="sm" variant="outline" className="border-destructive/40 text-destructive hover:bg-destructive/10 text-xs px-3 py-1" onClick={onSignOut}>
-                          <LogOut className="w-3 h-3 mr-1.5" />
-                          Sair
-                        </Button>}
                       <span className="text-xs text-muted-foreground md:hidden">v 1.9</span>
                     </motion.div>
                   </div>
