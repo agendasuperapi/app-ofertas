@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollableTable } from '@/components/ui/scrollable-table';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription } from '@/components/ui/responsive-dialog';
 import { toast } from 'sonner';
-import { Loader2, Copy, ExternalLink, Package, Search, Target, Calculator, Ban, Link, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, Copy, ExternalLink, Package, Search, Target, Calculator, Ban, Link, ImageIcon, ChevronLeft, ChevronRight, Percent, Tag } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useCouponDiscountRulesNotification, useCouponChangesNotification } from '@/hooks/useCouponDiscountRulesNotification';
 
@@ -31,6 +31,15 @@ interface CommissionRule {
   commission_type: string;
   commission_value: number;
 }
+interface CouponDiscountRule {
+  id: string;
+  coupon_id: string;
+  product_id: string | null;
+  category_name: string | null;
+  discount_type: string;
+  discount_value: number;
+  rule_type: string;
+}
 interface AffiliateStoreProductsTabProps {
   storeId: string;
   storeSlug: string;
@@ -39,6 +48,8 @@ interface AffiliateStoreProductsTabProps {
   defaultCommissionValue: number;
   couponCode: string;
   couponId?: string;
+  couponDiscountType?: string;
+  couponDiscountValue?: number;
   // Props para filtrar produtos conforme escopo do cupom
   couponScope?: 'all' | 'category' | 'product' | 'categories' | 'products';
   couponCategoryNames?: string[];
@@ -52,12 +63,15 @@ export function AffiliateStoreProductsTab({
   defaultCommissionValue,
   couponCode,
   couponId,
+  couponDiscountType = 'percentage',
+  couponDiscountValue = 0,
   couponScope = 'all',
   couponCategoryNames = [],
   couponProductIds = []
 }: AffiliateStoreProductsTabProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [commissionRules, setCommissionRules] = useState<CommissionRule[]>([]);
+  const [discountRules, setDiscountRules] = useState<CouponDiscountRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -122,6 +136,19 @@ export function AffiliateStoreProductsTab({
       
       setProducts(productsWithResolvedImages);
 
+      // Fetch coupon discount rules if couponId exists
+      if (couponId) {
+        const { data: discountRulesData, error: discountRulesError } = await supabase
+          .from('coupon_discount_rules')
+          .select('*')
+          .eq('coupon_id', couponId);
+        
+        if (!discountRulesError && discountRulesData) {
+          setDiscountRules(discountRulesData);
+          console.log('[AffiliateProducts] Loaded discount rules:', discountRulesData.length);
+        }
+      }
+
       // Fetch commission rules for this store affiliate
       // We need to get affiliate_id from store_affiliates first
       if (storeAffiliateId) {
@@ -182,6 +209,45 @@ export function AffiliateStoreProductsTab({
       source: 'none'
     };
   };
+
+  // Get product discount based on discount rules hierarchy
+  const getProductDiscount = (productId: string, category: string) => {
+    // 1. Check for product-specific rule
+    const productRule = discountRules.find(r => r.rule_type === 'product' && r.product_id === productId);
+    if (productRule) {
+      return {
+        type: productRule.discount_type,
+        value: productRule.discount_value,
+        source: 'specific' as const
+      };
+    }
+
+    // 2. Check for category rule
+    const categoryRule = discountRules.find(r => r.rule_type === 'category' && r.category_name === category);
+    if (categoryRule) {
+      return {
+        type: categoryRule.discount_type,
+        value: categoryRule.discount_value,
+        source: 'category' as const
+      };
+    }
+
+    // 3. Return coupon default discount
+    if (couponDiscountValue > 0) {
+      return {
+        type: couponDiscountType,
+        value: couponDiscountValue,
+        source: 'default' as const
+      };
+    }
+
+    return {
+      type: 'percentage',
+      value: 0,
+      source: 'none' as const
+    };
+  };
+
   const calculateCommission = (product: Product) => {
     const commission = getProductCommission(product.id);
     const productPrice = product.promotional_price || product.price;
@@ -190,6 +256,16 @@ export function AffiliateStoreProductsTab({
       return productPrice * commission.value / 100;
     }
     return commission.value;
+  };
+
+  const calculateDiscount = (product: Product) => {
+    const discount = getProductDiscount(product.id, product.category);
+    const productPrice = product.promotional_price || product.price;
+    if (discount.value === 0) return 0;
+    if (discount.type === 'percentage') {
+      return productPrice * discount.value / 100;
+    }
+    return discount.value;
   };
   const getProductLink = (product: Product) => {
     if (!product.short_id) return `https://ofertas.app/${storeSlug}`;
@@ -256,6 +332,8 @@ export function AffiliateStoreProductsTab({
             paginatedProducts.map(product => {
               const commission = getProductCommission(product.id);
               const commissionAmount = calculateCommission(product);
+              const discount = getProductDiscount(product.id, product.category);
+              const discountAmount = calculateDiscount(product);
               return (
                 <div
                   key={product.id}
@@ -293,41 +371,82 @@ export function AffiliateStoreProductsTab({
                     </div>
                   </div>
 
-                  {/* Grid: Preço e Comissão */}
-                  <div className="grid grid-cols-2 gap-3">
+                  {/* Grid: Preço, Desconto e Comissão */}
+                  <div className="grid grid-cols-3 gap-2">
                     <div className="bg-muted/50 rounded-lg p-2">
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Preço</p>
                       {product.promotional_price ? (
                         <div>
-                          <p className="font-semibold text-green-600">{formatCurrency(product.promotional_price)}</p>
-                          <p className="text-xs text-muted-foreground line-through">{formatCurrency(product.price)}</p>
+                          <p className="font-semibold text-green-600 text-sm">{formatCurrency(product.promotional_price)}</p>
+                          <p className="text-[10px] text-muted-foreground line-through">{formatCurrency(product.price)}</p>
                         </div>
                       ) : (
-                        <p className="font-semibold">{formatCurrency(product.price)}</p>
+                        <p className="font-semibold text-sm">{formatCurrency(product.price)}</p>
                       )}
+                    </div>
+                    <div className="bg-muted/50 rounded-lg p-2">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Desconto</p>
+                      <div className="mt-1">
+                        {discount.source === 'specific' && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-purple-500/10 text-purple-600 border-purple-500/20">
+                            <Tag className="h-3 w-3 mr-0.5" />
+                            {discount.type === 'percentage' ? `${discount.value}%` : formatCurrency(discount.value)}
+                          </Badge>
+                        )}
+                        {discount.source === 'category' && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-orange-500/10 text-orange-600 border-orange-500/20">
+                            <Percent className="h-3 w-3 mr-0.5" />
+                            {discount.type === 'percentage' ? `${discount.value}%` : formatCurrency(discount.value)}
+                          </Badge>
+                        )}
+                        {discount.source === 'default' && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-600 border-blue-500/20">
+                            <Percent className="h-3 w-3 mr-0.5" />
+                            {discount.type === 'percentage' ? `${discount.value}%` : formatCurrency(discount.value)}
+                          </Badge>
+                        )}
+                        {discount.source === 'none' && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-gray-500/10 text-gray-500 border-gray-500/20">
+                            <Ban className="h-3 w-3 mr-0.5" />
+                            0%
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     <div className="bg-muted/50 rounded-lg p-2">
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Comissão</p>
                       <div className="mt-1">
                         {commission.source === 'specific' && (
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-purple-500/10 text-purple-600 border-purple-500/20">
-                            <Target className="h-3 w-3 mr-1" />
+                            <Target className="h-3 w-3 mr-0.5" />
                             {commission.type === 'percentage' ? `${commission.value}%` : formatCurrency(commission.value)}
                           </Badge>
                         )}
                         {commission.source === 'default' && (
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-600 border-blue-500/20">
-                            <Calculator className="h-3 w-3 mr-1" />
+                            <Calculator className="h-3 w-3 mr-0.5" />
                             {commission.type === 'percentage' ? `${commission.value}%` : formatCurrency(commission.value)}
                           </Badge>
                         )}
                         {commission.source === 'none' && (
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-gray-500/10 text-gray-500 border-gray-500/20">
-                            <Ban className="h-3 w-3 mr-1" />
-                            Sem
+                            <Ban className="h-3 w-3 mr-0.5" />
+                            0%
                           </Badge>
                         )}
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Cliente Economiza + Você Ganha */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-orange-500/10 rounded-lg p-2 text-center">
+                      <span className="text-[10px] text-muted-foreground">Cliente Economiza: </span>
+                      <span className="font-bold text-sm text-orange-600">{formatCurrency(discountAmount)}</span>
+                    </div>
+                    <div className="bg-green-500/10 rounded-lg p-2 text-center">
+                      <span className="text-[10px] text-muted-foreground">Você Ganha: </span>
+                      <span className="font-bold text-sm text-green-600">{formatCurrency(commissionAmount)}</span>
                     </div>
                   </div>
 
@@ -363,6 +482,7 @@ export function AffiliateStoreProductsTab({
                 <TableHead className="w-[50px]">Foto</TableHead>
                 <TableHead>Produto</TableHead>
                 <TableHead className="text-right">Preço</TableHead>
+                <TableHead className="text-center">Desconto</TableHead>
                 <TableHead className="text-center">Comissão</TableHead>
                 <TableHead className="text-right">Você Ganha</TableHead>
                 <TableHead className="text-center">Copiar</TableHead>
@@ -371,7 +491,7 @@ export function AffiliateStoreProductsTab({
             <TableBody>
               {paginatedProducts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                     Nenhum produto encontrado
                   </TableCell>
                 </TableRow>
@@ -379,6 +499,7 @@ export function AffiliateStoreProductsTab({
                 paginatedProducts.map(product => {
                   const commission = getProductCommission(product.id);
                   const commissionAmount = calculateCommission(product);
+                  const discount = getProductDiscount(product.id, product.category);
                   return (
                     <TableRow
                       key={product.id}
@@ -425,6 +546,32 @@ export function AffiliateStoreProductsTab({
                         </div>
                       </TableCell>
                       <TableCell className="text-center">
+                        {discount.source === 'specific' && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-purple-500/10 text-purple-600 border-purple-500/20">
+                            <Tag className="h-3 w-3 mr-1" />
+                            {discount.type === 'percentage' ? `${discount.value}%` : formatCurrency(discount.value)}
+                          </Badge>
+                        )}
+                        {discount.source === 'category' && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-orange-500/10 text-orange-600 border-orange-500/20">
+                            <Percent className="h-3 w-3 mr-1" />
+                            {discount.type === 'percentage' ? `${discount.value}%` : formatCurrency(discount.value)}
+                          </Badge>
+                        )}
+                        {discount.source === 'default' && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-blue-500/10 text-blue-600 border-blue-500/20">
+                            <Percent className="h-3 w-3 mr-1" />
+                            {discount.type === 'percentage' ? `${discount.value}%` : formatCurrency(discount.value)}
+                          </Badge>
+                        )}
+                        {discount.source === 'none' && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-gray-500/10 text-gray-500 border-gray-500/20">
+                            <Ban className="h-3 w-3 mr-1" />
+                            0%
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
                         {commission.source === 'specific' && (
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-purple-500/10 text-purple-600 border-purple-500/20">
                             <Target className="h-3 w-3 mr-1" />
@@ -440,7 +587,7 @@ export function AffiliateStoreProductsTab({
                         {commission.source === 'none' && (
                           <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-gray-500/10 text-gray-500 border-gray-500/20">
                             <Ban className="h-3 w-3 mr-1" />
-                            Sem
+                            0%
                           </Badge>
                         )}
                       </TableCell>
@@ -543,33 +690,68 @@ export function AffiliateStoreProductsTab({
                 </div>
               </div>
 
-              {/* Commission Info */}
+              {/* Discount & Commission Info */}
               {(() => {
             const commission = getProductCommission(selectedProduct.id);
             const commissionAmount = calculateCommission(selectedProduct);
-            const productPrice = selectedProduct.promotional_price || selectedProduct.price;
-            return <div className="p-4 bg-gradient-to-br from-green-500/5 to-green-500/10 rounded-xl border border-green-500/20">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground">Sua comissão</p>
-                        <p className="text-2xl font-bold text-green-600">{formatCurrency(commissionAmount)}</p>
+            const discount = getProductDiscount(selectedProduct.id, selectedProduct.category);
+            const discountAmount = calculateDiscount(selectedProduct);
+            return <div className="space-y-3">
+                    {/* Customer Discount */}
+                    <div className="p-4 bg-gradient-to-br from-orange-500/5 to-orange-500/10 rounded-xl border border-orange-500/20">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Desconto do cliente</p>
+                          <p className="text-2xl font-bold text-orange-600">{formatCurrency(discountAmount)}</p>
+                        </div>
+                        <div className="text-right">
+                          {discount.source === 'specific' && <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/20">
+                              <Tag className="h-3 w-3 mr-1" />
+                              Regra específica
+                            </Badge>}
+                          {discount.source === 'category' && <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/20">
+                              <Percent className="h-3 w-3 mr-1" />
+                              Regra por categoria
+                            </Badge>}
+                          {discount.source === 'default' && <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+                              <Percent className="h-3 w-3 mr-1" />
+                              Desconto padrão
+                            </Badge>}
+                          {discount.source === 'none' && <Badge variant="outline" className="bg-gray-500/10 text-gray-500 border-gray-500/20">
+                              <Ban className="h-3 w-3 mr-1" />
+                              Sem desconto
+                            </Badge>}
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {discount.type === 'percentage' ? `${discount.value}% do valor` : 'Valor fixo'}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        {commission.source === 'specific' && <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/20">
-                            <Target className="h-3 w-3 mr-1" />
-                            Regra específica
-                          </Badge>}
-                        {commission.source === 'default' && <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
-                            <Calculator className="h-3 w-3 mr-1" />
-                            Comissão padrão
-                          </Badge>}
-                        {commission.source === 'none' && <Badge variant="outline" className="bg-gray-500/10 text-gray-500 border-gray-500/20">
-                            <Ban className="h-3 w-3 mr-1" />
-                            Sem comissão
-                          </Badge>}
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {commission.type === 'percentage' ? `${commission.value}% do valor` : 'Valor fixo'}
-                        </p>
+                    </div>
+
+                    {/* Your Commission */}
+                    <div className="p-4 bg-gradient-to-br from-green-500/5 to-green-500/10 rounded-xl border border-green-500/20">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Sua comissão</p>
+                          <p className="text-2xl font-bold text-green-600">{formatCurrency(commissionAmount)}</p>
+                        </div>
+                        <div className="text-right">
+                          {commission.source === 'specific' && <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/20">
+                              <Target className="h-3 w-3 mr-1" />
+                              Regra específica
+                            </Badge>}
+                          {commission.source === 'default' && <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+                              <Calculator className="h-3 w-3 mr-1" />
+                              Comissão padrão
+                            </Badge>}
+                          {commission.source === 'none' && <Badge variant="outline" className="bg-gray-500/10 text-gray-500 border-gray-500/20">
+                              <Ban className="h-3 w-3 mr-1" />
+                              Sem comissão
+                            </Badge>}
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {commission.type === 'percentage' ? `${commission.value}% do valor` : 'Valor fixo'}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>;
