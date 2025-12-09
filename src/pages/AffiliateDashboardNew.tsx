@@ -1740,7 +1740,7 @@ export default function AffiliateDashboardNew() {
                       {order.store_name}
                     </TableCell>
                     <TableCell>
-                      {order.customer_name}
+                      {order.customer_name?.split(' ')[0] || '-'}
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline" className="font-mono text-xs">
