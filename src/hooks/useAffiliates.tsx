@@ -201,7 +201,8 @@ export const useAffiliates = (storeId?: string) => {
     },
     onSuccess: () => {
       toast({ title: 'Afiliado criado!' });
-      queryClient.invalidateQueries({ queryKey: affiliateKeys.list(storeId!) });
+      // Invalidate all affiliates queries to ensure all components get updated
+      queryClient.invalidateQueries({ queryKey: ['affiliates'] });
       // Invalidate coupons to update available coupons list
       queryClient.invalidateQueries({ queryKey: ['coupons'] });
     },
@@ -287,7 +288,8 @@ export const useAffiliates = (storeId?: string) => {
     },
     onSuccess: () => {
       toast({ title: 'Afiliado atualizado!' });
-      queryClient.invalidateQueries({ queryKey: affiliateKeys.list(storeId!) });
+      // Invalidate all affiliates queries to ensure all components get updated
+      queryClient.invalidateQueries({ queryKey: ['affiliates'] });
       // Invalidate coupons to update available coupons list
       queryClient.invalidateQueries({ queryKey: ['coupons'] });
     },
@@ -305,7 +307,8 @@ export const useAffiliates = (storeId?: string) => {
     },
     onSuccess: () => {
       toast({ title: 'Afiliado removido!' });
-      queryClient.invalidateQueries({ queryKey: affiliateKeys.list(storeId!) });
+      // Invalidate all affiliates queries to ensure all components get updated
+      queryClient.invalidateQueries({ queryKey: ['affiliates'] });
       // Invalidate coupons to update available coupons list
       queryClient.invalidateQueries({ queryKey: ['coupons'] });
     },
