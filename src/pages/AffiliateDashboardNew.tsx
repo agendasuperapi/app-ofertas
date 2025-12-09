@@ -586,7 +586,7 @@ export default function AffiliateDashboardNew() {
       }} className="p-4 bg-primary/5 rounded-lg border border-primary/20">
           <div className="flex items-center gap-2 mb-2">
             <BarChart3 className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium">Configuração de Comissão</span>
+            <span className="text-sm font-medium">Comissão padrão</span>
           </div>
           <p className="text-2xl font-bold gradient-text">
             {store.commission_type === 'percentage' ? `${store.commission_value}%` : formatCurrency(store.commission_value)}
