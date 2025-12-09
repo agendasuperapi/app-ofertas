@@ -2454,10 +2454,11 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                           className="self-end h-8"
                         >
                           {savingDefaultCommission ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
+                            <Loader2 className="h-3 w-3 animate-spin mr-1" />
                           ) : (
-                            <Check className="h-3 w-3" />
+                            <Check className="h-3 w-3 mr-1" />
                           )}
+                          Salvar
                         </Button>
                       </div>
                       
