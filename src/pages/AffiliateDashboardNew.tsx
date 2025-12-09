@@ -1532,7 +1532,7 @@ export default function AffiliateDashboardNew() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant={store.status === 'active' ? 'default' : 'secondary'}>
+                      <Badge className={store.status === 'active' ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : ''} variant={store.status === 'active' ? 'default' : 'secondary'}>
                         {store.status === 'active' ? 'Ativo' : 'Pendente'}
                       </Badge>
                       <ChevronRight className="h-4 w-4 text-muted-foreground" />
