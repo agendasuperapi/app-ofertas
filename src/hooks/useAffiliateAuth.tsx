@@ -113,6 +113,7 @@ interface AffiliateAuthContextType {
   acceptInvite: (storeAffiliateId: string) => Promise<{ success: boolean; error?: string }>;
   rejectInvite: (storeAffiliateId: string) => Promise<{ success: boolean; error?: string }>;
   updateAvatarUrl: (avatarUrl: string) => Promise<{ success: boolean; error?: string }>;
+  updateProfile: (data: { email?: string; phone?: string }) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AffiliateAuthContext = createContext<AffiliateAuthContextType | undefined>(undefined);
@@ -394,6 +395,32 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateProfile = async (data: { email?: string; phone?: string }): Promise<{ success: boolean; error?: string }> => {
+    const token = getStoredToken();
+    if (!token || !affiliateUser) {
+      return { success: false, error: 'Não autenticado' };
+    }
+
+    try {
+      const updateData: Record<string, string> = {};
+      if (data.email !== undefined) updateData.email = data.email;
+      if (data.phone !== undefined) updateData.phone = data.phone;
+
+      const { error } = await supabase
+        .from('affiliate_accounts')
+        .update(updateData)
+        .eq('id', affiliateUser.id);
+
+      if (error) throw error;
+
+      setAffiliateUser(prev => prev ? { ...prev, ...updateData } : null);
+      return { success: true };
+    } catch (err: any) {
+      console.error('Error updating profile:', err);
+      return { success: false, error: err.message || 'Erro ao atualizar perfil' };
+    }
+  };
+
   return (
     <AffiliateAuthContext.Provider
       value={{
@@ -413,7 +440,8 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
         fetchPendingInvites,
         acceptInvite,
         rejectInvite,
-        updateAvatarUrl
+        updateAvatarUrl,
+        updateProfile
       }}
     >
       {children}
