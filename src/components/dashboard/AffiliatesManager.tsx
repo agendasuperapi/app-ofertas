@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { CPFInput } from '@/components/ui/cpf-input';
 import { PhoneInput } from '@/components/ui/phone-input';
+import { EmailInput } from '@/components/ui/email-input';
 import { useAffiliates, Affiliate, AffiliateEarning, AffiliateCommissionRule, AffiliateStats } from '@/hooks/useAffiliates';
 import { useCoupons } from '@/hooks/useCoupons';
 import { useCategories } from '@/hooks/useCategories';
@@ -1159,11 +1160,9 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                 </div>
                 <div className="col-span-2">
                   <Label>Email</Label>
-                  <Input
-                    type="email"
+                  <EmailInput
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="email@exemplo.com"
+                    onChange={(value) => setFormData({ ...formData, email: value })}
                   />
                 </div>
                 <div className="col-span-2">
