@@ -272,7 +272,6 @@ export const StoreOwnerDashboard = ({
     deleteCategory,
     reorderCategories
   } = useCategories(myStore?.id);
-
   const [productForm, setProductForm] = useState({
     name: '',
     description: '',
@@ -490,8 +489,8 @@ export const StoreOwnerDashboard = ({
   useAffiliateCommissionNotification(myStore?.id);
 
   // Enable real-time new withdrawal request notifications
-  useNewWithdrawalNotification({ 
-    storeId: myStore?.id || '', 
+  useNewWithdrawalNotification({
+    storeId: myStore?.id || '',
     onNewRequest: () => {} // Apenas notifica, não precisa recarregar
   });
 
@@ -765,16 +764,13 @@ export const StoreOwnerDashboard = ({
   };
 
   // Drag and drop sensors - activationConstraint evita interferir com cliques
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8, // Requer 8px de movimento antes de iniciar o drag
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates
-    })
-  );
+  const sensors = useSensors(useSensor(PointerSensor, {
+    activationConstraint: {
+      distance: 8 // Requer 8px de movimento antes de iniciar o drag
+    }
+  }), useSensor(KeyboardSensor, {
+    coordinateGetter: sortableKeyboardCoordinates
+  }));
 
   // Handle drag end for product reordering by category
   const handleDragEnd = (event: DragEndEvent) => {
@@ -1493,26 +1489,22 @@ export const StoreOwnerDashboard = ({
               const tempPath = urlParts[1].split('?')[0]; // Remove query params
               const fileExtension = tempPath.split('.').pop() || 'jpg';
               const newPath = `${newProduct.id}.${fileExtension}`;
-              
+
               // Mover arquivo de temp/ para raiz com ID do produto
-              const { error: moveError } = await supabase.storage
-                .from('product-images')
-                .move(tempPath, newPath);
-              
+              const {
+                error: moveError
+              } = await supabase.storage.from('product-images').move(tempPath, newPath);
               if (!moveError) {
                 // Obter nova URL pública
-                const { data: publicUrlData } = supabase.storage
-                  .from('product-images')
-                  .getPublicUrl(newPath);
-                
+                const {
+                  data: publicUrlData
+                } = supabase.storage.from('product-images').getPublicUrl(newPath);
                 const newUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
-                
+
                 // Atualizar URL no banco de dados
-                await supabase
-                  .from('products')
-                  .update({ image_url: newUrl })
-                  .eq('id', newProduct.id);
-                
+                await supabase.from('products').update({
+                  image_url: newUrl
+                }).eq('id', newProduct.id);
                 console.log('[ImageUpload] ✅ Imagem movida de', tempPath, 'para', newPath);
               } else {
                 console.error('[ImageUpload] ❌ Erro ao mover imagem:', moveError);
@@ -1623,28 +1615,24 @@ export const StoreOwnerDashboard = ({
     setDuplicatingFromProductId(product.id);
     setEditingProduct(null);
     setActiveProductTab("info");
-
     let duplicatedImageUrl = '';
-    
+
     // Se o produto original tem imagem, copiar para temp/
     if (product.image_url) {
       try {
         const cleanUrl = product.image_url.split('?')[0];
         const originalPath = cleanUrl.split('product-images/')[1];
-        
         if (originalPath) {
           const tempPath = `temp/${Date.now()}_copy.jpg`;
-          
+
           // Copiar arquivo no storage
-          const { error: copyError } = await supabase.storage
-            .from('product-images')
-            .copy(originalPath, tempPath);
-          
+          const {
+            error: copyError
+          } = await supabase.storage.from('product-images').copy(originalPath, tempPath);
           if (!copyError) {
-            const { data: publicUrlData } = supabase.storage
-              .from('product-images')
-              .getPublicUrl(tempPath);
-            
+            const {
+              data: publicUrlData
+            } = supabase.storage.from('product-images').getPublicUrl(tempPath);
             duplicatedImageUrl = `${publicUrlData.publicUrl}?t=${Date.now()}`;
             console.log('✅ Imagem copiada para temp:', duplicatedImageUrl);
           } else {
@@ -1664,7 +1652,8 @@ export const StoreOwnerDashboard = ({
       price: product.price,
       promotional_price: product.promotional_price || null,
       is_available: product.is_available,
-      image_url: duplicatedImageUrl, // URL da cópia em temp/, não do original
+      image_url: duplicatedImageUrl,
+      // URL da cópia em temp/, não do original
       is_pizza: product.is_pizza || false,
       max_flavors: product.max_flavors || 2,
       external_code: '',
@@ -2253,7 +2242,7 @@ export const StoreOwnerDashboard = ({
                           {myStore?.id && <div className="hidden md:block">
                               <WhatsAppStatusIndicator storeId={myStore.id} />
                             </div>}
-                          <span className="text-xs text-muted-foreground hidden md:inline">v 2.0</span>
+                          <span className="text-xs text-muted-foreground hidden md:inline">v 2.1</span>
                         </div>
                       </div>
                     </div>
@@ -3270,7 +3259,15 @@ export const StoreOwnerDashboard = ({
 
         {/* Afiliados Relatórios Tab */}
         {myStore?.id && <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8", activeTab !== 'afiliados-relatorios' && 'hidden')}>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <motion.div initial={{
+              opacity: 0,
+              y: 20
+            }} animate={{
+              opacity: 1,
+              y: 0
+            }} transition={{
+              duration: 0.5
+            }}>
               <div className="flex items-center gap-3 mb-6">
                 <Users className="h-6 w-6 text-primary" />
                 <div>
@@ -3286,7 +3283,15 @@ export const StoreOwnerDashboard = ({
 
         {/* Afiliados Saques Tab */}
         {myStore?.id && <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8", activeTab !== 'afiliados-saques' && 'hidden')}>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <motion.div initial={{
+              opacity: 0,
+              y: 20
+            }} animate={{
+              opacity: 1,
+              y: 0
+            }} transition={{
+              duration: 0.5
+            }}>
               <div className="flex items-center gap-3 mb-6">
                 <DollarSign className="h-6 w-6 text-primary" />
                 <div>
