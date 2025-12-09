@@ -1,4 +1,4 @@
-import { Home, BarChart3, MessageSquare, Mail, Bell, Settings, FolderOpen, ChevronDown, Package, FolderTree, Users, UserCog, Truck, MapPin, Bike, Tag, TrendingUp, DollarSign, ShoppingCart, Calendar, FileBarChart, FileText, LogOut, UserPlus } from "lucide-react";
+import { Home, BarChart3, MessageSquare, Mail, Bell, Settings, FolderOpen, ChevronDown, Package, FolderTree, Users, UserCog, Truck, MapPin, Bike, Tag, TrendingUp, DollarSign, ShoppingCart, Calendar, FileBarChart, FileText, LogOut, UserPlus, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -58,6 +58,7 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
   const afiliadosSubItems = [
     { id: 'afiliados', label: 'cadastro', icon: UserPlus },
     { id: 'afiliados-convites', label: 'convites', icon: Mail },
+    { id: 'afiliados-saques', label: 'saques', icon: Wallet },
     { id: 'afiliados-relatorios', label: 'relatórios', icon: FileBarChart },
   ];
   

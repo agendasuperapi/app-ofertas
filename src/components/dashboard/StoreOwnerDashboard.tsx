@@ -84,6 +84,7 @@ import { EmployeesManager } from "./EmployeesManager";
 import { AffiliatesManager } from "./AffiliatesManager";
 import { AffiliateInvitesManager } from "./AffiliateInvitesManager";
 import { AffiliatesReportsTab } from "./AffiliatesReportsTab";
+import { WithdrawalRequestsManager } from "./WithdrawalRequestsManager";
 import { useEmployeeAccess } from "@/hooks/useEmployeeAccess";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
@@ -3281,6 +3282,22 @@ export const StoreOwnerDashboard = ({
                 </div>
               </div>
               <AffiliatesReportsTab storeId={myStore.id} />
+            </motion.div>
+          </div>}
+
+        {/* Afiliados Saques Tab */}
+        {myStore?.id && <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8", activeTab !== 'afiliados-saques' && 'hidden')}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+              <div className="flex items-center gap-3 mb-6">
+                <DollarSign className="h-6 w-6 text-primary" />
+                <div>
+                  <h2 className="text-xl font-semibold">Solicitações de Saque</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Gerencie as solicitações de saque dos seus afiliados
+                  </p>
+                </div>
+              </div>
+              <WithdrawalRequestsManager storeId={myStore.id} />
             </motion.div>
           </div>}
 

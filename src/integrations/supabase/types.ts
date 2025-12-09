@@ -450,6 +450,92 @@ export type Database = {
           },
         ]
       }
+      affiliate_withdrawal_requests: {
+        Row: {
+          admin_notes: string | null
+          affiliate_id: string
+          amount: number
+          created_at: string | null
+          id: string
+          notes: string | null
+          paid_at: string | null
+          payment_method: string | null
+          payment_proof: string | null
+          pix_key: string | null
+          processed_at: string | null
+          requested_at: string
+          status: string
+          store_affiliate_id: string | null
+          store_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          affiliate_id: string
+          amount: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_proof?: string | null
+          pix_key?: string | null
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+          store_affiliate_id?: string | null
+          store_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          affiliate_id?: string
+          amount?: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_proof?: string | null
+          pix_key?: string | null
+          processed_at?: string | null
+          requested_at?: string
+          status?: string
+          store_affiliate_id?: string | null
+          store_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_withdrawal_requests_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_withdrawal_requests_store_affiliate_id_fkey"
+            columns: ["store_affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "store_affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_withdrawal_requests_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_withdrawal_requests_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliates: {
         Row: {
           commission_enabled: boolean

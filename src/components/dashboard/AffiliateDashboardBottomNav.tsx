@@ -1,4 +1,4 @@
-import { Home, Store, ShoppingBag, BarChart3, User } from "lucide-react";
+import { Home, Store, ShoppingBag, BarChart3, User, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +10,7 @@ interface AffiliateDashboardBottomNavProps {
 const navItems = [
   { id: "home", label: "Início", icon: Home },
   { id: "stores", label: "Lojas", icon: Store },
-  { id: "orders", label: "Pedidos", icon: ShoppingBag },
+  { id: "withdrawals", label: "Saques", icon: Wallet },
   { id: "commissions", label: "Comissões", icon: BarChart3 },
   { id: "profile", label: "Perfil", icon: User },
 ];

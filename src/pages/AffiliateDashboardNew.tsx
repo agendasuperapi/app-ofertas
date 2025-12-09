@@ -1,8 +1,9 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAffiliateAuth, AffiliateOrderItem, AffiliateOrder } from '@/hooks/useAffiliateAuth';
 import { useAffiliateEarningsNotification } from '@/hooks/useAffiliateEarningsNotification';
 import { useAffiliateOrderStatusNotification } from '@/hooks/useAffiliateOrderStatusNotification';
+import { useWithdrawalRequests } from '@/hooks/useWithdrawalRequests';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +14,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollableTable } from '@/components/ui/scrollable-table';
 import { AffiliateDashboardSidebar } from '@/components/dashboard/AffiliateDashboardSidebar';
 import { AffiliateDashboardBottomNav } from '@/components/dashboard/AffiliateDashboardBottomNav';
+import { RequestWithdrawalDialog } from '@/components/dashboard/RequestWithdrawalDialog';
+import { AffiliateWithdrawalHistory } from '@/components/dashboard/AffiliateWithdrawalHistory';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AffiliateStoreProductsTab } from '@/components/dashboard/AffiliateStoreProductsTab';
@@ -25,6 +28,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
 import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter, ChevronDown, XCircle } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { supabase } from '@/integrations/supabase/client';
 
 // Cores para gráfico de pizza
 const COLORS = ['hsl(var(--primary))', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
@@ -47,6 +51,116 @@ export default function AffiliateDashboardNew() {
 
   // Store modal state
   const [selectedStore, setSelectedStore] = useState<typeof affiliateStores[0] | null>(null);
+
+  // Withdrawal state
+  const [withdrawalDialogOpen, setWithdrawalDialogOpen] = useState(false);
+  const [withdrawalStore, setWithdrawalStore] = useState<typeof affiliateStores[0] | null>(null);
+  const [affiliateDbId, setAffiliateDbId] = useState<string | null>(null);
+  const [withdrawalRequests, setWithdrawalRequests] = useState<any[]>([]);
+  const [loadingWithdrawals, setLoadingWithdrawals] = useState(false);
+
+  // Buscar affiliate_id do banco
+  useEffect(() => {
+    const fetchAffiliateId = async () => {
+      if (!affiliateUser?.email) return;
+      const { data } = await supabase
+        .from('affiliates')
+        .select('id')
+        .eq('email', affiliateUser.email)
+        .limit(1)
+        .maybeSingle();
+      if (data) setAffiliateDbId(data.id);
+    };
+    fetchAffiliateId();
+  }, [affiliateUser?.email]);
+
+  // Buscar solicitações de saque
+  const fetchWithdrawalRequests = useCallback(async () => {
+    if (!affiliateDbId) return;
+    setLoadingWithdrawals(true);
+    try {
+      const { data } = await supabase
+        .from('affiliate_withdrawal_requests')
+        .select(`
+          *,
+          stores!inner(name)
+        `)
+        .eq('affiliate_id', affiliateDbId)
+        .order('requested_at', { ascending: false });
+      
+      const formatted = (data || []).map((req: any) => ({
+        ...req,
+        store_name: req.stores?.name,
+      }));
+      setWithdrawalRequests(formatted);
+    } catch (err) {
+      console.error('Erro ao buscar saques:', err);
+    } finally {
+      setLoadingWithdrawals(false);
+    }
+  }, [affiliateDbId]);
+
+  useEffect(() => {
+    if (affiliateDbId) {
+      fetchWithdrawalRequests();
+    }
+  }, [affiliateDbId, fetchWithdrawalRequests]);
+
+  // Criar solicitação de saque
+  const handleCreateWithdrawal = async (data: {
+    affiliate_id: string;
+    store_affiliate_id?: string;
+    store_id: string;
+    amount: number;
+    pix_key?: string;
+    notes?: string;
+  }) => {
+    try {
+      // Verificar se já existe pendente
+      const { data: existing } = await supabase
+        .from('affiliate_withdrawal_requests')
+        .select('id')
+        .eq('affiliate_id', data.affiliate_id)
+        .eq('store_id', data.store_id)
+        .eq('status', 'pending')
+        .maybeSingle();
+
+      if (existing) {
+        toast.error('Já existe uma solicitação pendente para esta loja');
+        return null;
+      }
+
+      const { data: newRequest, error } = await supabase
+        .from('affiliate_withdrawal_requests')
+        .insert({
+          affiliate_id: data.affiliate_id,
+          store_affiliate_id: data.store_affiliate_id || null,
+          store_id: data.store_id,
+          amount: data.amount,
+          pix_key: data.pix_key || null,
+          notes: data.notes || null,
+          status: 'pending',
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      toast.success('Solicitação de saque enviada!');
+      await fetchWithdrawalRequests();
+      setWithdrawalDialogOpen(false);
+      return newRequest;
+    } catch (err: any) {
+      console.error('Erro ao criar solicitação:', err);
+      toast.error('Erro ao solicitar saque');
+      return null;
+    }
+  };
+
+  // Verificar se tem solicitação pendente para uma loja
+  const hasPendingWithdrawal = (storeId: string) => {
+    return withdrawalRequests.some(r => r.store_id === storeId && r.status === 'pending');
+  };
 
   // Filter states
   const [periodFilter, setPeriodFilter] = useState<string>('all');
@@ -1227,6 +1341,19 @@ export default function AffiliateDashboardNew() {
         return renderOrdersContent();
       case 'commissions':
         return renderCommissionsContent();
+      case 'withdrawals':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center gap-3">
+              <Wallet className="h-6 w-6 text-primary" />
+              <div>
+                <h2 className="text-xl font-semibold">Meus Saques</h2>
+                <p className="text-sm text-muted-foreground">Histórico de solicitações de saque</p>
+              </div>
+            </div>
+            <AffiliateWithdrawalHistory requests={withdrawalRequests} isLoading={loadingWithdrawals} stores={affiliateStores} />
+          </div>
+        );
       case 'profile':
         return renderProfileContent();
       default:
