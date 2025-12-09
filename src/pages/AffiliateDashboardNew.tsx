@@ -1874,7 +1874,7 @@ export default function AffiliateDashboardNew() {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <div className="p-4 bg-muted rounded-lg">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
                 <TrendingUp className="h-4 w-4" />
@@ -1889,6 +1889,15 @@ export default function AffiliateDashboardNew() {
               </div>
               <p className="text-2xl font-bold text-green-600">
                 {formatCurrency(affiliateStats?.paid_commission || 0)}
+              </p>
+            </div>
+            <div className="p-4 bg-muted rounded-lg">
+              <div className="flex items-center gap-2 text-muted-foreground mb-1">
+                <Banknote className="h-4 w-4" />
+                <span className="text-sm">Total Disponível</span>
+              </div>
+              <p className="text-2xl font-bold text-orange-600">
+                {formatCurrency(affiliateStats?.total_commission || 0)}
               </p>
             </div>
           </div>
