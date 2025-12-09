@@ -475,10 +475,10 @@ export default function AffiliateDashboardNew() {
           y: 0
         }} transition={{
           delay: 0.15
-        }} className="p-3 sm:p-4 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center">
-            <Wallet className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-emerald-600 mb-1" />
-            <p className="text-[10px] sm:text-xs text-muted-foreground">Disponível Saque</p>
-            <p className="font-bold text-sm sm:text-lg text-emerald-600">{formatCurrency(store.total_commission)}</p>
+        }} className="p-3 sm:p-4 bg-purple-500/10 rounded-lg border border-purple-500/20 text-center">
+            <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-purple-600 mb-1" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Total Ganhos</p>
+            <p className="font-bold text-sm sm:text-lg text-purple-600">{formatCurrency(getStorePaidWithdrawals(store.store_id))}</p>
           </motion.div>
           <motion.div initial={{
           opacity: 0,
@@ -488,10 +488,10 @@ export default function AffiliateDashboardNew() {
           y: 0
         }} transition={{
           delay: 0.2
-        }} className="p-3 sm:p-4 bg-purple-500/10 rounded-lg border border-purple-500/20 text-center">
-            <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-purple-600 mb-1" />
-            <p className="text-[10px] sm:text-xs text-muted-foreground">Total Ganhos</p>
-            <p className="font-bold text-sm sm:text-lg text-purple-600">{formatCurrency(getStorePaidWithdrawals(store.store_id))}</p>
+        }} className="p-3 sm:p-4 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center">
+            <Wallet className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-emerald-600 mb-1" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Disponível Saque</p>
+            <p className="font-bold text-sm sm:text-lg text-emerald-600">{formatCurrency(store.total_commission)}</p>
           </motion.div>
           <motion.div initial={{
           opacity: 0,
