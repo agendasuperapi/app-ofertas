@@ -1141,47 +1141,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
             <TabsContent value="dados" className="flex-1 overflow-auto mt-2 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <Label>Nome *</Label>
-                  <Input
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="Nome completo"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Label>Email *</Label>
-                  <Input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="email@exemplo.com"
-                  />
-                </div>
-                <div>
-                  <Label>Telefone</Label>
-                  <Input
-                    value={formData.phone}
-                    onChange={(e) => {
-                      let value = e.target.value.replace(/\D/g, '');
-                      if (value.length > 11) value = value.slice(0, 11);
-                      if (value.length > 0) {
-                        value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
-                        value = value.replace(/(\d{5})(\d)/, '$1-$2');
-                      }
-                      setFormData({ ...formData, phone: value });
-                    }}
-                    placeholder="(00) 00000-0000"
-                    maxLength={15}
-                  />
-                  {formData.phone && formData.phone.replace(/\D/g, '').length > 0 && formData.phone.replace(/\D/g, '').length < 10 && (
-                    <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                      <AlertCircle className="h-3 w-3" />
-                      Telefone incompleto
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label>CPF/CNPJ</Label>
+                  <Label>CPF/CNPJ *</Label>
                   <Input
                     value={formData.cpf_cnpj}
                     onChange={(e) => {
@@ -1222,6 +1182,46 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                     }
                     return null;
                   })()}
+                </div>
+                <div className="col-span-2">
+                  <Label>Nome *</Label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Nome completo"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label>Email</Label>
+                  <Input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="email@exemplo.com"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label>Telefone</Label>
+                  <Input
+                    value={formData.phone}
+                    onChange={(e) => {
+                      let value = e.target.value.replace(/\D/g, '');
+                      if (value.length > 11) value = value.slice(0, 11);
+                      if (value.length > 0) {
+                        value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
+                        value = value.replace(/(\d{5})(\d)/, '$1-$2');
+                      }
+                      setFormData({ ...formData, phone: value });
+                    }}
+                    placeholder="(00) 00000-0000"
+                    maxLength={15}
+                  />
+                  {formData.phone && formData.phone.replace(/\D/g, '').length > 0 && formData.phone.replace(/\D/g, '').length < 10 && (
+                    <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      Telefone incompleto
+                    </p>
+                  )}
                 </div>
                 <div className="col-span-2">
                   <Label>Chave PIX</Label>
