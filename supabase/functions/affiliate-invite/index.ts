@@ -1035,6 +1035,228 @@ serve(async (req) => {
         );
       }
 
+      case "pending-invites": {
+        // Buscar convites pendentes para o afiliado logado
+        const { affiliate_token } = body;
+
+        if (!affiliate_token) {
+          return new Response(
+            JSON.stringify({ error: "Token não fornecido" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Validar sessão do afiliado
+        const { data: validation } = await supabase.rpc("validate_affiliate_session", {
+          session_token: affiliate_token,
+        });
+
+        if (!validation || validation.length === 0 || !validation[0].is_valid) {
+          return new Response(
+            JSON.stringify({ error: "Sessão inválida" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const affiliateAccountId = validation[0].affiliate_id;
+
+        // Buscar convites pendentes para este afiliado
+        const { data: pendingInvites, error: invitesError } = await supabase
+          .from("store_affiliates")
+          .select(`
+            id,
+            store_id,
+            status,
+            invite_expires,
+            created_at,
+            stores!inner(id, name, logo_url)
+          `)
+          .eq("affiliate_account_id", affiliateAccountId)
+          .eq("status", "pending")
+          .gt("invite_expires", new Date().toISOString());
+
+        if (invitesError) {
+          console.error("[affiliate-invite] Error fetching pending invites:", invitesError);
+          return new Response(
+            JSON.stringify({ error: "Erro ao buscar convites" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const invites = (pendingInvites || []).map((inv: any) => ({
+          id: inv.id,
+          store_id: inv.store_id,
+          store_name: inv.stores.name,
+          store_logo: inv.stores.logo_url,
+          invited_at: inv.created_at,
+          expires_at: inv.invite_expires,
+        }));
+
+        return new Response(
+          JSON.stringify({ invites }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      case "accept-invite-manual": {
+        // Afiliado aceita convite manualmente pelo dashboard
+        const { affiliate_token, store_affiliate_id } = body;
+
+        if (!affiliate_token || !store_affiliate_id) {
+          return new Response(
+            JSON.stringify({ error: "Parâmetros inválidos" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Validar sessão do afiliado
+        const { data: validation } = await supabase.rpc("validate_affiliate_session", {
+          session_token: affiliate_token,
+        });
+
+        if (!validation || validation.length === 0 || !validation[0].is_valid) {
+          return new Response(
+            JSON.stringify({ error: "Sessão inválida" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const affiliateAccountId = validation[0].affiliate_id;
+
+        // Buscar o convite
+        const { data: storeAffiliate, error: fetchError } = await supabase
+          .from("store_affiliates")
+          .select("*, stores!inner(name)")
+          .eq("id", store_affiliate_id)
+          .eq("affiliate_account_id", affiliateAccountId)
+          .single();
+
+        if (fetchError || !storeAffiliate) {
+          return new Response(
+            JSON.stringify({ error: "Convite não encontrado" }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        if (storeAffiliate.status !== "pending") {
+          return new Response(
+            JSON.stringify({ error: "Este convite já foi processado" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Verificar expiração
+        if (storeAffiliate.invite_expires && new Date(storeAffiliate.invite_expires) < new Date()) {
+          return new Response(
+            JSON.stringify({ error: "Convite expirado" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Aceitar convite
+        const { error: updateError } = await supabase
+          .from("store_affiliates")
+          .update({
+            status: "active",
+            is_active: true,
+            accepted_at: new Date().toISOString(),
+            invite_token: null,
+            invite_expires: null,
+          })
+          .eq("id", store_affiliate_id);
+
+        if (updateError) {
+          console.error("[affiliate-invite] Error accepting invite:", updateError);
+          return new Response(
+            JSON.stringify({ error: "Erro ao aceitar convite" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: `Você agora é afiliado da loja ${storeAffiliate.stores.name}!` 
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      case "reject-invite": {
+        // Afiliado recusa convite manualmente pelo dashboard
+        const { affiliate_token, store_affiliate_id } = body;
+
+        if (!affiliate_token || !store_affiliate_id) {
+          return new Response(
+            JSON.stringify({ error: "Parâmetros inválidos" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Validar sessão do afiliado
+        const { data: validation } = await supabase.rpc("validate_affiliate_session", {
+          session_token: affiliate_token,
+        });
+
+        if (!validation || validation.length === 0 || !validation[0].is_valid) {
+          return new Response(
+            JSON.stringify({ error: "Sessão inválida" }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        const affiliateAccountId = validation[0].affiliate_id;
+
+        // Verificar se o convite pertence ao afiliado
+        const { data: storeAffiliate, error: fetchError } = await supabase
+          .from("store_affiliates")
+          .select("*, stores!inner(name)")
+          .eq("id", store_affiliate_id)
+          .eq("affiliate_account_id", affiliateAccountId)
+          .single();
+
+        if (fetchError || !storeAffiliate) {
+          return new Response(
+            JSON.stringify({ error: "Convite não encontrado" }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        if (storeAffiliate.status !== "pending") {
+          return new Response(
+            JSON.stringify({ error: "Este convite já foi processado" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Recusar convite - atualizar status para "rejected"
+        const { error: updateError } = await supabase
+          .from("store_affiliates")
+          .update({
+            status: "rejected",
+            is_active: false,
+            invite_token: null,
+            invite_expires: null,
+          })
+          .eq("id", store_affiliate_id);
+
+        if (updateError) {
+          console.error("[affiliate-invite] Error rejecting invite:", updateError);
+          return new Response(
+            JSON.stringify({ error: "Erro ao recusar convite" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: `Convite da loja ${storeAffiliate.stores.name} recusado.` 
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       default:
         return new Response(
           JSON.stringify({ error: `Ação desconhecida: ${action}` }),

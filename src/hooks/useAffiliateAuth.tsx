@@ -85,11 +85,21 @@ export interface AffiliateOrderItem {
   item_commission: number;
 }
 
+export interface PendingInvite {
+  id: string;
+  store_id: string;
+  store_name: string;
+  store_logo?: string;
+  invited_at: string;
+  expires_at: string;
+}
+
 interface AffiliateAuthContextType {
   affiliateUser: AffiliateUser | null;
   affiliateStores: AffiliateStore[];
   affiliateStats: AffiliateStats | null;
   affiliateOrders: AffiliateOrder[];
+  pendingInvites: PendingInvite[];
   isAuthenticated: boolean;
   isLoading: boolean;
   affiliateLogin: (cpf: string, password: string) => Promise<{ success: boolean; error?: string }>;
@@ -98,6 +108,9 @@ interface AffiliateAuthContextType {
   refreshData: () => Promise<void>;
   fetchAffiliateOrders: () => Promise<void>;
   fetchOrderItems: (orderId: string, storeAffiliateId: string | null) => Promise<AffiliateOrderItem[]>;
+  fetchPendingInvites: () => Promise<void>;
+  acceptInvite: (storeAffiliateId: string) => Promise<{ success: boolean; error?: string }>;
+  rejectInvite: (storeAffiliateId: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 const AffiliateAuthContext = createContext<AffiliateAuthContextType | undefined>(undefined);
@@ -109,6 +122,7 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
   const [affiliateStores, setAffiliateStores] = useState<AffiliateStore[]>([]);
   const [affiliateStats, setAffiliateStats] = useState<AffiliateStats | null>(null);
   const [affiliateOrders, setAffiliateOrders] = useState<AffiliateOrder[]>([]);
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const getStoredToken = () => localStorage.getItem(AFFILIATE_TOKEN_KEY);
@@ -187,8 +201,78 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
 
       // Fetch orders
       await fetchAffiliateOrders();
+      
+      // Fetch pending invites
+      await fetchPendingInvites();
     } catch (err) {
       console.error('Error fetching affiliate data:', err);
+    }
+  };
+
+  const fetchPendingInvites = async () => {
+    const token = getStoredToken();
+    if (!token) return;
+
+    try {
+      const { data } = await supabase.functions.invoke('affiliate-invite', {
+        body: { action: 'pending-invites', affiliate_token: token }
+      });
+      
+      if (data?.invites) {
+        setPendingInvites(data.invites);
+      }
+    } catch (err) {
+      console.error('Error fetching pending invites:', err);
+    }
+  };
+
+  const acceptInvite = async (storeAffiliateId: string): Promise<{ success: boolean; error?: string }> => {
+    const token = getStoredToken();
+    if (!token) return { success: false, error: 'Não autenticado' };
+
+    try {
+      const { data, error } = await supabase.functions.invoke('affiliate-invite', {
+        body: { 
+          action: 'accept-invite-manual', 
+          affiliate_token: token,
+          store_affiliate_id: storeAffiliateId
+        }
+      });
+
+      if (error || !data?.success) {
+        return { success: false, error: data?.error || 'Erro ao aceitar convite' };
+      }
+
+      // Refresh data after accepting
+      await fetchAffiliateData();
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Erro de conexão' };
+    }
+  };
+
+  const rejectInvite = async (storeAffiliateId: string): Promise<{ success: boolean; error?: string }> => {
+    const token = getStoredToken();
+    if (!token) return { success: false, error: 'Não autenticado' };
+
+    try {
+      const { data, error } = await supabase.functions.invoke('affiliate-invite', {
+        body: { 
+          action: 'reject-invite', 
+          affiliate_token: token,
+          store_affiliate_id: storeAffiliateId
+        }
+      });
+
+      if (error || !data?.success) {
+        return { success: false, error: data?.error || 'Erro ao recusar convite' };
+      }
+
+      // Refresh pending invites after rejecting
+      await fetchPendingInvites();
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Erro de conexão' };
     }
   };
 
@@ -235,6 +319,7 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
     setAffiliateStores([]);
     setAffiliateStats(null);
     setAffiliateOrders([]);
+    setPendingInvites([]);
   };
 
   const affiliateRegister = async (token: string, password: string, name: string, phone?: string, cpf?: string) => {
@@ -292,6 +377,7 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
         affiliateStores,
         affiliateStats,
         affiliateOrders,
+        pendingInvites,
         isAuthenticated: !!affiliateUser,
         isLoading,
         affiliateLogin,
@@ -299,7 +385,10 @@ export function AffiliateAuthProvider({ children }: { children: ReactNode }) {
         affiliateRegister,
         refreshData,
         fetchAffiliateOrders,
-        fetchOrderItems
+        fetchOrderItems,
+        fetchPendingInvites,
+        acceptInvite,
+        rejectInvite
       }}
     >
       {children}

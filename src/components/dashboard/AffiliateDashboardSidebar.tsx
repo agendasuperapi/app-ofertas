@@ -1,18 +1,21 @@
-import { Home, Store, ShoppingBag, BarChart3, User, LogOut, Wallet } from "lucide-react";
+import { Home, Store, ShoppingBag, BarChart3, User, LogOut, Wallet, Mail } from "lucide-react";
 import { motion } from "framer-motion";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 interface AffiliateDashboardSidebarProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
   affiliateName?: string;
   onSignOut: () => void;
+  pendingInvitesCount?: number;
 }
 
 const menuItems = [
   { id: "home", label: "Início", icon: Home },
   { id: "stores", label: "Lojas", icon: Store },
+  { id: "invites", label: "Convites", icon: Mail },
   { id: "orders", label: "Pedidos", icon: ShoppingBag },
   { id: "commissions", label: "Comissões", icon: BarChart3 },
   { id: "withdrawals", label: "Saques", icon: Wallet },
@@ -24,6 +27,7 @@ export function AffiliateDashboardSidebar({
   onTabChange,
   affiliateName,
   onSignOut,
+  pendingInvitesCount = 0,
 }: AffiliateDashboardSidebarProps) {
   const handleTabChange = (tabId: string) => {
     onTabChange(tabId);
@@ -64,6 +68,7 @@ export function AffiliateDashboardSidebar({
           {menuItems.map((item) => {
             const isActive = activeTab === item.id;
             const Icon = item.icon;
+            const showBadge = item.id === "invites" && pendingInvitesCount > 0;
 
             return (
               <li key={item.id}>
@@ -85,7 +90,16 @@ export function AffiliateDashboardSidebar({
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                     />
                   )}
-                  <Icon className={`h-5 w-5 relative z-10 ${isActive ? "text-primary" : ""}`} />
+                  <div className="relative">
+                    <Icon className={`h-5 w-5 relative z-10 ${isActive ? "text-primary" : ""}`} />
+                    {showBadge && (
+                      <Badge 
+                        className="absolute -top-2 -right-2 h-4 min-w-4 px-1 text-[10px] bg-destructive text-destructive-foreground border-0"
+                      >
+                        {pendingInvitesCount > 9 ? "9+" : pendingInvitesCount}
+                      </Badge>
+                    )}
+                  </div>
                   <span className="text-[10px] font-medium relative z-10">{item.label}</span>
                 </button>
               </li>
