@@ -2219,7 +2219,7 @@ export default function AffiliateDashboardNew() {
 
       <div className="flex h-full w-full">
         {/* Desktop Sidebar */}
-        <AffiliateDashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} affiliateName={affiliateUser?.name} onSignOut={handleLogout} pendingInvitesCount={pendingInvites.length} />
+        <AffiliateDashboardSidebar activeTab={activeTab} onTabChange={setActiveTab} affiliateName={affiliateUser?.name} affiliateAvatarUrl={affiliateUser?.avatar_url} onSignOut={handleLogout} pendingInvitesCount={pendingInvites.length} />
 
         {/* Main Content */}
         <main className="flex-1 w-full max-w-full overflow-x-hidden px-2 sm:px-4 py-4 sm:py-6 pb-24 md:pb-6">
