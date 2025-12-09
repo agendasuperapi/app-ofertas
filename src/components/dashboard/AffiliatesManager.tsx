@@ -1342,26 +1342,28 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                 )}
               </div>
               
-              {/* Botão Salvar */}
-              <div className="pt-4 border-t border-border/50 flex justify-end">
-                <Button 
-                  onClick={handleSaveAffiliateData}
-                  disabled={savingData || !formData.name || !formData.cpf_cnpj}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  {savingData ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Salvando...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Salvar Alterações
-                    </>
-                  )}
-                </Button>
-              </div>
+              {/* Botão Salvar - só aparece em modo edição */}
+              {editingAffiliate && (
+                <div className="pt-4 border-t border-border/50 flex justify-end">
+                  <Button 
+                    onClick={handleSaveAffiliateData}
+                    disabled={savingData || !formData.name || !formData.cpf_cnpj}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    {savingData ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Salvar Alterações
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             </TabsContent>
             
             {/* Aba Cupons */}
