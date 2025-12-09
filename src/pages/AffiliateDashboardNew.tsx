@@ -488,10 +488,10 @@ export default function AffiliateDashboardNew() {
           y: 0
         }} transition={{
           delay: 0.2
-        }} className="p-3 sm:p-4 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center">
-            <Wallet className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-emerald-600 mb-1" />
-            <p className="text-[10px] sm:text-xs text-muted-foreground">Disponível Saque</p>
-            <p className="font-bold text-sm sm:text-lg text-emerald-600">{formatCurrency(store.total_commission)}</p>
+        }} className="p-3 sm:p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center">
+            <Clock className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-yellow-600 mb-1" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
+            <p className="font-bold text-sm sm:text-lg text-yellow-600">{formatCurrency(store.pending_commission)}</p>
           </motion.div>
           <motion.div initial={{
           opacity: 0,
@@ -501,10 +501,10 @@ export default function AffiliateDashboardNew() {
           y: 0
         }} transition={{
           delay: 0.25
-        }} className="p-3 sm:p-4 bg-yellow-500/10 rounded-lg border border-yellow-500/20 text-center">
-            <Clock className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-yellow-600 mb-1" />
-            <p className="text-[10px] sm:text-xs text-muted-foreground">Pendente</p>
-            <p className="font-bold text-sm sm:text-lg text-yellow-600">{formatCurrency(store.pending_commission)}</p>
+        }} className="p-3 sm:p-4 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center">
+            <Wallet className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-emerald-600 mb-1" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Disponível Saque</p>
+            <p className="font-bold text-sm sm:text-lg text-emerald-600">{formatCurrency(store.total_commission)}</p>
           </motion.div>
           <motion.div initial={{
           opacity: 0,
