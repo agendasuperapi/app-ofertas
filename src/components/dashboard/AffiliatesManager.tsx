@@ -2333,6 +2333,51 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                         })()}
                       </div>
                     </div>
+                    
+                    <div className="flex justify-end pt-2">
+                      <Button 
+                        onClick={async () => {
+                          if (!selectedAffiliate.name) {
+                            toast({
+                              title: 'Campo obrigatório',
+                              description: 'Nome é obrigatório.',
+                              variant: 'destructive',
+                            });
+                            return;
+                          }
+                          setSavingData(true);
+                          try {
+                            await updateAffiliate(selectedAffiliate.id, {
+                              name: selectedAffiliate.name,
+                              email: selectedAffiliate.email,
+                              phone: selectedAffiliate.phone,
+                              pix_key: selectedAffiliate.pix_key || selectedAffiliate.cpf_cnpj || '',
+                            });
+                            toast({
+                              title: 'Dados salvos',
+                              description: 'Os dados do afiliado foram atualizados.',
+                            });
+                          } catch (error) {
+                            toast({
+                              title: 'Erro ao salvar',
+                              description: 'Não foi possível salvar os dados.',
+                              variant: 'destructive',
+                            });
+                          } finally {
+                            setSavingData(false);
+                          }
+                        }}
+                        disabled={savingData || !selectedAffiliate.name}
+                        size="sm"
+                      >
+                        {savingData ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : (
+                          <Save className="h-4 w-4 mr-2" />
+                        )}
+                        Salvar Alterações
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
 
