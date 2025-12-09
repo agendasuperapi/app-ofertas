@@ -885,7 +885,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
               <div className="flex items-center justify-between relative">
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium">Total</p>
+                  <p className="text-xs text-muted-foreground font-medium">Total</p>
                   <p className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">{totalAffiliates}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
@@ -901,7 +901,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />
               <div className="flex items-center justify-between relative">
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium">Ativos</p>
+                  <p className="text-xs text-muted-foreground font-medium">Ativos</p>
                   <p className="text-3xl font-bold text-green-600">{activeAffiliates}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center">
@@ -917,7 +917,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
               <div className="flex items-center justify-between relative">
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium">Pendente</p>
+                  <p className="text-xs text-muted-foreground font-medium">Pendente</p>
                   <p className="text-3xl font-bold text-amber-600">{formatCurrency(totalPendingEarnings)}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center">
@@ -933,7 +933,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />
               <div className="flex items-center justify-between relative">
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium">Pago</p>
+                  <p className="text-xs text-muted-foreground font-medium">Pago</p>
                   <p className="text-3xl font-bold text-green-600">{formatCurrency(totalPaidEarnings)}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500/20 to-green-500/5 flex items-center justify-center">
