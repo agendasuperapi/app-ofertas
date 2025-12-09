@@ -853,6 +853,7 @@ serve(async (req) => {
               subtotal,
               coupon_discount,
               coupon_code,
+              status,
               stores!inner(name)
             )
           `)
@@ -883,6 +884,7 @@ serve(async (req) => {
           commission_amount: e.commission_amount,
           commission_status: e.status,
           coupon_code: e.orders?.coupon_code,
+          order_status: e.orders?.status,
         }));
 
         return new Response(

@@ -137,30 +137,63 @@ export default function AffiliateDashboardNew() {
     });
   }, [affiliateOrders, periodFilter, storeFilter, customDateRange]);
 
-  // Filtered stats based on filtered orders
+  // Filtered stats based on filtered orders - Baseado no status do PEDIDO (não da comissão)
   const filteredStats = useMemo(() => {
-    const totalOrders = filteredAffiliateOrders.length;
-    const totalSales = filteredAffiliateOrders.reduce((sum, order) => sum + (order.order_total || 0), 0);
-    const totalCommission = filteredAffiliateOrders.reduce((sum, order) => sum + (order.commission_amount || 0), 0);
-    const pendingCommission = filteredAffiliateOrders.filter(order => order.commission_status === 'pending').reduce((sum, order) => sum + (order.commission_amount || 0), 0);
-    const paidCommission = filteredAffiliateOrders.filter(order => order.commission_status === 'paid').reduce((sum, order) => sum + (order.commission_amount || 0), 0);
+    // Pedidos válidos: não cancelados
+    const validOrders = filteredAffiliateOrders.filter(
+      order => order.order_status !== 'cancelado' && order.order_status !== 'cancelled'
+    );
+    
+    // Pedidos cancelados
+    const cancelledOrders = filteredAffiliateOrders.filter(
+      order => order.order_status === 'cancelado' || order.order_status === 'cancelled'
+    );
+    
+    const totalOrders = validOrders.length;
+    const totalSales = validOrders.reduce((sum, order) => sum + (order.order_total || 0), 0);
+    
+    // Ganhos: SOMENTE pedidos ENTREGUES
+    const earnedCommission = validOrders
+      .filter(order => order.order_status === 'entregue' || order.order_status === 'delivered')
+      .reduce((sum, order) => sum + (order.commission_amount || 0), 0);
+    
+    // Pendente: pedidos que NÃO são "entregue" nem "cancelado"
+    const pendingCommission = validOrders
+      .filter(order => {
+        const status = order.order_status;
+        return status !== 'entregue' && status !== 'delivered' && 
+               status !== 'cancelado' && status !== 'cancelled';
+      })
+      .reduce((sum, order) => sum + (order.commission_amount || 0), 0);
+    
+    const cancelledCount = cancelledOrders.length;
+    const cancelledCommission = cancelledOrders.reduce((sum, order) => sum + (order.commission_amount || 0), 0);
+    
     return {
       total_orders: totalOrders,
       total_sales: totalSales,
-      total_commission: totalCommission,
-      pending_commission: pendingCommission,
-      paid_commission: paidCommission
+      total_commission: earnedCommission, // Apenas entregues
+      pending_commission: pendingCommission, // Em processamento
+      paid_commission: earnedCommission, // Alias para compatibilidade
+      cancelled_count: cancelledCount,
+      cancelled_commission: cancelledCommission
     };
   }, [filteredAffiliateOrders]);
 
-  // Dados para gráficos - Comissões ao longo do tempo (usando dados filtrados)
+  // Dados para gráficos - Comissões ao longo do tempo (excluindo cancelados)
   const commissionsOverTime = useMemo(() => {
     if (!filteredAffiliateOrders || filteredAffiliateOrders.length === 0) return [];
+    
+    // Filtrar pedidos não cancelados para os gráficos
+    const validOrdersForChart = filteredAffiliateOrders.filter(
+      order => order.order_status !== 'cancelado' && order.order_status !== 'cancelled'
+    );
+    
     const ordersByDate: Record<string, {
       pedidos: number;
       comissao: number;
     }> = {};
-    filteredAffiliateOrders.forEach(order => {
+    validOrdersForChart.forEach(order => {
       const date = format(new Date(order.order_date), 'dd/MM', {
         locale: ptBR
       });
@@ -171,7 +204,10 @@ export default function AffiliateDashboardNew() {
         };
       }
       ordersByDate[date].pedidos += 1;
-      ordersByDate[date].comissao += order.commission_amount || 0;
+      // Só somar comissão de pedidos entregues
+      if (order.order_status === 'entregue' || order.order_status === 'delivered') {
+        ordersByDate[date].comissao += order.commission_amount || 0;
+      }
     });
     return Object.entries(ordersByDate).map(([date, data]) => ({
       date,
@@ -179,14 +215,20 @@ export default function AffiliateDashboardNew() {
     })).slice(-14); // Últimos 14 dias
   }, [filteredAffiliateOrders]);
 
-  // Dados para gráfico de pizza - Comissões por loja (usando dados filtrados)
+  // Dados para gráfico de pizza - Comissões por loja (apenas pedidos entregues)
   const commissionsByStore = useMemo(() => {
     if (!filteredAffiliateOrders || filteredAffiliateOrders.length === 0) return [];
+    
+    // Filtrar apenas pedidos entregues para comissões
+    const deliveredOrders = filteredAffiliateOrders.filter(
+      order => order.order_status === 'entregue' || order.order_status === 'delivered'
+    );
+    
     const storeCommissions: Record<string, {
       name: string;
       value: number;
     }> = {};
-    filteredAffiliateOrders.forEach(order => {
+    deliveredOrders.forEach(order => {
       const storeName = order.store_name || 'Loja';
       if (!storeCommissions[storeName]) {
         storeCommissions[storeName] = {
@@ -198,6 +240,34 @@ export default function AffiliateDashboardNew() {
     });
     return Object.values(storeCommissions).filter(store => store.value > 0).sort((a, b) => b.value - a.value).slice(0, 6); // Top 6 lojas
   }, [filteredAffiliateOrders]);
+
+  // Helper para obter badge de status do pedido
+  const getOrderStatusBadge = (order: AffiliateOrder) => {
+    const status = order.order_status;
+    
+    if (status === 'entregue' || status === 'delivered') {
+      return (
+        <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+          <CheckCircle className="h-3 w-3 mr-1" /> Entregue
+        </Badge>
+      );
+    }
+    
+    if (status === 'cancelado' || status === 'cancelled') {
+      return (
+        <Badge className="bg-red-500/10 text-red-600 border-red-500/20">
+          <Ban className="h-3 w-3 mr-1" /> Cancelado
+        </Badge>
+      );
+    }
+    
+    // Outros status = em processamento (pendente)
+    return (
+      <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+        <Clock className="h-3 w-3 mr-1" /> Em andamento
+      </Badge>
+    );
+  };
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -973,9 +1043,7 @@ export default function AffiliateDashboardNew() {
                       {formatCurrency(order.commission_amount)}
                     </TableCell>
                     <TableCell>
-                      <Badge variant={order.commission_status === 'paid' ? 'default' : 'secondary'} className={order.commission_status === 'paid' ? 'bg-green-500/10 text-green-600 border-green-500/20' : 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20'}>
-                        {order.commission_status === 'paid' ? <><CheckCircle className="h-3 w-3 mr-1" /> Pago</> : <><Clock className="h-3 w-3 mr-1" /> Pendente</>}
-                      </Badge>
+                      {getOrderStatusBadge(order)}
                     </TableCell>
                   </TableRow>)}
               </TableBody>
