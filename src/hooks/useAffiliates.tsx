@@ -3,6 +3,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+// Normaliza CPF removendo caracteres não numéricos
+const normalizeCpf = (cpf: string | undefined | null): string | null => {
+  if (!cpf) return null;
+  return cpf.replace(/\D/g, '');
+};
+
 export interface Affiliate {
   id: string;
   store_id: string;
@@ -135,6 +141,8 @@ export const useAffiliates = (storeId?: string) => {
       if (!storeId) throw new Error('Store ID required');
       
       const { coupon_ids, ...rest } = affiliateData;
+      const normalizedCpf = normalizeCpf(rest.cpf_cnpj);
+      
       const { data, error } = await (supabase as any)
         .from('affiliates')
         .insert({
@@ -142,7 +150,7 @@ export const useAffiliates = (storeId?: string) => {
           name: rest.name,
           email: rest.email,
           phone: rest.phone,
-          cpf_cnpj: rest.cpf_cnpj,
+          cpf_cnpj: normalizedCpf, // CPF normalizado (apenas números)
           pix_key: rest.pix_key,
           coupon_id: coupon_ids?.[0] || rest.coupon_id,
           is_active: rest.is_active ?? true,
@@ -164,12 +172,16 @@ export const useAffiliates = (storeId?: string) => {
         }));
         await (supabase as any).from('affiliate_coupons').insert(couponInserts);
         
-        // Sync with store_affiliates system if affiliate_account exists
-        const { data: affiliateAccount } = await supabase
-          .from('affiliate_accounts')
-          .select('id')
-          .eq('email', rest.email?.toLowerCase() || '')
-          .maybeSingle();
+        // Sync with store_affiliates system if affiliate_account exists (busca por CPF)
+        let affiliateAccount = null;
+        if (normalizedCpf) {
+          const { data: account } = await supabase
+            .from('affiliate_accounts')
+            .select('id')
+            .eq('cpf_cnpj', normalizedCpf)
+            .maybeSingle();
+          affiliateAccount = account;
+        }
 
         if (affiliateAccount) {
           const { data: storeAffiliate } = await (supabase as any)
@@ -218,7 +230,12 @@ export const useAffiliates = (storeId?: string) => {
   const updateAffiliateMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Affiliate> & { coupon_ids?: string[] } }) => {
       const { coupon_ids, ...rest } = updates;
-      const updateData = { ...rest };
+      const normalizedCpf = rest.cpf_cnpj !== undefined ? normalizeCpf(rest.cpf_cnpj) : undefined;
+      
+      const updateData: any = { ...rest };
+      if (normalizedCpf !== undefined) {
+        updateData.cpf_cnpj = normalizedCpf; // CPF normalizado (apenas números)
+      }
       if (coupon_ids) {
         updateData.coupon_id = coupon_ids[0] || null;
       }
@@ -227,7 +244,7 @@ export const useAffiliates = (storeId?: string) => {
         .from('affiliates')
         .update(updateData)
         .eq('id', id)
-        .select('*, email, store_id')
+        .select('*, email, store_id, cpf_cnpj')
         .single();
 
       if (error) throw error;
@@ -243,45 +260,48 @@ export const useAffiliates = (storeId?: string) => {
           await (supabase as any).from('affiliate_coupons').insert(couponInserts);
         }
 
-        // Sync with store_affiliates table
-        if (data?.email) {
-          const { data: affiliateAccount } = await supabase
+        // Sync with store_affiliates table (busca por CPF)
+        const cpfToSearch = normalizedCpf || normalizeCpf(data?.cpf_cnpj);
+        let affiliateAccount = null;
+        if (cpfToSearch) {
+          const { data: account } = await supabase
             .from('affiliate_accounts')
             .select('id')
-            .eq('email', data.email.toLowerCase())
-            .single();
+            .eq('cpf_cnpj', cpfToSearch)
+            .maybeSingle();
+          affiliateAccount = account;
+        }
 
-          if (affiliateAccount && data?.store_id) {
-            const { data: storeAffiliate } = await (supabase as any)
+        if (affiliateAccount && data?.store_id) {
+          const { data: storeAffiliate } = await (supabase as any)
+            .from('store_affiliates')
+            .select('id')
+            .eq('affiliate_account_id', affiliateAccount.id)
+            .eq('store_id', data.store_id)
+            .maybeSingle();
+
+          if (storeAffiliate) {
+            await (supabase as any)
               .from('store_affiliates')
-              .select('id')
-              .eq('affiliate_account_id', affiliateAccount.id)
-              .eq('store_id', data.store_id)
-              .single();
+              .update({ 
+                coupon_id: coupon_ids[0] || null,
+                default_commission_type: rest.default_commission_type || data.default_commission_type || 'percentage',
+                default_commission_value: rest.default_commission_value ?? data.default_commission_value ?? 0,
+                use_default_commission: rest.use_default_commission ?? data.use_default_commission ?? true
+              })
+              .eq('id', storeAffiliate.id);
 
-            if (storeAffiliate) {
-              await (supabase as any)
-                .from('store_affiliates')
-                .update({ 
-                  coupon_id: coupon_ids[0] || null,
-                  default_commission_type: rest.default_commission_type || data.default_commission_type || 'percentage',
-                  default_commission_value: rest.default_commission_value ?? data.default_commission_value ?? 0,
-                  use_default_commission: rest.use_default_commission ?? data.use_default_commission ?? true
-                })
-                .eq('id', storeAffiliate.id);
+            await (supabase as any)
+              .from('store_affiliate_coupons')
+              .delete()
+              .eq('store_affiliate_id', storeAffiliate.id);
 
-              await (supabase as any)
-                .from('store_affiliate_coupons')
-                .delete()
-                .eq('store_affiliate_id', storeAffiliate.id);
-
-              if (coupon_ids.length > 0) {
-                const storeAffiliateInserts = coupon_ids.map(couponId => ({
-                  store_affiliate_id: storeAffiliate.id,
-                  coupon_id: couponId,
-                }));
-                await (supabase as any).from('store_affiliate_coupons').insert(storeAffiliateInserts);
-              }
+            if (coupon_ids.length > 0) {
+              const storeAffiliateInserts = coupon_ids.map(couponId => ({
+                store_affiliate_id: storeAffiliate.id,
+                coupon_id: couponId,
+              }));
+              await (supabase as any).from('store_affiliate_coupons').insert(storeAffiliateInserts);
             }
           }
         }
