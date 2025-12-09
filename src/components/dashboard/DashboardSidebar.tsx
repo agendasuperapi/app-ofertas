@@ -124,41 +124,41 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
                 >
                 <CollapsibleTrigger asChild>
                   <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.03, y: -1 }}
+                    whileTap={{ scale: 0.97 }}
                     className={cn(
-                      "w-full flex flex-col items-center gap-1 py-2 px-1 rounded-lg relative transition-all duration-200",
+                      "w-full flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl relative transition-all duration-300",
                       isOpen
-                        ? "bg-primary/10 text-primary shadow-sm" 
-                        : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                        ? "bg-gradient-to-br from-primary/20 via-primary/15 to-primary/10 text-primary shadow-md border border-primary/20" 
+                        : "text-foreground hover:bg-muted/60 hover:text-foreground hover:shadow-sm"
                     )}
                   >
                     {isOpen && (
                       <motion.div
                         layoutId="activeTab"
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-gradient-to-b from-primary to-primary/70 rounded-r-full shadow-lg"
                         initial={false}
                         transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                       />
                     )}
                     <Icon className={cn(
-                      "w-4 h-4 relative z-10 transition-colors",
-                      isOpen && "drop-shadow-sm"
+                      "w-5 h-5 relative z-10 transition-all duration-300",
+                      isOpen && "drop-shadow-[0_0_6px_rgba(var(--primary),0.4)] text-primary"
                     )} />
                     <span className={cn(
-                      "text-[10px] relative z-10 transition-colors font-medium uppercase leading-tight",
-                      isOpen && "font-semibold"
+                      "text-[11px] relative z-10 transition-all duration-300 font-semibold uppercase leading-tight tracking-wide",
+                      isOpen && "font-bold"
                     )}>
                       {item.label}
                     </span>
                     <ChevronDown className={cn(
-                      "w-2.5 h-2.5 transition-transform duration-200",
+                      "w-3 h-3 transition-transform duration-300",
                       isOpen && "rotate-180"
                     )} />
                   </motion.button>
                 </CollapsibleTrigger>
                 
-                <CollapsibleContent className="space-y-0.5 mt-0.5">
+                <CollapsibleContent className="mt-1 ml-1 pl-2 border-l-2 border-primary/15 space-y-0.5">
                   <AnimatePresence>
                     {subItems.map((subItem) => {
                       const SubIcon = subItem.icon;
@@ -171,30 +171,22 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
                           animate={{ opacity: 1, x: 0 }}
                           exit={{ opacity: 0, x: -10 }}
                           onClick={() => handleTabChange(subItem.id)}
-                          whileHover={{ scale: 1.02 }}
+                          whileHover={{ scale: 1.01, x: 2 }}
                           whileTap={{ scale: 0.98 }}
                           className={cn(
-                            "w-full flex flex-col items-center gap-1 py-1.5 px-1 rounded-lg relative transition-all duration-200",
+                            "w-full flex flex-col items-center gap-0.5 py-1.5 px-1 rounded-md relative transition-all duration-200",
                             isSubActive 
-                              ? "bg-primary/15 text-primary shadow-sm" 
-                              : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                              ? "bg-muted/50 text-primary/80" 
+                              : "text-muted-foreground/60 hover:bg-muted/30 hover:text-muted-foreground"
                           )}
                         >
-                          {isSubActive && (
-                            <motion.div
-                              layoutId="activeSubTab"
-                              className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-r-full"
-                              initial={false}
-                              transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                            />
-                          )}
                           <SubIcon className={cn(
-                            "w-3.5 h-3.5 relative z-10 transition-colors",
-                            isSubActive && "drop-shadow-sm"
+                            "w-3 h-3 relative z-10 transition-colors",
+                            isSubActive ? "text-primary/70" : "text-muted-foreground/50"
                           )} />
                           <span className={cn(
-                            "text-[9px] relative z-10 transition-colors font-medium text-center leading-tight uppercase",
-                            isSubActive && "font-semibold"
+                            "text-[8px] relative z-10 transition-colors text-center leading-tight uppercase tracking-wide",
+                            isSubActive ? "font-medium text-primary/80" : "font-normal"
                           )}>
                             {subItem.label}
                           </span>
@@ -213,30 +205,30 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
               {index > 0 && <div className="h-px bg-primary/20 my-1 mx-1" />}
               <motion.button
               onClick={() => handleTabChange(item.id)}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: 1.03, y: -1 }}
+              whileTap={{ scale: 0.97 }}
               className={cn(
-                "w-full flex flex-col items-center gap-1 py-2 px-1 rounded-lg relative transition-all duration-200",
+                "w-full flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl relative transition-all duration-300",
                 isActive 
-                  ? "bg-primary/10 text-primary shadow-sm" 
-                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  ? "bg-gradient-to-br from-primary/20 via-primary/15 to-primary/10 text-primary shadow-md border border-primary/20" 
+                  : "text-foreground hover:bg-muted/60 hover:text-foreground hover:shadow-sm"
               )}
             >
               {isActive && (
                 <motion.div
                   layoutId="activeTab"
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-gradient-to-b from-primary to-primary/70 rounded-r-full shadow-lg"
                   initial={false}
                   transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                 />
               )}
               <Icon className={cn(
-                "w-4 h-4 relative z-10 transition-colors",
-                isActive && "drop-shadow-sm"
+                "w-5 h-5 relative z-10 transition-all duration-300",
+                isActive && "drop-shadow-[0_0_6px_rgba(var(--primary),0.4)] text-primary"
               )} />
               <span className={cn(
-                "text-[10px] relative z-10 transition-colors font-medium uppercase leading-tight",
-                isActive && "font-semibold"
+                "text-[11px] relative z-10 transition-all duration-300 font-semibold uppercase leading-tight tracking-wide",
+                isActive && "font-bold"
               )}>
                 {item.label}
               </span>
