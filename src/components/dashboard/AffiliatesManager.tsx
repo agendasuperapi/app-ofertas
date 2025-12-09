@@ -132,6 +132,7 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
   const [toggleStatusAffiliate, setToggleStatusAffiliate] = useState<Affiliate | null>(null);
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
   const [couponProductsModalOpen, setCouponProductsModalOpen] = useState(false);
+  const [savingData, setSavingData] = useState(false);
 
   const [newCouponData, setNewCouponData] = useState({
     code: '',
@@ -523,6 +524,62 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
       });
     } finally {
       setSavingDefaultCommission(false);
+    }
+  };
+
+  // Handler para salvar dados do afiliado na aba Dados
+  const handleSaveAffiliateData = async () => {
+    if (!editingAffiliate) return;
+    
+    if (!formData.name || !formData.cpf_cnpj) {
+      toast({
+        title: 'Campos obrigatórios',
+        description: 'Nome e CPF são obrigatórios.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSavingData(true);
+    try {
+      await updateAffiliate(editingAffiliate.id, {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        cpf_cnpj: formData.cpf_cnpj,
+        pix_key: formData.pix_key,
+        commission_enabled: formData.commission_enabled,
+        default_commission_type: formData.default_commission_type,
+        default_commission_value: formData.default_commission_value,
+        use_default_commission: formData.commission_enabled && formData.default_commission_value > 0,
+      });
+      
+      // Atualizar estado local do editingAffiliate
+      setEditingAffiliate({
+        ...editingAffiliate,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        cpf_cnpj: formData.cpf_cnpj,
+        pix_key: formData.pix_key,
+        commission_enabled: formData.commission_enabled,
+        default_commission_type: formData.default_commission_type,
+        default_commission_value: formData.default_commission_value,
+        use_default_commission: formData.commission_enabled && formData.default_commission_value > 0,
+      });
+      
+      toast({
+        title: 'Dados salvos!',
+        description: 'As alterações foram salvas com sucesso.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Não foi possível salvar as alterações.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingData(false);
     }
   };
 
@@ -1274,6 +1331,27 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
                     </div>
                   </motion.div>
                 )}
+              </div>
+              
+              {/* Botão Salvar */}
+              <div className="pt-4 border-t border-border/50 flex justify-end">
+                <Button 
+                  onClick={handleSaveAffiliateData}
+                  disabled={savingData || !formData.name || !formData.cpf_cnpj}
+                  className="bg-primary hover:bg-primary/90"
+                >
+                  {savingData ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Salvar Alterações
+                    </>
+                  )}
+                </Button>
               </div>
             </TabsContent>
             
