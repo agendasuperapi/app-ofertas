@@ -3767,6 +3767,400 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal para adicionar regras por Categoria */}
+      <Dialog open={couponCategoryRulesModalOpen} onOpenChange={(open) => {
+        setCouponCategoryRulesModalOpen(open);
+        if (open) {
+          setEditingCouponRuleType(newCouponData.discount_type as 'percentage' | 'fixed');
+          setEditingCouponRuleValue(newCouponData.discount_value || 0);
+        }
+        if (!open) {
+          setSelectedCouponRuleCategoryNames(new Set());
+        }
+      }}>
+        <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Adicionar Regra por Categoria</DialogTitle>
+            <DialogDescription>
+              Todos os produtos da categoria terão o mesmo desconto. Novos produtos adicionados herdam automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Configuração de desconto */}
+            <div className="grid grid-cols-2 gap-4 p-3 bg-muted/50 rounded-lg">
+              <div>
+                <Label className="text-sm">Tipo de Desconto</Label>
+                <Select
+                  value={editingCouponRuleType}
+                  onValueChange={(v) => setEditingCouponRuleType(v as 'percentage' | 'fixed')}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">Porcentagem (%)</SelectItem>
+                    <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-sm">Valor do Desconto</Label>
+                <Input
+                  type="number"
+                  value={editingCouponRuleValue}
+                  onChange={(e) => setEditingCouponRuleValue(Number(e.target.value))}
+                  className="mt-1"
+                  min={0}
+                />
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{selectedCouponRuleCategoryNames.size} categoria(s) selecionada(s)</span>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="sm" onClick={() => {
+                  const existingNames = new Set(couponCategoryRules.map(r => r.category_name));
+                  setSelectedCouponRuleCategoryNames(new Set(
+                    categories.filter(c => !existingNames.has(c.name)).map(c => c.name)
+                  ));
+                }}>
+                  Selecionar Todas
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedCouponRuleCategoryNames(new Set())}>
+                  Limpar
+                </Button>
+              </div>
+            </div>
+
+            <ScrollArea className="h-[250px] border rounded-md">
+              {(() => {
+                const existingNames = new Set(couponCategoryRules.map(r => r.category_name));
+                const availableCategories = categories.filter(c => !existingNames.has(c.name));
+
+                if (availableCategories.length === 0) {
+                  return (
+                    <p className="text-center text-muted-foreground py-8">
+                      Todas as categorias já têm regra
+                    </p>
+                  );
+                }
+
+                return (
+                  <div className="p-2 space-y-1">
+                    {availableCategories.map((category) => {
+                      const productsInCategory = products.filter(p => p.category === category.name);
+                      const isSelected = selectedCouponRuleCategoryNames.has(category.name);
+                      
+                      return (
+                        <div
+                          key={category.id}
+                          className={`flex items-center gap-3 p-3 rounded-md cursor-pointer transition-colors ${
+                            isSelected ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/50 border border-transparent'
+                          }`}
+                          onClick={() => {
+                            setSelectedCouponRuleCategoryNames(prev => {
+                              const next = new Set(prev);
+                              if (next.has(category.name)) next.delete(category.name);
+                              else next.add(category.name);
+                              return next;
+                            });
+                          }}
+                        >
+                          <Checkbox checked={isSelected} />
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm">{category.name}</p>
+                            <p className="text-xs text-muted-foreground">{productsInCategory.length} produto(s)</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </ScrollArea>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setCouponCategoryRulesModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => {
+                if (selectedCouponRuleCategoryNames.size === 0 || editingCouponRuleValue <= 0) {
+                  toast({
+                    title: 'Selecione categorias e defina o valor',
+                    variant: 'destructive',
+                  });
+                  return;
+                }
+                const newRules = Array.from(selectedCouponRuleCategoryNames).map(categoryName => ({
+                  category_name: categoryName,
+                  discount_type: editingCouponRuleType,
+                  discount_value: editingCouponRuleValue,
+                }));
+                setCouponCategoryRules([...couponCategoryRules, ...newRules]);
+                setCouponCategoryRulesModalOpen(false);
+                setSelectedCouponRuleCategoryNames(new Set());
+                toast({
+                  title: 'Regras adicionadas',
+                  description: `${newRules.length} regra(s) de desconto por categoria adicionada(s)`,
+                });
+              }}
+              disabled={selectedCouponRuleCategoryNames.size === 0}
+            >
+              Adicionar ({selectedCouponRuleCategoryNames.size})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para adicionar regras por Produto */}
+      <Dialog open={couponRulesModalOpen} onOpenChange={(open) => {
+        setCouponRulesModalOpen(open);
+        if (open) {
+          setEditingCouponRuleType(newCouponData.discount_type as 'percentage' | 'fixed');
+          setEditingCouponRuleValue(newCouponData.discount_value || 0);
+        }
+        if (!open) {
+          setSelectedCouponRuleProductIds(new Set());
+          setCouponRuleProductSearch('');
+          setCollapsedCouponRuleCategories(new Set());
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Adicionar Regra por Produto</DialogTitle>
+            <DialogDescription>
+              Defina o desconto e selecione os produtos que receberão a regra.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
+            {/* Configuração de desconto */}
+            <div className="grid grid-cols-2 gap-4 p-3 bg-muted/50 rounded-lg">
+              <div>
+                <Label className="text-sm">Tipo de Desconto</Label>
+                <Select
+                  value={editingCouponRuleType}
+                  onValueChange={(v) => setEditingCouponRuleType(v as 'percentage' | 'fixed')}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">Porcentagem (%)</SelectItem>
+                    <SelectItem value="fixed">Valor Fixo (R$)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-sm">Valor do Desconto</Label>
+                <div className="relative mt-1">
+                  <Input
+                    type="number"
+                    value={editingCouponRuleValue}
+                    onChange={(e) => setEditingCouponRuleValue(Number(e.target.value))}
+                    className="pr-8"
+                    min={0}
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                    {editingCouponRuleType === 'percentage' ? '%' : 'R$'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Barra de busca e ações */}
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  value={couponRuleProductSearch}
+                  onChange={(e) => setCouponRuleProductSearch(e.target.value)}
+                  placeholder="Buscar por nome, código interno ou externo..."
+                  className="pl-9"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const existingIds = new Set(couponDiscountRules.map(r => r.product_id));
+                    const filteredProducts = products.filter(p => {
+                      if (!couponRuleProductSearch.trim()) return true;
+                      const search = couponRuleProductSearch.toLowerCase().trim();
+                      return p.name?.toLowerCase().includes(search) ||
+                        p.short_id?.toLowerCase().includes(search) ||
+                        p.external_code?.toLowerCase().includes(search);
+                    });
+                    const allProductIds = filteredProducts
+                      .filter(p => !existingIds.has(p.id))
+                      .map(p => p.id);
+                    setSelectedCouponRuleProductIds(new Set(allProductIds));
+                  }}
+                >
+                  Selecionar Todos
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedCouponRuleProductIds(new Set())}
+                >
+                  Limpar
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{selectedCouponRuleProductIds.size} produto(s) selecionado(s)</span>
+            </div>
+
+            {/* Lista de produtos por categoria */}
+            <ScrollArea className="flex-1 border rounded-md">
+              {(() => {
+                const existingIds = new Set(couponDiscountRules.map(r => r.product_id));
+                const filteredProducts = products.filter(p => {
+                  if (!couponRuleProductSearch.trim()) return true;
+                  const search = couponRuleProductSearch.toLowerCase().trim();
+                  return p.name?.toLowerCase().includes(search) ||
+                    p.short_id?.toLowerCase().includes(search) ||
+                    p.external_code?.toLowerCase().includes(search);
+                });
+                const availableProducts = filteredProducts.filter(p => !existingIds.has(p.id));
+
+                if (availableProducts.length === 0) {
+                  return (
+                    <div className="py-8 text-center text-muted-foreground">
+                      <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">Nenhum produto encontrado</p>
+                    </div>
+                  );
+                }
+
+                // Group by category
+                const grouped = availableProducts.reduce((acc, product) => {
+                  const category = product.category || 'Sem Categoria';
+                  if (!acc[category]) acc[category] = [];
+                  acc[category].push(product);
+                  return acc;
+                }, {} as Record<string, typeof availableProducts>);
+
+                const categoryNames = Object.keys(grouped).sort();
+
+                return (
+                  <div className="p-2 space-y-2">
+                    {categoryNames.map((category) => {
+                      const categoryProducts = grouped[category];
+                      const isCollapsed = collapsedCouponRuleCategories.has(category);
+                      const allSelected = categoryProducts.every(p => selectedCouponRuleProductIds.has(p.id));
+                      const someSelected = categoryProducts.some(p => selectedCouponRuleProductIds.has(p.id));
+
+                      return (
+                        <div key={category} className="border rounded-lg overflow-hidden">
+                          <div
+                            className="flex items-center gap-2 p-2 bg-muted/50 cursor-pointer hover:bg-muted/70"
+                            onClick={(e) => {
+                              if ((e.target as HTMLElement).closest('[data-checkbox]')) return;
+                              setCollapsedCouponRuleCategories(prev => {
+                                const next = new Set(prev);
+                                if (next.has(category)) next.delete(category);
+                                else next.add(category);
+                                return next;
+                              });
+                            }}
+                          >
+                            <div data-checkbox onClick={(e) => e.stopPropagation()}>
+                              <Checkbox
+                                checked={allSelected}
+                                onCheckedChange={(checked) => {
+                                  setSelectedCouponRuleProductIds(prev => {
+                                    const next = new Set(prev);
+                                    categoryProducts.forEach(p => {
+                                      if (checked) next.add(p.id);
+                                      else next.delete(p.id);
+                                    });
+                                    return next;
+                                  });
+                                }}
+                                className={someSelected && !allSelected ? 'data-[state=checked]:bg-primary/50' : ''}
+                              />
+                            </div>
+                            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                            <span className="font-medium flex-1 text-sm">{category}</span>
+                            <Badge variant="secondary" className="text-xs">{categoryProducts.length}</Badge>
+                          </div>
+                          {!isCollapsed && (
+                            <div className="divide-y">
+                              {categoryProducts.map((product) => (
+                                <div
+                                  key={product.id}
+                                  className={`flex items-center gap-2 p-2 cursor-pointer hover:bg-muted/30 ${
+                                    selectedCouponRuleProductIds.has(product.id) ? 'bg-primary/5' : ''
+                                  }`}
+                                  onClick={() => {
+                                    setSelectedCouponRuleProductIds(prev => {
+                                      const next = new Set(prev);
+                                      if (next.has(product.id)) next.delete(product.id);
+                                      else next.add(product.id);
+                                      return next;
+                                    });
+                                  }}
+                                >
+                                  <Checkbox checked={selectedCouponRuleProductIds.has(product.id)} />
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm truncate">{product.name}</p>
+                                    <div className="flex gap-2 text-xs text-muted-foreground">
+                                      {product.short_id && <span>#{product.short_id}</span>}
+                                      <span className="text-primary">R$ {product.price?.toFixed(2)}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </ScrollArea>
+          </div>
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setCouponRulesModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => {
+                if (selectedCouponRuleProductIds.size === 0 || editingCouponRuleValue <= 0) {
+                  toast({
+                    title: 'Selecione produtos e defina o valor',
+                    variant: 'destructive',
+                  });
+                  return;
+                }
+                const newRules = Array.from(selectedCouponRuleProductIds).map(productId => ({
+                  product_id: productId,
+                  discount_type: editingCouponRuleType,
+                  discount_value: editingCouponRuleValue,
+                }));
+                setCouponDiscountRules([...couponDiscountRules, ...newRules]);
+                setCouponRulesModalOpen(false);
+                setSelectedCouponRuleProductIds(new Set());
+                toast({
+                  title: 'Regras adicionadas',
+                  description: `${newRules.length} regra(s) de desconto adicionada(s)`,
+                });
+              }}
+              disabled={selectedCouponRuleProductIds.size === 0}
+            >
+              Adicionar ({selectedCouponRuleProductIds.size})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
