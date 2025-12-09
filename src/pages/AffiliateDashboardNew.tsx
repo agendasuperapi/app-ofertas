@@ -595,7 +595,7 @@ export default function AffiliateDashboardNew() {
       {/* Tab Resumo */}
       <TabsContent value="overview" className="space-y-6 mt-4 flex-1 overflow-y-auto">
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
           <motion.div initial={{
           opacity: 0,
           y: 10
@@ -643,6 +643,20 @@ export default function AffiliateDashboardNew() {
           y: 0
         }} transition={{
           delay: 0.25
+        }} className="p-3 sm:p-4 bg-orange-500/10 rounded-lg border border-orange-500/20 text-center">
+            <Clock className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-orange-500 mb-1" />
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Em Maturação</p>
+            <p className="font-bold text-sm sm:text-lg text-orange-500">{formatCurrency((store as any).maturing_commission || 0)}</p>
+            {(store as any).maturity_days > 0 && <p className="text-[8px] sm:text-[10px] text-orange-500/70">{(store as any).maturity_days} dias de carência</p>}
+          </motion.div>
+          <motion.div initial={{
+          opacity: 0,
+          y: 10
+        }} animate={{
+          opacity: 1,
+          y: 0
+        }} transition={{
+          delay: 0.3
         }} className="p-3 sm:p-4 bg-emerald-500/10 rounded-lg border border-emerald-500/20 text-center">
             <Wallet className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-emerald-600 mb-1" />
             <p className="text-[10px] sm:text-xs text-muted-foreground">Disponível Saque</p>
@@ -655,7 +669,7 @@ export default function AffiliateDashboardNew() {
           opacity: 1,
           y: 0
         }} transition={{
-          delay: 0.3
+          delay: 0.35
         }} className="p-3 sm:p-4 bg-red-500/10 rounded-lg border border-red-500/20 text-center">
             <XCircle className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-red-600 mb-1" />
             <p className="text-[10px] sm:text-xs text-muted-foreground">Cancelados</p>
@@ -697,31 +711,50 @@ export default function AffiliateDashboardNew() {
         y: 0
       }} transition={{
         delay: 0.5
-      }} className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/20">
-          <div className="flex items-center justify-between">
-            <div>
+      }} className="space-y-3">
+          {/* Valor em maturação */}
+          {((store as any).maturing_commission || 0) > 0 && (
+            <div className="p-4 bg-gradient-to-r from-orange-500/10 to-amber-500/10 rounded-lg border border-orange-500/20">
               <div className="flex items-center gap-2 mb-1">
-                <Wallet className="h-4 w-4 text-green-600" />
-                <span className="text-sm font-medium">Saque de Comissões</span>
+                <Clock className="h-4 w-4 text-orange-500" />
+                <span className="text-sm font-medium">Em Período de Carência</span>
               </div>
-              <p className="text-2xl font-bold text-green-600">
-                {formatCurrency(store.total_commission)}
+              <p className="text-xl font-bold text-orange-500">
+                {formatCurrency((store as any).maturing_commission || 0)}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
-                Disponível para saque
+                Liberação após {(store as any).maturity_days || 7} dias da entrega
               </p>
             </div>
-            <div>
-              {hasPendingWithdrawal(store.store_id) ? <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
-                  <Clock className="h-3 w-3 mr-1" />
-                  Saque Pendente
-                </Badge> : <Button onClick={() => {
-              setWithdrawalStore(store);
-              setWithdrawalDialogOpen(true);
-            }} disabled={store.total_commission <= 0} className="bg-green-600 hover:bg-green-700">
-                  <Wallet className="h-4 w-4 mr-2" />
-                  Solicitar Saque
-                </Button>}
+          )}
+          
+          {/* Valor disponível para saque */}
+          <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/20">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Wallet className="h-4 w-4 text-green-600" />
+                  <span className="text-sm font-medium">Disponível para Saque</span>
+                </div>
+                <p className="text-2xl font-bold text-green-600">
+                  {formatCurrency(store.total_commission)}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Comissões liberadas
+                </p>
+              </div>
+              <div>
+                {hasPendingWithdrawal(store.store_id) ? <Badge variant="outline" className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+                    <Clock className="h-3 w-3 mr-1" />
+                    Saque Pendente
+                  </Badge> : <Button onClick={() => {
+                setWithdrawalStore(store);
+                setWithdrawalDialogOpen(true);
+              }} disabled={store.total_commission <= 0} className="bg-green-600 hover:bg-green-700">
+                    <Wallet className="h-4 w-4 mr-2" />
+                    Solicitar Saque
+                  </Button>}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -977,7 +1010,33 @@ export default function AffiliateDashboardNew() {
                           <p className="font-medium">{getCommissionDisplay(order)}</p>
                         </div>
                       </div>
-                      {order.coupon_code && (
+                      {/* Mostrar contagem regressiva para pedidos entregues */}
+                      {(order.order_status === 'entregue' || order.order_status === 'delivered') && order.commission_status !== 'paid' && (order as any).commission_available_at && (() => {
+                        const availableAt = new Date((order as any).commission_available_at);
+                        const now = new Date();
+                        const daysRemaining = Math.ceil((availableAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                        
+                        if (daysRemaining > 0) {
+                          return (
+                            <div className="mt-2 pt-2 border-t border-border/50">
+                              <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/20">
+                                <Clock className="h-3 w-3 mr-1" />
+                                Liberação em {daysRemaining} dia{daysRemaining !== 1 ? 's' : ''}
+                              </Badge>
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <div className="mt-2 pt-2 border-t border-border/50">
+                              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Disponível para saque
+                              </Badge>
+                            </div>
+                          );
+                        }
+                      })()}
+                      {order.coupon_code && !(order.order_status === 'entregue' || order.order_status === 'delivered') && (
                         <div className="mt-2 pt-2 border-t border-border/50">
                           <Badge variant="outline" className="font-mono text-xs">
                             {order.coupon_code}
@@ -2608,7 +2667,7 @@ export default function AffiliateDashboardNew() {
       </ResponsiveDialog>
 
       {/* Dialog de Solicitação de Saque */}
-      {withdrawalStore && affiliateDbId && <RequestWithdrawalDialog open={withdrawalDialogOpen} onOpenChange={setWithdrawalDialogOpen} affiliateId={affiliateDbId} storeAffiliateId={withdrawalStore.store_affiliate_id} storeId={withdrawalStore.store_id} storeName={withdrawalStore.store_name} availableAmount={withdrawalStore.total_commission} defaultPixKey={affiliateUser?.cpf_cnpj || affiliateUser?.pix_key || ''} onSubmit={handleCreateWithdrawal} />}
+      {withdrawalStore && affiliateDbId && <RequestWithdrawalDialog open={withdrawalDialogOpen} onOpenChange={setWithdrawalDialogOpen} affiliateId={affiliateDbId} storeAffiliateId={withdrawalStore.store_affiliate_id} storeId={withdrawalStore.store_id} storeName={withdrawalStore.store_name} availableAmount={withdrawalStore.total_commission} maturingAmount={(withdrawalStore as any).maturing_commission || 0} maturityDays={(withdrawalStore as any).maturity_days || 7} defaultPixKey={affiliateUser?.cpf_cnpj || affiliateUser?.pix_key || ''} onSubmit={handleCreateWithdrawal} />}
 
       {/* Modal de Detalhes do Saque */}
       <ResponsiveDialog open={!!selectedWithdrawal} onOpenChange={(open) => !open && setSelectedWithdrawal(null)}>

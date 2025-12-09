@@ -23,6 +23,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useProducts } from '@/hooks/useProducts';
 import { InviteAffiliateDialog } from './InviteAffiliateDialog';
 import { AffiliateInvitesManager } from './AffiliateInvitesManager';
+import { AffiliateMaturitySettings } from './AffiliateMaturitySettings';
 import { 
   Users, Plus, Edit, Trash2, DollarSign, TrendingUp, 
   Copy, Check, Tag, Percent, Settings, Eye, 
@@ -928,6 +929,9 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
         </TabsContent>
 
         <TabsContent value="gerenciar" className="space-y-6 mt-0">
+          {/* Configuração de Carência */}
+          <AffiliateMaturitySettings storeId={storeId} />
+          
           {/* Botão Novo Afiliado */}
           <div className="flex justify-end">
             <Button className="bg-gradient-primary shadow-glow hover-lift" onClick={() => handleOpenDialog()}>
