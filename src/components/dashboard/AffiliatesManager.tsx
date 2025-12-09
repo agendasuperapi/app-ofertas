@@ -22,6 +22,7 @@ import { useCoupons } from '@/hooks/useCoupons';
 import { useCategories } from '@/hooks/useCategories';
 import { useProducts } from '@/hooks/useProducts';
 import { InviteAffiliateDialog } from './InviteAffiliateDialog';
+import { AffiliateInvitesManager } from './AffiliateInvitesManager';
 import { 
   Users, Plus, Edit, Trash2, DollarSign, TrendingUp, 
   Copy, Check, Tag, Percent, Settings, Eye, 
@@ -886,6 +887,8 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
     );
   }
 
+  const [mainTab, setMainTab] = useState<'gerenciar' | 'convites'>('gerenciar');
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -906,19 +909,41 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
             Gerencie seus afiliados e comissões
           </p>
         </div>
-        <Button className="bg-gradient-primary shadow-glow hover-lift" onClick={() => handleOpenDialog()}>
-          <Plus className="h-4 w-4 mr-2" />
-          Novo Afiliado
-        </Button>
       </motion.div>
+
+      {/* Main Tabs */}
+      <Tabs value={mainTab} onValueChange={(value) => setMainTab(value as 'gerenciar' | 'convites')} className="w-full">
+        <TabsList className="glass mb-4">
+          <TabsTrigger value="gerenciar" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Gerenciar
+          </TabsTrigger>
+          <TabsTrigger value="convites" className="flex items-center gap-2">
+            <Mail className="h-4 w-4" />
+            Convites
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="convites" className="mt-0">
+          <AffiliateInvitesManager storeId={storeId} storeName={storeName} />
+        </TabsContent>
+
+        <TabsContent value="gerenciar" className="space-y-6 mt-0">
+          {/* Botão Novo Afiliado */}
+          <div className="flex justify-end">
+            <Button className="bg-gradient-primary shadow-glow hover-lift" onClick={() => handleOpenDialog()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Afiliado
+            </Button>
+          </div>
       
-      {/* Invite Dialog */}
-      <InviteAffiliateDialog
-        storeId={storeId}
-        storeName={storeName}
-        open={inviteDialogOpen}
-        onOpenChange={setInviteDialogOpen}
-      />
+          {/* Invite Dialog */}
+          <InviteAffiliateDialog
+            storeId={storeId}
+            storeName={storeName}
+            open={inviteDialogOpen}
+            onOpenChange={setInviteDialogOpen}
+          />
 
       {/* Summary Cards */}
       <motion.div
@@ -4227,6 +4252,8 @@ export const AffiliatesManager = ({ storeId, storeName = 'Loja' }: AffiliatesMan
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
