@@ -123,7 +123,8 @@ export function RequestWithdrawalDialog({
               placeholder="Digite sua chave PIX"
               value={pixKey}
               onChange={(e) => setPixKey(e.target.value)}
-              className={pixKey && !pixValidation.isValid ? 'border-destructive' : pixValidation.isValid && pixValidation.type !== 'empty' ? 'border-emerald-500' : ''}
+              disabled
+              className={`bg-muted ${pixKey && !pixValidation.isValid ? 'border-destructive' : pixValidation.isValid && pixValidation.type !== 'empty' ? 'border-emerald-500' : ''}`}
             />
             {pixKey && pixValidation.type !== 'empty' && (
               <p className={`text-xs flex items-center gap-1 ${pixValidation.isValid ? 'text-emerald-600' : 'text-destructive'}`}>
