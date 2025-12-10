@@ -42,6 +42,7 @@ interface OrderItem {
   unit_price: number;
   subtotal: number;
   item_discount: number | null;
+  item_value_with_discount: number;
   commission_amount: number;
   commission_type: string;
   commission_value: number;
@@ -78,7 +79,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
       // Fetch from affiliate_item_earnings which has commission details
       const { data: itemEarnings, error: earningsError } = await supabase
         .from('affiliate_item_earnings')
-        .select('id, product_name, item_subtotal, item_discount, commission_amount, commission_type, commission_value, order_item_id')
+        .select('id, product_name, item_subtotal, item_discount, item_value_with_discount, commission_amount, commission_type, commission_value, order_item_id')
         .eq('earning_id', earningId);
 
       if (earningsError) throw earningsError;
@@ -102,6 +103,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
           unit_price: orderItem?.unit_price || 0,
           subtotal: earning.item_subtotal,
           item_discount: earning.item_discount,
+          item_value_with_discount: earning.item_value_with_discount,
           commission_amount: earning.commission_amount,
           commission_type: earning.commission_type,
           commission_value: earning.commission_value
@@ -736,7 +738,16 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                                           <span className="font-medium">{item.quantity}x</span>{' '}
                                           <span>{item.product_name}</span>
                                         </div>
-                                        <span className="text-muted-foreground">{formatCurrency(item.subtotal)}</span>
+                                        <div className="text-right">
+                                          {item.item_discount && item.item_discount > 0 ? (
+                                            <>
+                                              <span className="text-muted-foreground line-through mr-1">{formatCurrency(item.subtotal)}</span>
+                                              <span className="text-primary font-medium">{formatCurrency(item.item_value_with_discount)}</span>
+                                            </>
+                                          ) : (
+                                            <span className="text-muted-foreground">{formatCurrency(item.subtotal)}</span>
+                                          )}
+                                        </div>
                                       </div>
                                       <div className="flex justify-between items-center text-[10px] text-muted-foreground">
                                         <div className="flex gap-2">
