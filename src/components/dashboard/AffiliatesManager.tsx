@@ -2401,7 +2401,7 @@ export const AffiliatesManager = ({
                                     <Button 
                                       size="sm" 
                                       variant="outline" 
-                                      className="h-8 text-xs"
+                                      className="h-8 text-xs bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700"
                                       onClick={() => {
                                         if (!selectedAffiliate) return;
                                         setConfirmLinkCoupon({ coupon });
