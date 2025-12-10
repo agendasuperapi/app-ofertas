@@ -134,7 +134,7 @@ export function useWithdrawalRequests(options: UseWithdrawalRequestsOptions = {}
   // Marcar como pago (lojista)
   const markAsPaid = async (requestId: string, adminNotes?: string, paymentProof?: string) => {
     try {
-      // Buscar a solicitação para obter store_affiliate_id
+      // Buscar a solicitação para obter store_affiliate_id e affiliate_id
       const request = requests.find(r => r.id === requestId);
       if (!request) {
         toast.error('Solicitação não encontrada');
@@ -159,11 +159,19 @@ export function useWithdrawalRequests(options: UseWithdrawalRequestsOptions = {}
 
       // 2. Marcar as comissões elegíveis como pagas
       // Buscar comissões de pedidos entregues que ainda estão pendentes
-      const { data: eligibleEarnings, error: fetchError } = await supabase
+      let eligibleEarningsQuery = supabase
         .from('affiliate_earnings')
         .select('id, order_id')
-        .eq('store_affiliate_id', request.store_affiliate_id)
         .eq('status', 'pending');
+
+      // Filter by store_affiliate_id or affiliate_id
+      if (request.store_affiliate_id) {
+        eligibleEarningsQuery = eligibleEarningsQuery.eq('store_affiliate_id', request.store_affiliate_id);
+      } else if (request.affiliate_id) {
+        eligibleEarningsQuery = eligibleEarningsQuery.eq('affiliate_id', request.affiliate_id);
+      }
+
+      const { data: eligibleEarnings, error: fetchError } = await eligibleEarningsQuery;
 
       if (fetchError) {
         console.error('[useWithdrawalRequests] Erro ao buscar comissões:', fetchError);
@@ -180,8 +188,8 @@ export function useWithdrawalRequests(options: UseWithdrawalRequestsOptions = {}
           o => (o.status as string) === 'entregue' || (o.status as string) === 'delivered'
         );
 
-        if (deliveredOrders && deliveredOrders.length > 0) {
-          const deliveredOrderIds = deliveredOrders.map(o => o.id);
+        if (filteredDeliveredOrders.length > 0) {
+          const deliveredOrderIds = filteredDeliveredOrders.map(o => o.id);
           const earningsToUpdate = eligibleEarnings
             .filter(e => deliveredOrderIds.includes(e.order_id))
             .map(e => e.id);
