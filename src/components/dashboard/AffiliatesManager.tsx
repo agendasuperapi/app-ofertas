@@ -2364,7 +2364,7 @@ export const AffiliatesManager = ({
                           {availableCoupons.map(coupon => {
                           const linkedCouponIds = selectedAffiliate?.affiliate_coupons?.map(ac => ac.coupon_id) || [];
                           const isLinked = linkedCouponIds.includes(coupon.id);
-                          return <div key={coupon.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 border rounded-lg ${isLinked ? 'border-primary/50 bg-primary/5' : ''}`}>
+                          return <div key={coupon.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 border rounded-lg ${coupon.is_active ? 'bg-gradient-to-r from-green-50 to-green-100/50 border-green-200' : 'bg-gradient-to-r from-orange-50 to-amber-100/50 border-orange-200'}`}>
                                 <div className="flex items-center gap-3 min-w-0">
                                   {isLinked && <Lock className="h-4 w-4 text-primary flex-shrink-0" />}
                                   <div className="min-w-0">
