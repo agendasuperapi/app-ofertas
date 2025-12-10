@@ -258,6 +258,7 @@ export default function AffiliateDashboardNew() {
   // Hook de notificação de mudança de status do pedido (atualiza dashboard quando lojista muda status)
   useAffiliateOrderStatusNotification({
     orderIds: affiliateOrderIds,
+    storeAffiliateIds,
     onStatusChange: refreshData
   });
 
