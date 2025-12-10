@@ -2329,7 +2329,7 @@ export const AffiliatesManager = ({
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Tag className="h-5 w-5 text-primary" />
-                        <CardTitle className="text-base">Cupons Vinculados</CardTitle>
+                        <CardTitle className="text-base">Cupons Vinculados - {selectedAffiliate?.name?.split(' ')[0]}</CardTitle>
                       </div>
                       <Button size="sm" variant="outline" onClick={() => {
                         setEditingCouponId(null);
