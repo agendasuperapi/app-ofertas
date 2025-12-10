@@ -32,7 +32,6 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, onSign
     { id: "pedidos", label: "Pedidos", icon: ShoppingBag },
     { id: "relatorios", label: "Relatórios", icon: TrendingUp, isRelatorios: true },
     { id: "menu", label: "Menu", icon: Menu, isMenu: true },
-    ...(onSignOut ? [{ id: "sair", label: "Sair", icon: LogOut, isLogout: true }] : []),
   ];
 
   const relatoriosSubmenus = [
@@ -81,7 +80,7 @@ export const DashboardBottomNav = ({ activeTab, onTabChange, onMenuClick, onSign
     };
   }, [showRelatoriosMenu]);
 
-  const gridCols = onSignOut ? "grid-cols-6" : "grid-cols-5";
+  const gridCols = "grid-cols-5";
 
   return (
     <>
