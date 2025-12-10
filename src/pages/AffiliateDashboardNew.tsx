@@ -492,6 +492,30 @@ export default function AffiliateDashboardNew() {
       .slice(0, 14); // Próximos 14 dias
   }, [filteredAffiliateOrders]);
 
+  // Lista de pedidos em maturação com detalhes
+  const maturingOrdersList = useMemo(() => {
+    if (!filteredAffiliateOrders || filteredAffiliateOrders.length === 0) return [];
+    
+    const now = new Date();
+    
+    return filteredAffiliateOrders
+      .filter(order => {
+        const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
+        if (!isDelivered) return false;
+        
+        if (order.commission_available_at) {
+          const maturityDate = new Date(order.commission_available_at);
+          return maturityDate > now;
+        }
+        return false;
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.commission_available_at || 0);
+        const dateB = new Date(b.commission_available_at || 0);
+        return dateA.getTime() - dateB.getTime();
+      });
+  }, [filteredAffiliateOrders]);
+
   // Dados para gráfico de pizza - Comissões por loja (apenas pedidos entregues)
   const commissionsByStore = useMemo(() => {
     if (!filteredAffiliateOrders || filteredAffiliateOrders.length === 0) return [];
@@ -1730,6 +1754,58 @@ export default function AffiliateDashboardNew() {
                   {formatCurrency(maturityChartData.reduce((sum, d) => sum + d.value, 0))}
                 </span>
               </div>
+
+              {/* Lista detalhada de pedidos em maturação */}
+              {maturingOrdersList.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                    <Package className="h-4 w-4" />
+                    Pedidos em maturação ({maturingOrdersList.length})
+                  </h4>
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                    {maturingOrdersList.map(order => {
+                      const store = affiliateStores.find(s => s.store_id === order.store_id);
+                      return (
+                        <div 
+                          key={order.earning_id} 
+                          className="p-3 bg-muted/50 rounded-lg border border-border/50 hover:bg-muted/70 transition-colors cursor-pointer"
+                          onClick={() => openOrderModal(order)}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-medium text-sm">#{order.order_number}</span>
+                                <Badge variant="outline" className="text-xs text-amber-600 border-amber-500/30 bg-amber-500/10">
+                                  <Timer className="h-3 w-3 mr-1" />
+                                  Em maturação
+                                </Badge>
+                              </div>
+                              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                                <Store className="h-3 w-3" />
+                                <span className="truncate">{store?.store_name || 'Loja'}</span>
+                                <span>•</span>
+                                <span>{format(new Date(order.order_date), 'dd/MM/yy', { locale: ptBR })}</span>
+                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-1">
+                              <span className="font-semibold text-amber-600 text-sm">
+                                {formatCurrency(order.commission_amount)}
+                              </span>
+                              {order.commission_available_at && (
+                                <MaturityCountdown 
+                                  commissionAvailableAt={order.commission_available_at} 
+                                  orderStatus={order.order_status}
+                                  variant="inline"
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
