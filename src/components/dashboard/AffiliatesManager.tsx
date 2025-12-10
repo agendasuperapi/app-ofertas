@@ -2384,9 +2384,6 @@ export const AffiliatesManager = ({
                                       <Badge variant={coupon.is_active ? "default" : "destructive"} className={coupon.is_active ? "bg-green-600 text-white text-xs flex-shrink-0" : "text-xs flex-shrink-0"}>
                                         {coupon.is_active ? "Cupom Ativo" : "Cupom Inativo"}
                                       </Badge>
-                                      {isLinked && <Badge variant="secondary" className="text-xs flex-shrink-0">
-                                          Permanente
-                                        </Badge>}
                                     </div>
                                     <p className="text-sm text-muted-foreground">
                                       {coupon.discount_type === 'percentage' ? `${coupon.discount_value}% de desconto` : `${formatCurrency(coupon.discount_value)} de desconto`}
