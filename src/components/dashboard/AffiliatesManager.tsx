@@ -2173,7 +2173,7 @@ export const AffiliatesManager = ({
                         </div>
                         <div className="text-center border-x px-3">
                           <span className="font-bold text-amber-600">{commissionRules.length}</span>
-                          <span className="text-muted-foreground ml-1">Específica</span>
+                          <span className="text-muted-foreground ml-1">Produtos Comissão Específica</span>
                         </div>
                         <div className="text-center">
                           <span className="font-bold text-emerald-600">{Math.max(0, products.length - commissionRules.length)}</span>
