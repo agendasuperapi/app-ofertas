@@ -59,7 +59,8 @@ export const AffiliatesManager = ({
   const {
     coupons,
     createCoupon,
-    updateCoupon
+    updateCoupon,
+    fetchCoupons
   } = useCoupons(storeId);
   const {
     categories
@@ -2390,6 +2391,15 @@ export const AffiliatesManager = ({
                               }}>
                                       <Link2 className="h-3 w-3 mr-1" />
                                       Vincular Cupom 
+                                    </Button>}
+                                  {isLinked && <Button size="sm" variant={coupon.is_active ? "destructive" : "outline"} className={`h-8 text-xs ${!coupon.is_active ? 'bg-green-600 text-white border-green-600 hover:bg-green-700' : ''}`} onClick={async () => {
+                                const { error } = await supabase.from('coupons').update({ is_active: !coupon.is_active }).eq('id', coupon.id);
+                                if (!error) {
+                                  toast({ title: coupon.is_active ? 'Cupom inativado' : 'Cupom ativado' });
+                                  fetchCoupons();
+                                }
+                              }}>
+                                      {coupon.is_active ? 'Inativar' : 'Ativar'}
                                     </Button>}
                                   <Button size="icon" variant="ghost" className="h-8 w-8" onClick={async () => {
                                 setEditingCouponId(coupon.id);
