@@ -266,6 +266,7 @@ export const useAffiliates = (storeId?: string) => {
 
       // Sync with store_affiliates when relevant fields are updated
       const needsStoreAffiliateSync = 
+        rest.is_active !== undefined ||
         rest.commission_maturity_days !== undefined ||
         rest.use_default_commission !== undefined ||
         rest.default_commission_type !== undefined ||
@@ -293,8 +294,9 @@ export const useAffiliates = (storeId?: string) => {
             .maybeSingle();
 
           if (storeAffiliate) {
-            // Always update commission configuration fields
+            // Always update commission configuration fields including is_active
             const storeAffiliateUpdate: any = {
+              is_active: rest.is_active ?? data.is_active ?? true,
               default_commission_type: rest.default_commission_type || data.default_commission_type || 'percentage',
               default_commission_value: rest.default_commission_value ?? data.default_commission_value ?? 0,
               use_default_commission: rest.use_default_commission ?? data.use_default_commission ?? true,
