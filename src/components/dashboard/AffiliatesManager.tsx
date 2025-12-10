@@ -193,6 +193,7 @@ export const AffiliatesManager = ({
     commission_enabled: true,
     default_commission_type: 'percentage' as 'percentage' | 'fixed',
     default_commission_value: 0,
+    commission_maturity_days: 7,
     commission_products: [] as {
       id: string;
       type: 'percentage' | 'fixed';
@@ -260,6 +261,7 @@ export const AffiliatesManager = ({
       commission_enabled: true,
       default_commission_type: 'percentage',
       default_commission_value: 0,
+      commission_maturity_days: 7,
       commission_products: []
     });
     setProductSearch('');
@@ -293,6 +295,7 @@ export const AffiliatesManager = ({
         commission_enabled: affiliate.use_default_commission ?? true,
         default_commission_type: affiliate.default_commission_type,
         default_commission_value: affiliate.default_commission_value,
+        commission_maturity_days: affiliate.commission_maturity_days ?? 7,
         commission_products: productRules
       });
     } else {
@@ -340,7 +343,8 @@ export const AffiliatesManager = ({
       commission_enabled: formData.commission_enabled,
       default_commission_type: formData.default_commission_type,
       default_commission_value: formData.default_commission_value,
-      use_default_commission: formData.commission_enabled && formData.default_commission_value > 0
+      use_default_commission: formData.commission_enabled && formData.default_commission_value > 0,
+      commission_maturity_days: formData.commission_maturity_days
     };
     let result;
     const isNewAffiliate = !editingAffiliate;
@@ -403,7 +407,7 @@ export const AffiliatesManager = ({
             default_commission_type: formData.default_commission_type,
             default_commission_value: formData.default_commission_value,
             use_default_commission: formData.commission_enabled && formData.default_commission_value > 0,
-            commission_maturity_days: 7 // Default value, can be configured later
+            commission_maturity_days: formData.commission_maturity_days
           }
         });
         if (data?.success && data?.invite_token) {
@@ -1312,6 +1316,36 @@ export const AffiliatesManager = ({
                       </p>
                     </div>
                   </motion.div>}
+              </div>
+              
+              {/* Seção Liberação de Saque */}
+              <div className="pt-4 border-t border-border/50">
+                <div className="p-3 bg-gradient-to-r from-amber-500/10 to-amber-500/5 border border-amber-500/20 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar className="h-4 w-4 text-amber-600" />
+                    <Label className="font-semibold">Liberação de Saque</Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Após a entrega do pedido, a comissão ficará disponível para saque após este período
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      type="number" 
+                      min="0" 
+                      max="90" 
+                      value={formData.commission_maturity_days} 
+                      onChange={e => setFormData({
+                        ...formData,
+                        commission_maturity_days: Math.min(90, Math.max(0, Number(e.target.value)))
+                      })} 
+                      className="h-8 w-20 text-sm glass" 
+                    />
+                    <span className="text-sm text-muted-foreground">dias</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Valor entre 0 e 90 dias. Padrão: 7 dias.
+                  </p>
+                </div>
               </div>
               
               {/* Botão Salvar - só aparece em modo edição */}
