@@ -715,7 +715,7 @@ export default function AffiliateDashboardNew() {
           delay: 0.25
         }} className="p-3 sm:p-4 bg-orange-500/10 rounded-lg border border-orange-500/20 text-center">
             <Clock className="h-4 w-4 sm:h-5 sm:w-5 mx-auto text-orange-500 mb-1" />
-            <p className="text-[10px] sm:text-xs text-muted-foreground">Em Maturação</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Aguardando Prazo Liberação</p>
             <p className="font-bold text-sm sm:text-lg text-orange-500">{formatCurrency((store as any).maturing_commission || 0)}</p>
             {(store as any).maturity_days > 0 && <p className="text-[8px] sm:text-[10px] text-orange-500/70">{(store as any).maturity_days} dias de carência</p>}
           </motion.div>
