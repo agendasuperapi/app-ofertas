@@ -2363,16 +2363,16 @@ export const AffiliatesManager = ({
                           {availableCoupons.map(coupon => {
                           const linkedCouponIds = selectedAffiliate?.affiliate_coupons?.map(ac => ac.coupon_id) || [];
                           const isLinked = linkedCouponIds.includes(coupon.id);
-                          return <div key={coupon.id} className={`flex items-center justify-between p-3 border rounded-lg ${isLinked ? 'border-primary/50 bg-primary/5' : ''}`}>
-                                <div className="flex items-center gap-3">
-                                  {isLinked && <Lock className="h-4 w-4 text-primary" />}
-                                  <div>
-                                    <div className="flex items-center gap-2">
-                                      <p className="font-medium">{coupon.code}</p>
-                                      <Badge variant={coupon.is_active ? "default" : "destructive"} className={coupon.is_active ? "bg-green-600 text-white text-xs" : "text-xs"}>
+                          return <div key={coupon.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 border rounded-lg ${isLinked ? 'border-primary/50 bg-primary/5' : ''}`}>
+                                <div className="flex items-center gap-3 min-w-0">
+                                  {isLinked && <Lock className="h-4 w-4 text-primary flex-shrink-0" />}
+                                  <div className="min-w-0">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <p className="font-medium break-all">{coupon.code}</p>
+                                      <Badge variant={coupon.is_active ? "default" : "destructive"} className={coupon.is_active ? "bg-green-600 text-white text-xs flex-shrink-0" : "text-xs flex-shrink-0"}>
                                         {coupon.is_active ? "Ativo" : "Inativo"}
                                       </Badge>
-                                      {isLinked && <Badge variant="secondary" className="text-xs">
+                                      {isLinked && <Badge variant="secondary" className="text-xs flex-shrink-0">
                                           Permanente
                                         </Badge>}
                                     </div>
@@ -2381,7 +2381,7 @@ export const AffiliatesManager = ({
                                     </p>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-shrink-0">
                                   {!isLinked && <Button size="sm" variant="outline" className="h-8 text-xs bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700" onClick={() => {
                                 if (!selectedAffiliate) return;
                                 setConfirmLinkCoupon({
