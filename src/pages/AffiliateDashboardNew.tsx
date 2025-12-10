@@ -91,6 +91,7 @@ export default function AffiliateDashboardNew() {
   const [commissionViewMode, setCommissionViewMode] = useState<'stores' | 'orders'>('stores');
   const [commissionsOrderSearch, setCommissionsOrderSearch] = useState('');
   const [commissionsStoreFilter, setCommissionsStoreFilter] = useState<string>('all');
+  const [commissionsStatusFilter, setCommissionsStatusFilter] = useState<string>('all');
 
   // Withdrawal orders modal state
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<any | null>(null);
@@ -2403,22 +2404,36 @@ export default function AffiliateDashboardNew() {
                 <Input placeholder="Buscar loja..." className="pl-9 w-full" value={storesSearch} onChange={e => setStoresSearch(e.target.value)} />
               </div>
             ) : (
-              <div className="flex flex-col sm:flex-row gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Buscar pedido..." className="pl-9 w-full" value={commissionsOrderSearch} onChange={e => setCommissionsOrderSearch(e.target.value)} />
+              <div className="flex flex-col gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="Buscar pedido..." className="pl-9 w-full" value={commissionsOrderSearch} onChange={e => setCommissionsOrderSearch(e.target.value)} />
+                  </div>
+                  <Select value={commissionsStoreFilter} onValueChange={setCommissionsStoreFilter}>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                      <SelectValue placeholder="Filtrar por loja" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas as lojas</SelectItem>
+                      {affiliateStores.map(store => (
+                        <SelectItem key={store.store_affiliate_id} value={store.store_id}>
+                          {store.store_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <Select value={commissionsStoreFilter} onValueChange={setCommissionsStoreFilter}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Filtrar por loja" />
+                <Select value={commissionsStatusFilter} onValueChange={setCommissionsStatusFilter}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Filtrar por status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todas as lojas</SelectItem>
-                    {affiliateStores.map(store => (
-                      <SelectItem key={store.store_affiliate_id} value={store.store_id}>
-                        {store.store_name}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value="all">Todos os pedidos</SelectItem>
+                    <SelectItem value="maturing">Em maturação</SelectItem>
+                    <SelectItem value="available">Disponíveis</SelectItem>
+                    <SelectItem value="pending">Pendentes</SelectItem>
+                    <SelectItem value="cancelled">Cancelados</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -2452,7 +2467,21 @@ export default function AffiliateDashboardNew() {
                     order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) ||
                     order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
                   const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
-                  return matchesSearch && matchesStore;
+                  
+                  // Status filter logic
+                  const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
+                  const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
+                  const isMaturing = isDelivered && order.commission_available_at && new Date(order.commission_available_at) > new Date();
+                  const isAvailable = isDelivered && !isMaturing && !isCancelled;
+                  const isPending = !isDelivered && !isCancelled;
+                  
+                  let matchesStatus = true;
+                  if (commissionsStatusFilter === 'maturing') matchesStatus = isMaturing;
+                  else if (commissionsStatusFilter === 'available') matchesStatus = isAvailable;
+                  else if (commissionsStatusFilter === 'pending') matchesStatus = isPending;
+                  else if (commissionsStatusFilter === 'cancelled') matchesStatus = isCancelled;
+                  
+                  return matchesSearch && matchesStore && matchesStatus;
                 })
                 .slice(0, 10)
                 .map(order => {
@@ -2499,14 +2528,34 @@ export default function AffiliateDashboardNew() {
                   order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) ||
                   order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
                 const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
-                return matchesSearch && matchesStore;
+                const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
+                const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
+                const isMaturing = isDelivered && order.commission_available_at && new Date(order.commission_available_at) > new Date();
+                const isAvailable = isDelivered && !isMaturing && !isCancelled;
+                const isPending = !isDelivered && !isCancelled;
+                let matchesStatus = true;
+                if (commissionsStatusFilter === 'maturing') matchesStatus = isMaturing;
+                else if (commissionsStatusFilter === 'available') matchesStatus = isAvailable;
+                else if (commissionsStatusFilter === 'pending') matchesStatus = isPending;
+                else if (commissionsStatusFilter === 'cancelled') matchesStatus = isCancelled;
+                return matchesSearch && matchesStore && matchesStatus;
               }).length === 0 && <p className="text-center text-muted-foreground py-4">Nenhum pedido encontrado</p>}
               {affiliateOrders.filter(order => {
                 const matchesSearch = commissionsOrderSearch === '' || 
                   order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) ||
                   order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
                 const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
-                return matchesSearch && matchesStore;
+                const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
+                const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
+                const isMaturing = isDelivered && order.commission_available_at && new Date(order.commission_available_at) > new Date();
+                const isAvailable = isDelivered && !isMaturing && !isCancelled;
+                const isPending = !isDelivered && !isCancelled;
+                let matchesStatus = true;
+                if (commissionsStatusFilter === 'maturing') matchesStatus = isMaturing;
+                else if (commissionsStatusFilter === 'available') matchesStatus = isAvailable;
+                else if (commissionsStatusFilter === 'pending') matchesStatus = isPending;
+                else if (commissionsStatusFilter === 'cancelled') matchesStatus = isCancelled;
+                return matchesSearch && matchesStore && matchesStatus;
               }).length > 10 && (
                 <p className="text-center text-muted-foreground text-sm py-2">
                   Mostrando 10 de {affiliateOrders.filter(order => {
@@ -2514,7 +2563,17 @@ export default function AffiliateDashboardNew() {
                       order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) ||
                       order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
                     const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
-                    return matchesSearch && matchesStore;
+                    const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
+                    const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
+                    const isMaturing = isDelivered && order.commission_available_at && new Date(order.commission_available_at) > new Date();
+                    const isAvailable = isDelivered && !isMaturing && !isCancelled;
+                    const isPending = !isDelivered && !isCancelled;
+                    let matchesStatus = true;
+                    if (commissionsStatusFilter === 'maturing') matchesStatus = isMaturing;
+                    else if (commissionsStatusFilter === 'available') matchesStatus = isAvailable;
+                    else if (commissionsStatusFilter === 'pending') matchesStatus = isPending;
+                    else if (commissionsStatusFilter === 'cancelled') matchesStatus = isCancelled;
+                    return matchesSearch && matchesStore && matchesStatus;
                   }).length} pedidos
                 </p>
               )}
