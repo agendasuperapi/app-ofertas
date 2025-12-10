@@ -85,7 +85,7 @@ export default function AffiliateDashboardNew() {
   const [storesSortBy, setStoresSortBy] = useState('name');
   const [storesSubTab, setStoresSubTab] = useState('stores');
   const [historyPage, setHistoryPage] = useState<Record<string, number>>({});
-  
+
   // Withdrawal orders modal state
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<any | null>(null);
   const [withdrawalOrders, setWithdrawalOrders] = useState<any[]>([]);
@@ -186,9 +186,10 @@ export default function AffiliateDashboardNew() {
     setLoadingWithdrawalOrders(true);
     try {
       // Buscar affiliate_earnings com status 'paid' e paid_at no período do saque
-      const { data: earnings, error } = await supabase
-        .from('affiliate_earnings')
-        .select(`
+      const {
+        data: earnings,
+        error
+      } = await supabase.from('affiliate_earnings').select(`
           id,
           order_id,
           commission_amount,
@@ -201,14 +202,8 @@ export default function AffiliateDashboardNew() {
             total,
             status
           )
-        `)
-        .eq('affiliate_id', affiliateDbId)
-        .eq('status', 'paid')
-        .gte('paid_at', withdrawal.requested_at)
-        .lte('paid_at', withdrawal.paid_at || new Date().toISOString());
-
+        `).eq('affiliate_id', affiliateDbId).eq('status', 'paid').gte('paid_at', withdrawal.requested_at).lte('paid_at', withdrawal.paid_at || new Date().toISOString());
       if (error) throw error;
-
       const formattedOrders = (earnings || []).map((e: any) => ({
         order_id: e.order_id,
         order_number: e.orders?.order_number,
@@ -218,7 +213,6 @@ export default function AffiliateDashboardNew() {
         commission_amount: e.commission_amount,
         order_status: e.orders?.status
       }));
-
       setWithdrawalOrders(formattedOrders);
     } catch (err) {
       console.error('Erro ao buscar pedidos do saque:', err);
@@ -357,17 +351,17 @@ export default function AffiliateDashboardNew() {
     const availableForWithdrawal = validOrders.filter(order => {
       const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
       if (!isDelivered) return false;
-      
+
       // Se tem data de maturidade, verificar se já passou
       if (order.commission_available_at) {
         const maturityDate = new Date(order.commission_available_at);
         return maturityDate <= now;
       }
-      
+
       // Fallback: usar maturity_days (default 7 dias) + data do pedido
       const maturityDays = order.maturity_days || 7;
       const orderDate = new Date(order.order_date);
-      const maturityDate = new Date(orderDate.getTime() + (maturityDays * 24 * 60 * 60 * 1000));
+      const maturityDate = new Date(orderDate.getTime() + maturityDays * 24 * 60 * 60 * 1000);
       return maturityDate <= now;
     }).reduce((sum, order) => sum + (order.commission_amount || 0), 0);
 
@@ -375,17 +369,17 @@ export default function AffiliateDashboardNew() {
     const maturingCommission = validOrders.filter(order => {
       const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
       if (!isDelivered) return false;
-      
+
       // Se tem data de maturidade, verificar se ainda não passou
       if (order.commission_available_at) {
         const maturityDate = new Date(order.commission_available_at);
         return maturityDate > now;
       }
-      
+
       // Fallback: usar maturity_days (default 7 dias) + data do pedido
       const maturityDays = order.maturity_days || 7;
       const orderDate = new Date(order.order_date);
-      const maturityDate = new Date(orderDate.getTime() + (maturityDays * 24 * 60 * 60 * 1000));
+      const maturityDate = new Date(orderDate.getTime() + maturityDays * 24 * 60 * 60 * 1000);
       return maturityDate > now;
     }).reduce((sum, order) => sum + (order.commission_amount || 0), 0);
 
@@ -536,48 +530,82 @@ export default function AffiliateDashboardNew() {
   };
 
   // Formatar e validar chave PIX
-  const formatPixKey = (key: string | null | undefined): { formatted: string; type: string; isValid: boolean } => {
-    if (!key) return { formatted: '', type: '', isValid: false };
-    
+  const formatPixKey = (key: string | null | undefined): {
+    formatted: string;
+    type: string;
+    isValid: boolean;
+  } => {
+    if (!key) return {
+      formatted: '',
+      type: '',
+      isValid: false
+    };
     const cleanKey = key.replace(/\D/g, '');
-    
+
     // CPF: 11 dígitos
     if (cleanKey.length === 11 && /^\d{11}$/.test(cleanKey)) {
       const formatted = cleanKey.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-      return { formatted, type: 'CPF', isValid: true };
+      return {
+        formatted,
+        type: 'CPF',
+        isValid: true
+      };
     }
-    
+
     // CNPJ: 14 dígitos
     if (cleanKey.length === 14 && /^\d{14}$/.test(cleanKey)) {
       const formatted = cleanKey.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-      return { formatted, type: 'CNPJ', isValid: true };
+      return {
+        formatted,
+        type: 'CNPJ',
+        isValid: true
+      };
     }
-    
+
     // Telefone: 10 ou 11 dígitos
     if ((cleanKey.length === 10 || cleanKey.length === 11) && /^\d+$/.test(cleanKey)) {
       if (cleanKey.length === 11) {
         const formatted = cleanKey.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-        return { formatted, type: 'Telefone', isValid: true };
+        return {
+          formatted,
+          type: 'Telefone',
+          isValid: true
+        };
       } else {
         const formatted = cleanKey.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
-        return { formatted, type: 'Telefone', isValid: true };
+        return {
+          formatted,
+          type: 'Telefone',
+          isValid: true
+        };
       }
     }
-    
+
     // Email
     if (key.includes('@') && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(key)) {
-      return { formatted: key, type: 'E-mail', isValid: true };
+      return {
+        formatted: key,
+        type: 'E-mail',
+        isValid: true
+      };
     }
-    
+
     // Chave aleatória (32 caracteres hexadecimais com hifens)
     if (/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(key)) {
-      return { formatted: key, type: 'Chave Aleatória', isValid: true };
+      return {
+        formatted: key,
+        type: 'Chave Aleatória',
+        isValid: true
+      };
     }
-    
-    // Formato não reconhecido
-    return { formatted: key, type: 'Desconhecido', isValid: false };
-  };
 
+    // Formato não reconhecido
+    return {
+      formatted: key,
+      type: 'Desconhecido',
+      isValid: false
+    };
+  };
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     toast.success(`${label} copiado!`);
@@ -755,11 +783,10 @@ export default function AffiliateDashboardNew() {
         delay: 0.5
       }} className="space-y-3">
           {/* Valor em maturação */}
-          {((store as any).maturing_commission || 0) > 0 && (
-            <div className="p-4 bg-gradient-to-r from-orange-500/10 to-amber-500/10 rounded-lg border border-orange-500/20">
+          {((store as any).maturing_commission || 0) > 0 && <div className="p-4 bg-gradient-to-r from-orange-500/10 to-amber-500/10 rounded-lg border border-orange-500/20">
               <div className="flex items-center gap-2 mb-1">
                 <Clock className="h-4 w-4 text-orange-500" />
-                <span className="text-sm font-medium">Em Período de Carência</span>
+                <span className="text-sm font-medium">​Aguardando o prazo para a liberação </span>
               </div>
               <p className="text-xl font-bold text-orange-500">
                 {formatCurrency((store as any).maturing_commission || 0)}
@@ -767,8 +794,7 @@ export default function AffiliateDashboardNew() {
               <p className="text-xs text-muted-foreground mt-1">
                 Liberação após {(store as any).maturity_days || 7} dias da entrega
               </p>
-            </div>
-          )}
+            </div>}
           
           {/* Valor disponível para saque */}
           <div className="p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg border border-green-500/20">
@@ -909,64 +935,57 @@ export default function AffiliateDashboardNew() {
       {/* Tab Pedidos */}
       <TabsContent value="orders" className="space-y-4 mt-4 flex-1 overflow-y-auto">
         {(() => {
-          const searchTerm = (ordersSearch[store.store_id] || '').toLowerCase();
-          const statusFilter = ordersStatusFilter[store.store_id] || 'all';
-          
-          // Filtrar pedidos
-          const storeOrders = affiliateOrders
-            .filter(order => order.store_id === store.store_id)
-            .filter(order => {
-              if (!searchTerm) return true;
-              return (
-                order.order_number?.toLowerCase().includes(searchTerm) ||
-                order.customer_name?.toLowerCase().includes(searchTerm) ||
-                order.coupon_code?.toLowerCase().includes(searchTerm)
-              );
-            })
-            .filter(order => {
-              if (statusFilter === 'all') return true;
-              const orderStatus = order.order_status?.toLowerCase() || '';
-              if (statusFilter === 'pending') return orderStatus === 'pendente' || orderStatus === 'pending';
-              if (statusFilter === 'delivered') return orderStatus === 'entregue' || orderStatus === 'delivered';
-              if (statusFilter === 'cancelled') return orderStatus === 'cancelado' || orderStatus === 'cancelled';
-              if (statusFilter === 'processing') return !['pendente', 'pending', 'entregue', 'delivered', 'cancelado', 'cancelled'].includes(orderStatus);
-              return true;
-            });
-          
-          const ORDERS_PER_PAGE = 10;
-          const currentPage = ordersPage[store.store_id] || 1;
-          const totalPages = Math.ceil(storeOrders.length / ORDERS_PER_PAGE);
-          const paginatedOrders = storeOrders.slice((currentPage - 1) * ORDERS_PER_PAGE, currentPage * ORDERS_PER_PAGE);
-          
-          const totalOrders = affiliateOrders.filter(order => order.store_id === store.store_id).length;
-          
-          return (
-            <div className="space-y-3">
+        const searchTerm = (ordersSearch[store.store_id] || '').toLowerCase();
+        const statusFilter = ordersStatusFilter[store.store_id] || 'all';
+
+        // Filtrar pedidos
+        const storeOrders = affiliateOrders.filter(order => order.store_id === store.store_id).filter(order => {
+          if (!searchTerm) return true;
+          return order.order_number?.toLowerCase().includes(searchTerm) || order.customer_name?.toLowerCase().includes(searchTerm) || order.coupon_code?.toLowerCase().includes(searchTerm);
+        }).filter(order => {
+          if (statusFilter === 'all') return true;
+          const orderStatus = order.order_status?.toLowerCase() || '';
+          if (statusFilter === 'pending') return orderStatus === 'pendente' || orderStatus === 'pending';
+          if (statusFilter === 'delivered') return orderStatus === 'entregue' || orderStatus === 'delivered';
+          if (statusFilter === 'cancelled') return orderStatus === 'cancelado' || orderStatus === 'cancelled';
+          if (statusFilter === 'processing') return !['pendente', 'pending', 'entregue', 'delivered', 'cancelado', 'cancelled'].includes(orderStatus);
+          return true;
+        });
+        const ORDERS_PER_PAGE = 10;
+        const currentPage = ordersPage[store.store_id] || 1;
+        const totalPages = Math.ceil(storeOrders.length / ORDERS_PER_PAGE);
+        const paginatedOrders = storeOrders.slice((currentPage - 1) * ORDERS_PER_PAGE, currentPage * ORDERS_PER_PAGE);
+        const totalOrders = affiliateOrders.filter(order => order.store_id === store.store_id).length;
+        return <div className="space-y-3">
               {/* Filtros e Busca */}
               <div className="p-3 bg-muted/30 rounded-lg border border-border/50 space-y-3">
                 {/* Busca */}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por número, cliente ou cupom..."
-                    value={ordersSearch[store.store_id] || ''}
-                    onChange={(e) => {
-                      setOrdersSearch(prev => ({ ...prev, [store.store_id]: e.target.value }));
-                      setOrdersPage(prev => ({ ...prev, [store.store_id]: 1 }));
-                    }}
-                    className="pl-9 h-9 text-sm"
-                  />
+                  <Input placeholder="Buscar por número, cliente ou cupom..." value={ordersSearch[store.store_id] || ''} onChange={e => {
+                setOrdersSearch(prev => ({
+                  ...prev,
+                  [store.store_id]: e.target.value
+                }));
+                setOrdersPage(prev => ({
+                  ...prev,
+                  [store.store_id]: 1
+                }));
+              }} className="pl-9 h-9 text-sm" />
                 </div>
                 
                 {/* Filtros */}
                 <div className="flex flex-wrap gap-2">
-                  <Select 
-                    value={statusFilter} 
-                    onValueChange={(value) => {
-                      setOrdersStatusFilter(prev => ({ ...prev, [store.store_id]: value }));
-                      setOrdersPage(prev => ({ ...prev, [store.store_id]: 1 }));
-                    }}
-                  >
+                  <Select value={statusFilter} onValueChange={value => {
+                setOrdersStatusFilter(prev => ({
+                  ...prev,
+                  [store.store_id]: value
+                }));
+                setOrdersPage(prev => ({
+                  ...prev,
+                  [store.store_id]: 1
+                }));
+              }}>
                     <SelectTrigger className="w-[160px] h-8 text-xs">
                       <Filter className="h-3 w-3 mr-1.5" />
                       <SelectValue placeholder="Status" />
@@ -980,56 +999,44 @@ export default function AffiliateDashboardNew() {
                     </SelectContent>
                   </Select>
                   
-                  {(searchTerm || statusFilter !== 'all') && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-xs text-muted-foreground hover:text-foreground"
-                      onClick={() => {
-                        setOrdersSearch(prev => ({ ...prev, [store.store_id]: '' }));
-                        setOrdersStatusFilter(prev => ({ ...prev, [store.store_id]: 'all' }));
-                        setOrdersPage(prev => ({ ...prev, [store.store_id]: 1 }));
-                      }}
-                    >
+                  {(searchTerm || statusFilter !== 'all') && <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground hover:text-foreground" onClick={() => {
+                setOrdersSearch(prev => ({
+                  ...prev,
+                  [store.store_id]: ''
+                }));
+                setOrdersStatusFilter(prev => ({
+                  ...prev,
+                  [store.store_id]: 'all'
+                }));
+                setOrdersPage(prev => ({
+                  ...prev,
+                  [store.store_id]: 1
+                }));
+              }}>
                       <X className="h-3 w-3 mr-1" />
                       Limpar filtros
-                    </Button>
-                  )}
+                    </Button>}
                 </div>
                 
                 {/* Contador de resultados */}
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>
-                    {storeOrders.length === totalOrders 
-                      ? `${totalOrders} pedido${totalOrders !== 1 ? 's' : ''}` 
-                      : `${storeOrders.length} de ${totalOrders} pedidos`}
+                    {storeOrders.length === totalOrders ? `${totalOrders} pedido${totalOrders !== 1 ? 's' : ''}` : `${storeOrders.length} de ${totalOrders} pedidos`}
                   </span>
-                  {storeOrders.length > 0 && (
-                    <span className="text-emerald-600 font-medium">
+                  {storeOrders.length > 0 && <span className="text-emerald-600 font-medium">
                       Total: {formatCurrency(storeOrders.reduce((sum, o) => sum + (o.order_total || 0), 0))}
-                    </span>
-                  )}
+                    </span>}
                 </div>
               </div>
               
               {/* Lista de pedidos */}
-              {storeOrders.length === 0 ? (
-                <div className="p-6 bg-muted/50 rounded-lg text-center border border-border/50">
+              {storeOrders.length === 0 ? <div className="p-6 bg-muted/50 rounded-lg text-center border border-border/50">
                   <ShoppingBag className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    {totalOrders === 0 
-                      ? 'Nenhum pedido realizado ainda nesta loja'
-                      : 'Nenhum pedido encontrado com os filtros selecionados'}
+                    {totalOrders === 0 ? 'Nenhum pedido realizado ainda nesta loja' : 'Nenhum pedido encontrado com os filtros selecionados'}
                   </p>
-                </div>
-              ) : (
-                <>
-                  {paginatedOrders.map(order => (
-                    <div 
-                      key={order.earning_id} 
-                      className="p-3 bg-muted/30 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => openOrderModal(order)}
-                    >
+                </div> : <>
+                  {paginatedOrders.map(order => <div key={order.earning_id} className="p-3 bg-muted/30 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => openOrderModal(order)}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-mono font-medium text-sm">#{order.order_number}</span>
                         {getOrderStatusBadge(order)}
@@ -1053,112 +1060,88 @@ export default function AffiliateDashboardNew() {
                         </div>
                       </div>
                       {/* Mostrar contagem regressiva para pedidos entregues */}
-                      {(order.order_status === 'entregue' || order.order_status === 'delivered') && order.commission_status !== 'paid' && (order as any).commission_available_at && (
-                        <div className="mt-2 pt-2 border-t border-border/50">
-                          <MaturityCountdown
-                            commissionAvailableAt={(order as any).commission_available_at}
-                            commissionStatus={order.commission_status}
-                            orderStatus={order.order_status}
-                          />
-                        </div>
-                      )}
-                      {order.coupon_code && !(order.order_status === 'entregue' || order.order_status === 'delivered') && (
-                        <div className="mt-2 pt-2 border-t border-border/50">
+                      {(order.order_status === 'entregue' || order.order_status === 'delivered') && order.commission_status !== 'paid' && (order as any).commission_available_at && <div className="mt-2 pt-2 border-t border-border/50">
+                          <MaturityCountdown commissionAvailableAt={(order as any).commission_available_at} commissionStatus={order.commission_status} orderStatus={order.order_status} />
+                        </div>}
+                      {order.coupon_code && !(order.order_status === 'entregue' || order.order_status === 'delivered') && <div className="mt-2 pt-2 border-t border-border/50">
                           <Badge variant="outline" className="font-mono text-xs">
                             {order.coupon_code}
                           </Badge>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        </div>}
+                    </div>)}
                   
                   {/* Paginação */}
-                  {totalPages > 1 && (
-                    <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={currentPage === 1}
-                        onClick={() => setOrdersPage(prev => ({ ...prev, [store.store_id]: currentPage - 1 }))}
-                      >
+                  {totalPages > 1 && <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                      <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setOrdersPage(prev => ({
+                ...prev,
+                [store.store_id]: currentPage - 1
+              }))}>
                         Anterior
                       </Button>
                       <span className="text-xs text-muted-foreground">
                         Página {currentPage} de {totalPages}
                       </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={currentPage === totalPages}
-                        onClick={() => setOrdersPage(prev => ({ ...prev, [store.store_id]: currentPage + 1 }))}
-                      >
+                      <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setOrdersPage(prev => ({
+                ...prev,
+                [store.store_id]: currentPage + 1
+              }))}>
                         Próxima
                       </Button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          );
-        })()}
+                    </div>}
+                </>}
+            </div>;
+      })()}
       </TabsContent>
       
       {/* Tab Saques */}
       <TabsContent value="withdrawals" className="space-y-4 mt-4 flex-1 overflow-y-auto">
         {(() => {
-          const searchTerm = (withdrawalsSearch[store.store_id] || '').toLowerCase();
-          const statusFilter = withdrawalsStatusFilter[store.store_id] || 'all';
-          
-          // Filtrar saques
-          const storeWithdrawals = withdrawalRequests
-            .filter(req => req.store_id === store.store_id)
-            .filter(req => {
-              if (!searchTerm) return true;
-              return (
-                req.pix_key?.toLowerCase().includes(searchTerm) ||
-                req.admin_notes?.toLowerCase().includes(searchTerm) ||
-                formatCurrency(req.amount).toLowerCase().includes(searchTerm)
-              );
-            })
-            .filter(req => {
-              if (statusFilter === 'all') return true;
-              return req.status === statusFilter;
-            });
-          
-          const WITHDRAWALS_PER_PAGE = 10;
-          const currentPage = withdrawalsPage[store.store_id] || 1;
-          const totalPages = Math.ceil(storeWithdrawals.length / WITHDRAWALS_PER_PAGE);
-          const paginatedWithdrawals = storeWithdrawals.slice((currentPage - 1) * WITHDRAWALS_PER_PAGE, currentPage * WITHDRAWALS_PER_PAGE);
-          
-          const totalWithdrawals = withdrawalRequests.filter(req => req.store_id === store.store_id).length;
-          
-          return (
-            <div className="space-y-3">
+        const searchTerm = (withdrawalsSearch[store.store_id] || '').toLowerCase();
+        const statusFilter = withdrawalsStatusFilter[store.store_id] || 'all';
+
+        // Filtrar saques
+        const storeWithdrawals = withdrawalRequests.filter(req => req.store_id === store.store_id).filter(req => {
+          if (!searchTerm) return true;
+          return req.pix_key?.toLowerCase().includes(searchTerm) || req.admin_notes?.toLowerCase().includes(searchTerm) || formatCurrency(req.amount).toLowerCase().includes(searchTerm);
+        }).filter(req => {
+          if (statusFilter === 'all') return true;
+          return req.status === statusFilter;
+        });
+        const WITHDRAWALS_PER_PAGE = 10;
+        const currentPage = withdrawalsPage[store.store_id] || 1;
+        const totalPages = Math.ceil(storeWithdrawals.length / WITHDRAWALS_PER_PAGE);
+        const paginatedWithdrawals = storeWithdrawals.slice((currentPage - 1) * WITHDRAWALS_PER_PAGE, currentPage * WITHDRAWALS_PER_PAGE);
+        const totalWithdrawals = withdrawalRequests.filter(req => req.store_id === store.store_id).length;
+        return <div className="space-y-3">
               {/* Filtros e Busca */}
               <div className="p-3 bg-muted/30 rounded-lg border border-border/50 space-y-3">
                 {/* Busca */}
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por valor ou chave PIX..."
-                    value={withdrawalsSearch[store.store_id] || ''}
-                    onChange={(e) => {
-                      setWithdrawalsSearch(prev => ({ ...prev, [store.store_id]: e.target.value }));
-                      setWithdrawalsPage(prev => ({ ...prev, [store.store_id]: 1 }));
-                    }}
-                    className="pl-9 h-9 text-sm"
-                  />
+                  <Input placeholder="Buscar por valor ou chave PIX..." value={withdrawalsSearch[store.store_id] || ''} onChange={e => {
+                setWithdrawalsSearch(prev => ({
+                  ...prev,
+                  [store.store_id]: e.target.value
+                }));
+                setWithdrawalsPage(prev => ({
+                  ...prev,
+                  [store.store_id]: 1
+                }));
+              }} className="pl-9 h-9 text-sm" />
                 </div>
                 
                 {/* Filtros */}
                 <div className="flex flex-wrap gap-2">
-                  <Select 
-                    value={statusFilter} 
-                    onValueChange={(value) => {
-                      setWithdrawalsStatusFilter(prev => ({ ...prev, [store.store_id]: value }));
-                      setWithdrawalsPage(prev => ({ ...prev, [store.store_id]: 1 }));
-                    }}
-                  >
+                  <Select value={statusFilter} onValueChange={value => {
+                setWithdrawalsStatusFilter(prev => ({
+                  ...prev,
+                  [store.store_id]: value
+                }));
+                setWithdrawalsPage(prev => ({
+                  ...prev,
+                  [store.store_id]: 1
+                }));
+              }}>
                     <SelectTrigger className="w-[160px] h-8 text-xs">
                       <Filter className="h-3 w-3 mr-1.5" />
                       <SelectValue placeholder="Status" />
@@ -1171,56 +1154,44 @@ export default function AffiliateDashboardNew() {
                     </SelectContent>
                   </Select>
                   
-                  {(searchTerm || statusFilter !== 'all') && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-xs text-muted-foreground hover:text-foreground"
-                      onClick={() => {
-                        setWithdrawalsSearch(prev => ({ ...prev, [store.store_id]: '' }));
-                        setWithdrawalsStatusFilter(prev => ({ ...prev, [store.store_id]: 'all' }));
-                        setWithdrawalsPage(prev => ({ ...prev, [store.store_id]: 1 }));
-                      }}
-                    >
+                  {(searchTerm || statusFilter !== 'all') && <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground hover:text-foreground" onClick={() => {
+                setWithdrawalsSearch(prev => ({
+                  ...prev,
+                  [store.store_id]: ''
+                }));
+                setWithdrawalsStatusFilter(prev => ({
+                  ...prev,
+                  [store.store_id]: 'all'
+                }));
+                setWithdrawalsPage(prev => ({
+                  ...prev,
+                  [store.store_id]: 1
+                }));
+              }}>
                       <X className="h-3 w-3 mr-1" />
                       Limpar filtros
-                    </Button>
-                  )}
+                    </Button>}
                 </div>
                 
                 {/* Contador de resultados */}
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>
-                    {storeWithdrawals.length === totalWithdrawals 
-                      ? `${totalWithdrawals} saque${totalWithdrawals !== 1 ? 's' : ''}` 
-                      : `${storeWithdrawals.length} de ${totalWithdrawals} saques`}
+                    {storeWithdrawals.length === totalWithdrawals ? `${totalWithdrawals} saque${totalWithdrawals !== 1 ? 's' : ''}` : `${storeWithdrawals.length} de ${totalWithdrawals} saques`}
                   </span>
-                  {storeWithdrawals.length > 0 && (
-                    <span className="text-emerald-600 font-medium">
+                  {storeWithdrawals.length > 0 && <span className="text-emerald-600 font-medium">
                       Total: {formatCurrency(storeWithdrawals.reduce((sum, w) => sum + (w.amount || 0), 0))}
-                    </span>
-                  )}
+                    </span>}
                 </div>
               </div>
               
               {/* Lista de saques */}
-              {storeWithdrawals.length === 0 ? (
-                <div className="p-6 bg-muted/50 rounded-lg text-center border border-border/50">
+              {storeWithdrawals.length === 0 ? <div className="p-6 bg-muted/50 rounded-lg text-center border border-border/50">
                   <Wallet className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                   <p className="text-sm text-muted-foreground">
-                    {totalWithdrawals === 0 
-                      ? 'Nenhum saque solicitado ainda nesta loja'
-                      : 'Nenhum saque encontrado com os filtros selecionados'}
+                    {totalWithdrawals === 0 ? 'Nenhum saque solicitado ainda nesta loja' : 'Nenhum saque encontrado com os filtros selecionados'}
                   </p>
-                </div>
-              ) : (
-                <>
-                  {paginatedWithdrawals.map(withdrawal => (
-                    <div 
-                      key={withdrawal.id} 
-                      className="p-3 bg-muted/30 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => handleOpenWithdrawalDetails(withdrawal)}
-                    >
+                </div> : <>
+                  {paginatedWithdrawals.map(withdrawal => <div key={withdrawal.id} className="p-3 bg-muted/30 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => handleOpenWithdrawalDetails(withdrawal)}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-bold text-lg text-emerald-600">{formatCurrency(withdrawal.amount)}</span>
                         {getWithdrawalStatusBadge(withdrawal.status)}
@@ -1230,69 +1201,47 @@ export default function AffiliateDashboardNew() {
                           <span className="text-muted-foreground">Solicitado em:</span>
                           <p className="font-medium">{formatDate(withdrawal.requested_at)}</p>
                         </div>
-                        {withdrawal.paid_at && (
-                          <div>
+                        {withdrawal.paid_at && <div>
                             <span className="text-muted-foreground">Pago em:</span>
                             <p className="font-medium">{formatDate(withdrawal.paid_at)}</p>
-                          </div>
-                        )}
-                        {withdrawal.pix_key && (
-                          <div className="col-span-2">
+                          </div>}
+                        {withdrawal.pix_key && <div className="col-span-2">
                             <span className="text-muted-foreground">Chave PIX:</span>
                             <p className="font-medium font-mono">{withdrawal.pix_key}</p>
-                          </div>
-                        )}
+                          </div>}
                       </div>
-                      {withdrawal.admin_notes && (
-                        <div className="mt-2 pt-2 border-t border-border/50">
+                      {withdrawal.admin_notes && <div className="mt-2 pt-2 border-t border-border/50">
                           <span className="text-xs text-muted-foreground">Observação:</span>
                           <p className="text-xs">{withdrawal.admin_notes}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                        </div>}
+                    </div>)}
                   
                   {/* Paginação */}
-                  {totalPages > 1 && (
-                    <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={currentPage === 1}
-                        onClick={() => setWithdrawalsPage(prev => ({ ...prev, [store.store_id]: currentPage - 1 }))}
-                      >
+                  {totalPages > 1 && <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                      <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setWithdrawalsPage(prev => ({
+                ...prev,
+                [store.store_id]: currentPage - 1
+              }))}>
                         Anterior
                       </Button>
                       <span className="text-xs text-muted-foreground">
                         Página {currentPage} de {totalPages}
                       </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={currentPage === totalPages}
-                        onClick={() => setWithdrawalsPage(prev => ({ ...prev, [store.store_id]: currentPage + 1 }))}
-                      >
+                      <Button variant="outline" size="sm" disabled={currentPage === totalPages} onClick={() => setWithdrawalsPage(prev => ({
+                ...prev,
+                [store.store_id]: currentPage + 1
+              }))}>
                         Próxima
                       </Button>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-          );
-        })()}
+                    </div>}
+                </>}
+            </div>;
+      })()}
       </TabsContent>
       
       {/* Tab Histórico - Extrato de Comissões */}
       <TabsContent value="history" className="space-y-4 mt-4 flex-1 overflow-y-auto">
-        <StoreHistoryTab 
-          store={store} 
-          affiliateOrders={affiliateOrders} 
-          withdrawalRequests={withdrawalRequests}
-          historyPage={historyPage}
-          setHistoryPage={setHistoryPage}
-          formatCurrency={formatCurrency}
-        />
+        <StoreHistoryTab store={store} affiliateOrders={affiliateOrders} withdrawalRequests={withdrawalRequests} historyPage={historyPage} setHistoryPage={setHistoryPage} formatCurrency={formatCurrency} />
       </TabsContent>
     </Tabs>;
   if (isLoading) {
@@ -1648,7 +1597,9 @@ export default function AffiliateDashboardNew() {
                   <div className="space-y-2">
                     {affiliateStores.slice(0, 3).map(store => <motion.div key={store.store_affiliate_id} whileHover={{
                   scale: 1.01
-                }} whileTap={{ scale: 0.98 }} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
+                }} whileTap={{
+                  scale: 0.98
+                }} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border/50 cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
                   setActiveTab('stores');
                   setSelectedStore(store);
                 }}>
@@ -1793,24 +1744,20 @@ export default function AffiliateDashboardNew() {
   // Filtered and sorted stores
   const filteredStores = useMemo(() => {
     let result = [...affiliateStores];
-    
+
     // Apply search filter
     if (storesSearch.trim()) {
       const searchLower = storesSearch.toLowerCase();
-      result = result.filter(store => 
-        store.store_name.toLowerCase().includes(searchLower) ||
-        store.coupon_code?.toLowerCase().includes(searchLower) ||
-        store.coupons?.some(c => c.code.toLowerCase().includes(searchLower))
-      );
+      result = result.filter(store => store.store_name.toLowerCase().includes(searchLower) || store.coupon_code?.toLowerCase().includes(searchLower) || store.coupons?.some(c => c.code.toLowerCase().includes(searchLower)));
     }
-    
+
     // Apply status filter
     if (storesStatusFilter === 'with_commission') {
       result = result.filter(store => store.total_commission > 0);
     } else if (storesStatusFilter !== 'all') {
       result = result.filter(store => store.status === storesStatusFilter);
     }
-    
+
     // Apply sorting
     result.sort((a, b) => {
       switch (storesSortBy) {
@@ -1826,20 +1773,13 @@ export default function AffiliateDashboardNew() {
           return 0;
       }
     });
-    
     return result;
   }, [affiliateStores, storesSearch, storesStatusFilter, storesSortBy]);
-
-  const totalStoresCommission = useMemo(() => 
-    filteredStores.reduce((sum, store) => sum + store.total_commission, 0), 
-    [filteredStores]
-  );
-
+  const totalStoresCommission = useMemo(() => filteredStores.reduce((sum, store) => sum + store.total_commission, 0), [filteredStores]);
   const hasStoresFilters = storesSearch.trim() || storesStatusFilter !== 'all' || storesSortBy !== 'name';
 
   // Stores Tab Content
-  const renderStoresContent = () => (
-    <div className="space-y-4">
+  const renderStoresContent = () => <div className="space-y-4">
       <Card className="glass border-border/50">
         <CardHeader className="p-4 sm:p-6 pb-0 sm:pb-0">
           <CardTitle className="flex items-center gap-2">
@@ -1860,27 +1800,19 @@ export default function AffiliateDashboardNew() {
               <TabsTrigger value="invites" className="gap-2">
                 <Users className="h-4 w-4" />
                 Convites
-                {pendingInvites.length > 0 && (
-                  <Badge variant="destructive" className="ml-1 h-5 min-w-5 px-1 text-[10px]">
+                {pendingInvites.length > 0 && <Badge variant="destructive" className="ml-1 h-5 min-w-5 px-1 text-[10px]">
                     {pendingInvites.length}
-                  </Badge>
-                )}
+                  </Badge>}
               </TabsTrigger>
             </TabsList>
             
             <TabsContent value="stores" className="mt-0 space-y-4">
               {/* Search and Filters */}
-              {affiliateStores.length > 0 && (
-                <div className="space-y-4">
+              {affiliateStores.length > 0 && <div className="space-y-4">
                   {/* Search */}
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Buscar por nome da loja ou cupom..."
-                      value={storesSearch}
-                      onChange={(e) => setStoresSearch(e.target.value)}
-                      className="pl-9"
-                    />
+                    <Input placeholder="Buscar por nome da loja ou cupom..." value={storesSearch} onChange={e => setStoresSearch(e.target.value)} className="pl-9" />
                   </div>
                   
                   {/* Filters Row */}
@@ -1911,21 +1843,14 @@ export default function AffiliateDashboardNew() {
                       </SelectContent>
                     </Select>
                     
-                    {hasStoresFilters && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          setStoresSearch('');
-                          setStoresStatusFilter('all');
-                          setStoresSortBy('name');
-                        }}
-                        className="gap-2"
-                      >
+                    {hasStoresFilters && <Button variant="outline" size="sm" onClick={() => {
+                  setStoresSearch('');
+                  setStoresStatusFilter('all');
+                  setStoresSortBy('name');
+                }} className="gap-2">
                         <XCircle className="h-4 w-4" />
                         Limpar filtros
-                      </Button>
-                    )}
+                      </Button>}
                   </div>
                   
                   {/* Results Counter */}
@@ -1937,42 +1862,35 @@ export default function AffiliateDashboardNew() {
                       Total disponível: {formatCurrency(totalStoresCommission)}
                     </span>
                   </div>
-                </div>
-              )}
+                </div>}
 
-              {affiliateStores.length === 0 ? (
-                <div className="py-12 text-center">
+              {affiliateStores.length === 0 ? <div className="py-12 text-center">
                   <Store className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold mb-2">Nenhuma loja vinculada</h3>
                   <p className="text-muted-foreground">
                     Aguarde um convite de uma loja parceira para começar a ganhar comissões.
                   </p>
-                </div>
-              ) : filteredStores.length === 0 ? (
-                <div className="py-12 text-center">
+                </div> : filteredStores.length === 0 ? <div className="py-12 text-center">
                   <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold mb-2">Nenhuma loja encontrada</h3>
                   <p className="text-muted-foreground">
                     Tente ajustar os filtros ou o termo de busca.
                   </p>
-                </div>
-              ) : (
-                <div className="grid gap-4 md:grid-cols-2">
-                  {filteredStores.map(store => (
-                    <motion.div key={store.store_affiliate_id} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                </div> : <div className="grid gap-4 md:grid-cols-2">
+                  {filteredStores.map(store => <motion.div key={store.store_affiliate_id} whileHover={{
+                scale: 1.02
+              }} whileTap={{
+                scale: 0.98
+              }}>
                       <Card className="glass border-border/50 overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setSelectedStore(store)}>
                         <CardHeader className="pb-3 p-3 sm:p-6 sm:pb-3">
                           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                             <div className="flex items-center gap-3">
-                              {store.store_logo ? (
-                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
+                              {store.store_logo ? <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg overflow-hidden ring-2 ring-primary/20 shadow-glow flex-shrink-0">
                                   <img src={store.store_logo} alt={store.store_name} className="w-full h-full object-cover" />
-                                </div>
-                              ) : (
-                                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary to-primary-glow rounded-lg flex items-center justify-center shadow-glow flex-shrink-0">
+                                </div> : <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary to-primary-glow rounded-lg flex items-center justify-center shadow-glow flex-shrink-0">
                                   <Store className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                                </div>
-                              )}
+                                </div>}
                               <div className="min-w-0 flex-1">
                                 <CardTitle className="text-sm sm:text-base truncate">{store.store_name}</CardTitle>
                                 <CardDescription className="text-xs sm:text-sm truncate">
@@ -2013,10 +1931,8 @@ export default function AffiliateDashboardNew() {
                           </div>
                         </CardContent>
                       </Card>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
+                    </motion.div>)}
+                </div>}
             </TabsContent>
             
             <TabsContent value="invites" className="mt-0">
@@ -2025,8 +1941,7 @@ export default function AffiliateDashboardNew() {
           </Tabs>
         </CardContent>
       </Card>
-    </div>
-  );
+    </div>;
 
   // Orders Tab Content
   const renderOrdersContent = () => <Card>
@@ -2130,33 +2045,20 @@ export default function AffiliateDashboardNew() {
               <div className="flex items-center justify-between">
                 <h4 className="font-medium">Por Loja</h4>
                 <label className="flex items-center gap-2 text-xs sm:text-sm cursor-pointer whitespace-nowrap">
-                  <input 
-                    type="checkbox" 
-                    checked={storesStatusFilter === 'available'}
-                    onChange={(e) => setStoresStatusFilter(e.target.checked ? 'available' : 'all')}
-                    className="h-4 w-4 rounded border-border"
-                  />
+                  <input type="checkbox" checked={storesStatusFilter === 'available'} onChange={e => setStoresStatusFilter(e.target.checked ? 'available' : 'all')} className="h-4 w-4 rounded border-border" />
                   <span className="text-muted-foreground">Só c/ Saldo</span>
                 </label>
               </div>
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar loja..."
-                  className="pl-9 w-full"
-                  value={storesSearch}
-                  onChange={(e) => setStoresSearch(e.target.value)}
-                />
+                <Input placeholder="Buscar loja..." className="pl-9 w-full" value={storesSearch} onChange={e => setStoresSearch(e.target.value)} />
               </div>
             </div>
             <div className="space-y-2">
-              {affiliateStores
-                .filter(store => store.store_name.toLowerCase().includes(storesSearch.toLowerCase()))
-                .filter(store => storesStatusFilter === 'available' ? store.total_commission > 0 : true)
-                .map(store => <div key={store.store_affiliate_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
-                  setActiveTab('stores');
-                  setSelectedStore(store);
-                }}>
+              {affiliateStores.filter(store => store.store_name.toLowerCase().includes(storesSearch.toLowerCase())).filter(store => storesStatusFilter === 'available' ? store.total_commission > 0 : true).map(store => <div key={store.store_affiliate_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
+              setActiveTab('stores');
+              setSelectedStore(store);
+            }}>
                   <div className="flex items-center gap-3">
                     {store.store_logo ? <img src={store.store_logo} alt={store.store_name} className="w-8 h-8 rounded object-cover" /> : <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
                         <Store className="h-4 w-4 text-muted-foreground" />
@@ -2167,12 +2069,7 @@ export default function AffiliateDashboardNew() {
                     {formatCurrency(store.total_commission)}
                   </span>
                 </div>)}
-              {affiliateStores
-                .filter(store => store.store_name.toLowerCase().includes(storesSearch.toLowerCase()))
-                .filter(store => storesStatusFilter === 'available' ? store.total_commission > 0 : true)
-                .length === 0 && (
-                <p className="text-center text-muted-foreground py-4">Nenhuma loja encontrada</p>
-              )}
+              {affiliateStores.filter(store => store.store_name.toLowerCase().includes(storesSearch.toLowerCase())).filter(store => storesStatusFilter === 'available' ? store.total_commission > 0 : true).length === 0 && <p className="text-center text-muted-foreground py-4">Nenhuma loja encontrada</p>}
             </div>
           </div>
         </div>
@@ -2200,7 +2097,7 @@ export default function AffiliateDashboardNew() {
     const objectUrl = URL.createObjectURL(file);
     setTempImageUrl(objectUrl);
     setCropDialogOpen(true);
-    
+
     // Reset input
     event.target.value = '';
   };
@@ -2208,27 +2105,26 @@ export default function AffiliateDashboardNew() {
   // Handle cropped image upload
   const handleCropComplete = async (croppedBlob: Blob) => {
     if (!affiliateUser) return;
-
     setUploadingAvatar(true);
     try {
       const fileName = `${affiliateUser.id}.jpg`;
       const filePath = `${fileName}`;
 
       // Upload to Supabase Storage
-      const { error: uploadError } = await supabase.storage
-        .from('affiliate-avatars')
-        .upload(filePath, croppedBlob, { 
-          upsert: true,
-          contentType: 'image/jpeg'
-        });
-
+      const {
+        error: uploadError
+      } = await supabase.storage.from('affiliate-avatars').upload(filePath, croppedBlob, {
+        upsert: true,
+        contentType: 'image/jpeg'
+      });
       if (uploadError) throw uploadError;
 
       // Get public URL with cache buster
-      const { data: { publicUrl } } = supabase.storage
-        .from('affiliate-avatars')
-        .getPublicUrl(filePath);
-
+      const {
+        data: {
+          publicUrl
+        }
+      } = supabase.storage.from('affiliate-avatars').getPublicUrl(filePath);
       const urlWithCacheBuster = `${publicUrl}?t=${Date.now()}`;
 
       // Update affiliate account
@@ -2251,8 +2147,7 @@ export default function AffiliateDashboardNew() {
   };
 
   // Profile Tab Content
-  const renderProfileContent = () => (
-    <Card>
+  const renderProfileContent = () => <Card>
       <CardHeader>
         <CardTitle>Meus Dados</CardTitle>
         <CardDescription>
@@ -2264,101 +2159,60 @@ export default function AffiliateDashboardNew() {
         <div className="flex flex-col items-center gap-4">
           <div className="relative">
             <div className="w-24 h-24 rounded-full overflow-hidden bg-muted ring-2 ring-primary/20">
-              {affiliateUser?.avatar_url ? (
-                <img 
-                  src={affiliateUser.avatar_url} 
-                  alt="Avatar" 
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-primary/60">
+              {affiliateUser?.avatar_url ? <img src={affiliateUser.avatar_url} alt="Avatar" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary to-primary/60">
                   <User className="h-10 w-10 text-white" />
-                </div>
-              )}
+                </div>}
             </div>
             <label className="absolute bottom-0 right-0 p-2 bg-primary rounded-full cursor-pointer hover:bg-primary/90 transition-colors shadow-lg">
-              {uploadingAvatar ? (
-                <Loader2 className="h-4 w-4 text-white animate-spin" />
-              ) : (
-                <Camera className="h-4 w-4 text-white" />
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarSelect}
-                disabled={uploadingAvatar}
-              />
+              {uploadingAvatar ? <Loader2 className="h-4 w-4 text-white animate-spin" /> : <Camera className="h-4 w-4 text-white" />}
+              <input type="file" accept="image/*" className="hidden" onChange={handleAvatarSelect} disabled={uploadingAvatar} />
             </label>
           </div>
           <p className="text-sm text-muted-foreground">Clique no ícone para alterar a foto</p>
           
           {/* Avatar Crop Dialog */}
-          {tempImageUrl && (
-            <AvatarCropDialog
-              open={cropDialogOpen}
-              onOpenChange={(open) => {
-                setCropDialogOpen(open);
-                if (!open && tempImageUrl) {
-                  URL.revokeObjectURL(tempImageUrl);
-                  setTempImageUrl(null);
-                }
-              }}
-              imageUrl={tempImageUrl}
-              onCropComplete={handleCropComplete}
-            />
-          )}
+          {tempImageUrl && <AvatarCropDialog open={cropDialogOpen} onOpenChange={open => {
+          setCropDialogOpen(open);
+          if (!open && tempImageUrl) {
+            URL.revokeObjectURL(tempImageUrl);
+            setTempImageUrl(null);
+          }
+        }} imageUrl={tempImageUrl} onCropComplete={handleCropComplete} />}
         </div>
 
         <Separator />
 
         <div className="flex items-center justify-between mb-4">
           <span className="text-sm text-muted-foreground">Dados do Perfil</span>
-          {!editingProfile ? (
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => {
-                setEditEmail(affiliateUser?.email || '');
-                setEditPhone(affiliateUser?.phone || '');
-                setEditingProfile(true);
-              }}
-              className="gap-2"
-            >
+          {!editingProfile ? <Button variant="ghost" size="sm" onClick={() => {
+          setEditEmail(affiliateUser?.email || '');
+          setEditPhone(affiliateUser?.phone || '');
+          setEditingProfile(true);
+        }} className="gap-2">
               <Pencil className="h-4 w-4" />
               Editar
-            </Button>
-          ) : (
-            <div className="flex gap-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setEditingProfile(false)}
-                disabled={savingProfile}
-              >
+            </Button> : <div className="flex gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setEditingProfile(false)} disabled={savingProfile}>
                 <X className="h-4 w-4" />
               </Button>
-              <Button 
-                size="sm" 
-                onClick={async () => {
-                  setSavingProfile(true);
-                  const result = await updateProfile({ email: editEmail, phone: editPhone });
-                  if (result.success) {
-                    toast.success('Perfil atualizado com sucesso!');
-                    setEditingProfile(false);
-                  } else {
-                    toast.error(result.error || 'Erro ao atualizar perfil');
-                  }
-                  setSavingProfile(false);
-                }}
-                disabled={savingProfile}
-                className="gap-2"
-              >
+              <Button size="sm" onClick={async () => {
+            setSavingProfile(true);
+            const result = await updateProfile({
+              email: editEmail,
+              phone: editPhone
+            });
+            if (result.success) {
+              toast.success('Perfil atualizado com sucesso!');
+              setEditingProfile(false);
+            } else {
+              toast.error(result.error || 'Erro ao atualizar perfil');
+            }
+            setSavingProfile(false);
+          }} disabled={savingProfile} className="gap-2">
                 {savingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 Salvar
               </Button>
-            </div>
-          )}
+            </div>}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -2368,28 +2222,11 @@ export default function AffiliateDashboardNew() {
           </div>
           <div>
             <p className="text-sm text-muted-foreground">E-mail</p>
-            {editingProfile ? (
-              <Input 
-                value={editEmail} 
-                onChange={(e) => setEditEmail(e.target.value)} 
-                placeholder="seu@email.com"
-                type="email"
-              />
-            ) : (
-              <p className="font-medium">{affiliateUser?.email || '-'}</p>
-            )}
+            {editingProfile ? <Input value={editEmail} onChange={e => setEditEmail(e.target.value)} placeholder="seu@email.com" type="email" /> : <p className="font-medium">{affiliateUser?.email || '-'}</p>}
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Telefone</p>
-            {editingProfile ? (
-              <Input 
-                value={editPhone} 
-                onChange={(e) => setEditPhone(e.target.value)} 
-                placeholder="(00) 00000-0000"
-              />
-            ) : (
-              <p className="font-medium">{affiliateUser?.phone || '-'}</p>
-            )}
+            {editingProfile ? <Input value={editPhone} onChange={e => setEditPhone(e.target.value)} placeholder="(00) 00000-0000" /> : <p className="font-medium">{affiliateUser?.phone || '-'}</p>}
           </div>
           <div>
             <p className="text-sm text-muted-foreground">CPF/CNPJ</p>
@@ -2402,32 +2239,25 @@ export default function AffiliateDashboardNew() {
         <div>
           <p className="text-sm text-muted-foreground mb-1">Chave PIX para recebimento</p>
           {(() => {
-            const rawPixKey = affiliateUser?.pix_key || affiliateUser?.cpf_cnpj;
-            if (!rawPixKey) {
-              return <p className="text-muted-foreground italic">Nenhuma chave PIX cadastrada</p>;
-            }
-            const pixInfo = formatPixKey(rawPixKey);
-            return (
-              <div className="space-y-2">
+          const rawPixKey = affiliateUser?.pix_key || affiliateUser?.cpf_cnpj;
+          if (!rawPixKey) {
+            return <p className="text-muted-foreground italic">Nenhuma chave PIX cadastrada</p>;
+          }
+          const pixInfo = formatPixKey(rawPixKey);
+          return <div className="space-y-2">
                 <code className="p-2 bg-muted rounded text-sm font-mono">
                   {pixInfo.formatted}
                 </code>
                 <div className="flex items-center gap-2">
                   <Badge variant={pixInfo.isValid ? 'default' : 'destructive'} className={pixInfo.isValid ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : ''}>
-                    {pixInfo.isValid ? (
-                      <><CheckCircle className="h-3 w-3 mr-1" /> {pixInfo.type}</>
-                    ) : (
-                      <><XCircle className="h-3 w-3 mr-1" /> Formato inválido</>
-                    )}
+                    {pixInfo.isValid ? <><CheckCircle className="h-3 w-3 mr-1" /> {pixInfo.type}</> : <><XCircle className="h-3 w-3 mr-1" /> Formato inválido</>}
                   </Badge>
                 </div>
-              </div>
-            );
-          })()}
+              </div>;
+        })()}
         </div>
       </CardContent>
-    </Card>
-  );
+    </Card>;
 
   // Render content based on active tab
   const renderContent = () => {
@@ -2723,7 +2553,7 @@ export default function AffiliateDashboardNew() {
       {withdrawalStore && affiliateDbId && <RequestWithdrawalDialog open={withdrawalDialogOpen} onOpenChange={setWithdrawalDialogOpen} affiliateId={affiliateDbId} storeAffiliateId={withdrawalStore.store_affiliate_id} storeId={withdrawalStore.store_id} storeName={withdrawalStore.store_name} availableAmount={withdrawalStore.total_commission} maturingAmount={(withdrawalStore as any).maturing_commission || 0} maturityDays={(withdrawalStore as any).maturity_days || 7} defaultPixKey={affiliateUser?.cpf_cnpj || affiliateUser?.pix_key || ''} onSubmit={handleCreateWithdrawal} />}
 
       {/* Modal de Detalhes do Saque */}
-      <ResponsiveDialog open={!!selectedWithdrawal} onOpenChange={(open) => !open && setSelectedWithdrawal(null)}>
+      <ResponsiveDialog open={!!selectedWithdrawal} onOpenChange={open => !open && setSelectedWithdrawal(null)}>
         <ResponsiveDialogContent className="max-w-lg">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle className="flex items-center gap-2">
@@ -2731,41 +2561,32 @@ export default function AffiliateDashboardNew() {
               Detalhes do Saque
             </ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
-              {selectedWithdrawal && (
-                <div className="flex items-center justify-between mt-2">
+              {selectedWithdrawal && <div className="flex items-center justify-between mt-2">
                   <span className="font-bold text-xl text-emerald-600">{formatCurrency(selectedWithdrawal.amount)}</span>
                   {getWithdrawalStatusBadge(selectedWithdrawal.status)}
-                </div>
-              )}
+                </div>}
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
 
-          {selectedWithdrawal && (
-            <div className="space-y-4">
+          {selectedWithdrawal && <div className="space-y-4">
               {/* Informações do saque */}
               <div className="grid grid-cols-2 gap-3 text-sm bg-muted/30 p-3 rounded-lg">
                 <div>
                   <span className="text-muted-foreground text-xs">Solicitado em:</span>
                   <p className="font-medium">{formatDate(selectedWithdrawal.requested_at)}</p>
                 </div>
-                {selectedWithdrawal.paid_at && (
-                  <div>
+                {selectedWithdrawal.paid_at && <div>
                     <span className="text-muted-foreground text-xs">Pago em:</span>
                     <p className="font-medium">{formatDate(selectedWithdrawal.paid_at)}</p>
-                  </div>
-                )}
-                {selectedWithdrawal.pix_key && (
-                  <div className="col-span-2">
+                  </div>}
+                {selectedWithdrawal.pix_key && <div className="col-span-2">
                     <span className="text-muted-foreground text-xs">Chave PIX:</span>
                     <p className="font-medium font-mono">{selectedWithdrawal.pix_key}</p>
-                  </div>
-                )}
-                {selectedWithdrawal.admin_notes && (
-                  <div className="col-span-2">
+                  </div>}
+                {selectedWithdrawal.admin_notes && <div className="col-span-2">
                     <span className="text-muted-foreground text-xs">Observação:</span>
                     <p className="text-sm">{selectedWithdrawal.admin_notes}</p>
-                  </div>
-                )}
+                  </div>}
               </div>
 
               {/* Lista de pedidos do saque */}
@@ -2775,18 +2596,12 @@ export default function AffiliateDashboardNew() {
                   Pedidos incluídos neste saque
                 </h4>
                 
-                {loadingWithdrawalOrders ? (
-                  <div className="flex items-center justify-center py-6">
+                {loadingWithdrawalOrders ? <div className="flex items-center justify-center py-6">
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  </div>
-                ) : withdrawalOrders.length === 0 ? (
-                  <div className="text-center py-4 text-muted-foreground text-sm bg-muted/20 rounded-lg">
+                  </div> : withdrawalOrders.length === 0 ? <div className="text-center py-4 text-muted-foreground text-sm bg-muted/20 rounded-lg">
                     Nenhum pedido encontrado para este saque
-                  </div>
-                ) : (
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {withdrawalOrders.map((order, idx) => (
-                      <div key={order.order_id || idx} className="flex items-center justify-between p-2 bg-muted/20 rounded-lg text-sm">
+                  </div> : <div className="space-y-2 max-h-60 overflow-y-auto">
+                    {withdrawalOrders.map((order, idx) => <div key={order.order_id || idx} className="flex items-center justify-between p-2 bg-muted/20 rounded-lg text-sm">
                         <div className="min-w-0 flex-1">
                           <p className="font-medium truncate">#{order.order_number}</p>
                           <p className="text-xs text-muted-foreground truncate">{order.customer_name}</p>
@@ -2795,8 +2610,7 @@ export default function AffiliateDashboardNew() {
                           <p className="font-medium text-emerald-600">{formatCurrency(order.commission_amount)}</p>
                           <p className="text-xs text-muted-foreground">{formatCurrency(order.order_total)}</p>
                         </div>
-                      </div>
-                    ))}
+                      </div>)}
                     
                     {/* Total */}
                     <div className="flex items-center justify-between p-2 bg-emerald-500/10 rounded-lg text-sm border border-emerald-500/20">
@@ -2805,11 +2619,9 @@ export default function AffiliateDashboardNew() {
                         {formatCurrency(withdrawalOrders.reduce((sum, o) => sum + (o.commission_amount || 0), 0))}
                       </span>
                     </div>
-                  </div>
-                )}
+                  </div>}
               </div>
-            </div>
-          )}
+            </div>}
 
           <ResponsiveDialogFooter>
             <Button variant="outline" onClick={() => setSelectedWithdrawal(null)}>
