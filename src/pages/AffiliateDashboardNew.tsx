@@ -85,6 +85,7 @@ export default function AffiliateDashboardNew() {
   const [storesSortBy, setStoresSortBy] = useState('name');
   const [storesSubTab, setStoresSubTab] = useState('stores');
   const [historyPage, setHistoryPage] = useState<Record<string, number>>({});
+  const [maturingOrdersPage, setMaturingOrdersPage] = useState(1);
 
   // Commissions summary filters
   const [commissionViewMode, setCommissionViewMode] = useState<'stores' | 'orders'>('stores');
@@ -1762,48 +1763,77 @@ export default function AffiliateDashboardNew() {
                     <Package className="h-4 w-4" />
                     Pedidos em maturação ({maturingOrdersList.length})
                   </h4>
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
-                    {maturingOrdersList.map(order => {
-                      const store = affiliateStores.find(s => s.store_id === order.store_id);
-                      return (
-                        <div 
-                          key={order.earning_id} 
-                          className="p-3 bg-muted/50 rounded-lg border border-border/50 hover:bg-muted/70 transition-colors cursor-pointer"
-                          onClick={() => openOrderModal(order)}
-                        >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-medium text-sm">#{order.order_number}</span>
-                                <Badge variant="outline" className="text-xs text-amber-600 border-amber-500/30 bg-amber-500/10">
-                                  <Timer className="h-3 w-3 mr-1" />
-                                  Em maturação
-                                </Badge>
+                  <div className="space-y-2">
+                    {maturingOrdersList
+                      .slice((maturingOrdersPage - 1) * 10, maturingOrdersPage * 10)
+                      .map(order => {
+                        const store = affiliateStores.find(s => s.store_id === order.store_id);
+                        return (
+                          <div 
+                            key={order.earning_id} 
+                            className="p-3 bg-muted/50 rounded-lg border border-border/50 hover:bg-muted/70 transition-colors cursor-pointer"
+                            onClick={() => openOrderModal(order)}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-medium text-sm">#{order.order_number}</span>
+                                  <Badge variant="outline" className="text-xs text-amber-600 border-amber-500/30 bg-amber-500/10">
+                                    <Timer className="h-3 w-3 mr-1" />
+                                    Em maturação
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                                  <Store className="h-3 w-3" />
+                                  <span className="truncate">{store?.store_name || 'Loja'}</span>
+                                  <span>•</span>
+                                  <span>{format(new Date(order.order_date), 'dd/MM/yy', { locale: ptBR })}</span>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                                <Store className="h-3 w-3" />
-                                <span className="truncate">{store?.store_name || 'Loja'}</span>
-                                <span>•</span>
-                                <span>{format(new Date(order.order_date), 'dd/MM/yy', { locale: ptBR })}</span>
+                              <div className="flex flex-col items-end gap-1">
+                                <span className="font-semibold text-amber-600 text-sm">
+                                  {formatCurrency(order.commission_amount)}
+                                </span>
+                                {order.commission_available_at && (
+                                  <MaturityCountdown 
+                                    commissionAvailableAt={order.commission_available_at} 
+                                    orderStatus={order.order_status}
+                                    variant="inline"
+                                  />
+                                )}
                               </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-1">
-                              <span className="font-semibold text-amber-600 text-sm">
-                                {formatCurrency(order.commission_amount)}
-                              </span>
-                              {order.commission_available_at && (
-                                <MaturityCountdown 
-                                  commissionAvailableAt={order.commission_available_at} 
-                                  orderStatus={order.order_status}
-                                  variant="inline"
-                                />
-                              )}
                             </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
                   </div>
+                  
+                  {/* Paginação */}
+                  {maturingOrdersList.length > 10 && (
+                    <div className="flex items-center justify-between pt-2">
+                      <span className="text-xs text-muted-foreground">
+                        {((maturingOrdersPage - 1) * 10) + 1}-{Math.min(maturingOrdersPage * 10, maturingOrdersList.length)} de {maturingOrdersList.length}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setMaturingOrdersPage(p => Math.max(1, p - 1))}
+                          disabled={maturingOrdersPage === 1}
+                        >
+                          Anterior
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => setMaturingOrdersPage(p => Math.min(Math.ceil(maturingOrdersList.length / 10), p + 1))}
+                          disabled={maturingOrdersPage >= Math.ceil(maturingOrdersList.length / 10)}
+                        >
+                          Próximo
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
