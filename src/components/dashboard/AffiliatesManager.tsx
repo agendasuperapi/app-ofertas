@@ -1196,16 +1196,6 @@ export const AffiliatesManager = ({
                 <div className="col-span-2">
                   <Label className="mb-1 block">Vincular Cupom</Label>
                   <div className="flex items-center gap-2">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="icon" 
-                      className="h-10 w-10 shrink-0"
-                      onClick={() => setNewCouponDialogOpen(true)}
-                      title="Criar Novo Cupom"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </Button>
                     <Select
                       value={formData.coupon_ids[0] || ''} 
                       onValueChange={(value) => setFormData({
@@ -1230,6 +1220,16 @@ export const AffiliatesManager = ({
                         ))}
                       </SelectContent>
                     </Select>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="icon" 
+                      className="h-10 w-10 shrink-0"
+                      onClick={() => setNewCouponDialogOpen(true)}
+                      title="Criar Novo Cupom"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {availableCoupons.length === 0 
