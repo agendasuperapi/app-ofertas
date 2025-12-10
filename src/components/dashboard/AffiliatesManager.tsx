@@ -1363,15 +1363,16 @@ export const AffiliatesManager = ({
                       </div>
                     ) : (
                       <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                        {/* Cupons vinculados primeiro */}
-                        {formData.coupon_ids.map(couponId => {
-                          const coupon = coupons.find(c => c.id === couponId);
-                          if (!coupon) return null;
-                          const wasAlreadyLinked = editingAffiliate?.affiliate_coupons?.some(ac => ac.coupon_id === couponId);
+                        {/* Renderiza todos os cupons em ordem estável */}
+                        {[...availableCoupons, ...coupons.filter(c => formData.coupon_ids.includes(c.id) && !availableCoupons.some(ac => ac.id === c.id))]
+                          .filter((coupon, index, self) => self.findIndex(c => c.id === coupon.id) === index)
+                          .map(coupon => {
+                          const isLinked = formData.coupon_ids.includes(coupon.id);
+                          const wasAlreadyLinked = editingAffiliate?.affiliate_coupons?.some(ac => ac.coupon_id === coupon.id);
                           return (
-                            <div key={couponId} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 border rounded-lg ${coupon.is_active ? 'bg-gradient-to-r from-green-50 to-green-100/50 border-green-200' : 'bg-gradient-to-r from-orange-50 to-amber-100/50 border-orange-200'}`}>
+                            <div key={coupon.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 border rounded-lg ${coupon.is_active ? 'bg-gradient-to-r from-green-50 to-green-100/50 border-green-200' : 'bg-gradient-to-r from-orange-50 to-amber-100/50 border-orange-200'}`}>
                               <div className="flex items-center gap-3 min-w-0">
-                                {wasAlreadyLinked && <Lock className="h-4 w-4 text-primary flex-shrink-0" />}
+                                {isLinked && wasAlreadyLinked && <Lock className="h-4 w-4 text-primary flex-shrink-0" />}
                                 <div className="min-w-0">
                                   <div className="flex flex-wrap items-center gap-2">
                                     <p className="font-medium break-all">{coupon.code}</p>
@@ -1385,25 +1386,39 @@ export const AffiliatesManager = ({
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
-                                {!wasAlreadyLinked && (
-                                  <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => {
+                                {isLinked ? (
+                                  <>
+                                    {!wasAlreadyLinked && (
+                                      <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => {
+                                        setFormData({
+                                          ...formData,
+                                          coupon_ids: formData.coupon_ids.filter(id => id !== coupon.id)
+                                        });
+                                      }}>
+                                        Desvincular
+                                      </Button>
+                                    )}
+                                    {wasAlreadyLinked && (
+                                      <Button size="sm" variant={coupon.is_active ? "destructive" : "outline"} className={`h-8 text-xs ${!coupon.is_active ? 'bg-green-600 text-white border-green-600 hover:bg-green-700' : ''}`} onClick={async () => {
+                                        const { error } = await supabase.from('coupons').update({ is_active: !coupon.is_active }).eq('id', coupon.id);
+                                        if (!error) {
+                                          toast({ title: coupon.is_active ? 'Cupom inativado' : 'Cupom ativado' });
+                                          fetchCoupons();
+                                        }
+                                      }}>
+                                        {coupon.is_active ? 'Inativar' : 'Ativar'}
+                                      </Button>
+                                    )}
+                                  </>
+                                ) : (
+                                  <Button size="sm" variant="outline" className="h-8 text-xs bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700" onClick={() => {
                                     setFormData({
                                       ...formData,
-                                      coupon_ids: formData.coupon_ids.filter(id => id !== couponId)
+                                      coupon_ids: [...formData.coupon_ids, coupon.id]
                                     });
                                   }}>
-                                    Desvincular
-                                  </Button>
-                                )}
-                                {wasAlreadyLinked && (
-                                  <Button size="sm" variant={coupon.is_active ? "destructive" : "outline"} className={`h-8 text-xs ${!coupon.is_active ? 'bg-green-600 text-white border-green-600 hover:bg-green-700' : ''}`} onClick={async () => {
-                                    const { error } = await supabase.from('coupons').update({ is_active: !coupon.is_active }).eq('id', coupon.id);
-                                    if (!error) {
-                                      toast({ title: coupon.is_active ? 'Cupom inativado' : 'Cupom ativado' });
-                                      fetchCoupons();
-                                    }
-                                  }}>
-                                    {coupon.is_active ? 'Inativar' : 'Ativar'}
+                                    <Link2 className="h-3 w-3 mr-1" />
+                                    Vincular Cupom
                                   </Button>
                                 )}
                                 <Button size="icon" variant="ghost" className="h-8 w-8" onClick={async () => {
@@ -1442,77 +1457,13 @@ export const AffiliatesManager = ({
                                 }}>
                                   <Pencil className="h-4 w-4" />
                                 </Button>
-                                <Badge variant="default">Vinculado</Badge>
+                                <Badge variant={isLinked ? 'default' : 'outline'}>
+                                  {isLinked ? 'Vinculado' : 'Cupom Não vinculado'}
+                                </Badge>
                               </div>
                             </div>
                           );
                         })}
-                        {/* Cupons disponíveis */}
-                        {availableCoupons.filter(c => !formData.coupon_ids.includes(c.id)).map(coupon => (
-                          <div key={coupon.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 border rounded-lg ${coupon.is_active ? 'bg-gradient-to-r from-green-50 to-green-100/50 border-green-200' : 'bg-gradient-to-r from-orange-50 to-amber-100/50 border-orange-200'}`}>
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="min-w-0">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <p className="font-medium break-all">{coupon.code}</p>
-                                  <Badge variant={coupon.is_active ? "default" : "destructive"} className={coupon.is_active ? "bg-green-600 text-white text-xs flex-shrink-0" : "text-xs flex-shrink-0"}>
-                                    {coupon.is_active ? "Cupom Ativo" : "Cupom Inativo"}
-                                  </Badge>
-                                </div>
-                                <p className="text-sm text-muted-foreground">
-                                  {coupon.discount_type === 'percentage' ? `${coupon.discount_value}% de desconto` : `${formatCurrency(coupon.discount_value)} de desconto`}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <Button size="sm" variant="outline" className="h-8 text-xs bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700" onClick={() => {
-                                setFormData({
-                                  ...formData,
-                                  coupon_ids: [...formData.coupon_ids, coupon.id]
-                                });
-                              }}>
-                                <Link2 className="h-3 w-3 mr-1" />
-                                Vincular Cupom
-                              </Button>
-                              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={async () => {
-                                setEditingCouponId(coupon.id);
-                                setNewCouponData({
-                                  code: coupon.code,
-                                  discount_type: coupon.discount_type,
-                                  discount_value: coupon.discount_value,
-                                  min_order_value: coupon.min_order_value || 0,
-                                  max_uses: coupon.max_uses || null,
-                                  valid_from: coupon.valid_from ? new Date(coupon.valid_from).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-                                  valid_until: coupon.valid_until ? new Date(coupon.valid_until).toISOString().split('T')[0] : '',
-                                  applies_to: coupon.applies_to as 'all' | 'category' | 'product' || 'all',
-                                  category_names: coupon.category_names || [],
-                                  product_ids: coupon.product_ids || []
-                                });
-                                const { data: rules } = await supabase.from('coupon_discount_rules').select('*').eq('coupon_id', coupon.id);
-                                if (rules) {
-                                  const productRules = rules.filter(r => r.rule_type === 'product' && r.product_id).map(r => ({
-                                    product_id: r.product_id!,
-                                    discount_type: r.discount_type as 'percentage' | 'fixed',
-                                    discount_value: r.discount_value
-                                  }));
-                                  const categoryRules = rules.filter(r => r.rule_type === 'category' && r.category_name).map(r => ({
-                                    category_name: r.category_name!,
-                                    discount_type: r.discount_type as 'percentage' | 'fixed',
-                                    discount_value: r.discount_value
-                                  }));
-                                  setCouponDiscountRules(productRules);
-                                  setCouponCategoryRules(categoryRules);
-                                } else {
-                                  setCouponDiscountRules([]);
-                                  setCouponCategoryRules([]);
-                                }
-                                setNewCouponDialogOpen(true);
-                              }}>
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Badge variant="outline">Cupom Não vinculado</Badge>
-                            </div>
-                          </div>
-                        ))}
                       </div>
                     )}
                   </div>
