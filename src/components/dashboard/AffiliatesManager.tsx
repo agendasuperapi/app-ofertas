@@ -306,6 +306,16 @@ export const AffiliatesManager = ({
       return;
     }
 
+    // Validar cupom obrigatório
+    if (formData.coupon_ids.length === 0) {
+      toast({
+        title: 'Cupom obrigatório',
+        description: 'Selecione ou crie um cupom para vincular ao afiliado.',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     // Validar valor da comissão padrão se estiver habilitada
     if (formData.commission_enabled && formData.default_commission_value <= 0 && formData.commission_products.length === 0) {
       toast({
@@ -1194,7 +1204,7 @@ export const AffiliatesManager = ({
                   </p>
                 </div>
                 <div className="col-span-2">
-                  <Label className="mb-1 block">Vincular Cupom</Label>
+                  <Label className="mb-1 block">Vincular Cupom <span className="text-destructive">*</span></Label>
                   <div className="flex items-center gap-2">
                     <Select
                       value={formData.coupon_ids[0] || ''} 
@@ -1202,9 +1212,10 @@ export const AffiliatesManager = ({
                         ...formData,
                         coupon_ids: value ? [value] : []
                       })}
+                      required
                     >
                       <SelectTrigger className="glass flex-1">
-                        <SelectValue placeholder="Selecione um cupom (opcional)" />
+                        <SelectValue placeholder="Selecione um cupom" />
                       </SelectTrigger>
                       <SelectContent>
                         {availableCoupons.map(coupon => (
@@ -1234,7 +1245,7 @@ export const AffiliatesManager = ({
                   <p className="text-xs text-muted-foreground mt-1">
                     {availableCoupons.length === 0 
                       ? 'Nenhum cupom disponível. Clique no + para criar.' 
-                      : 'Selecione um cupom para vincular ao afiliado'}
+                      : 'Cupom obrigatório para vincular ao afiliado'}
                   </p>
                 </div>
               </div>
