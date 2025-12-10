@@ -41,6 +41,10 @@ interface OrderItem {
   quantity: number;
   unit_price: number;
   subtotal: number;
+  item_discount: number | null;
+  commission_amount: number;
+  commission_type: string;
+  commission_value: number;
 }
 
 export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManagerProps) {
@@ -63,7 +67,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
   const [loadingOrderItems, setLoadingOrderItems] = useState<string | null>(null);
 
   // Fetch order items when expanding an order
-  const fetchOrderItems = async (orderId: string) => {
+  const fetchOrderItems = async (orderId: string, earningId: string) => {
     if (orderItems[orderId]) {
       // Already loaded
       return;
@@ -71,17 +75,42 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
 
     setLoadingOrderItems(orderId);
     try {
-      const { data, error } = await supabase
+      // Fetch from affiliate_item_earnings which has commission details
+      const { data: itemEarnings, error: earningsError } = await supabase
+        .from('affiliate_item_earnings')
+        .select('id, product_name, item_subtotal, item_discount, commission_amount, commission_type, commission_value, order_item_id')
+        .eq('earning_id', earningId);
+
+      if (earningsError) throw earningsError;
+
+      // Fetch order items to get quantity
+      const { data: items, error: itemsError } = await supabase
         .from('order_items')
-        .select('id, product_name, quantity, unit_price, subtotal')
+        .select('id, quantity, unit_price')
         .eq('order_id', orderId)
         .is('deleted_at', null);
 
-      if (error) throw error;
+      if (itemsError) throw itemsError;
+
+      // Merge data
+      const mergedItems: OrderItem[] = (itemEarnings || []).map(earning => {
+        const orderItem = items?.find(i => i.id === earning.order_item_id);
+        return {
+          id: earning.id,
+          product_name: earning.product_name,
+          quantity: orderItem?.quantity || 1,
+          unit_price: orderItem?.unit_price || 0,
+          subtotal: earning.item_subtotal,
+          item_discount: earning.item_discount,
+          commission_amount: earning.commission_amount,
+          commission_type: earning.commission_type,
+          commission_value: earning.commission_value
+        };
+      });
 
       setOrderItems(prev => ({
         ...prev,
-        [orderId]: data || []
+        [orderId]: mergedItems
       }));
     } catch (error) {
       console.error('Error fetching order items:', error);
@@ -91,12 +120,12 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
     }
   };
 
-  const handleOrderClick = (orderId: string) => {
+  const handleOrderClick = (orderId: string, earningId: string) => {
     if (expandedOrderId === orderId) {
       setExpandedOrderId(null);
     } else {
       setExpandedOrderId(orderId);
-      fetchOrderItems(orderId);
+      fetchOrderItems(orderId, earningId);
     }
   };
 
@@ -657,7 +686,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                       <Collapsible 
                         key={order.earning_id} 
                         open={expandedOrderId === order.order_id}
-                        onOpenChange={() => handleOrderClick(order.order_id)}
+                        onOpenChange={() => handleOrderClick(order.order_id, order.earning_id)}
                       >
                         <Card className="bg-muted/30">
                           <CollapsibleTrigger asChild>
@@ -701,12 +730,29 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                                     Itens do Pedido
                                   </p>
                                   {orderItems[order.order_id]?.map((item) => (
-                                    <div key={item.id} className="flex justify-between items-center text-xs bg-background/50 p-2 rounded">
-                                      <div>
-                                        <span className="font-medium">{item.quantity}x</span>{' '}
-                                        <span>{item.product_name}</span>
+                                    <div key={item.id} className="text-xs bg-background/50 p-2 rounded space-y-1">
+                                      <div className="flex justify-between items-start">
+                                        <div>
+                                          <span className="font-medium">{item.quantity}x</span>{' '}
+                                          <span>{item.product_name}</span>
+                                        </div>
+                                        <span className="text-muted-foreground">{formatCurrency(item.subtotal)}</span>
                                       </div>
-                                      <span className="text-muted-foreground">{formatCurrency(item.subtotal)}</span>
+                                      <div className="flex justify-between items-center text-[10px] text-muted-foreground">
+                                        <div className="flex gap-2">
+                                          {item.item_discount && item.item_discount > 0 && (
+                                            <span className="text-orange-500">
+                                              Desconto: -{formatCurrency(item.item_discount)}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <span className="text-green-600 font-medium">
+                                          Comissão: {formatCurrency(item.commission_amount)}
+                                          {item.commission_type === 'percentage' && (
+                                            <span className="text-muted-foreground ml-1">({item.commission_value}%)</span>
+                                          )}
+                                        </span>
+                                      </div>
                                     </div>
                                   ))}
                                 </div>
