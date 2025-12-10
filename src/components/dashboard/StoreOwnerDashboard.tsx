@@ -64,7 +64,6 @@ import { OrderStatusManager } from "./OrderStatusManager";
 import { useOrderStatusNotification } from "@/hooks/useOrderStatusNotification";
 import { useNewOrderNotification } from "@/hooks/useNewOrderNotification";
 import { useWhatsAppDisconnectNotification } from "@/hooks/useWhatsAppDisconnectNotification";
-
 import { useNewWithdrawalNotification } from "@/hooks/useNewWithdrawalNotification";
 import { useWhatsAppAutoReconnect } from "@/hooks/useWhatsAppAutoReconnect";
 import { useOrderStatuses } from "@/hooks/useOrderStatuses";
@@ -484,7 +483,6 @@ export const StoreOwnerDashboard = ({
   useNewOrderNotification(myStore?.id, {
     pauseInvalidations: isAnyModalOpen
   });
-
 
   // Enable real-time new withdrawal request notifications
   useNewWithdrawalNotification({
@@ -2240,7 +2238,7 @@ export const StoreOwnerDashboard = ({
                           {myStore?.id && <div className="hidden md:block">
                               <WhatsAppStatusIndicator storeId={myStore.id} />
                             </div>}
-                          <span className="text-xs text-muted-foreground hidden md:inline">v 2.1</span>
+                          <span className="text-xs text-muted-foreground hidden md:inline">v 2.2</span>
                         </div>
                       </div>
                     </div>
