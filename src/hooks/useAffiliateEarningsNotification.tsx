@@ -75,14 +75,14 @@ export const useAffiliateEarningsNotification = ({
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: 'INSERT',
           schema: 'public',
           table: 'affiliate_earnings'
         },
         async (payload) => {
           const earning = payload.new as any;
           
-          console.log('💰 Evento UPDATE recebido em affiliate_earnings:', earning);
+          console.log('💰 Novo registro de comissão criado:', earning);
           
           // Verificar se é para este afiliado
           if (!earning.store_affiliate_id || !storeAffiliateIds.includes(earning.store_affiliate_id)) {
