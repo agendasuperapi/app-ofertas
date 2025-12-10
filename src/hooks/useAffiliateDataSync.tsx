@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -19,6 +20,8 @@ export const useAffiliateDataSync = ({
   const onDataChangeRef = useRef(onDataChange);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastEventRef = useRef<string>('');
+  const location = useLocation();
+  const isAffiliateDashboard = location.pathname.startsWith('/afiliado');
   
   useEffect(() => {
     onDataChangeRef.current = onDataChange;
@@ -71,12 +74,19 @@ export const useAffiliateDataSync = ({
   }, []);
 
   useEffect(() => {
-    if (!enabled || !storeAffiliateIds.length) return;
-
+    // Limpar canal anterior
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
     }
+
+    // Só criar canal se estiver no dashboard do afiliado
+    if (!isAffiliateDashboard) {
+      console.log('[AffiliateDataSync] Não está no dashboard do afiliado - sincronização desabilitada');
+      return;
+    }
+
+    if (!enabled || !storeAffiliateIds.length) return;
 
     console.log('[AffiliateDataSync] 📡 Iniciando sincronização para', storeAffiliateIds.length, 'lojas');
 
@@ -158,5 +168,5 @@ export const useAffiliateDataSync = ({
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [enabled, storeAffiliateIds, handleDataChange]);
+  }, [enabled, storeAffiliateIds, handleDataChange, isAffiliateDashboard]);
 };
