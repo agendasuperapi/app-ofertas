@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AffiliateStoreProductsTab } from '@/components/dashboard/AffiliateStoreProductsTab';
 import { StoreHistoryTab } from '@/components/dashboard/StoreHistoryTab';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { format, startOfDay, endOfDay, startOfWeek, endOfWeek, startOfMonth, endOfMonth, subDays, isWithinInterval } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
@@ -516,6 +516,51 @@ export default function AffiliateDashboardNew() {
         return dateA.getTime() - dateB.getTime();
       });
   }, [filteredAffiliateOrders]);
+
+  // Dados para gráfico de área empilhada - Evolução acumulada de maturação
+  const maturityEvolutionData = useMemo(() => {
+    if (!maturingOrdersList || maturingOrdersList.length === 0) return [];
+    
+    // Agrupar por data de liberação
+    const byDate: Record<string, { disponivel: number; emMaturacao: number }> = {};
+    
+    // Ordenar por data de liberação
+    const sortedOrders = [...maturingOrdersList].sort((a, b) => {
+      const dateA = new Date(a.commission_available_at || 0);
+      const dateB = new Date(b.commission_available_at || 0);
+      return dateA.getTime() - dateB.getTime();
+    });
+    
+    // Calcular acumulado
+    let accumulated = 0;
+    sortedOrders.forEach(order => {
+      if (order.commission_available_at) {
+        const dateKey = format(new Date(order.commission_available_at), 'yyyy-MM-dd');
+        if (!byDate[dateKey]) {
+          byDate[dateKey] = { disponivel: accumulated, emMaturacao: 0 };
+        }
+        byDate[dateKey].emMaturacao += order.commission_amount || 0;
+        accumulated += order.commission_amount || 0;
+      }
+    });
+    
+    // Converter para array com acumulado progressivo
+    let runningTotal = 0;
+    return Object.entries(byDate)
+      .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
+      .map(([date, data]) => {
+        const prevTotal = runningTotal;
+        runningTotal += data.emMaturacao;
+        return {
+          date,
+          dateDisplay: format(new Date(date), 'dd/MM', { locale: ptBR }),
+          fullDate: format(new Date(date), "dd 'de' MMMM", { locale: ptBR }),
+          liberado: data.emMaturacao,
+          acumulado: runningTotal,
+        };
+      })
+      .slice(0, 14);
+  }, [maturingOrdersList]);
 
   // Dados para gráfico de pizza - Comissões por loja (apenas pedidos entregues)
   const commissionsByStore = useMemo(() => {
@@ -1836,6 +1881,71 @@ export default function AffiliateDashboardNew() {
                   )}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Gráfico de Evolução Acumulada de Maturação */}
+      {maturityEvolutionData.length > 1 && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.58 }}>
+          <Card className="glass border-border/50 overflow-hidden">
+            <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-emerald-500/10 to-amber-500/10">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-emerald-500 to-amber-500 flex items-center justify-center shadow-lg">
+                  <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
+                </div>
+                <span className="gradient-text">Evolução Acumulada de Liberação</span>
+              </CardTitle>
+              <CardDescription className="text-[10px] sm:text-sm">
+                Total acumulado de comissões que serão liberadas
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-2 sm:pt-4">
+              <ResponsiveContainer width="100%" height={220}>
+                <AreaChart data={maturityEvolutionData}>
+                  <defs>
+                    <linearGradient id="colorAcumulado" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(160, 84%, 39%)" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="hsl(160, 84%, 39%)" stopOpacity={0.1}/>
+                    </linearGradient>
+                    <linearGradient id="colorLiberado" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(38, 92%, 50%)" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="hsl(38, 92%, 50%)" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="dateDisplay" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(value) => `R$${value}`} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                    labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    formatter={(value: number, name: string) => [
+                      formatCurrency(value), 
+                      name === 'acumulado' ? 'Total Acumulado' : 'Liberado no Dia'
+                    ]}
+                    labelFormatter={(label, payload) => {
+                      if (payload && payload[0]?.payload?.fullDate) {
+                        return payload[0].payload.fullDate;
+                      }
+                      return label;
+                    }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="acumulado" 
+                    stroke="hsl(160, 84%, 39%)" 
+                    strokeWidth={2}
+                    fillOpacity={1} 
+                    fill="url(#colorAcumulado)" 
+                    name="acumulado"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </motion.div>
