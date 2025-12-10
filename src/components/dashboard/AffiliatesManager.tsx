@@ -1457,7 +1457,7 @@ export const AffiliatesManager = ({
                                 }}>
                                   <Pencil className="h-4 w-4" />
                                 </Button>
-                                <Badge variant={isLinked ? 'default' : 'outline'}>
+                                <Badge className={isLinked ? 'bg-green-600 text-white' : 'bg-orange-500 text-white border-orange-500'}>
                                   {isLinked ? 'Vinculado' : 'Cupom Não vinculado'}
                                 </Badge>
                               </div>
