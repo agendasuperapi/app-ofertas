@@ -1360,32 +1360,39 @@ export const AffiliatesManager = ({
                       if (!coupon) return null;
                       // Check if this coupon was already linked before editing (for existing affiliates)
                       const wasAlreadyLinked = editingAffiliate?.affiliate_coupons?.some(ac => ac.coupon_id === couponId);
-                      return <div key={couponId} className="flex items-center justify-between p-3 border rounded-lg border-primary/50 bg-primary/5">
-                          <div className="flex items-center gap-3">
-                            {wasAlreadyLinked ? <div className="flex items-center justify-center h-4 w-4 text-primary" title="Cupom vinculado permanentemente">
-                                <Lock className="h-4 w-4" />
-                              </div> : <Checkbox checked={true} onCheckedChange={() => {
+                      return <div key={couponId} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 border rounded-lg ${coupon.is_active ? 'bg-gradient-to-r from-green-50 to-green-100/50 border-green-200' : 'bg-gradient-to-r from-orange-50 to-amber-100/50 border-orange-200'}`}>
+                          <div className="flex items-center gap-3 min-w-0">
+                            {wasAlreadyLinked ? <Lock className="h-4 w-4 text-primary flex-shrink-0" /> : <Checkbox checked={true} onCheckedChange={() => {
                             setFormData({
                               ...formData,
                               coupon_ids: formData.coupon_ids.filter(id => id !== couponId)
                             });
                           }} />}
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono font-medium">{coupon.code}</span>
-                                <Badge variant={coupon.is_active ? "default" : "destructive"} className={coupon.is_active ? "bg-green-600 text-white text-xs" : "text-xs"}>
-                                  {coupon.is_active ? "Ativo" : "Inativo"}
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-mono font-medium break-all">{coupon.code}</span>
+                                <Badge variant={coupon.is_active ? "default" : "destructive"} className={coupon.is_active ? "bg-green-600 text-white text-xs flex-shrink-0" : "text-xs flex-shrink-0"}>
+                                  {coupon.is_active ? "Cupom Ativo" : "Cupom Inativo"}
                                 </Badge>
-                                {wasAlreadyLinked && <Badge variant="secondary" className="text-xs">
+                                {wasAlreadyLinked && <Badge variant="secondary" className="text-xs flex-shrink-0">
                                     Permanente
                                   </Badge>}
                               </div>
-                              <p className="text-xs text-muted-foreground">
-                                {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : formatCurrency(coupon.discount_value)} de desconto
+                              <p className="text-sm text-muted-foreground">
+                                {coupon.discount_type === 'percentage' ? `${coupon.discount_value}% de desconto` : `${formatCurrency(coupon.discount_value)} de desconto`}
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {wasAlreadyLinked && <Button size="sm" variant={coupon.is_active ? "destructive" : "outline"} className={`h-8 text-xs ${!coupon.is_active ? 'bg-green-600 text-white border-green-600 hover:bg-green-700' : ''}`} onClick={async () => {
+                              const { error } = await supabase.from('coupons').update({ is_active: !coupon.is_active }).eq('id', coupon.id);
+                              if (!error) {
+                                toast({ title: coupon.is_active ? 'Cupom inativado' : 'Cupom ativado' });
+                                fetchCoupons();
+                              }
+                            }}>
+                              {coupon.is_active ? 'Inativar' : 'Ativar'}
+                            </Button>}
                             <Button size="icon" variant="ghost" className="h-8 w-8" onClick={async () => {
                             setEditingCouponId(coupon.id);
                             setNewCouponData({
@@ -1450,27 +1457,30 @@ export const AffiliatesManager = ({
                 {availableCoupons.filter(c => !formData.coupon_ids.includes(c.id)).length > 0 && <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Cupons Disponíveis</Label>
                     <div className="max-h-[200px] overflow-y-auto space-y-2 border rounded-lg p-2">
-                      {availableCoupons.filter(c => !formData.coupon_ids.includes(c.id)).map(coupon => <div key={coupon.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
-                          <div className="flex items-center gap-3">
-                            <Checkbox checked={false} onCheckedChange={() => {
-                            setFormData({
-                              ...formData,
-                              coupon_ids: [...formData.coupon_ids, coupon.id]
-                            });
-                          }} />
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono font-medium">{coupon.code}</span>
-                                <Badge variant={coupon.is_active ? "default" : "destructive"} className={coupon.is_active ? "bg-green-600 text-white text-xs" : "text-xs"}>
-                                  {coupon.is_active ? "Ativo" : "Inativo"}
+                      {availableCoupons.filter(c => !formData.coupon_ids.includes(c.id)).map(coupon => <div key={coupon.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 border rounded-lg ${coupon.is_active ? 'bg-gradient-to-r from-green-50 to-green-100/50 border-green-200' : 'bg-gradient-to-r from-orange-50 to-amber-100/50 border-orange-200'}`}>
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="font-mono font-medium break-all">{coupon.code}</span>
+                                <Badge variant={coupon.is_active ? "default" : "destructive"} className={coupon.is_active ? "bg-green-600 text-white text-xs flex-shrink-0" : "text-xs flex-shrink-0"}>
+                                  {coupon.is_active ? "Cupom Ativo" : "Cupom Inativo"}
                                 </Badge>
                               </div>
-                              <p className="text-xs text-muted-foreground">
-                                {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : formatCurrency(coupon.discount_value)} de desconto
+                              <p className="text-sm text-muted-foreground">
+                                {coupon.discount_type === 'percentage' ? `${coupon.discount_value}% de desconto` : `${formatCurrency(coupon.discount_value)} de desconto`}
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <Button size="sm" variant="outline" className="h-8 text-xs bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700" onClick={() => {
+                              setFormData({
+                                ...formData,
+                                coupon_ids: [...formData.coupon_ids, coupon.id]
+                              });
+                            }}>
+                              <Link2 className="h-3 w-3 mr-1" />
+                              Vincular Cupom
+                            </Button>
                             <Button size="icon" variant="ghost" className="h-8 w-8" onClick={async () => {
                             setEditingCouponId(coupon.id);
                             setNewCouponData({
@@ -1525,7 +1535,7 @@ export const AffiliatesManager = ({
                           }}>
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Badge variant="outline">Não vinculado</Badge>
+                            <Badge variant="outline">Cupom Não vinculado</Badge>
                           </div>
                         </div>)}
                     </div>
