@@ -2391,6 +2391,9 @@ export const AffiliatesManager = ({
                                       <Link2 className="h-3 w-3 mr-1" />
                                       Vincular Cupom 
                                     </Button>}
+                                  {isLinked && <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/30">
+                                      Vinculado
+                                    </Badge>}
                                   <Button size="icon" variant="ghost" className="h-8 w-8" onClick={async () => {
                                 setEditingCouponId(coupon.id);
                                 setNewCouponData({
