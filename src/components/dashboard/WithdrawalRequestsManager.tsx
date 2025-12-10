@@ -85,33 +85,56 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
 
       if (itemsError) throw itemsError;
 
-      // Try to fetch from affiliate_item_earnings which has commission details
-      const { data: itemEarnings, error: earningsError } = await supabase
-        .from('affiliate_item_earnings')
-        .select('id, product_name, item_subtotal, item_discount, item_value_with_discount, commission_amount, commission_type, commission_value, order_item_id')
-        .eq('earning_id', earningId);
+      // Get order_item_ids to query affiliate_item_earnings
+      const orderItemIds = (items || []).map(i => i.id);
 
-      if (earningsError) {
-        console.error('Error fetching item earnings:', earningsError);
+      let itemEarnings: any[] = [];
+      
+      // Try to fetch by order_item_id first (more reliable)
+      if (orderItemIds.length > 0) {
+        const { data: earningsByItem, error: earningsError } = await supabase
+          .from('affiliate_item_earnings')
+          .select('id, product_name, item_subtotal, item_discount, item_value_with_discount, commission_amount, commission_type, commission_value, order_item_id')
+          .in('order_item_id', orderItemIds);
+
+        if (earningsError) {
+          console.error('Error fetching item earnings by order_item_id:', earningsError);
+        } else if (earningsByItem && earningsByItem.length > 0) {
+          itemEarnings = earningsByItem;
+        }
+      }
+
+      // Fallback: try by earning_id if no results found
+      if (itemEarnings.length === 0 && earningId) {
+        const { data: earningsByEarningId, error: earningsError2 } = await supabase
+          .from('affiliate_item_earnings')
+          .select('id, product_name, item_subtotal, item_discount, item_value_with_discount, commission_amount, commission_type, commission_value, order_item_id')
+          .eq('earning_id', earningId);
+
+        if (earningsError2) {
+          console.error('Error fetching item earnings by earning_id:', earningsError2);
+        } else if (earningsByEarningId && earningsByEarningId.length > 0) {
+          itemEarnings = earningsByEarningId;
+        }
       }
 
       let mergedItems: OrderItem[];
 
-      if (itemEarnings && itemEarnings.length > 0) {
+      if (itemEarnings.length > 0) {
         // Use item_earnings data with commission details
         mergedItems = itemEarnings.map(earning => {
           const orderItem = items?.find(i => i.id === earning.order_item_id);
           return {
             id: earning.id,
-            product_name: earning.product_name,
+            product_name: earning.product_name || orderItem?.product_name || 'Produto',
             quantity: orderItem?.quantity || 1,
             unit_price: orderItem?.unit_price || 0,
-            subtotal: earning.item_subtotal || 0,
-            item_discount: earning.item_discount || 0,
-            item_value_with_discount: earning.item_value_with_discount || earning.item_subtotal || 0,
-            commission_amount: earning.commission_amount || 0,
+            subtotal: Number(earning.item_subtotal) || orderItem?.subtotal || 0,
+            item_discount: Number(earning.item_discount) || 0,
+            item_value_with_discount: Number(earning.item_value_with_discount) || Number(earning.item_subtotal) || 0,
+            commission_amount: Number(earning.commission_amount) || 0,
             commission_type: earning.commission_type || 'percentage',
-            commission_value: earning.commission_value || 0
+            commission_value: Number(earning.commission_value) || 0
           };
         });
       } else {
