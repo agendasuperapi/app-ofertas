@@ -493,7 +493,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                   )}
 
                   {selectedRequest.status === 'paid' && (
-                    <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+                    <div className="p-3 bg-primary/10 rounded-lg border border-primary/20 text-center">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <Image className="h-4 w-4 text-green-600" />
