@@ -28,7 +28,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
-import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter, ChevronDown, XCircle, Search, Banknote, Camera, Pencil, Save } from 'lucide-react';
+import { Users, DollarSign, Store, TrendingUp, Copy, LogOut, Loader2, Clock, CheckCircle, Building2, Wallet, BarChart3, User, Link, Ticket, ShoppingBag, Package, Target, Ban, Calculator, Home, ExternalLink, ChevronRight, Grid3X3, X, Calendar as CalendarIcon, Filter, ChevronDown, XCircle, Search, Banknote, Camera, Pencil, Save, Timer } from 'lucide-react';
+import { MaturityCountdown } from '@/components/dashboard/MaturityCountdown';
 import { AvatarCropDialog } from '@/components/dashboard/AvatarCropDialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { supabase } from '@/integrations/supabase/client';
@@ -1052,31 +1053,15 @@ export default function AffiliateDashboardNew() {
                         </div>
                       </div>
                       {/* Mostrar contagem regressiva para pedidos entregues */}
-                      {(order.order_status === 'entregue' || order.order_status === 'delivered') && order.commission_status !== 'paid' && (order as any).commission_available_at && (() => {
-                        const availableAt = new Date((order as any).commission_available_at);
-                        const now = new Date();
-                        const daysRemaining = Math.ceil((availableAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-                        
-                        if (daysRemaining > 0) {
-                          return (
-                            <div className="mt-2 pt-2 border-t border-border/50">
-                              <Badge variant="outline" className="bg-orange-500/10 text-orange-600 border-orange-500/20">
-                                <Clock className="h-3 w-3 mr-1" />
-                                Liberação em {daysRemaining} dia{daysRemaining !== 1 ? 's' : ''}
-                              </Badge>
-                            </div>
-                          );
-                        } else {
-                          return (
-                            <div className="mt-2 pt-2 border-t border-border/50">
-                              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20">
-                                <CheckCircle className="h-3 w-3 mr-1" />
-                                Disponível para saque
-                              </Badge>
-                            </div>
-                          );
-                        }
-                      })()}
+                      {(order.order_status === 'entregue' || order.order_status === 'delivered') && order.commission_status !== 'paid' && (order as any).commission_available_at && (
+                        <div className="mt-2 pt-2 border-t border-border/50">
+                          <MaturityCountdown
+                            commissionAvailableAt={(order as any).commission_available_at}
+                            commissionStatus={order.commission_status}
+                            orderStatus={order.order_status}
+                          />
+                        </div>
+                      )}
                       {order.coupon_code && !(order.order_status === 'entregue' || order.order_status === 'delivered') && (
                         <div className="mt-2 pt-2 border-t border-border/50">
                           <Badge variant="outline" className="font-mono text-xs">
@@ -1324,7 +1309,7 @@ export default function AffiliateDashboardNew() {
     // Determine if we should show filtered data or all data
     const showFilteredData = periodFilter !== 'all' || storeFilter !== 'all';
     const displayStats = showFilteredData ? filteredStats : affiliateStats;
-    return <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
+    return <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-2 sm:gap-3">
         <motion.div initial={{
         opacity: 0,
         y: 20
@@ -1441,6 +1426,33 @@ export default function AffiliateDashboardNew() {
         y: 0
       }} transition={{
         delay: 0.5
+      }} whileHover={{
+        scale: 1.02
+      }}>
+          <Card className="glass border-border/50 overflow-hidden relative h-full">
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
+            <CardContent className="p-2.5 sm:p-4 md:pt-6 md:px-6 relative">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-amber-500 to-amber-600 shadow-[0_0_20px_hsl(38_92%_50%/0.4)]">
+                  <Timer className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white animate-pulse" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Em Maturação</p>
+                  <p className="text-xs sm:text-sm md:text-lg lg:text-xl font-bold text-amber-600">{formatCurrency((displayStats as any)?.maturing_commission || 0)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div initial={{
+        opacity: 0,
+        y: 20
+      }} animate={{
+        opacity: 1,
+        y: 0
+      }} transition={{
+        delay: 0.55
       }} whileHover={{
         scale: 1.02
       }}>
