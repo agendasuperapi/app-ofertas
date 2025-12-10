@@ -76,39 +76,59 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
 
     setLoadingOrderItems(orderId);
     try {
-      // Fetch from affiliate_item_earnings which has commission details
-      const { data: itemEarnings, error: earningsError } = await supabase
-        .from('affiliate_item_earnings')
-        .select('id, product_name, item_subtotal, item_discount, item_value_with_discount, commission_amount, commission_type, commission_value, order_item_id')
-        .eq('earning_id', earningId);
-
-      if (earningsError) throw earningsError;
-
-      // Fetch order items to get quantity
+      // Fetch order items first
       const { data: items, error: itemsError } = await supabase
         .from('order_items')
-        .select('id, quantity, unit_price')
+        .select('id, product_name, quantity, unit_price, subtotal')
         .eq('order_id', orderId)
         .is('deleted_at', null);
 
       if (itemsError) throw itemsError;
 
-      // Merge data
-      const mergedItems: OrderItem[] = (itemEarnings || []).map(earning => {
-        const orderItem = items?.find(i => i.id === earning.order_item_id);
-        return {
-          id: earning.id,
-          product_name: earning.product_name,
-          quantity: orderItem?.quantity || 1,
-          unit_price: orderItem?.unit_price || 0,
-          subtotal: earning.item_subtotal,
-          item_discount: earning.item_discount,
-          item_value_with_discount: earning.item_value_with_discount,
-          commission_amount: earning.commission_amount,
-          commission_type: earning.commission_type,
-          commission_value: earning.commission_value
-        };
-      });
+      // Try to fetch from affiliate_item_earnings which has commission details
+      const { data: itemEarnings, error: earningsError } = await supabase
+        .from('affiliate_item_earnings')
+        .select('id, product_name, item_subtotal, item_discount, item_value_with_discount, commission_amount, commission_type, commission_value, order_item_id')
+        .eq('earning_id', earningId);
+
+      if (earningsError) {
+        console.error('Error fetching item earnings:', earningsError);
+      }
+
+      let mergedItems: OrderItem[];
+
+      if (itemEarnings && itemEarnings.length > 0) {
+        // Use item_earnings data with commission details
+        mergedItems = itemEarnings.map(earning => {
+          const orderItem = items?.find(i => i.id === earning.order_item_id);
+          return {
+            id: earning.id,
+            product_name: earning.product_name,
+            quantity: orderItem?.quantity || 1,
+            unit_price: orderItem?.unit_price || 0,
+            subtotal: earning.item_subtotal || 0,
+            item_discount: earning.item_discount || 0,
+            item_value_with_discount: earning.item_value_with_discount || earning.item_subtotal || 0,
+            commission_amount: earning.commission_amount || 0,
+            commission_type: earning.commission_type || 'percentage',
+            commission_value: earning.commission_value || 0
+          };
+        });
+      } else {
+        // Fallback to order_items without commission details
+        mergedItems = (items || []).map(item => ({
+          id: item.id,
+          product_name: item.product_name,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          subtotal: item.subtotal,
+          item_discount: 0,
+          item_value_with_discount: item.subtotal,
+          commission_amount: 0,
+          commission_type: 'percentage',
+          commission_value: 0
+        }));
+      }
 
       setOrderItems(prev => ({
         ...prev,
