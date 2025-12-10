@@ -87,11 +87,11 @@ export const AffiliatesManager = ({
     // If not linked to any affiliate, it's available
     if (!linkedAffiliate) return true;
 
-    // Get current affiliate being edited (from edit mode or details modal)
-    const currentAffiliateId = editingAffiliate?.id || selectedAffiliate?.id;
+    // For new affiliate dialog, exclude all coupons already linked to any affiliate
+    // Only use editingAffiliate for the new/edit dialog context (not selectedAffiliate which is for details modal)
+    const currentAffiliateId = dialogOpen ? editingAffiliate?.id : selectedAffiliate?.id;
 
-    // If we're creating a new affiliate (no editingAffiliate and no selectedAffiliate in edit context),
-    // exclude coupons already linked to other affiliates
+    // If we're creating a new affiliate (no editingAffiliate), exclude coupons already linked to other affiliates
     if (!currentAffiliateId) return false;
 
     // Only allow if linked to the SAME affiliate being edited/viewed (not others)
