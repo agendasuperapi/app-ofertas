@@ -243,6 +243,28 @@ export function useWithdrawalRequests(options: UseWithdrawalRequestsOptions = {}
     }
   };
 
+  // Atualizar comprovante de pagamento (lojista)
+  const updatePaymentProof = async (requestId: string, paymentProof: string) => {
+    try {
+      const { error } = await supabase
+        .from('affiliate_withdrawal_requests')
+        .update({
+          payment_proof: paymentProof,
+        })
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      toast.success('Comprovante anexado com sucesso!');
+      await fetchRequests();
+      return true;
+    } catch (err: any) {
+      console.error('[useWithdrawalRequests] Erro ao atualizar comprovante:', err);
+      toast.error('Erro ao anexar comprovante');
+      return false;
+    }
+  };
+
   // Stats
   const stats = {
     total: requests.length,
@@ -272,5 +294,6 @@ export function useWithdrawalRequests(options: UseWithdrawalRequestsOptions = {}
     createWithdrawalRequest,
     markAsPaid,
     rejectRequest,
+    updatePaymentProof,
   };
 }

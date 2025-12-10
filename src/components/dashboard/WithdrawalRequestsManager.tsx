@@ -12,12 +12,13 @@ import { ScrollableTable } from '@/components/ui/scrollable-table';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Wallet, Clock, CheckCircle, XCircle, DollarSign, User, Phone, Key, FileText, Search, Filter, Ban, ShoppingBag, Image, Eye } from 'lucide-react';
+import { Loader2, Wallet, Clock, CheckCircle, XCircle, DollarSign, User, Phone, Key, FileText, Search, Filter, Ban, ShoppingBag, Image, Eye, Upload, Paperclip } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { WithdrawalPaymentModal } from './WithdrawalPaymentModal';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface WithdrawalRequestsManagerProps {
   storeId: string;
@@ -34,7 +35,7 @@ interface WithdrawalOrder {
 }
 
 export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManagerProps) {
-  const { requests, isLoading, stats, markAsPaid, rejectRequest } = useWithdrawalRequests({ storeId });
+  const { requests, isLoading, stats, markAsPaid, rejectRequest, updatePaymentProof } = useWithdrawalRequests({ storeId });
   const isMobile = useIsMobile();
   const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [searchTerm, setSearchTerm] = useState('');
@@ -46,6 +47,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
   const [paymentRequest, setPaymentRequest] = useState<WithdrawalRequest | null>(null);
   const [withdrawalOrders, setWithdrawalOrders] = useState<WithdrawalOrder[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [isUploadingProof, setIsUploadingProof] = useState(false);
 
   // Fetch orders associated with the withdrawal
   useEffect(() => {
@@ -190,6 +192,38 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
     setRejectDialogOpen(false);
     setRejectNotes('');
     setSelectedRequest(null);
+  };
+
+  const handleUploadProof = async (file: File) => {
+    if (!selectedRequest) return;
+    
+    setIsUploadingProof(true);
+    try {
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      const fileName = `${selectedRequest.id}_${Date.now()}.${fileExt}`;
+      const filePath = `withdrawals/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('payment-receipts')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('payment-receipts')
+        .getPublicUrl(filePath);
+
+      const success = await updatePaymentProof(selectedRequest.id, publicUrl);
+      if (success) {
+        // Update local state
+        setSelectedRequest({ ...selectedRequest, payment_proof: publicUrl });
+      }
+    } catch (err: any) {
+      console.error('[WithdrawalRequestsManager] Erro ao fazer upload:', err);
+      toast.error('Erro ao enviar comprovante: ' + err.message);
+    } finally {
+      setIsUploadingProof(false);
+    }
   };
 
   if (isLoading) {
@@ -457,28 +491,62 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                     </div>
                   )}
 
-                  {selectedRequest.payment_proof && selectedRequest.status === 'paid' && (
+                  {selectedRequest.status === 'paid' && (
                     <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Image className="h-4 w-4 text-green-600" />
-                        <p className="text-sm font-medium text-green-600">Comprovante de Pagamento</p>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Image className="h-4 w-4 text-green-600" />
+                          <p className="text-sm font-medium text-green-600">Comprovante de Pagamento</p>
+                        </div>
+                        <label className="cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleUploadProof(file);
+                            }}
+                            disabled={isUploadingProof}
+                          />
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="text-xs"
+                            disabled={isUploadingProof}
+                            asChild
+                          >
+                            <span>
+                              {isUploadingProof ? (
+                                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                              ) : (
+                                <Upload className="h-3 w-3 mr-1" />
+                              )}
+                              {selectedRequest.payment_proof ? 'Trocar' : 'Anexar'}
+                            </span>
+                          </Button>
+                        </label>
                       </div>
-                      {selectedRequest.payment_proof.endsWith('.pdf') ? (
-                        <a 
-                          href={selectedRequest.payment_proof} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-                        >
-                          <Eye className="h-4 w-4" />
-                          Ver Comprovante PDF
-                        </a>
+                      {selectedRequest.payment_proof ? (
+                        selectedRequest.payment_proof.endsWith('.pdf') ? (
+                          <a 
+                            href={selectedRequest.payment_proof} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                          >
+                            <Eye className="h-4 w-4" />
+                            Ver Comprovante PDF
+                          </a>
+                        ) : (
+                          <img 
+                            src={selectedRequest.payment_proof} 
+                            alt="Comprovante de pagamento" 
+                            className="max-w-full rounded-lg border border-border mt-2"
+                          />
+                        )
                       ) : (
-                        <img 
-                          src={selectedRequest.payment_proof} 
-                          alt="Comprovante de pagamento" 
-                          className="max-w-full rounded-lg border border-border mt-2"
-                        />
+                        <p className="text-xs text-muted-foreground">Nenhum comprovante anexado</p>
                       )}
                     </div>
                   )}
