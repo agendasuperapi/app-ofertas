@@ -36,7 +36,7 @@ interface WithdrawalOrder {
 export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManagerProps) {
   const { requests, isLoading, stats, markAsPaid, rejectRequest } = useWithdrawalRequests({ storeId });
   const isMobile = useIsMobile();
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRequest, setSelectedRequest] = useState<WithdrawalRequest | null>(null);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
