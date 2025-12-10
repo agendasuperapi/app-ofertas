@@ -4,6 +4,7 @@ import { useAffiliateAuth, AffiliateOrderItem, AffiliateOrder } from '@/hooks/us
 import { useAffiliateEarningsNotification } from '@/hooks/useAffiliateEarningsNotification';
 import { useAffiliateOrderStatusNotification } from '@/hooks/useAffiliateOrderStatusNotification';
 import { useWithdrawalNotification } from '@/hooks/useWithdrawalNotification';
+import { useAffiliateDataSync } from '@/hooks/useAffiliateDataSync';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -273,6 +274,14 @@ export default function AffiliateDashboardNew() {
   useWithdrawalNotification({
     affiliateId: affiliateDbId,
     onStatusChange: fetchWithdrawalRequests
+  });
+
+  // Hook de sincronização de dados (quando lojista altera configurações do afiliado)
+  useAffiliateDataSync({
+    affiliateAccountId: affiliateUser?.id,
+    storeAffiliateIds,
+    onDataChange: refreshData,
+    enabled: storeAffiliateIds.length > 0
   });
 
   // Filtered orders based on period and store
