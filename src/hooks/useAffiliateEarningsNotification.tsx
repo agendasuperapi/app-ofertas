@@ -75,7 +75,7 @@ export const useAffiliateEarningsNotification = ({
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: 'UPDATE',
           schema: 'public',
           table: 'affiliate_earnings'
         },
