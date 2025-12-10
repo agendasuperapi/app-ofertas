@@ -67,16 +67,15 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
   const [orderItems, setOrderItems] = useState<Record<string, OrderItem[]>>({});
   const [loadingOrderItems, setLoadingOrderItems] = useState<string | null>(null);
 
-  // Fetch order items when expanding an order
-  const fetchOrderItems = async (orderId: string, earningId: string) => {
+  // Fetch order items when expanding an order - uses only order_item_id for commission lookups
+  const fetchOrderItems = async (orderId: string) => {
     if (orderItems[orderId]) {
-      // Already loaded
       return;
     }
 
     setLoadingOrderItems(orderId);
     try {
-      // Fetch order items first
+      // 1. Fetch order_items first
       const { data: items, error: itemsError } = await supabase
         .from('order_items')
         .select('id, product_name, quantity, unit_price, subtotal')
@@ -85,73 +84,39 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
 
       if (itemsError) throw itemsError;
 
-      // Get order_item_ids to query affiliate_item_earnings
+      // 2. Get order_item_ids and fetch commissions ONLY by order_item_id
       const orderItemIds = (items || []).map(i => i.id);
-
-      let itemEarnings: any[] = [];
       
-      // Try to fetch by order_item_id first (more reliable)
+      let itemEarnings: any[] = [];
       if (orderItemIds.length > 0) {
-        const { data: earningsByItem, error: earningsError } = await supabase
+        const { data: earningsData, error: earningsError } = await supabase
           .from('affiliate_item_earnings')
-          .select('id, product_name, item_subtotal, item_discount, item_value_with_discount, commission_amount, commission_type, commission_value, order_item_id')
+          .select('order_item_id, product_name, item_subtotal, item_discount, item_value_with_discount, commission_amount, commission_type, commission_value')
           .in('order_item_id', orderItemIds);
 
         if (earningsError) {
-          console.error('Error fetching item earnings by order_item_id:', earningsError);
-        } else if (earningsByItem && earningsByItem.length > 0) {
-          itemEarnings = earningsByItem;
+          console.error('Error fetching item earnings:', earningsError);
+        } else {
+          itemEarnings = earningsData || [];
         }
       }
 
-      // Fallback: try by earning_id if no results found
-      if (itemEarnings.length === 0 && earningId) {
-        const { data: earningsByEarningId, error: earningsError2 } = await supabase
-          .from('affiliate_item_earnings')
-          .select('id, product_name, item_subtotal, item_discount, item_value_with_discount, commission_amount, commission_type, commission_value, order_item_id')
-          .eq('earning_id', earningId);
-
-        if (earningsError2) {
-          console.error('Error fetching item earnings by earning_id:', earningsError2);
-        } else if (earningsByEarningId && earningsByEarningId.length > 0) {
-          itemEarnings = earningsByEarningId;
-        }
-      }
-
-      let mergedItems: OrderItem[];
-
-      if (itemEarnings.length > 0) {
-        // Use item_earnings data with commission details
-        mergedItems = itemEarnings.map(earning => {
-          const orderItem = items?.find(i => i.id === earning.order_item_id);
-          return {
-            id: earning.id,
-            product_name: earning.product_name || orderItem?.product_name || 'Produto',
-            quantity: orderItem?.quantity || 1,
-            unit_price: orderItem?.unit_price || 0,
-            subtotal: Number(earning.item_subtotal) || orderItem?.subtotal || 0,
-            item_discount: Number(earning.item_discount) || 0,
-            item_value_with_discount: Number(earning.item_value_with_discount) || Number(earning.item_subtotal) || 0,
-            commission_amount: Number(earning.commission_amount) || 0,
-            commission_type: earning.commission_type || 'percentage',
-            commission_value: Number(earning.commission_value) || 0
-          };
-        });
-      } else {
-        // Fallback to order_items without commission details
-        mergedItems = (items || []).map(item => ({
+      // 3. Merge data using order_item_id as the unique key
+      const mergedItems: OrderItem[] = (items || []).map(item => {
+        const earning = itemEarnings.find(e => e.order_item_id === item.id);
+        return {
           id: item.id,
-          product_name: item.product_name,
+          product_name: earning?.product_name || item.product_name,
           quantity: item.quantity,
           unit_price: item.unit_price,
-          subtotal: item.subtotal,
-          item_discount: 0,
-          item_value_with_discount: item.subtotal,
-          commission_amount: 0,
-          commission_type: 'percentage',
-          commission_value: 0
-        }));
-      }
+          subtotal: Number(earning?.item_subtotal) || item.subtotal,
+          item_discount: Number(earning?.item_discount) || 0,
+          item_value_with_discount: Number(earning?.item_value_with_discount) || item.subtotal,
+          commission_amount: Number(earning?.commission_amount) || 0,
+          commission_type: earning?.commission_type || 'percentage',
+          commission_value: Number(earning?.commission_value) || 0
+        };
+      });
 
       setOrderItems(prev => ({
         ...prev,
@@ -165,12 +130,12 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
     }
   };
 
-  const handleOrderClick = (orderId: string, earningId: string) => {
+  const handleOrderClick = (orderId: string) => {
     if (expandedOrderId === orderId) {
       setExpandedOrderId(null);
     } else {
       setExpandedOrderId(orderId);
-      fetchOrderItems(orderId, earningId);
+      fetchOrderItems(orderId);
     }
   };
 
@@ -731,7 +696,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                       <Collapsible 
                         key={order.earning_id} 
                         open={expandedOrderId === order.order_id}
-                        onOpenChange={() => handleOrderClick(order.order_id, order.earning_id)}
+                        onOpenChange={() => handleOrderClick(order.order_id)}
                       >
                         <Card className="bg-muted/30">
                           <CollapsibleTrigger asChild>
