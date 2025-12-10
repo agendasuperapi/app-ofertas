@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -96,6 +97,8 @@ export const useAffiliateOrderStatusNotification = ({
   const earningsChannelRef = useRef<any>(null);
   const newOrdersChannelRef = useRef<any>(null);
   const onStatusChangeRef = useRef(onStatusChange);
+  const location = useLocation();
+  const isAffiliateDashboard = location.pathname.startsWith('/afiliado');
   
   // Manter ref atualizado
   useEffect(() => {
@@ -133,15 +136,21 @@ export const useAffiliateOrderStatusNotification = ({
 
   // Monitor order status changes
   useEffect(() => {
-    // Não criar canal se não há pedidos para monitorar
-    if (!orderIds || orderIds.length === 0) {
-      return;
-    }
-    
-    // Evitar recriação do canal se já existe
+    // Limpar canal anterior
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
+    }
+
+    // Só criar canal se estiver no dashboard do afiliado
+    if (!isAffiliateDashboard) {
+      console.log('[AffiliateOrderStatus] Não está no dashboard do afiliado - notificações desabilitadas');
+      return;
+    }
+
+    // Não criar canal se não há pedidos para monitorar
+    if (!orderIds || orderIds.length === 0) {
+      return;
     }
 
     console.log('[AffiliateOrderStatus] 📡 Iniciando monitoramento de', orderIds.length, 'pedidos');
@@ -196,17 +205,23 @@ export const useAffiliateOrderStatusNotification = ({
         channelRef.current = null;
       }
     };
-  }, [orderIds, handleStatusChange]);
+  }, [orderIds, handleStatusChange, isAffiliateDashboard]);
 
   // Monitor affiliate_earnings for commission updates (INSERT and UPDATE)
   useEffect(() => {
-    if (!storeAffiliateIds || storeAffiliateIds.length === 0) {
-      return;
-    }
-
+    // Limpar canal anterior
     if (earningsChannelRef.current) {
       supabase.removeChannel(earningsChannelRef.current);
       earningsChannelRef.current = null;
+    }
+
+    // Só criar canal se estiver no dashboard do afiliado
+    if (!isAffiliateDashboard) {
+      return;
+    }
+
+    if (!storeAffiliateIds || storeAffiliateIds.length === 0) {
+      return;
     }
 
     console.log('[AffiliateOrderStatus] 📡 Monitorando earnings para', storeAffiliateIds.length, 'store_affiliates');
@@ -250,17 +265,23 @@ export const useAffiliateOrderStatusNotification = ({
         earningsChannelRef.current = null;
       }
     };
-  }, [storeAffiliateIds]);
+  }, [storeAffiliateIds, isAffiliateDashboard]);
 
   // Monitor NEW orders for affiliate's stores
   useEffect(() => {
-    if (!storeIds || storeIds.length === 0) {
-      return;
-    }
-
+    // Limpar canal anterior
     if (newOrdersChannelRef.current) {
       supabase.removeChannel(newOrdersChannelRef.current);
       newOrdersChannelRef.current = null;
+    }
+
+    // Só criar canal se estiver no dashboard do afiliado
+    if (!isAffiliateDashboard) {
+      return;
+    }
+
+    if (!storeIds || storeIds.length === 0) {
+      return;
     }
 
     console.log('[AffiliateOrderStatus] 📡 Monitorando novos pedidos para', storeIds.length, 'lojas');
@@ -323,5 +344,5 @@ export const useAffiliateOrderStatusNotification = ({
         newOrdersChannelRef.current = null;
       }
     };
-  }, [storeIds]);
+  }, [storeIds, isAffiliateDashboard]);
 };

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -47,6 +48,8 @@ export const useAffiliateEarningsNotification = ({
   const channelRef = useRef<any>(null);
   const lastProcessedRef = useRef<string>('');
   const onNewEarningRef = useRef(onNewEarning);
+  const location = useLocation();
+  const isAffiliateDashboard = location.pathname.startsWith('/afiliado');
 
   useEffect(() => {
     onNewEarningRef.current = onNewEarning;
@@ -58,6 +61,12 @@ export const useAffiliateEarningsNotification = ({
       console.log('🔕 Limpando canal anterior de ganhos');
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
+    }
+
+    // Só criar canal se estiver no dashboard do afiliado
+    if (!isAffiliateDashboard) {
+      console.log('💰 Não está no dashboard do afiliado - notificações desabilitadas');
+      return;
     }
 
     if (!storeAffiliateIds.length) {
@@ -154,5 +163,5 @@ export const useAffiliateEarningsNotification = ({
         channelRef.current = null;
       }
     };
-  }, [storeAffiliateIds.join(',')]); // Dependência como string para evitar re-renders desnecessários
+  }, [storeAffiliateIds.join(','), isAffiliateDashboard]); // Adiciona isAffiliateDashboard como dependência
 };
