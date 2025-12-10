@@ -410,7 +410,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
       {/* Details Modal */}
       <ResponsiveDialog open={!!selectedRequest && !rejectDialogOpen} onOpenChange={(open) => !open && setSelectedRequest(null)}>
         <ResponsiveDialogContent className="max-w-2xl h-[90vh] overflow-y-auto">
-          <ResponsiveDialogHeader>
+          <ResponsiveDialogHeader className="pb-2 space-y-0">
             <ResponsiveDialogTitle>Detalhes do Saque</ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
               Solicitação de {selectedRequest?.affiliate_name}
