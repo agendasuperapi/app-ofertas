@@ -2178,7 +2178,7 @@ export const AffiliatesManager = ({
                 </Card>
 
                 {/* Seção Carência para Liberação de Saque */}
-                <Card className="border-amber-500/20 bg-amber-50/30">
+                <Card className="border-primary/20 bg-primary/5">
                   <CardHeader className="py-2 px-3">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-amber-600" />
