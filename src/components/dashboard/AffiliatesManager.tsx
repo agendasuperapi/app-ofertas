@@ -2452,7 +2452,7 @@ export const AffiliatesManager = ({
                                     <Pencil className="h-4 w-4" />
                                   </Button>
                                   <Badge variant={isLinked ? 'default' : 'outline'}>
-                                    {isLinked ? 'Vinculado' : 'Não vinculado'}
+                                    {isLinked ? 'Vinculado' : 'Cupom Não vinculado'}
                                   </Badge>
                                 </div>
                               </div>;
