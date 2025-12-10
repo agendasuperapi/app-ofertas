@@ -397,7 +397,13 @@ export const AffiliatesManager = ({
             cpf: cpfNumbers,
             email: affiliateEmail,
             name: affiliateName,
-            coupon_id: affiliateCouponId
+            // Pass ALL coupon IDs instead of just the first one
+            coupon_ids: formData.coupon_ids,
+            // Pass commission configuration values
+            default_commission_type: formData.default_commission_type,
+            default_commission_value: formData.default_commission_value,
+            use_default_commission: formData.commission_enabled && formData.default_commission_value > 0,
+            commission_maturity_days: 7 // Default value, can be configured later
           }
         });
         if (data?.success && data?.invite_token) {

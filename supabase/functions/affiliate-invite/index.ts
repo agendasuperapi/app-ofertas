@@ -82,8 +82,19 @@ serve(async (req) => {
           cpf,
           email, // Email agora é opcional
           name,
-          coupon_id 
+          coupon_id, // Legacy: single coupon ID
+          coupon_ids, // New: array of coupon IDs
+          // Commission values from user configuration
+          default_commission_type = 'percentage',
+          default_commission_value = 0,
+          use_default_commission = true,
+          commission_maturity_days = 7,
         } = body;
+        
+        // Support both single coupon_id and array of coupon_ids
+        const allCouponIds: string[] = coupon_ids && Array.isArray(coupon_ids) && coupon_ids.length > 0 
+          ? coupon_ids 
+          : (coupon_id ? [coupon_id] : []);
 
         console.log(`[affiliate-invite] Send action: cpf=${cpf}, store_id=${store_id}, name=${name}, email=${email}`);
 
@@ -217,13 +228,41 @@ serve(async (req) => {
                 is_active: true,
                 invite_token: inviteToken,
                 invite_expires: inviteExpires.toISOString(),
-                default_commission_type: "percentage",
-                default_commission_value: 0,
-                coupon_id: coupon_id || null,
+                default_commission_type: default_commission_type,
+                default_commission_value: default_commission_value,
+                use_default_commission: use_default_commission,
+                commission_maturity_days: commission_maturity_days,
+                coupon_id: allCouponIds[0] || null,
               })
               .eq("id", existingAffiliation.id)
               .select()
               .single();
+            
+            // Update store_affiliate_coupons junction table
+            if (!updateError && updatedAffiliation) {
+              // Delete existing coupons
+              await supabase
+                .from("store_affiliate_coupons")
+                .delete()
+                .eq("store_affiliate_id", updatedAffiliation.id);
+              
+              // Insert all coupons
+              if (allCouponIds.length > 0) {
+                const couponInserts = allCouponIds.map(cId => ({
+                  store_affiliate_id: updatedAffiliation.id,
+                  coupon_id: cId,
+                }));
+                const { error: sacError } = await supabase
+                  .from("store_affiliate_coupons")
+                  .insert(couponInserts);
+                
+                if (sacError) {
+                  console.error("[affiliate-invite] store_affiliate_coupons reactivation insert error:", sacError);
+                } else {
+                  console.log(`[affiliate-invite] store_affiliate_coupons reactivation: inserted ${allCouponIds.length} coupons`);
+                }
+              }
+            }
 
             if (updateError) {
               console.error(`[affiliate-invite] Update affiliation error:`, updateError);
@@ -290,9 +329,11 @@ serve(async (req) => {
           .insert({
             affiliate_account_id: affiliateAccount.id,
             store_id: store_id,
-            coupon_id: coupon_id || null,
-            default_commission_type: "percentage",
-            default_commission_value: 0,
+            coupon_id: allCouponIds[0] || null,
+            default_commission_type: default_commission_type,
+            default_commission_value: default_commission_value,
+            use_default_commission: use_default_commission,
+            commission_maturity_days: commission_maturity_days,
             invite_token: inviteToken,
             invite_expires: inviteExpires.toISOString(),
             status: "pending",
@@ -316,19 +357,21 @@ serve(async (req) => {
           status: storeAffiliate.status
         });
 
-        // Insert into store_affiliate_coupons junction table if coupon_id provided
-        if (coupon_id) {
+        // Insert ALL coupons into store_affiliate_coupons junction table
+        if (allCouponIds.length > 0) {
+          const couponInserts = allCouponIds.map(cId => ({
+            store_affiliate_id: storeAffiliate.id,
+            coupon_id: cId,
+          }));
+          
           const { error: sacError } = await supabase
             .from("store_affiliate_coupons")
-            .insert({
-              store_affiliate_id: storeAffiliate.id,
-              coupon_id: coupon_id,
-            });
+            .insert(couponInserts);
           
           if (sacError) {
             console.error("[affiliate-invite] store_affiliate_coupons insert error:", sacError);
           } else {
-            console.log(`[affiliate-invite] store_affiliate_coupons inserted: store_affiliate_id=${storeAffiliate.id}, coupon_id=${coupon_id}`);
+            console.log(`[affiliate-invite] store_affiliate_coupons inserted: store_affiliate_id=${storeAffiliate.id}, coupon_ids=${allCouponIds.join(', ')}`);
           }
         }
 
