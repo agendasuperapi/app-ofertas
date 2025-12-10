@@ -86,6 +86,11 @@ export default function AffiliateDashboardNew() {
   const [storesSubTab, setStoresSubTab] = useState('stores');
   const [historyPage, setHistoryPage] = useState<Record<string, number>>({});
 
+  // Commissions summary filters
+  const [commissionViewMode, setCommissionViewMode] = useState<'stores' | 'orders'>('stores');
+  const [commissionsOrderSearch, setCommissionsOrderSearch] = useState('');
+  const [commissionsStoreFilter, setCommissionsStoreFilter] = useState<string>('all');
+
   // Withdrawal orders modal state
   const [selectedWithdrawal, setSelectedWithdrawal] = useState<any | null>(null);
   const [withdrawalOrders, setWithdrawalOrders] = useState<any[]>([]);
@@ -2012,7 +2017,7 @@ export default function AffiliateDashboardNew() {
   const renderCommissionsContent = () => <Card>
       <CardHeader>
         <CardTitle>Resumo de Comissões</CardTitle>
-        <CardDescription>
+      <CardDescription>
           Acompanhe seus ganhos em todas as lojas
         </CardDescription>
       </CardHeader>
@@ -2041,20 +2046,65 @@ export default function AffiliateDashboardNew() {
 
           <Separator />
 
-          <div>
-            <div className="flex flex-col gap-3 mb-3">
-              <div className="flex items-center justify-between">
-                <h4 className="font-medium">Por Loja</h4>
-                <label className="flex items-center gap-2 text-xs sm:text-sm cursor-pointer whitespace-nowrap">
+          {/* Toggle between Stores and Orders view */}
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+              <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
+                <button
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${commissionViewMode === 'stores' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  onClick={() => setCommissionViewMode('stores')}
+                >
+                  <Store className="h-4 w-4 inline-block mr-1.5" />
+                  Por Loja
+                </button>
+                <button
+                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${commissionViewMode === 'orders' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                  onClick={() => setCommissionViewMode('orders')}
+                >
+                  <Package className="h-4 w-4 inline-block mr-1.5" />
+                  Por Pedido
+                </button>
+              </div>
+
+              {commissionViewMode === 'stores' && (
+                <label className="flex items-center gap-2 text-xs sm:text-sm cursor-pointer whitespace-nowrap ml-auto">
                   <input type="checkbox" checked={storesStatusFilter === 'available'} onChange={e => setStoresStatusFilter(e.target.checked ? 'available' : 'all')} className="h-4 w-4 rounded border-border" />
                   <span className="text-muted-foreground">Só c/ Saldo</span>
                 </label>
-              </div>
+              )}
+            </div>
+
+            {/* Filters based on view mode */}
+            {commissionViewMode === 'stores' ? (
               <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Buscar loja..." className="pl-9 w-full" value={storesSearch} onChange={e => setStoresSearch(e.target.value)} />
               </div>
-            </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Buscar pedido..." className="pl-9 w-full" value={commissionsOrderSearch} onChange={e => setCommissionsOrderSearch(e.target.value)} />
+                </div>
+                <Select value={commissionsStoreFilter} onValueChange={setCommissionsStoreFilter}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Filtrar por loja" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as lojas</SelectItem>
+                    {affiliateStores.map(store => (
+                      <SelectItem key={store.store_affiliate_id} value={store.store_id}>
+                        {store.store_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          {/* Content based on view mode */}
+          {commissionViewMode === 'stores' ? (
             <div className="space-y-2">
               {affiliateStores.filter(store => store.store_name.toLowerCase().includes(storesSearch.toLowerCase())).filter(store => storesStatusFilter === 'available' ? store.total_commission > 0 : true).map(store => <div key={store.store_affiliate_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
               setActiveTab('stores');
@@ -2072,7 +2122,67 @@ export default function AffiliateDashboardNew() {
                 </div>)}
               {affiliateStores.filter(store => store.store_name.toLowerCase().includes(storesSearch.toLowerCase())).filter(store => storesStatusFilter === 'available' ? store.total_commission > 0 : true).length === 0 && <p className="text-center text-muted-foreground py-4">Nenhuma loja encontrada</p>}
             </div>
-          </div>
+          ) : (
+            <div className="space-y-2">
+              {affiliateOrders
+                .filter(order => {
+                  const matchesSearch = commissionsOrderSearch === '' || 
+                    order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) ||
+                    order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
+                  const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
+                  return matchesSearch && matchesStore;
+                })
+                .slice(0, 10)
+                .map(order => {
+                  const store = affiliateStores.find(s => s.store_id === order.store_id);
+                  const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
+                  const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
+                  
+                  return (
+                    <div key={order.earning_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
+                      openOrderModal(order);
+                    }}>
+                      <div className="flex flex-col gap-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">#{order.order_number}</span>
+                          <Badge variant={isCancelled ? 'destructive' : isDelivered ? 'default' : 'secondary'} className="text-xs">
+                            {isCancelled ? 'Cancelado' : isDelivered ? 'Entregue' : 'Pendente'}
+                          </Badge>
+                        </div>
+                        <span className="text-xs text-muted-foreground">{store?.store_name || 'Loja'}</span>
+                      </div>
+                      <span className={`font-semibold ${isCancelled ? 'text-destructive line-through' : 'text-green-600'}`}>
+                        {formatCurrency(order.commission_amount)}
+                      </span>
+                    </div>
+                  );
+                })}
+              {affiliateOrders.filter(order => {
+                const matchesSearch = commissionsOrderSearch === '' || 
+                  order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) ||
+                  order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
+                const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
+                return matchesSearch && matchesStore;
+              }).length === 0 && <p className="text-center text-muted-foreground py-4">Nenhum pedido encontrado</p>}
+              {affiliateOrders.filter(order => {
+                const matchesSearch = commissionsOrderSearch === '' || 
+                  order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) ||
+                  order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
+                const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
+                return matchesSearch && matchesStore;
+              }).length > 10 && (
+                <p className="text-center text-muted-foreground text-sm py-2">
+                  Mostrando 10 de {affiliateOrders.filter(order => {
+                    const matchesSearch = commissionsOrderSearch === '' || 
+                      order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) ||
+                      order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
+                    const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
+                    return matchesSearch && matchesStore;
+                  }).length} pedidos
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>;
