@@ -1196,14 +1196,6 @@ export const AffiliatesManager = ({
                     })} />
                 </div>
                 <div className="col-span-2">
-                  <Label>Chave PIX</Label>
-                  <Input value={formData.cpf_cnpj || ''} disabled className="bg-muted cursor-not-allowed" placeholder="CPF/CNPJ do afiliado" />
-                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                    <CheckCircle className="h-3 w-3 text-green-600" />
-                    Chave PIX do tipo CPF
-                  </p>
-                </div>
-                <div className="col-span-2">
                   <Label className="mb-1 block">Vincular Cupom <span className="text-destructive">*</span></Label>
                   <div className="flex items-center gap-2">
                     <Select
