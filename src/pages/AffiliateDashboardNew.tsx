@@ -451,14 +451,13 @@ export default function AffiliateDashboardNew() {
   // Dados para gráfico de maturação - Liberação de comissões por dia
   const maturityChartData = useMemo(() => {
     if (!filteredAffiliateOrders || filteredAffiliateOrders.length === 0) return [];
-    
     const now = new Date();
-    
+
     // Filtrar apenas pedidos entregues que ainda estão em maturação
     const maturingOrders = filteredAffiliateOrders.filter(order => {
       const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
       if (!isDelivered) return false;
-      
+
       // Verificar se ainda está em maturação
       if (order.commission_available_at) {
         const maturityDate = new Date(order.commission_available_at);
@@ -466,12 +465,10 @@ export default function AffiliateDashboardNew() {
       }
       return false;
     });
-    
     if (maturingOrders.length === 0) return [];
-    
+
     // Agrupar por data de liberação
     const byDate: Record<string, number> = {};
-    
     maturingOrders.forEach(order => {
       if (order.commission_available_at) {
         const dateKey = format(new Date(order.commission_available_at), 'yyyy-MM-dd');
@@ -481,86 +478,89 @@ export default function AffiliateDashboardNew() {
         byDate[dateKey] += order.commission_amount || 0;
       }
     });
-    
+
     // Converter para array e ordenar por data
-    return Object.entries(byDate)
-      .map(([date, value]) => ({
-        date,
-        dateDisplay: format(new Date(date), 'dd/MM', { locale: ptBR }),
-        value,
-        fullDate: format(new Date(date), "dd 'de' MMMM", { locale: ptBR })
-      }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-      .slice(0, 14); // Próximos 14 dias
+    return Object.entries(byDate).map(([date, value]) => ({
+      date,
+      dateDisplay: format(new Date(date), 'dd/MM', {
+        locale: ptBR
+      }),
+      value,
+      fullDate: format(new Date(date), "dd 'de' MMMM", {
+        locale: ptBR
+      })
+    })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).slice(0, 14); // Próximos 14 dias
   }, [filteredAffiliateOrders]);
 
   // Lista de pedidos em maturação com detalhes
   const maturingOrdersList = useMemo(() => {
     if (!filteredAffiliateOrders || filteredAffiliateOrders.length === 0) return [];
-    
     const now = new Date();
-    
-    return filteredAffiliateOrders
-      .filter(order => {
-        const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
-        if (!isDelivered) return false;
-        
-        if (order.commission_available_at) {
-          const maturityDate = new Date(order.commission_available_at);
-          return maturityDate > now;
-        }
-        return false;
-      })
-      .sort((a, b) => {
-        const dateA = new Date(a.commission_available_at || 0);
-        const dateB = new Date(b.commission_available_at || 0);
-        return dateA.getTime() - dateB.getTime();
-      });
+    return filteredAffiliateOrders.filter(order => {
+      const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
+      if (!isDelivered) return false;
+      if (order.commission_available_at) {
+        const maturityDate = new Date(order.commission_available_at);
+        return maturityDate > now;
+      }
+      return false;
+    }).sort((a, b) => {
+      const dateA = new Date(a.commission_available_at || 0);
+      const dateB = new Date(b.commission_available_at || 0);
+      return dateA.getTime() - dateB.getTime();
+    });
   }, [filteredAffiliateOrders]);
 
   // Dados para gráfico de área empilhada - Evolução acumulada de maturação
   const maturityEvolutionData = useMemo(() => {
     if (!maturingOrdersList || maturingOrdersList.length === 0) return [];
-    
+
     // Agrupar por data de liberação
-    const byDate: Record<string, { disponivel: number; emMaturacao: number }> = {};
-    
+    const byDate: Record<string, {
+      disponivel: number;
+      emMaturacao: number;
+    }> = {};
+
     // Ordenar por data de liberação
     const sortedOrders = [...maturingOrdersList].sort((a, b) => {
       const dateA = new Date(a.commission_available_at || 0);
       const dateB = new Date(b.commission_available_at || 0);
       return dateA.getTime() - dateB.getTime();
     });
-    
+
     // Calcular acumulado
     let accumulated = 0;
     sortedOrders.forEach(order => {
       if (order.commission_available_at) {
         const dateKey = format(new Date(order.commission_available_at), 'yyyy-MM-dd');
         if (!byDate[dateKey]) {
-          byDate[dateKey] = { disponivel: accumulated, emMaturacao: 0 };
+          byDate[dateKey] = {
+            disponivel: accumulated,
+            emMaturacao: 0
+          };
         }
         byDate[dateKey].emMaturacao += order.commission_amount || 0;
         accumulated += order.commission_amount || 0;
       }
     });
-    
+
     // Converter para array com acumulado progressivo
     let runningTotal = 0;
-    return Object.entries(byDate)
-      .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime())
-      .map(([date, data]) => {
-        const prevTotal = runningTotal;
-        runningTotal += data.emMaturacao;
-        return {
-          date,
-          dateDisplay: format(new Date(date), 'dd/MM', { locale: ptBR }),
-          fullDate: format(new Date(date), "dd 'de' MMMM", { locale: ptBR }),
-          liberado: data.emMaturacao,
-          acumulado: runningTotal,
-        };
-      })
-      .slice(0, 14);
+    return Object.entries(byDate).sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime()).map(([date, data]) => {
+      const prevTotal = runningTotal;
+      runningTotal += data.emMaturacao;
+      return {
+        date,
+        dateDisplay: format(new Date(date), 'dd/MM', {
+          locale: ptBR
+        }),
+        fullDate: format(new Date(date), "dd 'de' MMMM", {
+          locale: ptBR
+        }),
+        liberado: data.emMaturacao,
+        acumulado: runningTotal
+      };
+    }).slice(0, 14);
   }, [maturingOrdersList]);
 
   // Dados para gráfico de pizza - Comissões por loja (apenas pedidos entregues)
@@ -1509,7 +1509,7 @@ export default function AffiliateDashboardNew() {
                   <Timer className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-white animate-pulse" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Em Maturação</p>
+                  <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Aguardando</p>
                   <p className="text-xs sm:text-sm md:text-lg lg:text-xl font-bold text-amber-600">{formatCurrency((displayStats as any)?.maturing_commission || 0)}</p>
                 </div>
               </div>
@@ -1747,8 +1747,15 @@ export default function AffiliateDashboardNew() {
       </motion.div>
 
       {/* Maturity Chart - Cronograma de Liberação */}
-      {maturityChartData.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
+      {maturityChartData.length > 0 && <motion.div initial={{
+      opacity: 0,
+      y: 20
+    }} animate={{
+      opacity: 1,
+      y: 0
+    }} transition={{
+      delay: 0.55
+    }}>
           <Card className="glass border-border/50 overflow-hidden">
             <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-amber-500/10 to-transparent">
               <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
@@ -1766,28 +1773,20 @@ export default function AffiliateDashboardNew() {
                 <BarChart data={maturityChartData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="dateDisplay" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(value) => `R$${value}`} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                    labelStyle={{ color: 'hsl(var(--foreground))' }}
-                    formatter={(value: number) => [formatCurrency(value), 'Liberação']}
-                    labelFormatter={(label, payload) => {
-                      if (payload && payload[0]?.payload?.fullDate) {
-                        return payload[0].payload.fullDate;
-                      }
-                      return label;
-                    }}
-                  />
-                  <Bar 
-                    dataKey="value" 
-                    fill="hsl(38, 92%, 50%)" 
-                    radius={[6, 6, 0, 0]}
-                    name="Liberação"
-                  />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={value => `R$${value}`} />
+                  <Tooltip contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px'
+              }} labelStyle={{
+                color: 'hsl(var(--foreground))'
+              }} formatter={(value: number) => [formatCurrency(value), 'Liberação']} labelFormatter={(label, payload) => {
+                if (payload && payload[0]?.payload?.fullDate) {
+                  return payload[0].payload.fullDate;
+                }
+                return label;
+              }} />
+                  <Bar dataKey="value" fill="hsl(38, 92%, 50%)" radius={[6, 6, 0, 0]} name="Liberação" />
                 </BarChart>
               </ResponsiveContainer>
               
@@ -1803,23 +1802,15 @@ export default function AffiliateDashboardNew() {
               </div>
 
               {/* Lista detalhada de pedidos em maturação */}
-              {maturingOrdersList.length > 0 && (
-                <div className="mt-4 space-y-2">
+              {maturingOrdersList.length > 0 && <div className="mt-4 space-y-2">
                   <h4 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                     <Package className="h-4 w-4" />
                     Pedidos em maturação ({maturingOrdersList.length})
                   </h4>
                   <div className="space-y-2">
-                    {maturingOrdersList
-                      .slice((maturingOrdersPage - 1) * 10, maturingOrdersPage * 10)
-                      .map(order => {
-                        const store = affiliateStores.find(s => s.store_id === order.store_id);
-                        return (
-                          <div 
-                            key={order.earning_id} 
-                            className="p-3 bg-muted/50 rounded-lg border border-border/50 hover:bg-muted/70 transition-colors cursor-pointer"
-                            onClick={() => openOrderModal(order)}
-                          >
+                    {maturingOrdersList.slice((maturingOrdersPage - 1) * 10, maturingOrdersPage * 10).map(order => {
+                const store = affiliateStores.find(s => s.store_id === order.store_id);
+                return <div key={order.earning_id} className="p-3 bg-muted/50 rounded-lg border border-border/50 hover:bg-muted/70 transition-colors cursor-pointer" onClick={() => openOrderModal(order)}>
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
@@ -1833,63 +1824,51 @@ export default function AffiliateDashboardNew() {
                                   <Store className="h-3 w-3" />
                                   <span className="truncate">{store?.store_name || 'Loja'}</span>
                                   <span>•</span>
-                                  <span>{format(new Date(order.order_date), 'dd/MM/yy', { locale: ptBR })}</span>
+                                  <span>{format(new Date(order.order_date), 'dd/MM/yy', {
+                            locale: ptBR
+                          })}</span>
                                 </div>
                               </div>
                               <div className="flex flex-col items-end gap-1">
                                 <span className="font-semibold text-amber-600 text-sm">
                                   {formatCurrency(order.commission_amount)}
                                 </span>
-                                {order.commission_available_at && (
-                                  <MaturityCountdown 
-                                    commissionAvailableAt={order.commission_available_at} 
-                                    orderStatus={order.order_status}
-                                    variant="inline"
-                                  />
-                                )}
+                                {order.commission_available_at && <MaturityCountdown commissionAvailableAt={order.commission_available_at} orderStatus={order.order_status} variant="inline" />}
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          </div>;
+              })}
                   </div>
                   
                   {/* Paginação */}
-                  {maturingOrdersList.length > 10 && (
-                    <div className="flex items-center justify-between pt-2">
+                  {maturingOrdersList.length > 10 && <div className="flex items-center justify-between pt-2">
                       <span className="text-xs text-muted-foreground">
-                        {((maturingOrdersPage - 1) * 10) + 1}-{Math.min(maturingOrdersPage * 10, maturingOrdersList.length)} de {maturingOrdersList.length}
+                        {(maturingOrdersPage - 1) * 10 + 1}-{Math.min(maturingOrdersPage * 10, maturingOrdersList.length)} de {maturingOrdersList.length}
                       </span>
                       <div className="flex items-center gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setMaturingOrdersPage(p => Math.max(1, p - 1))}
-                          disabled={maturingOrdersPage === 1}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => setMaturingOrdersPage(p => Math.max(1, p - 1))} disabled={maturingOrdersPage === 1}>
                           Anterior
                         </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => setMaturingOrdersPage(p => Math.min(Math.ceil(maturingOrdersList.length / 10), p + 1))}
-                          disabled={maturingOrdersPage >= Math.ceil(maturingOrdersList.length / 10)}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => setMaturingOrdersPage(p => Math.min(Math.ceil(maturingOrdersList.length / 10), p + 1))} disabled={maturingOrdersPage >= Math.ceil(maturingOrdersList.length / 10)}>
                           Próximo
                         </Button>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                    </div>}
+                </div>}
             </CardContent>
           </Card>
-        </motion.div>
-      )}
+        </motion.div>}
 
       {/* Gráfico de Evolução Acumulada de Maturação */}
-      {maturityEvolutionData.length > 1 && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.58 }}>
+      {maturityEvolutionData.length > 1 && <motion.div initial={{
+      opacity: 0,
+      y: 20
+    }} animate={{
+      opacity: 1,
+      y: 0
+    }} transition={{
+      delay: 0.58
+    }}>
           <Card className="glass border-border/50 overflow-hidden">
             <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-emerald-500/10 to-amber-500/10">
               <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
@@ -1907,50 +1886,35 @@ export default function AffiliateDashboardNew() {
                 <AreaChart data={maturityEvolutionData}>
                   <defs>
                     <linearGradient id="colorAcumulado" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(160, 84%, 39%)" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="hsl(160, 84%, 39%)" stopOpacity={0.1}/>
+                      <stop offset="5%" stopColor="hsl(160, 84%, 39%)" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="hsl(160, 84%, 39%)" stopOpacity={0.1} />
                     </linearGradient>
                     <linearGradient id="colorLiberado" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="hsl(38, 92%, 50%)" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="hsl(38, 92%, 50%)" stopOpacity={0.1}/>
+                      <stop offset="5%" stopColor="hsl(38, 92%, 50%)" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="hsl(38, 92%, 50%)" stopOpacity={0.1} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="dateDisplay" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(value) => `R$${value}`} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                    labelStyle={{ color: 'hsl(var(--foreground))' }}
-                    formatter={(value: number, name: string) => [
-                      formatCurrency(value), 
-                      name === 'acumulado' ? 'Total Acumulado' : 'Liberado no Dia'
-                    ]}
-                    labelFormatter={(label, payload) => {
-                      if (payload && payload[0]?.payload?.fullDate) {
-                        return payload[0].payload.fullDate;
-                      }
-                      return label;
-                    }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="acumulado" 
-                    stroke="hsl(160, 84%, 39%)" 
-                    strokeWidth={2}
-                    fillOpacity={1} 
-                    fill="url(#colorAcumulado)" 
-                    name="acumulado"
-                  />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={value => `R$${value}`} />
+                  <Tooltip contentStyle={{
+                backgroundColor: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px'
+              }} labelStyle={{
+                color: 'hsl(var(--foreground))'
+              }} formatter={(value: number, name: string) => [formatCurrency(value), name === 'acumulado' ? 'Total Acumulado' : 'Liberado no Dia']} labelFormatter={(label, payload) => {
+                if (payload && payload[0]?.payload?.fullDate) {
+                  return payload[0].payload.fullDate;
+                }
+                return label;
+              }} />
+                  <Area type="monotone" dataKey="acumulado" stroke="hsl(160, 84%, 39%)" strokeWidth={2} fillOpacity={1} fill="url(#colorAcumulado)" name="acumulado" />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
-        </motion.div>
-      )}
+        </motion.div>}
 
       {/* Charts Section */}
       {affiliateOrders.length > 0 && <div className="grid gap-4 md:gap-6 md:grid-cols-2">
@@ -2373,38 +2337,27 @@ export default function AffiliateDashboardNew() {
           <div className="flex flex-col gap-3">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               <div className="flex items-center gap-2 bg-muted rounded-lg p-1">
-                <button
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${commissionViewMode === 'stores' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                  onClick={() => setCommissionViewMode('stores')}
-                >
+                <button className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${commissionViewMode === 'stores' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setCommissionViewMode('stores')}>
                   <Store className="h-4 w-4 inline-block mr-1.5" />
                   Por Loja
                 </button>
-                <button
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${commissionViewMode === 'orders' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                  onClick={() => setCommissionViewMode('orders')}
-                >
+                <button className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${commissionViewMode === 'orders' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'}`} onClick={() => setCommissionViewMode('orders')}>
                   <Package className="h-4 w-4 inline-block mr-1.5" />
                   Por Pedido
                 </button>
               </div>
 
-              {commissionViewMode === 'stores' && (
-                <label className="flex items-center gap-2 text-xs sm:text-sm cursor-pointer whitespace-nowrap ml-auto">
+              {commissionViewMode === 'stores' && <label className="flex items-center gap-2 text-xs sm:text-sm cursor-pointer whitespace-nowrap ml-auto">
                   <input type="checkbox" checked={storesStatusFilter === 'available'} onChange={e => setStoresStatusFilter(e.target.checked ? 'available' : 'all')} className="h-4 w-4 rounded border-border" />
                   <span className="text-muted-foreground">Só c/ Saldo</span>
-                </label>
-              )}
+                </label>}
             </div>
 
             {/* Filters based on view mode */}
-            {commissionViewMode === 'stores' ? (
-              <div className="relative w-full">
+            {commissionViewMode === 'stores' ? <div className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Buscar loja..." className="pl-9 w-full" value={storesSearch} onChange={e => setStoresSearch(e.target.value)} />
-              </div>
-            ) : (
-              <div className="flex flex-col gap-2">
+              </div> : <div className="flex flex-col gap-2">
                 <div className="flex flex-col sm:flex-row gap-2">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -2416,11 +2369,9 @@ export default function AffiliateDashboardNew() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todas as lojas</SelectItem>
-                      {affiliateStores.map(store => (
-                        <SelectItem key={store.store_affiliate_id} value={store.store_id}>
+                      {affiliateStores.map(store => <SelectItem key={store.store_affiliate_id} value={store.store_id}>
                           {store.store_name}
-                        </SelectItem>
-                      ))}
+                        </SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -2436,17 +2387,15 @@ export default function AffiliateDashboardNew() {
                     <SelectItem value="cancelled">Cancelados</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-            )}
+              </div>}
           </div>
 
           {/* Content based on view mode */}
-          {commissionViewMode === 'stores' ? (
-            <div className="space-y-2">
+          {commissionViewMode === 'stores' ? <div className="space-y-2">
               {affiliateStores.filter(store => store.store_name.toLowerCase().includes(storesSearch.toLowerCase())).filter(store => storesStatusFilter === 'available' ? store.total_commission > 0 : true).map(store => <div key={store.store_affiliate_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
-              setActiveTab('stores');
-              setSelectedStore(store);
-            }}>
+            setActiveTab('stores');
+            setSelectedStore(store);
+          }}>
                   <div className="flex items-center gap-3">
                     {store.store_logo ? <img src={store.store_logo} alt={store.store_name} className="w-8 h-8 rounded object-cover" /> : <div className="w-8 h-8 bg-muted rounded flex items-center justify-center">
                         <Store className="h-4 w-4 text-muted-foreground" />
@@ -2458,55 +2407,35 @@ export default function AffiliateDashboardNew() {
                   </span>
                 </div>)}
               {affiliateStores.filter(store => store.store_name.toLowerCase().includes(storesSearch.toLowerCase())).filter(store => storesStatusFilter === 'available' ? store.total_commission > 0 : true).length === 0 && <p className="text-center text-muted-foreground py-4">Nenhuma loja encontrada</p>}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {affiliateOrders
-                .filter(order => {
-                  const matchesSearch = commissionsOrderSearch === '' || 
-                    order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) ||
-                    order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
-                  const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
-                  
-                  // Status filter logic
-                  const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
-                  const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
-                  const isMaturing = isDelivered && order.commission_available_at && new Date(order.commission_available_at) > new Date();
-                  const isAvailable = isDelivered && !isMaturing && !isCancelled;
-                  const isPending = !isDelivered && !isCancelled;
-                  
-                  let matchesStatus = true;
-                  if (commissionsStatusFilter === 'maturing') matchesStatus = isMaturing;
-                  else if (commissionsStatusFilter === 'available') matchesStatus = isAvailable;
-                  else if (commissionsStatusFilter === 'pending') matchesStatus = isPending;
-                  else if (commissionsStatusFilter === 'cancelled') matchesStatus = isCancelled;
-                  
-                  return matchesSearch && matchesStore && matchesStatus;
-                })
-                .slice(0, 10)
-                .map(order => {
-                  const store = affiliateStores.find(s => s.store_id === order.store_id);
-                  const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
-                  const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
-                  const isMaturing = isDelivered && order.commission_available_at && new Date(order.commission_available_at) > new Date();
-                  
-                  return (
-                    <div key={order.earning_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
-                      openOrderModal(order);
-                    }}>
+            </div> : <div className="space-y-2">
+              {affiliateOrders.filter(order => {
+            const matchesSearch = commissionsOrderSearch === '' || order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) || order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
+            const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
+
+            // Status filter logic
+            const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
+            const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
+            const isMaturing = isDelivered && order.commission_available_at && new Date(order.commission_available_at) > new Date();
+            const isAvailable = isDelivered && !isMaturing && !isCancelled;
+            const isPending = !isDelivered && !isCancelled;
+            let matchesStatus = true;
+            if (commissionsStatusFilter === 'maturing') matchesStatus = isMaturing;else if (commissionsStatusFilter === 'available') matchesStatus = isAvailable;else if (commissionsStatusFilter === 'pending') matchesStatus = isPending;else if (commissionsStatusFilter === 'cancelled') matchesStatus = isCancelled;
+            return matchesSearch && matchesStore && matchesStatus;
+          }).slice(0, 10).map(order => {
+            const store = affiliateStores.find(s => s.store_id === order.store_id);
+            const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
+            const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
+            const isMaturing = isDelivered && order.commission_available_at && new Date(order.commission_available_at) > new Date();
+            return <div key={order.earning_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
+              openOrderModal(order);
+            }}>
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium">#{order.order_number}</span>
                           <Badge variant={isCancelled ? 'destructive' : isDelivered ? 'default' : 'secondary'} className="text-xs">
                             {isCancelled ? 'Cancelado' : isDelivered ? 'Entregue' : 'Pendente'}
                           </Badge>
-                          {isMaturing && order.commission_available_at && (
-                            <MaturityCountdown 
-                              commissionAvailableAt={order.commission_available_at} 
-                              orderStatus={order.order_status}
-                              variant="inline"
-                            />
-                          )}
+                          {isMaturing && order.commission_available_at && <MaturityCountdown commissionAvailableAt={order.commission_available_at} orderStatus={order.order_status} variant="inline" />}
                         </div>
                         <span className="text-xs text-muted-foreground">{store?.store_name || 'Loja'}</span>
                       </div>
@@ -2514,71 +2443,50 @@ export default function AffiliateDashboardNew() {
                         <span className={`font-semibold ${isCancelled ? 'text-destructive line-through' : 'text-green-600'}`}>
                           {formatCurrency(order.commission_amount)}
                         </span>
-                        {isDelivered && !isMaturing && !isCancelled && (
-                          <Badge variant="outline" className="text-xs text-green-600 border-green-600">
+                        {isDelivered && !isMaturing && !isCancelled && <Badge variant="outline" className="text-xs text-green-600 border-green-600">
                             Disponível
-                          </Badge>
-                        )}
+                          </Badge>}
                       </div>
-                    </div>
-                  );
-                })}
+                    </div>;
+          })}
               {affiliateOrders.filter(order => {
-                const matchesSearch = commissionsOrderSearch === '' || 
-                  order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) ||
-                  order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
-                const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
-                const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
-                const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
-                const isMaturing = isDelivered && order.commission_available_at && new Date(order.commission_available_at) > new Date();
-                const isAvailable = isDelivered && !isMaturing && !isCancelled;
-                const isPending = !isDelivered && !isCancelled;
-                let matchesStatus = true;
-                if (commissionsStatusFilter === 'maturing') matchesStatus = isMaturing;
-                else if (commissionsStatusFilter === 'available') matchesStatus = isAvailable;
-                else if (commissionsStatusFilter === 'pending') matchesStatus = isPending;
-                else if (commissionsStatusFilter === 'cancelled') matchesStatus = isCancelled;
-                return matchesSearch && matchesStore && matchesStatus;
-              }).length === 0 && <p className="text-center text-muted-foreground py-4">Nenhum pedido encontrado</p>}
+            const matchesSearch = commissionsOrderSearch === '' || order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) || order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
+            const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
+            const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
+            const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
+            const isMaturing = isDelivered && order.commission_available_at && new Date(order.commission_available_at) > new Date();
+            const isAvailable = isDelivered && !isMaturing && !isCancelled;
+            const isPending = !isDelivered && !isCancelled;
+            let matchesStatus = true;
+            if (commissionsStatusFilter === 'maturing') matchesStatus = isMaturing;else if (commissionsStatusFilter === 'available') matchesStatus = isAvailable;else if (commissionsStatusFilter === 'pending') matchesStatus = isPending;else if (commissionsStatusFilter === 'cancelled') matchesStatus = isCancelled;
+            return matchesSearch && matchesStore && matchesStatus;
+          }).length === 0 && <p className="text-center text-muted-foreground py-4">Nenhum pedido encontrado</p>}
               {affiliateOrders.filter(order => {
-                const matchesSearch = commissionsOrderSearch === '' || 
-                  order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) ||
-                  order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
-                const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
-                const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
-                const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
-                const isMaturing = isDelivered && order.commission_available_at && new Date(order.commission_available_at) > new Date();
-                const isAvailable = isDelivered && !isMaturing && !isCancelled;
-                const isPending = !isDelivered && !isCancelled;
-                let matchesStatus = true;
-                if (commissionsStatusFilter === 'maturing') matchesStatus = isMaturing;
-                else if (commissionsStatusFilter === 'available') matchesStatus = isAvailable;
-                else if (commissionsStatusFilter === 'pending') matchesStatus = isPending;
-                else if (commissionsStatusFilter === 'cancelled') matchesStatus = isCancelled;
-                return matchesSearch && matchesStore && matchesStatus;
-              }).length > 10 && (
-                <p className="text-center text-muted-foreground text-sm py-2">
+            const matchesSearch = commissionsOrderSearch === '' || order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) || order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
+            const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
+            const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
+            const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
+            const isMaturing = isDelivered && order.commission_available_at && new Date(order.commission_available_at) > new Date();
+            const isAvailable = isDelivered && !isMaturing && !isCancelled;
+            const isPending = !isDelivered && !isCancelled;
+            let matchesStatus = true;
+            if (commissionsStatusFilter === 'maturing') matchesStatus = isMaturing;else if (commissionsStatusFilter === 'available') matchesStatus = isAvailable;else if (commissionsStatusFilter === 'pending') matchesStatus = isPending;else if (commissionsStatusFilter === 'cancelled') matchesStatus = isCancelled;
+            return matchesSearch && matchesStore && matchesStatus;
+          }).length > 10 && <p className="text-center text-muted-foreground text-sm py-2">
                   Mostrando 10 de {affiliateOrders.filter(order => {
-                    const matchesSearch = commissionsOrderSearch === '' || 
-                      order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) ||
-                      order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
-                    const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
-                    const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
-                    const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
-                    const isMaturing = isDelivered && order.commission_available_at && new Date(order.commission_available_at) > new Date();
-                    const isAvailable = isDelivered && !isMaturing && !isCancelled;
-                    const isPending = !isDelivered && !isCancelled;
-                    let matchesStatus = true;
-                    if (commissionsStatusFilter === 'maturing') matchesStatus = isMaturing;
-                    else if (commissionsStatusFilter === 'available') matchesStatus = isAvailable;
-                    else if (commissionsStatusFilter === 'pending') matchesStatus = isPending;
-                    else if (commissionsStatusFilter === 'cancelled') matchesStatus = isCancelled;
-                    return matchesSearch && matchesStore && matchesStatus;
-                  }).length} pedidos
-                </p>
-              )}
-            </div>
-          )}
+              const matchesSearch = commissionsOrderSearch === '' || order.order_number.toLowerCase().includes(commissionsOrderSearch.toLowerCase()) || order.customer_name.toLowerCase().includes(commissionsOrderSearch.toLowerCase());
+              const matchesStore = commissionsStoreFilter === 'all' || order.store_id === commissionsStoreFilter;
+              const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
+              const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
+              const isMaturing = isDelivered && order.commission_available_at && new Date(order.commission_available_at) > new Date();
+              const isAvailable = isDelivered && !isMaturing && !isCancelled;
+              const isPending = !isDelivered && !isCancelled;
+              let matchesStatus = true;
+              if (commissionsStatusFilter === 'maturing') matchesStatus = isMaturing;else if (commissionsStatusFilter === 'available') matchesStatus = isAvailable;else if (commissionsStatusFilter === 'pending') matchesStatus = isPending;else if (commissionsStatusFilter === 'cancelled') matchesStatus = isCancelled;
+              return matchesSearch && matchesStore && matchesStatus;
+            }).length} pedidos
+                </p>}
+            </div>}
         </div>
       </CardContent>
     </Card>;
