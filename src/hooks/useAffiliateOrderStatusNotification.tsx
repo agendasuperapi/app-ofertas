@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 interface UseAffiliateOrderStatusNotificationOptions {
   orderIds: string[];
   storeAffiliateIds?: string[];
+  storeIds?: string[];
   onStatusChange?: () => void;
 }
 
@@ -45,14 +46,55 @@ const playDeliveredSound = () => {
   }
 };
 
+// Som de notificação para novo pedido
+const playNewOrderSound = () => {
+  try {
+    const soundEnabled = localStorage.getItem('soundEnabled') !== 'false';
+    const volume = parseFloat(localStorage.getItem('soundVolume') || '0.7');
+    
+    if (!soundEnabled) return;
+    
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    // Som de "novo pedido" - três notas rápidas subindo
+    const playNote = (frequency: number, startTime: number, duration: number) => {
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.frequency.value = frequency;
+      oscillator.type = 'sine';
+      
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(volume * 0.25, startTime + 0.03);
+      gainNode.gain.linearRampToValueAtTime(0, startTime + duration);
+      
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
+    };
+    
+    const now = audioContext.currentTime;
+    playNote(440, now, 0.1); // A4
+    playNote(523.25, now + 0.1, 0.1); // C5
+    playNote(659.25, now + 0.2, 0.15); // E5
+  } catch (error) {
+    console.log('Não foi possível tocar o som');
+  }
+};
+
 export const useAffiliateOrderStatusNotification = ({
   orderIds,
   storeAffiliateIds,
+  storeIds,
   onStatusChange
 }: UseAffiliateOrderStatusNotificationOptions) => {
   const lastProcessedEventRef = useRef<string>('');
+  const lastProcessedNewOrderRef = useRef<string>('');
   const channelRef = useRef<any>(null);
   const earningsChannelRef = useRef<any>(null);
+  const newOrdersChannelRef = useRef<any>(null);
   const onStatusChangeRef = useRef(onStatusChange);
   
   // Manter ref atualizado
@@ -209,4 +251,77 @@ export const useAffiliateOrderStatusNotification = ({
       }
     };
   }, [storeAffiliateIds]);
+
+  // Monitor NEW orders for affiliate's stores
+  useEffect(() => {
+    if (!storeIds || storeIds.length === 0) {
+      return;
+    }
+
+    if (newOrdersChannelRef.current) {
+      supabase.removeChannel(newOrdersChannelRef.current);
+      newOrdersChannelRef.current = null;
+    }
+
+    console.log('[AffiliateOrderStatus] 📡 Monitorando novos pedidos para', storeIds.length, 'lojas');
+
+    const channel = supabase
+      .channel('affiliate-new-orders')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'orders'
+        },
+        (payload) => {
+          const newOrder = payload.new as Record<string, any>;
+          
+          // Verificar se é um pedido de uma das lojas do afiliado
+          if (!newOrder?.store_id || !storeIds.includes(newOrder.store_id)) {
+            return;
+          }
+
+          // Verificar se o pedido tem cupom (indica que pode ter comissão)
+          if (!newOrder.coupon_code) {
+            return;
+          }
+
+          // Prevenir processamento duplicado
+          const eventId = `new-${newOrder.id}-${newOrder.created_at}`;
+          if (lastProcessedNewOrderRef.current === eventId) {
+            console.log('[AffiliateOrderStatus] ⏭️ Novo pedido duplicado ignorado');
+            return;
+          }
+          lastProcessedNewOrderRef.current = eventId;
+
+          console.log('[AffiliateOrderStatus] 🆕 Novo pedido detectado:', newOrder.order_number, 'Cupom:', newOrder.coupon_code);
+          
+          // Tocar som e mostrar notificação
+          playNewOrderSound();
+          toast.success('Novo Pedido! 🛒', {
+            description: `Pedido #${newOrder.order_number} com cupom ${newOrder.coupon_code}`,
+            duration: 5000
+          });
+          
+          // Atualizar dados do dashboard
+          if (onStatusChangeRef.current) {
+            onStatusChangeRef.current();
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('[AffiliateOrderStatus] New orders subscription status:', status);
+      });
+
+    newOrdersChannelRef.current = channel;
+
+    return () => {
+      if (newOrdersChannelRef.current) {
+        console.log('[AffiliateOrderStatus] 🔌 Removendo canal de novos pedidos');
+        supabase.removeChannel(newOrdersChannelRef.current);
+        newOrdersChannelRef.current = null;
+      }
+    };
+  }, [storeIds]);
 };
