@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollableTable } from '@/components/ui/scrollable-table';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription } from '@/components/ui/responsive-dialog';
-import { Wallet, Clock, CheckCircle, XCircle, DollarSign, Loader2, Store, FileText, Image, ExternalLink } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Wallet, Clock, CheckCircle, XCircle, DollarSign, Loader2, Store, FileText, Image, ExternalLink, ShoppingBag, Calendar, Key, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WithdrawalRequest {
   id: string;
@@ -21,7 +23,18 @@ interface WithdrawalRequest {
   requested_at: string;
   paid_at: string | null;
   store_name?: string;
+  store_affiliate_id?: string;
   payment_proof?: string | null;
+}
+
+interface WithdrawalOrder {
+  earning_id: string;
+  order_id: string;
+  order_number: string;
+  customer_name: string;
+  order_date: string;
+  order_total: number;
+  commission_amount: number;
 }
 
 interface AffiliateWithdrawalHistoryProps {
@@ -34,6 +47,10 @@ export function AffiliateWithdrawalHistory({ requests, isLoading, stores }: Affi
   const isMobile = useIsMobile();
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [selectedWithdrawal, setSelectedWithdrawal] = useState<WithdrawalRequest | null>(null);
+  const [withdrawalOrders, setWithdrawalOrders] = useState<WithdrawalOrder[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -56,6 +73,71 @@ export function AffiliateWithdrawalHistory({ requests, isLoading, stores }: Affi
     setSelectedReceipt(receiptUrl);
     setReceiptModalOpen(true);
   };
+
+  const handleViewDetails = (withdrawal: WithdrawalRequest) => {
+    setSelectedWithdrawal(withdrawal);
+    setDetailsModalOpen(true);
+  };
+
+  // Fetch orders associated with the withdrawal
+  useEffect(() => {
+    if (!selectedWithdrawal || !detailsModalOpen) {
+      setWithdrawalOrders([]);
+      return;
+    }
+
+    const fetchWithdrawalOrders = async () => {
+      setIsLoadingOrders(true);
+      try {
+        // Get paid earnings for this store affiliate that were paid around this withdrawal
+        const { data, error } = await supabase
+          .from('affiliate_earnings')
+          .select(`
+            id,
+            order_id,
+            order_total,
+            commission_amount,
+            orders!inner (
+              order_number,
+              customer_name,
+              created_at
+            )
+          `)
+          .eq('store_affiliate_id', selectedWithdrawal.store_affiliate_id)
+          .eq('status', 'paid')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Filter orders by withdrawal date range
+        const orders: WithdrawalOrder[] = (data || [])
+          .filter((earning: any) => {
+            if (!selectedWithdrawal.paid_at) return false;
+            const earningDate = new Date(earning.orders?.created_at);
+            const requestedAt = new Date(selectedWithdrawal.requested_at);
+            const paidAt = new Date(selectedWithdrawal.paid_at);
+            return earningDate <= paidAt && earningDate >= new Date(requestedAt.getTime() - 30 * 24 * 60 * 60 * 1000);
+          })
+          .map((earning: any) => ({
+            earning_id: earning.id,
+            order_id: earning.order_id,
+            order_number: earning.orders?.order_number || '',
+            customer_name: earning.orders?.customer_name || '',
+            order_date: earning.orders?.created_at || '',
+            order_total: earning.order_total,
+            commission_amount: earning.commission_amount,
+          }));
+
+        setWithdrawalOrders(orders);
+      } catch (error) {
+        console.error('Error fetching withdrawal orders:', error);
+      } finally {
+        setIsLoadingOrders(false);
+      }
+    };
+
+    fetchWithdrawalOrders();
+  }, [selectedWithdrawal, detailsModalOpen]);
 
   const stats = useMemo(() => {
     const pending = requests.filter(r => r.status === 'pending');
@@ -149,7 +231,7 @@ export function AffiliateWithdrawalHistory({ requests, isLoading, stores }: Affi
         <div className="space-y-3">
           {requests.map((req, idx) => (
             <motion.div key={req.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}>
-              <Card>
+              <Card className="cursor-pointer hover:bg-muted/30 transition-colors" onClick={() => handleViewDetails(req)}>
                 <CardContent className="pt-4">
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex items-center gap-2">
@@ -170,17 +252,6 @@ export function AffiliateWithdrawalHistory({ requests, isLoading, stores }: Affi
                       {req.admin_notes}
                     </div>
                   )}
-                  {req.payment_proof && req.status === 'paid' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="mt-2 w-full"
-                      onClick={() => handleViewReceipt(req.payment_proof!)}
-                    >
-                      <Image className="h-4 w-4 mr-2" />
-                      Ver Comprovante
-                    </Button>
-                  )}
                 </CardContent>
               </Card>
             </motion.div>
@@ -197,12 +268,12 @@ export function AffiliateWithdrawalHistory({ requests, isLoading, stores }: Affi
                   <TableHead>Data</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Observações</TableHead>
-                  <TableHead>Comprovante</TableHead>
+                  <TableHead>Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {requests.map((req) => (
-                  <TableRow key={req.id}>
+                  <TableRow key={req.id} className="cursor-pointer hover:bg-muted/30" onClick={() => handleViewDetails(req)}>
                     <TableCell className="font-medium">{req.store_name || 'Loja'}</TableCell>
                     <TableCell className="font-bold text-primary">{formatCurrency(req.amount)}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">
@@ -213,18 +284,10 @@ export function AffiliateWithdrawalHistory({ requests, isLoading, stores }: Affi
                       {req.admin_notes || '-'}
                     </TableCell>
                     <TableCell>
-                      {req.payment_proof && req.status === 'paid' ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleViewReceipt(req.payment_proof!)}
-                        >
-                          <Image className="h-4 w-4 mr-1" />
-                          Ver
-                        </Button>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
-                      )}
+                      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleViewDetails(req); }}>
+                        <Eye className="h-4 w-4 mr-1" />
+                        Detalhes
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -233,6 +296,152 @@ export function AffiliateWithdrawalHistory({ requests, isLoading, stores }: Affi
           </ScrollableTable>
         </Card>
       )}
+
+      {/* Withdrawal Details Modal */}
+      <ResponsiveDialog open={detailsModalOpen} onOpenChange={setDetailsModalOpen}>
+        <ResponsiveDialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Detalhes do Saque</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              Informações do saque e pedidos associados
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+
+          {selectedWithdrawal && (
+            <Tabs defaultValue="details" className="mt-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="details">
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Detalhes
+                </TabsTrigger>
+                <TabsTrigger value="orders">
+                  <ShoppingBag className="h-4 w-4 mr-2" />
+                  Pedidos
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="details" className="mt-4 space-y-4">
+                {/* Status and Amount */}
+                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Valor do Saque</p>
+                    <p className="text-2xl font-bold text-primary">{formatCurrency(selectedWithdrawal.amount)}</p>
+                  </div>
+                  {getStatusBadge(selectedWithdrawal.status)}
+                </div>
+
+                {/* Dates */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">Solicitado em</p>
+                    </div>
+                    <p className="font-medium">
+                      {format(new Date(selectedWithdrawal.requested_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                    </p>
+                  </div>
+                  {selectedWithdrawal.paid_at && (
+                    <div className="p-3 bg-green-500/10 rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <p className="text-xs text-muted-foreground">Pago em</p>
+                      </div>
+                      <p className="font-medium text-green-600">
+                        {format(new Date(selectedWithdrawal.paid_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* PIX Key */}
+                {selectedWithdrawal.pix_key && (
+                  <div className="p-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Key className="h-4 w-4 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">Chave PIX</p>
+                    </div>
+                    <p className="font-mono text-sm">{selectedWithdrawal.pix_key}</p>
+                  </div>
+                )}
+
+                {/* Admin Notes */}
+                {selectedWithdrawal.admin_notes && (
+                  <div className="p-3 bg-muted/30 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">Observações do Lojista</p>
+                    </div>
+                    <p className="text-sm">{selectedWithdrawal.admin_notes}</p>
+                  </div>
+                )}
+
+                {/* Payment Proof */}
+                {selectedWithdrawal.payment_proof && selectedWithdrawal.status === 'paid' && (
+                  <div className="p-3 bg-green-500/10 rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Image className="h-4 w-4 text-green-600" />
+                      <p className="text-xs text-muted-foreground">Comprovante de Pagamento</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewReceipt(selectedWithdrawal.payment_proof!)}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      Ver Comprovante
+                    </Button>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="orders" className="mt-4">
+                {isLoadingOrders ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : withdrawalOrders.length === 0 ? (
+                  <div className="text-center py-8">
+                    <ShoppingBag className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-muted-foreground text-sm">Nenhum pedido encontrado para este saque</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {/* Summary */}
+                    <div className="p-3 bg-primary/10 rounded-lg flex justify-between items-center">
+                      <span className="text-sm font-medium">{withdrawalOrders.length} pedido(s)</span>
+                      <span className="font-bold text-primary">
+                        {formatCurrency(withdrawalOrders.reduce((sum, o) => sum + o.commission_amount, 0))}
+                      </span>
+                    </div>
+
+                    {/* Orders List */}
+                    {withdrawalOrders.map((order) => (
+                      <Card key={order.earning_id} className="bg-muted/30">
+                        <CardContent className="p-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium text-sm">Pedido #{order.order_number}</p>
+                              <p className="text-xs text-muted-foreground">{order.customer_name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {format(new Date(order.order_date), "dd/MM/yy HH:mm", { locale: ptBR })}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-muted-foreground">Comissão</p>
+                              <p className="font-bold text-green-600">{formatCurrency(order.commission_amount)}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          )}
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {/* Receipt Modal */}
       <ResponsiveDialog open={receiptModalOpen} onOpenChange={setReceiptModalOpen}>
