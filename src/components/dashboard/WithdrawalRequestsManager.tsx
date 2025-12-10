@@ -48,6 +48,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
   const [withdrawalOrders, setWithdrawalOrders] = useState<WithdrawalOrder[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
   const [isUploadingProof, setIsUploadingProof] = useState(false);
+  const [previewImageOpen, setPreviewImageOpen] = useState(false);
 
   // Fetch orders associated with the withdrawal
   useEffect(() => {
@@ -539,11 +540,17 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                             Ver Comprovante PDF
                           </a>
                         ) : (
-                          <img 
-                            src={selectedRequest.payment_proof} 
-                            alt="Comprovante de pagamento" 
-                            className="max-w-full rounded-lg border border-border mt-2"
-                          />
+                          <div 
+                            className="cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={() => setPreviewImageOpen(true)}
+                          >
+                            <img 
+                              src={selectedRequest.payment_proof} 
+                              alt="Comprovante de pagamento" 
+                              className="h-20 w-auto rounded-lg border border-border mt-2 object-cover"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">Clique para ampliar</p>
+                          </div>
                         )
                       ) : (
                         <p className="text-xs text-muted-foreground">Nenhum comprovante anexado</p>
@@ -657,6 +664,24 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
           isProcessing={processingId === paymentRequest.id}
         />
       )}
+
+      {/* Image Preview Modal */}
+      <ResponsiveDialog open={previewImageOpen} onOpenChange={setPreviewImageOpen}>
+        <ResponsiveDialogContent className="max-w-3xl">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Comprovante de Pagamento</ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
+          {selectedRequest?.payment_proof && (
+            <div className="flex justify-center p-4">
+              <img 
+                src={selectedRequest.payment_proof} 
+                alt="Comprovante de pagamento" 
+                className="max-w-full max-h-[70vh] rounded-lg border border-border object-contain"
+              />
+            </div>
+          )}
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }
