@@ -54,7 +54,8 @@ export const AffiliatesManager = ({
     updateEarningStatus,
     getAffiliateStats,
     getAllStoreEarnings,
-    createPayment
+    createPayment,
+    invalidateAffiliates
   } = useAffiliates(storeId);
   const {
     coupons,
@@ -3084,6 +3085,7 @@ export const AffiliatesManager = ({
                   title: 'Cupom vinculado',
                   description: `${confirmLinkCoupon.coupon.code} foi vinculado ao afiliado.`
                 });
+                invalidateAffiliates();
                 setConfirmLinkCoupon(null);
               }}>
               Confirmar
