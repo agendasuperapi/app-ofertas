@@ -53,13 +53,25 @@ export const useAffiliateEarningsNotification = ({
   }, [onNewEarning]);
 
   useEffect(() => {
-    if (!storeAffiliateIds.length) return;
-    if (channelRef.current) return;
+    // Limpar canal anterior antes de qualquer coisa
+    if (channelRef.current) {
+      console.log('🔕 Limpando canal anterior de ganhos');
+      supabase.removeChannel(channelRef.current);
+      channelRef.current = null;
+    }
+
+    if (!storeAffiliateIds.length) {
+      console.log('💰 Sem IDs de afiliado para escutar');
+      return;
+    }
 
     console.log('💰 Iniciando escuta de ganhos para afiliado:', storeAffiliateIds);
 
+    // Criar canal com nome único baseado nos IDs
+    const channelName = `affiliate-earnings-${storeAffiliateIds.join('-').slice(0, 50)}`;
+    
     const channel = supabase
-      .channel('affiliate-earnings-notifications')
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -70,32 +82,21 @@ export const useAffiliateEarningsNotification = ({
         async (payload) => {
           const earning = payload.new as any;
           
+          console.log('💰 Evento UPDATE recebido em affiliate_earnings:', earning);
+          
           // Verificar se é para este afiliado
           if (!earning.store_affiliate_id || !storeAffiliateIds.includes(earning.store_affiliate_id)) {
+            console.log('💰 Evento não é para este afiliado, ignorando');
             return;
           }
 
-          // Evitar duplicatas
-          const eventId = `${earning.id}-${earning.created_at}`;
-          if (lastProcessedRef.current === eventId) return;
-          lastProcessedRef.current = eventId;
-
-          // Buscar nome da loja
-          const { data: storeAffiliate } = await supabase
-            .from('store_affiliates')
-            .select('store_id')
-            .eq('id', earning.store_affiliate_id)
-            .single();
-
-          let storeName = 'Loja';
-          if (storeAffiliate) {
-            const { data: store } = await supabase
-              .from('stores')
-              .select('name')
-              .eq('id', storeAffiliate.store_id)
-              .single();
-            storeName = store?.name || 'Loja';
+          // Evitar duplicatas usando order_id e updated_at
+          const eventId = `${earning.order_id}-${earning.commission_amount}`;
+          if (lastProcessedRef.current === eventId) {
+            console.log('💰 Evento duplicado, ignorando');
+            return;
           }
+          lastProcessedRef.current = eventId;
 
           const commissionAmount = earning.commission_amount || 0;
 
@@ -105,8 +106,22 @@ export const useAffiliateEarningsNotification = ({
             return;
           }
 
+          // Buscar nome do cliente do pedido
+          let customerName = 'Cliente';
+          if (earning.order_id) {
+            const { data: orderData } = await supabase
+              .from('orders')
+              .select('customer_name, order_number')
+              .eq('id', earning.order_id)
+              .single();
+            
+            if (orderData?.customer_name) {
+              customerName = orderData.customer_name;
+            }
+          }
+
           console.log('💰 Nova comissão recebida:', {
-            storeName,
+            customerName,
             commissionAmount,
             orderId: earning.order_id
           });
@@ -115,8 +130,8 @@ export const useAffiliateEarningsNotification = ({
           playEarningsSound();
 
           // Mostrar toast com sonner
-          toast.success('💰 Nova Comissão Recebida!', {
-            description: `${storeName} - R$ ${commissionAmount.toFixed(2)}`,
+          toast.success('💰 Nova Comissão Gerada!', {
+            description: `${customerName} - R$ ${commissionAmount.toFixed(2)}`,
             duration: 8000,
           });
 
@@ -133,11 +148,11 @@ export const useAffiliateEarningsNotification = ({
     channelRef.current = channel;
 
     return () => {
-      console.log('🔕 Encerrando escuta de ganhos');
+      console.log('🔕 Encerrando escuta de ganhos (cleanup)');
       if (channelRef.current) {
         supabase.removeChannel(channelRef.current);
         channelRef.current = null;
       }
     };
-  }, [storeAffiliateIds]);
+  }, [storeAffiliateIds.join(',')]); // Dependência como string para evitar re-renders desnecessários
 };
