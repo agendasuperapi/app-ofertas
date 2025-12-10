@@ -1378,9 +1378,9 @@ export default function AffiliateDashboardNew() {
 
   // Render Stats Cards (reusable) - using filtered data
   const renderStatsCards = () => {
-    // Determine if we should show filtered data or all data
-    const showFilteredData = periodFilter !== 'all' || storeFilter !== 'all';
-    const displayStats = showFilteredData ? filteredStats : affiliateStats;
+    // Always use filteredStats since it calculates maturing_commission and available_for_withdrawal correctly
+    // affiliateStats from backend doesn't have these fields
+    const displayStats = filteredStats;
     return <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-7 gap-2 sm:gap-3">
         <motion.div initial={{
         opacity: 0,
