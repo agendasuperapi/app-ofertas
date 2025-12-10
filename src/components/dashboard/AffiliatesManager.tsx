@@ -1194,46 +1194,46 @@ export const AffiliatesManager = ({
                   </p>
                 </div>
                 <div className="col-span-2">
-                  <div className="flex items-center justify-between mb-1">
-                    <Label>Vincular Cupom</Label>
+                  <Label className="mb-1 block">Vincular Cupom</Label>
+                  <div className="flex items-center gap-2">
                     <Button 
                       type="button" 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-6 px-2 text-xs text-primary hover:text-primary/80"
+                      variant="outline" 
+                      size="icon" 
+                      className="h-10 w-10 shrink-0"
                       onClick={() => setNewCouponDialogOpen(true)}
+                      title="Criar Novo Cupom"
                     >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Criar Novo Cupom
+                      <Plus className="h-4 w-4" />
                     </Button>
+                    <Select
+                      value={formData.coupon_ids[0] || ''} 
+                      onValueChange={(value) => setFormData({
+                        ...formData,
+                        coupon_ids: value ? [value] : []
+                      })}
+                    >
+                      <SelectTrigger className="glass flex-1">
+                        <SelectValue placeholder="Selecione um cupom (opcional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableCoupons.map(coupon => (
+                          <SelectItem key={coupon.id} value={coupon.id}>
+                            <div className="flex items-center gap-2">
+                              <Tag className="h-4 w-4 text-primary" />
+                              <span className="font-mono font-medium">{coupon.code}</span>
+                              <Badge variant="outline" className="text-xs">
+                                {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `R$ ${coupon.discount_value}`}
+                              </Badge>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <Select 
-                    value={formData.coupon_ids[0] || ''} 
-                    onValueChange={(value) => setFormData({
-                      ...formData,
-                      coupon_ids: value ? [value] : []
-                    })}
-                  >
-                    <SelectTrigger className="glass">
-                      <SelectValue placeholder="Selecione um cupom (opcional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableCoupons.map(coupon => (
-                        <SelectItem key={coupon.id} value={coupon.id}>
-                          <div className="flex items-center gap-2">
-                            <Tag className="h-4 w-4 text-primary" />
-                            <span className="font-mono font-medium">{coupon.code}</span>
-                            <Badge variant="outline" className="text-xs">
-                              {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `R$ ${coupon.discount_value}`}
-                            </Badge>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <p className="text-xs text-muted-foreground mt-1">
                     {availableCoupons.length === 0 
-                      ? 'Nenhum cupom disponível. Clique em "+ Criar Novo Cupom".' 
+                      ? 'Nenhum cupom disponível. Clique no + para criar.' 
                       : 'Selecione um cupom para vincular ao afiliado'}
                   </p>
                 </div>
