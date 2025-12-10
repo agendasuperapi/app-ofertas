@@ -65,12 +65,13 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
     setPaymentModalOpen(true);
   };
 
-  const handleMarkAsPaid = async (requestId: string) => {
+  const handleMarkAsPaid = async (requestId: string, adminNotes?: string, paymentProof?: string): Promise<boolean> => {
     setProcessingId(requestId);
-    await markAsPaid(requestId);
+    const success = await markAsPaid(requestId, adminNotes, paymentProof);
     setProcessingId(null);
     setSelectedRequest(null);
     setPaymentRequest(null);
+    return success;
   };
 
   const handleReject = async () => {
