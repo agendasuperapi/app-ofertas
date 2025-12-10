@@ -2389,7 +2389,7 @@ export const AffiliatesManager = ({
                                 });
                               }}>
                                       <Link2 className="h-3 w-3 mr-1" />
-                                      Vincular
+                                      Vincular Cupom 
                                     </Button>}
                                   <Button size="icon" variant="ghost" className="h-8 w-8" onClick={async () => {
                                 setEditingCouponId(coupon.id);
