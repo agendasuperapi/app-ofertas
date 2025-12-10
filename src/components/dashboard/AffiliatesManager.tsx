@@ -2380,12 +2380,7 @@ export const AffiliatesManager = ({
                           const isLinked = linkedCouponIds.includes(coupon.id);
                           return <div key={coupon.id} className={`flex items-center justify-between p-3 border rounded-lg ${isLinked ? 'border-primary/50 bg-primary/5' : ''}`}>
                                 <div className="flex items-center gap-3">
-                                  {isLinked ? <div className="flex items-center justify-center h-4 w-4 text-primary" title="Cupom vinculado permanentemente">
-                                      <Lock className="h-4 w-4" />
-                                    </div> : <Checkbox id={`detail-coupon-${coupon.id}`} checked={false} onCheckedChange={checked => {
-                                if (!selectedAffiliate || !checked) return;
-                                setConfirmLinkCoupon({ coupon });
-                              }} />}
+                                  {isLinked && <Lock className="h-4 w-4 text-primary" />}
                                   <div>
                                     <div className="flex items-center gap-2">
                                       <p className="font-medium">{coupon.code}</p>
@@ -2402,6 +2397,20 @@ export const AffiliatesManager = ({
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
+                                  {!isLinked && (
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      className="h-8 text-xs"
+                                      onClick={() => {
+                                        if (!selectedAffiliate) return;
+                                        setConfirmLinkCoupon({ coupon });
+                                      }}
+                                    >
+                                      <Link2 className="h-3 w-3 mr-1" />
+                                      Vincular
+                                    </Button>
+                                  )}
                                   <Button size="icon" variant="ghost" className="h-8 w-8" onClick={async () => {
                                 setEditingCouponId(coupon.id);
                                 setNewCouponData({
