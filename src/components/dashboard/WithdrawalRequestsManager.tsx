@@ -496,10 +496,10 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                     <div className="p-4 bg-muted/50 dark:bg-muted/30 rounded-xl border border-border shadow-sm">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                          <div className="p-1.5 bg-emerald-500/10 rounded-lg">
-                            <Image className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                          <div className="p-1.5 bg-muted rounded-lg">
+                            <Image className="h-4 w-4 text-muted-foreground" />
                           </div>
-                          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Comprovante de Pagamento</p>
+                          <p className="text-sm font-semibold text-foreground">Comprovante de Pagamento</p>
                         </div>
                         <label className="cursor-pointer">
                           <input
@@ -515,7 +515,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            className="text-xs bg-white dark:bg-background border-emerald-300 dark:border-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 text-emerald-700 dark:text-emerald-300"
+                            className="text-xs"
                             disabled={isUploadingProof}
                             asChild
                           >
@@ -536,7 +536,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                             href={selectedRequest.payment_proof} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors bg-white dark:bg-background/50 px-4 py-2 rounded-lg border border-emerald-200 dark:border-emerald-800 hover:border-emerald-300 dark:hover:border-emerald-700"
+                            className="inline-flex items-center gap-2 text-sm font-medium text-foreground hover:text-muted-foreground transition-colors bg-background px-4 py-2 rounded-lg border border-border hover:border-muted-foreground"
                           >
                             <Eye className="h-4 w-4" />
                             Ver Comprovante PDF
@@ -546,17 +546,17 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                             className="cursor-pointer group flex flex-col items-center"
                             onClick={() => setPreviewImageOpen(true)}
                           >
-                            <div className="relative overflow-hidden rounded-xl border-2 border-emerald-200 dark:border-emerald-800 shadow-lg group-hover:shadow-xl group-hover:border-emerald-300 dark:group-hover:border-emerald-700 transition-all duration-300">
+                            <div className="relative overflow-hidden rounded-xl border-2 border-border shadow-lg group-hover:shadow-xl group-hover:border-muted-foreground transition-all duration-300">
                               <img 
                                 src={selectedRequest.payment_proof} 
                                 alt="Comprovante de pagamento" 
                                 className="h-24 w-auto object-cover group-hover:scale-105 transition-transform duration-300"
                               />
-                              <div className="absolute inset-0 bg-emerald-600/0 group-hover:bg-emerald-600/10 transition-colors duration-300 flex items-center justify-center">
+                              <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/5 transition-colors duration-300 flex items-center justify-center">
                                 <Eye className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 drop-shadow-lg" />
                               </div>
                             </div>
-                            <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-2 font-medium">Clique para ampliar</p>
+                            <p className="text-xs text-muted-foreground mt-2 font-medium">Clique para ampliar</p>
                           </div>
                         )
                       ) : (
