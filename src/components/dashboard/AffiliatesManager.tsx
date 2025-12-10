@@ -94,7 +94,7 @@ export const AffiliatesManager = ({
     // exclude coupons already linked to other affiliates
     if (!currentAffiliateId) return false;
 
-    // Allow if linked to the affiliate being edited/viewed
+    // Only allow if linked to the SAME affiliate being edited/viewed (not others)
     return linkedAffiliate.id === currentAffiliateId;
   });
   const [commissionRules, setCommissionRules] = useState<AffiliateCommissionRule[]>([]);
