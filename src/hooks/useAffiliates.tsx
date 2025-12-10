@@ -262,8 +262,17 @@ export const useAffiliates = (storeId?: string) => {
           }));
           await (supabase as any).from('affiliate_coupons').insert(couponInserts);
         }
+      }
 
-        // Sync with store_affiliates table (busca por CPF)
+      // Sync with store_affiliates when relevant fields are updated
+      const needsStoreAffiliateSync = 
+        rest.commission_maturity_days !== undefined ||
+        rest.use_default_commission !== undefined ||
+        rest.default_commission_type !== undefined ||
+        rest.default_commission_value !== undefined ||
+        coupon_ids !== undefined;
+
+      if (needsStoreAffiliateSync) {
         const cpfToSearch = normalizedCpf || normalizeCpf(data?.cpf_cnpj);
         let affiliateAccount = null;
         if (cpfToSearch) {
@@ -284,28 +293,40 @@ export const useAffiliates = (storeId?: string) => {
             .maybeSingle();
 
           if (storeAffiliate) {
+            // Always update commission configuration fields
+            const storeAffiliateUpdate: any = {
+              default_commission_type: rest.default_commission_type || data.default_commission_type || 'percentage',
+              default_commission_value: rest.default_commission_value ?? data.default_commission_value ?? 0,
+              use_default_commission: rest.use_default_commission ?? data.use_default_commission ?? true,
+              commission_maturity_days: rest.commission_maturity_days ?? data.commission_maturity_days ?? 7
+            };
+            
+            // Only update coupon_id if coupon_ids was explicitly provided
+            if (coupon_ids !== undefined) {
+              storeAffiliateUpdate.coupon_id = coupon_ids[0] || null;
+            }
+
             await (supabase as any)
               .from('store_affiliates')
-              .update({ 
-                coupon_id: coupon_ids[0] || null,
-                default_commission_type: rest.default_commission_type || data.default_commission_type || 'percentage',
-                default_commission_value: rest.default_commission_value ?? data.default_commission_value ?? 0,
-                use_default_commission: rest.use_default_commission ?? data.use_default_commission ?? true,
-                commission_maturity_days: rest.commission_maturity_days ?? data.commission_maturity_days ?? 7
-              })
+              .update(storeAffiliateUpdate)
               .eq('id', storeAffiliate.id);
 
-            await (supabase as any)
-              .from('store_affiliate_coupons')
-              .delete()
-              .eq('store_affiliate_id', storeAffiliate.id);
+            console.log('✅ Synced commission settings to store_affiliates:', storeAffiliateUpdate);
 
-            if (coupon_ids.length > 0) {
-              const storeAffiliateInserts = coupon_ids.map(couponId => ({
-                store_affiliate_id: storeAffiliate.id,
-                coupon_id: couponId,
-              }));
-              await (supabase as any).from('store_affiliate_coupons').insert(storeAffiliateInserts);
+            // Sync coupons only if coupon_ids was explicitly provided
+            if (coupon_ids !== undefined) {
+              await (supabase as any)
+                .from('store_affiliate_coupons')
+                .delete()
+                .eq('store_affiliate_id', storeAffiliate.id);
+
+              if (coupon_ids.length > 0) {
+                const storeAffiliateInserts = coupon_ids.map(couponId => ({
+                  store_affiliate_id: storeAffiliate.id,
+                  coupon_id: couponId,
+                }));
+                await (supabase as any).from('store_affiliate_coupons').insert(storeAffiliateInserts);
+              }
             }
           }
         }
