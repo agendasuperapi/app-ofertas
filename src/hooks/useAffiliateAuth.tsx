@@ -66,6 +66,8 @@ export interface AffiliateOrder {
   commission_status: string;
   coupon_code?: string;
   order_status?: string;
+  commission_available_at?: string;
+  maturity_days?: number;
 }
 
 export interface AffiliateOrderItem {

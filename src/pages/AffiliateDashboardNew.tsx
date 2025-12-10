@@ -351,6 +351,43 @@ export default function AffiliateDashboardNew() {
     // Ganhos: SOMENTE pedidos ENTREGUES
     const earnedCommission = validOrders.filter(order => order.order_status === 'entregue' || order.order_status === 'delivered').reduce((sum, order) => sum + (order.commission_amount || 0), 0);
 
+    // Disponível para saque: pedidos entregues E que já passaram o período de maturidade
+    const now = new Date();
+    const availableForWithdrawal = validOrders.filter(order => {
+      const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
+      if (!isDelivered) return false;
+      
+      // Se tem data de maturidade, verificar se já passou
+      if (order.commission_available_at) {
+        const maturityDate = new Date(order.commission_available_at);
+        return maturityDate <= now;
+      }
+      
+      // Fallback: usar maturity_days (default 7 dias) + data do pedido
+      const maturityDays = order.maturity_days || 7;
+      const orderDate = new Date(order.order_date);
+      const maturityDate = new Date(orderDate.getTime() + (maturityDays * 24 * 60 * 60 * 1000));
+      return maturityDate <= now;
+    }).reduce((sum, order) => sum + (order.commission_amount || 0), 0);
+
+    // Em maturação: pedidos entregues MAS ainda no período de carência
+    const maturingCommission = validOrders.filter(order => {
+      const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
+      if (!isDelivered) return false;
+      
+      // Se tem data de maturidade, verificar se ainda não passou
+      if (order.commission_available_at) {
+        const maturityDate = new Date(order.commission_available_at);
+        return maturityDate > now;
+      }
+      
+      // Fallback: usar maturity_days (default 7 dias) + data do pedido
+      const maturityDays = order.maturity_days || 7;
+      const orderDate = new Date(order.order_date);
+      const maturityDate = new Date(orderDate.getTime() + (maturityDays * 24 * 60 * 60 * 1000));
+      return maturityDate > now;
+    }).reduce((sum, order) => sum + (order.commission_amount || 0), 0);
+
     // Pendente: pedidos que NÃO são "entregue" nem "cancelado"
     const pendingCommission = validOrders.filter(order => {
       const status = order.order_status;
@@ -362,9 +399,13 @@ export default function AffiliateDashboardNew() {
       total_orders: totalOrders,
       total_sales: totalSales,
       total_commission: earnedCommission,
-      // Apenas entregues
+      // Apenas entregues (total de ganhos)
+      available_for_withdrawal: availableForWithdrawal,
+      // Disponível para saque (passou maturidade)
+      maturing_commission: maturingCommission,
+      // Em maturação (ainda no período de carência)
       pending_commission: pendingCommission,
-      // Em processamento
+      // Em processamento (pedidos não entregues)
       paid_commission: earnedCommission,
       // Alias para compatibilidade
       cancelled_count: cancelledCount,
@@ -1412,7 +1453,7 @@ export default function AffiliateDashboardNew() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground truncate">Disponível Saque</p>
-                  <p className="text-xs sm:text-sm md:text-lg lg:text-xl font-bold text-orange-600">{formatCurrency((displayStats as any)?.total_commission || 0)}</p>
+                  <p className="text-xs sm:text-sm md:text-lg lg:text-xl font-bold text-orange-600">{formatCurrency((displayStats as any)?.available_for_withdrawal || 0)}</p>
                 </div>
               </div>
             </CardContent>
