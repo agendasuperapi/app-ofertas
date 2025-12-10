@@ -91,6 +91,9 @@ export function AffiliateWithdrawalHistory({ requests, isLoading, stores }: Affi
       setIsLoadingOrders(true);
       try {
         // Build query based on available IDs
+        // Determine earning status based on withdrawal status
+        const earningStatus = selectedWithdrawal.status === 'paid' ? 'paid' : 'pending';
+        
         let query = supabase
           .from('affiliate_earnings')
           .select(`
@@ -108,7 +111,7 @@ export function AffiliateWithdrawalHistory({ requests, isLoading, stores }: Affi
               status
             )
           `)
-          .eq('status', 'paid');
+          .eq('status', earningStatus);
 
         // Filter by store_affiliate_id or affiliate_id
         if (selectedWithdrawal.store_affiliate_id) {
