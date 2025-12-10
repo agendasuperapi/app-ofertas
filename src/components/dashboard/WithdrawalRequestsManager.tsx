@@ -418,7 +418,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
           </ResponsiveDialogHeader>
 
           {selectedRequest && (
-            <Tabs defaultValue="details" className="mt-1">
+            <Tabs defaultValue="details">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="details">
                   <Wallet className="h-4 w-4 mr-2" />
