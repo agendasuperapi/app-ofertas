@@ -1181,6 +1181,38 @@ export const AffiliatesManager = ({
                     Chave PIX do tipo CPF
                   </p>
                 </div>
+                <div className="col-span-2">
+                  <Label>Vincular Cupom</Label>
+                  <Select 
+                    value={formData.coupon_ids[0] || ''} 
+                    onValueChange={(value) => setFormData({
+                      ...formData,
+                      coupon_ids: value ? [value] : []
+                    })}
+                  >
+                    <SelectTrigger className="glass">
+                      <SelectValue placeholder="Selecione um cupom (opcional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableCoupons.map(coupon => (
+                        <SelectItem key={coupon.id} value={coupon.id}>
+                          <div className="flex items-center gap-2">
+                            <Tag className="h-4 w-4 text-primary" />
+                            <span className="font-mono font-medium">{coupon.code}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `R$ ${coupon.discount_value}`}
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {availableCoupons.length === 0 
+                      ? 'Nenhum cupom disponível. Crie um cupom na aba Cupons.' 
+                      : 'Selecione um cupom para vincular ao afiliado'}
+                  </p>
+                </div>
               </div>
               
               {/* Seção Comissão Padrão */}
