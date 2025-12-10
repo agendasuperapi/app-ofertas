@@ -63,7 +63,7 @@ export const useAffiliateEarningsNotification = ({
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: 'UPDATE',
           schema: 'public',
           table: 'affiliate_earnings'
         },
@@ -98,6 +98,12 @@ export const useAffiliateEarningsNotification = ({
           }
 
           const commissionAmount = earning.commission_amount || 0;
+
+          // Só notificar se a comissão for maior que 0
+          if (commissionAmount <= 0) {
+            console.log('💰 Comissão com valor 0 - ignorando notificação');
+            return;
+          }
 
           console.log('💰 Nova comissão recebida:', {
             storeName,
