@@ -2,8 +2,9 @@ import { useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, Copy, Check, CheckCircle, Key, DollarSign, User, Upload, Image, X } from 'lucide-react';
+import { Loader2, Copy, Check, CheckCircle, Key, DollarSign, User, Upload, Image, X, ZoomIn } from 'lucide-react';
 import { generatePixQrCode, isValidPixKey } from '@/lib/pixQrCode';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,6 +34,7 @@ export function WithdrawalPaymentModal({
   const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
   const [paymentProofPreview, setPaymentProofPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatCurrency = (value: number) => {
@@ -158,6 +160,7 @@ export function WithdrawalPaymentModal({
   const isValidPix = affiliatePixKey && isValidPixKey(affiliatePixKey);
 
   return (
+    <>
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <ResponsiveDialogHeader>
@@ -274,11 +277,19 @@ export function WithdrawalPaymentModal({
                 </Button>
                 
                 {paymentProofPreview ? (
-                  <img 
-                    src={paymentProofPreview} 
-                    alt="Comprovante" 
-                    className="w-full max-h-32 object-contain rounded"
-                  />
+                  <div 
+                    className="relative cursor-pointer group"
+                    onClick={() => setPreviewModalOpen(true)}
+                  >
+                    <img 
+                      src={paymentProofPreview} 
+                      alt="Comprovante" 
+                      className="w-full max-h-32 object-contain rounded"
+                    />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded flex items-center justify-center">
+                      <ZoomIn className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
                 ) : (
                   <div className="flex items-center gap-2">
                     <Image className="h-5 w-5 text-muted-foreground" />
@@ -323,5 +334,19 @@ export function WithdrawalPaymentModal({
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>
     </ResponsiveDialog>
+
+    {/* Preview Modal */}
+    <Dialog open={previewModalOpen} onOpenChange={setPreviewModalOpen}>
+      <DialogContent className="max-w-3xl p-2">
+        {paymentProofPreview && (
+          <img 
+            src={paymentProofPreview} 
+            alt="Comprovante" 
+            className="w-full max-h-[80vh] object-contain rounded"
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
