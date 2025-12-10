@@ -250,6 +250,9 @@ export default function AffiliateDashboardNew() {
 
   // Extrair IDs dos store_affiliates para notificações em tempo real
   const storeAffiliateIds = useMemo(() => affiliateStores.map(s => s.store_affiliate_id).filter(Boolean), [affiliateStores]);
+  
+  // Extrair store_ids das lojas do afiliado para monitorar novos pedidos
+  const affiliateStoreIds = useMemo(() => affiliateStores.map(s => s.store_id).filter(Boolean), [affiliateStores]);
 
   // Hook de notificação de ganhos em tempo real
   const handleNewEarning = useCallback(() => {
@@ -264,9 +267,11 @@ export default function AffiliateDashboardNew() {
   const affiliateOrderIds = useMemo(() => affiliateOrders?.map(o => o.order_id).filter(Boolean) || [], [affiliateOrders]);
 
   // Hook de notificação de mudança de status do pedido (atualiza dashboard quando lojista muda status)
+  // E também monitora novos pedidos com cupom nas lojas do afiliado
   useAffiliateOrderStatusNotification({
     orderIds: affiliateOrderIds,
     storeAffiliateIds,
+    storeIds: affiliateStoreIds,
     onStatusChange: refreshData
   });
 
