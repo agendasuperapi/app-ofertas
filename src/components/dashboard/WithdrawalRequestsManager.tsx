@@ -541,7 +541,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                           </a>
                         ) : (
                           <div 
-                            className="cursor-pointer hover:opacity-80 transition-opacity"
+                            className="cursor-pointer hover:opacity-80 transition-opacity flex flex-col items-center"
                             onClick={() => setPreviewImageOpen(true)}
                           >
                             <img 
