@@ -409,8 +409,8 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
 
       {/* Details Modal */}
       <ResponsiveDialog open={!!selectedRequest && !rejectDialogOpen} onOpenChange={(open) => !open && setSelectedRequest(null)}>
-        <ResponsiveDialogContent className="max-w-2xl h-[90vh] overflow-y-auto">
-          <ResponsiveDialogHeader className="pb-2 space-y-0">
+        <ResponsiveDialogContent className="max-w-2xl h-[90vh] overflow-y-auto [&>*]:gap-0">
+          <ResponsiveDialogHeader className="pb-0 space-y-0">
             <ResponsiveDialogTitle>Detalhes do Saque</ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
               Solicitação de {selectedRequest?.affiliate_name}
@@ -418,7 +418,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
           </ResponsiveDialogHeader>
 
           {selectedRequest && (
-            <Tabs defaultValue="details" className="-mt-2">
+            <Tabs defaultValue="details" className="mt-0">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="details">
                   <Wallet className="h-4 w-4 mr-2" />
