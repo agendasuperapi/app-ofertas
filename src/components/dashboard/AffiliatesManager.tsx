@@ -1338,23 +1338,23 @@ export const AffiliatesManager = ({
                       <CardTitle className="text-base">Cupons Vinculados</CardTitle>
                     </div>
                     <Button size="sm" variant="outline" onClick={() => {
-                      setEditingCouponId(null);
-                      setNewCouponData({
-                        code: '',
-                        discount_type: 'percentage',
-                        discount_value: 0,
-                        min_order_value: 0,
-                        max_uses: null,
-                        valid_from: new Date().toISOString().split('T')[0],
-                        valid_until: '',
-                        applies_to: 'all',
-                        category_names: [],
-                        product_ids: []
-                      });
-                      setCouponDiscountRules([]);
-                      setCouponCategoryRules([]);
-                      setNewCouponDialogOpen(true);
-                    }}>
+                        setEditingCouponId(null);
+                        setNewCouponData({
+                          code: '',
+                          discount_type: 'percentage',
+                          discount_value: 0,
+                          min_order_value: 0,
+                          max_uses: null,
+                          valid_from: new Date().toISOString().split('T')[0],
+                          valid_until: '',
+                          applies_to: 'all',
+                          category_names: [],
+                          product_ids: []
+                        });
+                        setCouponDiscountRules([]);
+                        setCouponCategoryRules([]);
+                        setNewCouponDialogOpen(true);
+                      }}>
                       <Plus className="h-4 w-4 mr-1" />
                       Novo Cupom
                     </Button>
@@ -1363,22 +1363,16 @@ export const AffiliatesManager = ({
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {availableCoupons.length === 0 && formData.coupon_ids.length === 0 ? (
-                      <div className="py-8 text-center text-muted-foreground">
+                    {availableCoupons.length === 0 && formData.coupon_ids.length === 0 ? <div className="py-8 text-center text-muted-foreground">
                         <Tag className="h-8 w-8 mx-auto mb-2 opacity-50" />
                         <p className="text-sm">Nenhum cupom disponível</p>
                         <p className="text-xs mt-1">Crie um novo cupom para vincular</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                      </div> : <div className="space-y-2 max-h-[300px] overflow-y-auto">
                         {/* Renderiza todos os cupons em ordem estável */}
-                        {[...availableCoupons, ...coupons.filter(c => formData.coupon_ids.includes(c.id) && !availableCoupons.some(ac => ac.id === c.id))]
-                          .filter((coupon, index, self) => self.findIndex(c => c.id === coupon.id) === index)
-                          .map(coupon => {
+                        {[...availableCoupons, ...coupons.filter(c => formData.coupon_ids.includes(c.id) && !availableCoupons.some(ac => ac.id === c.id))].filter((coupon, index, self) => self.findIndex(c => c.id === coupon.id) === index).map(coupon => {
                           const isLinked = formData.coupon_ids.includes(coupon.id);
                           const wasAlreadyLinked = editingAffiliate?.affiliate_coupons?.some(ac => ac.coupon_id === coupon.id);
-                          return (
-                            <div key={coupon.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 border rounded-lg ${coupon.is_active ? 'bg-gradient-to-r from-green-50 to-green-100/50 border-green-200' : 'bg-gradient-to-r from-orange-50 to-amber-100/50 border-orange-200'}`}>
+                          return <div key={coupon.id} className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 border rounded-lg ${coupon.is_active ? 'bg-gradient-to-r from-green-50 to-green-100/50 border-green-200' : 'bg-gradient-to-r from-orange-50 to-amber-100/50 border-orange-200'}`}>
                               <div className="flex items-center gap-3 min-w-0">
                                 {isLinked && wasAlreadyLinked && <Lock className="h-4 w-4 text-primary flex-shrink-0" />}
                                 <div className="min-w-0">
@@ -1394,86 +1388,84 @@ export const AffiliatesManager = ({
                                 </div>
                               </div>
                               <div className="flex items-center gap-2 flex-shrink-0">
-                                {isLinked ? (
-                                  <>
-                                    {!wasAlreadyLinked && (
-                                      <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => {
-                                        setFormData({
-                                          ...formData,
-                                          coupon_ids: formData.coupon_ids.filter(id => id !== coupon.id)
-                                        });
-                                      }}>
+                                {isLinked ? <>
+                                    {!wasAlreadyLinked && <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => {
+                                  setFormData({
+                                    ...formData,
+                                    coupon_ids: formData.coupon_ids.filter(id => id !== coupon.id)
+                                  });
+                                }}>
                                         Desvincular
-                                      </Button>
-                                    )}
-                                    {wasAlreadyLinked && (
-                                      <Button size="sm" variant={coupon.is_active ? "destructive" : "outline"} className={`h-8 text-xs ${!coupon.is_active ? 'bg-green-600 text-white border-green-600 hover:bg-green-700' : ''}`} onClick={async () => {
-                                        const { error } = await supabase.from('coupons').update({ is_active: !coupon.is_active }).eq('id', coupon.id);
-                                        if (!error) {
-                                          toast({ title: coupon.is_active ? 'Cupom inativado' : 'Cupom ativado' });
-                                          fetchCoupons();
-                                        }
-                                      }}>
-                                        {coupon.is_active ? 'Inativar' : 'Ativar'}
-                                      </Button>
-                                    )}
-                                  </>
-                                ) : (
-                                  <Button size="sm" variant="outline" className="h-8 text-xs bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700" onClick={() => {
-                                    setFormData({
-                                      ...formData,
-                                      coupon_ids: [...formData.coupon_ids, coupon.id]
+                                      </Button>}
+                                    {wasAlreadyLinked && <Button size="sm" variant={coupon.is_active ? "destructive" : "outline"} className={`h-8 text-xs ${!coupon.is_active ? 'bg-green-600 text-white border-green-600 hover:bg-green-700' : ''}`} onClick={async () => {
+                                  const {
+                                    error
+                                  } = await supabase.from('coupons').update({
+                                    is_active: !coupon.is_active
+                                  }).eq('id', coupon.id);
+                                  if (!error) {
+                                    toast({
+                                      title: coupon.is_active ? 'Cupom inativado' : 'Cupom ativado'
                                     });
-                                  }}>
+                                    fetchCoupons();
+                                  }
+                                }}>
+                                        {coupon.is_active ? 'Inativar' : 'Ativar'}
+                                      </Button>}
+                                  </> : <Button size="sm" variant="outline" className="h-8 text-xs bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700" onClick={() => {
+                                setFormData({
+                                  ...formData,
+                                  coupon_ids: [...formData.coupon_ids, coupon.id]
+                                });
+                              }}>
                                     <Link2 className="h-3 w-3 mr-1" />
                                     Vincular Cupom
-                                  </Button>
-                                )}
+                                  </Button>}
                                 <Button size="icon" variant="ghost" className="h-8 w-8" onClick={async () => {
-                                  setEditingCouponId(coupon.id);
-                                  setNewCouponData({
-                                    code: coupon.code,
-                                    discount_type: coupon.discount_type,
-                                    discount_value: coupon.discount_value,
-                                    min_order_value: coupon.min_order_value || 0,
-                                    max_uses: coupon.max_uses || null,
-                                    valid_from: coupon.valid_from ? new Date(coupon.valid_from).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-                                    valid_until: coupon.valid_until ? new Date(coupon.valid_until).toISOString().split('T')[0] : '',
-                                    applies_to: coupon.applies_to as 'all' | 'category' | 'product' || 'all',
-                                    category_names: coupon.category_names || [],
-                                    product_ids: coupon.product_ids || []
-                                  });
-                                  const { data: rules } = await supabase.from('coupon_discount_rules').select('*').eq('coupon_id', coupon.id);
-                                  if (rules) {
-                                    const productRules = rules.filter(r => r.rule_type === 'product' && r.product_id).map(r => ({
-                                      product_id: r.product_id!,
-                                      discount_type: r.discount_type as 'percentage' | 'fixed',
-                                      discount_value: r.discount_value
-                                    }));
-                                    const categoryRules = rules.filter(r => r.rule_type === 'category' && r.category_name).map(r => ({
-                                      category_name: r.category_name!,
-                                      discount_type: r.discount_type as 'percentage' | 'fixed',
-                                      discount_value: r.discount_value
-                                    }));
-                                    setCouponDiscountRules(productRules);
-                                    setCouponCategoryRules(categoryRules);
-                                  } else {
-                                    setCouponDiscountRules([]);
-                                    setCouponCategoryRules([]);
-                                  }
-                                  setNewCouponDialogOpen(true);
-                                }}>
+                                setEditingCouponId(coupon.id);
+                                setNewCouponData({
+                                  code: coupon.code,
+                                  discount_type: coupon.discount_type,
+                                  discount_value: coupon.discount_value,
+                                  min_order_value: coupon.min_order_value || 0,
+                                  max_uses: coupon.max_uses || null,
+                                  valid_from: coupon.valid_from ? new Date(coupon.valid_from).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+                                  valid_until: coupon.valid_until ? new Date(coupon.valid_until).toISOString().split('T')[0] : '',
+                                  applies_to: coupon.applies_to as 'all' | 'category' | 'product' || 'all',
+                                  category_names: coupon.category_names || [],
+                                  product_ids: coupon.product_ids || []
+                                });
+                                const {
+                                  data: rules
+                                } = await supabase.from('coupon_discount_rules').select('*').eq('coupon_id', coupon.id);
+                                if (rules) {
+                                  const productRules = rules.filter(r => r.rule_type === 'product' && r.product_id).map(r => ({
+                                    product_id: r.product_id!,
+                                    discount_type: r.discount_type as 'percentage' | 'fixed',
+                                    discount_value: r.discount_value
+                                  }));
+                                  const categoryRules = rules.filter(r => r.rule_type === 'category' && r.category_name).map(r => ({
+                                    category_name: r.category_name!,
+                                    discount_type: r.discount_type as 'percentage' | 'fixed',
+                                    discount_value: r.discount_value
+                                  }));
+                                  setCouponDiscountRules(productRules);
+                                  setCouponCategoryRules(categoryRules);
+                                } else {
+                                  setCouponDiscountRules([]);
+                                  setCouponCategoryRules([]);
+                                }
+                                setNewCouponDialogOpen(true);
+                              }}>
                                   <Pencil className="h-4 w-4" />
                                 </Button>
                                 <Badge className={isLinked ? 'bg-green-600 text-white' : 'bg-orange-500 text-white border-orange-500'}>
                                   {isLinked ? 'Vinculado' : 'Cupom Não vinculado'}
                                 </Badge>
                               </div>
-                            </div>
-                          );
+                            </div>;
                         })}
-                      </div>
-                    )}
+                      </div>}
                   </div>
                 </CardContent>
               </Card>
@@ -2190,7 +2182,7 @@ export const AffiliatesManager = ({
                   <CardHeader className="py-2 px-3">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-amber-600" />
-                      <CardTitle className="text-sm">Carência para Liberação de Saque</CardTitle>
+                      <CardTitle className="text-sm">Liberação de Saque</CardTitle>
                     </div>
                     <p className="text-xs text-muted-foreground">
                       Após a entrega do pedido, a comissão ficará disponível para saque após este período
@@ -2337,9 +2329,15 @@ export const AffiliatesManager = ({
                                       Vincular Cupom 
                                     </Button>}
                                   {isLinked && <Button size="sm" variant={coupon.is_active ? "destructive" : "outline"} className={`h-8 text-xs ${!coupon.is_active ? 'bg-green-600 text-white border-green-600 hover:bg-green-700' : ''}`} onClick={async () => {
-                                const { error } = await supabase.from('coupons').update({ is_active: !coupon.is_active }).eq('id', coupon.id);
+                                const {
+                                  error
+                                } = await supabase.from('coupons').update({
+                                  is_active: !coupon.is_active
+                                }).eq('id', coupon.id);
                                 if (!error) {
-                                  toast({ title: coupon.is_active ? 'Cupom inativado' : 'Cupom ativado' });
+                                  toast({
+                                    title: coupon.is_active ? 'Cupom inativado' : 'Cupom ativado'
+                                  });
                                   fetchCoupons();
                                 }
                               }}>
