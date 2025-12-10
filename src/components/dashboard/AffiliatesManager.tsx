@@ -753,6 +753,8 @@ export const AffiliatesManager = ({
               description: `O cupom ${newCouponData.code.toUpperCase()} foi criado.`
             });
           }
+          // Atualizar lista de cupons para refletir o novo cupom
+          await fetchCoupons();
         }
       }
 
