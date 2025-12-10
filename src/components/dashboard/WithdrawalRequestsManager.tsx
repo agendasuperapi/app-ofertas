@@ -57,34 +57,64 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
     const fetchWithdrawalOrders = async () => {
       setIsLoadingOrders(true);
       try {
-        // Get paid earnings for this store affiliate
-        const { data, error } = await supabase
+        // Build query based on available IDs
+        let query = supabase
           .from('affiliate_earnings')
           .select(`
             id,
             order_id,
             order_total,
             commission_amount,
+            paid_at,
+            store_affiliate_id,
+            affiliate_id,
             orders!inner (
               order_number,
               customer_name,
-              created_at
+              created_at,
+              status
             )
           `)
-          .eq('store_affiliate_id', selectedRequest.store_affiliate_id)
-          .eq('status', 'paid')
-          .order('created_at', { ascending: false });
+          .eq('status', 'paid');
+
+        // Filter by store_affiliate_id or affiliate_id
+        if (selectedRequest.store_affiliate_id) {
+          query = query.eq('store_affiliate_id', selectedRequest.store_affiliate_id);
+        } else if (selectedRequest.affiliate_id) {
+          query = query.eq('affiliate_id', selectedRequest.affiliate_id);
+        } else {
+          // No affiliate ID available, can't fetch orders
+          setWithdrawalOrders([]);
+          setIsLoadingOrders(false);
+          return;
+        }
+
+        const { data, error } = await query.order('created_at', { ascending: false });
 
         if (error) throw error;
 
-        // Filter orders by withdrawal date range
+        // Filter orders that were paid around the time of this withdrawal
+        // For paid withdrawals: orders with paid_at around the withdrawal paid_at
+        // For pending withdrawals: orders with delivered status (not yet paid)
         const orders: WithdrawalOrder[] = (data || [])
           .filter((earning: any) => {
-            if (!selectedRequest.paid_at) return false;
-            const earningDate = new Date(earning.orders?.created_at);
-            const requestedAt = new Date(selectedRequest.requested_at);
-            const paidAt = new Date(selectedRequest.paid_at);
-            return earningDate <= paidAt && earningDate >= new Date(requestedAt.getTime() - 30 * 24 * 60 * 60 * 1000);
+            // If withdrawal is paid, filter by paid_at timestamp
+            if (selectedRequest.status === 'paid' && selectedRequest.paid_at) {
+              const earningPaidAt = earning.paid_at ? new Date(earning.paid_at) : null;
+              const withdrawalPaidAt = new Date(selectedRequest.paid_at);
+              const requestedAt = new Date(selectedRequest.requested_at);
+              
+              // Check if earning was paid within the window of this withdrawal
+              // (between request time and a few seconds after paid time to account for processing)
+              if (earningPaidAt) {
+                const paidAtPlusBuffer = new Date(withdrawalPaidAt.getTime() + 60000); // 1 minute buffer
+                return earningPaidAt >= requestedAt && earningPaidAt <= paidAtPlusBuffer;
+              }
+              return false;
+            }
+            
+            // For pending withdrawals, show orders with delivered status
+            return earning.orders?.status === 'entregue' || earning.orders?.status === 'delivered';
           })
           .map((earning: any) => ({
             earning_id: earning.id,
@@ -99,6 +129,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
         setWithdrawalOrders(orders);
       } catch (error) {
         console.error('Error fetching withdrawal orders:', error);
+        setWithdrawalOrders([]);
       } finally {
         setIsLoadingOrders(false);
       }
