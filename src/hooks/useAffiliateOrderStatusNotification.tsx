@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 interface UseAffiliateOrderStatusNotificationOptions {
   orderIds: string[];
+  storeAffiliateIds?: string[];
   onStatusChange?: () => void;
 }
 
@@ -46,10 +47,12 @@ const playDeliveredSound = () => {
 
 export const useAffiliateOrderStatusNotification = ({
   orderIds,
+  storeAffiliateIds,
   onStatusChange
 }: UseAffiliateOrderStatusNotificationOptions) => {
   const lastProcessedEventRef = useRef<string>('');
   const channelRef = useRef<any>(null);
+  const earningsChannelRef = useRef<any>(null);
   const onStatusChangeRef = useRef(onStatusChange);
   
   // Manter ref atualizado
@@ -86,6 +89,7 @@ export const useAffiliateOrderStatusNotification = ({
     }
   }, []);
 
+  // Monitor order status changes
   useEffect(() => {
     // Não criar canal se não há pedidos para monitorar
     if (!orderIds || orderIds.length === 0) {
@@ -151,4 +155,58 @@ export const useAffiliateOrderStatusNotification = ({
       }
     };
   }, [orderIds, handleStatusChange]);
+
+  // Monitor affiliate_earnings for commission updates (INSERT and UPDATE)
+  useEffect(() => {
+    if (!storeAffiliateIds || storeAffiliateIds.length === 0) {
+      return;
+    }
+
+    if (earningsChannelRef.current) {
+      supabase.removeChannel(earningsChannelRef.current);
+      earningsChannelRef.current = null;
+    }
+
+    console.log('[AffiliateOrderStatus] 📡 Monitorando earnings para', storeAffiliateIds.length, 'store_affiliates');
+
+    const channel = supabase
+      .channel('affiliate-earnings-status-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'affiliate_earnings'
+        },
+        (payload) => {
+          const newRecord = payload.new as Record<string, any> | null;
+          const oldRecord = payload.old as Record<string, any> | null;
+          const storeAffiliateId = newRecord?.store_affiliate_id || oldRecord?.store_affiliate_id;
+          
+          if (!storeAffiliateId || !storeAffiliateIds.includes(storeAffiliateId)) {
+            return;
+          }
+
+          console.log('[AffiliateOrderStatus] 💰 Earnings atualizado:', payload.eventType);
+          
+          // Atualizar dados do dashboard
+          if (onStatusChangeRef.current) {
+            onStatusChangeRef.current();
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('[AffiliateOrderStatus] Earnings subscription status:', status);
+      });
+
+    earningsChannelRef.current = channel;
+
+    return () => {
+      if (earningsChannelRef.current) {
+        console.log('[AffiliateOrderStatus] 🔌 Removendo canal de earnings');
+        supabase.removeChannel(earningsChannelRef.current);
+        earningsChannelRef.current = null;
+      }
+    };
+  }, [storeAffiliateIds]);
 };
