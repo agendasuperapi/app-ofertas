@@ -149,6 +149,18 @@ jobs:
             echo "   Use apenas: $(echo $HOST | sed 's|^[^/]*//||' | sed 's|/.*$||')"
           fi
 
+      - name: Prepare FTP path
+        id: ftp_path
+        run: |
+          FTP_PATH="${{ secrets.HOSTINGER_FTP_PATH }}"
+          if [ -z "$FTP_PATH" ]; then
+            FTP_PATH="/public_html/"
+          elif [[ "$FTP_PATH" != */ ]]; then
+            FTP_PATH="${FTP_PATH}/"
+          fi
+          echo "path=$FTP_PATH" >> $GITHUB_OUTPUT
+          echo "📋 FTP Path preparado: $FTP_PATH"
+
       - name: Deploy to Hostinger via FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
@@ -156,7 +168,7 @@ jobs:
           username: ${{ secrets.HOSTINGER_FTP_USER }}
           password: ${{ secrets.HOSTINGER_FTP_PASSWORD }}
           local-dir: ./dist/
-          server-dir: ${{ secrets.HOSTINGER_FTP_PATH || '/public_html/' }}
+          server-dir: ${{ steps.ftp_path.outputs.path }}
           exclude: |
             **/.git*
             **/.git*/**
