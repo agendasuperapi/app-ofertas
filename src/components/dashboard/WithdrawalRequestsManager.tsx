@@ -12,7 +12,8 @@ import { ScrollableTable } from '@/components/ui/scrollable-table';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Wallet, Clock, CheckCircle, XCircle, DollarSign, User, Phone, Key, FileText, Search, Filter, Ban, ShoppingBag, Image, Eye, Upload, Paperclip } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Loader2, Wallet, Clock, CheckCircle, XCircle, DollarSign, User, Phone, Key, FileText, Search, Filter, Ban, ShoppingBag, Image, Eye, Upload, Paperclip, ChevronDown, ChevronUp, Package } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -34,6 +35,14 @@ interface WithdrawalOrder {
   commission_amount: number;
 }
 
+interface OrderItem {
+  id: string;
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+  subtotal: number;
+}
+
 export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManagerProps) {
   const { requests, isLoading, stats, markAsPaid, rejectRequest, updatePaymentProof } = useWithdrawalRequests({ storeId });
   const isMobile = useIsMobile();
@@ -49,6 +58,47 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
   const [isLoadingOrders, setIsLoadingOrders] = useState(false);
   const [isUploadingProof, setIsUploadingProof] = useState(false);
   const [previewImageOpen, setPreviewImageOpen] = useState(false);
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [orderItems, setOrderItems] = useState<Record<string, OrderItem[]>>({});
+  const [loadingOrderItems, setLoadingOrderItems] = useState<string | null>(null);
+
+  // Fetch order items when expanding an order
+  const fetchOrderItems = async (orderId: string) => {
+    if (orderItems[orderId]) {
+      // Already loaded
+      return;
+    }
+
+    setLoadingOrderItems(orderId);
+    try {
+      const { data, error } = await supabase
+        .from('order_items')
+        .select('id, product_name, quantity, unit_price, subtotal')
+        .eq('order_id', orderId)
+        .is('deleted_at', null);
+
+      if (error) throw error;
+
+      setOrderItems(prev => ({
+        ...prev,
+        [orderId]: data || []
+      }));
+    } catch (error) {
+      console.error('Error fetching order items:', error);
+      toast.error('Erro ao carregar itens do pedido');
+    } finally {
+      setLoadingOrderItems(null);
+    }
+  };
+
+  const handleOrderClick = (orderId: string) => {
+    if (expandedOrderId === orderId) {
+      setExpandedOrderId(null);
+    } else {
+      setExpandedOrderId(orderId);
+      fetchOrderItems(orderId);
+    }
+  };
 
   // Fetch orders associated with the withdrawal
   useEffect(() => {
@@ -604,23 +654,67 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
 
                     {/* Orders List */}
                     {withdrawalOrders.map((order) => (
-                      <Card key={order.earning_id} className="bg-muted/30">
-                        <CardContent className="p-3">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="font-medium text-sm">Pedido #{order.order_number}</p>
-                              <p className="text-xs text-muted-foreground">{order.customer_name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {format(new Date(order.order_date), "dd/MM/yy HH:mm", { locale: ptBR })}
-                              </p>
+                      <Collapsible 
+                        key={order.earning_id} 
+                        open={expandedOrderId === order.order_id}
+                        onOpenChange={() => handleOrderClick(order.order_id)}
+                      >
+                        <Card className="bg-muted/30">
+                          <CollapsibleTrigger asChild>
+                            <CardContent className="p-3 cursor-pointer hover:bg-muted/50 transition-colors">
+                              <div className="flex justify-between items-start">
+                                <div className="flex items-start gap-2">
+                                  <div className="mt-0.5">
+                                    {expandedOrderId === order.order_id ? (
+                                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                    ) : (
+                                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                    )}
+                                  </div>
+                                  <div>
+                                    <p className="font-medium text-sm">Pedido #{order.order_number}</p>
+                                    <p className="text-xs text-muted-foreground">{order.customer_name}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {format(new Date(order.order_date), "dd/MM/yy HH:mm", { locale: ptBR })}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-xs text-muted-foreground">Comissão</p>
+                                  <p className="font-bold text-green-600">{formatCurrency(order.commission_amount)}</p>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <div className="px-3 pb-3 border-t border-border/50">
+                              {loadingOrderItems === order.order_id ? (
+                                <div className="flex items-center justify-center py-4">
+                                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                </div>
+                              ) : orderItems[order.order_id]?.length === 0 ? (
+                                <p className="text-xs text-muted-foreground py-3 text-center">Nenhum item encontrado</p>
+                              ) : (
+                                <div className="space-y-2 pt-3">
+                                  <p className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                                    <Package className="h-3 w-3" />
+                                    Itens do Pedido
+                                  </p>
+                                  {orderItems[order.order_id]?.map((item) => (
+                                    <div key={item.id} className="flex justify-between items-center text-xs bg-background/50 p-2 rounded">
+                                      <div>
+                                        <span className="font-medium">{item.quantity}x</span>{' '}
+                                        <span>{item.product_name}</span>
+                                      </div>
+                                      <span className="text-muted-foreground">{formatCurrency(item.subtotal)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
-                            <div className="text-right">
-                              <p className="text-xs text-muted-foreground">Comissão</p>
-                              <p className="font-bold text-green-600">{formatCurrency(order.commission_amount)}</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                          </CollapsibleContent>
+                        </Card>
+                      </Collapsible>
                     ))}
                   </div>
                 )}
