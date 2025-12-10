@@ -721,11 +721,23 @@ export const AffiliatesManager = ({
             type: 'percentage' as const,
             value: 10
           }));
-          setFormData({
-            ...formData,
-            coupon_ids: [...formData.coupon_ids, couponResult.id],
-            commission_products: productConfigs
-          });
+          // Auto-preencher o cupom criado no formulário de novo afiliado
+          if (dialogOpen) {
+            setFormData({
+              ...formData,
+              coupon_ids: [...formData.coupon_ids, couponResult.id],
+              commission_products: productConfigs
+            });
+            toast({
+              title: 'Cupom vinculado automaticamente',
+              description: `O cupom ${newCouponData.code.toUpperCase()} foi criado e vinculado ao afiliado.`
+            });
+          } else {
+            toast({
+              title: 'Cupom criado com sucesso',
+              description: `O cupom ${newCouponData.code.toUpperCase()} foi criado.`
+            });
+          }
         }
       }
 
