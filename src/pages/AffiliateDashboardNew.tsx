@@ -446,6 +446,52 @@ export default function AffiliateDashboardNew() {
     })).slice(-14); // Últimos 14 dias
   }, [filteredAffiliateOrders]);
 
+  // Dados para gráfico de maturação - Liberação de comissões por dia
+  const maturityChartData = useMemo(() => {
+    if (!filteredAffiliateOrders || filteredAffiliateOrders.length === 0) return [];
+    
+    const now = new Date();
+    
+    // Filtrar apenas pedidos entregues que ainda estão em maturação
+    const maturingOrders = filteredAffiliateOrders.filter(order => {
+      const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
+      if (!isDelivered) return false;
+      
+      // Verificar se ainda está em maturação
+      if (order.commission_available_at) {
+        const maturityDate = new Date(order.commission_available_at);
+        return maturityDate > now;
+      }
+      return false;
+    });
+    
+    if (maturingOrders.length === 0) return [];
+    
+    // Agrupar por data de liberação
+    const byDate: Record<string, number> = {};
+    
+    maturingOrders.forEach(order => {
+      if (order.commission_available_at) {
+        const dateKey = format(new Date(order.commission_available_at), 'yyyy-MM-dd');
+        if (!byDate[dateKey]) {
+          byDate[dateKey] = 0;
+        }
+        byDate[dateKey] += order.commission_amount || 0;
+      }
+    });
+    
+    // Converter para array e ordenar por data
+    return Object.entries(byDate)
+      .map(([date, value]) => ({
+        date,
+        dateDisplay: format(new Date(date), 'dd/MM', { locale: ptBR }),
+        value,
+        fullDate: format(new Date(date), "dd 'de' MMMM", { locale: ptBR })
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .slice(0, 14); // Próximos 14 dias
+  }, [filteredAffiliateOrders]);
+
   // Dados para gráfico de pizza - Comissões por loja (apenas pedidos entregues)
   const commissionsByStore = useMemo(() => {
     if (!filteredAffiliateOrders || filteredAffiliateOrders.length === 0) return [];
@@ -1628,6 +1674,66 @@ export default function AffiliateDashboardNew() {
         </CardContent>
       </Card>
       </motion.div>
+
+      {/* Maturity Chart - Cronograma de Liberação */}
+      {maturityChartData.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
+          <Card className="glass border-border/50 overflow-hidden">
+            <CardHeader className="p-4 sm:p-6 bg-gradient-to-r from-amber-500/10 to-transparent">
+              <CardTitle className="flex items-center gap-2 text-sm sm:text-base">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
+                  <CalendarIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white" />
+                </div>
+                <span className="gradient-text">Cronograma de Liberação</span>
+              </CardTitle>
+              <CardDescription className="text-[10px] sm:text-sm">
+                Comissões que serão liberadas nos próximos dias
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-2 sm:pt-4">
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={maturityChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="dateDisplay" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickFormatter={(value) => `R$${value}`} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px'
+                    }}
+                    labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    formatter={(value: number) => [formatCurrency(value), 'Liberação']}
+                    labelFormatter={(label, payload) => {
+                      if (payload && payload[0]?.payload?.fullDate) {
+                        return payload[0].payload.fullDate;
+                      }
+                      return label;
+                    }}
+                  />
+                  <Bar 
+                    dataKey="value" 
+                    fill="hsl(38, 92%, 50%)" 
+                    radius={[6, 6, 0, 0]}
+                    name="Liberação"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+              
+              {/* Resumo total em maturação */}
+              <div className="mt-4 p-3 bg-amber-500/10 rounded-lg border border-amber-500/20 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Timer className="h-4 w-4 text-amber-600" />
+                  <span className="text-sm text-muted-foreground">Total em maturação:</span>
+                </div>
+                <span className="font-bold text-amber-600">
+                  {formatCurrency(maturityChartData.reduce((sum, d) => sum + d.value, 0))}
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Charts Section */}
       {affiliateOrders.length > 0 && <div className="grid gap-4 md:gap-6 md:grid-cols-2">
