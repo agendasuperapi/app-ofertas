@@ -15,6 +15,7 @@ import { Loader2, Wallet, Clock, CheckCircle, XCircle, DollarSign, User, Phone, 
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { WithdrawalPaymentModal } from './WithdrawalPaymentModal';
 
 interface WithdrawalRequestsManagerProps {
   storeId: string;
@@ -29,6 +30,8 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [rejectNotes, setRejectNotes] = useState('');
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentRequest, setPaymentRequest] = useState<WithdrawalRequest | null>(null);
 
   const filteredRequests = useMemo(() => {
     return requests.filter(req => {
@@ -57,11 +60,17 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
     }
   };
 
+  const handleOpenPaymentModal = (request: WithdrawalRequest) => {
+    setPaymentRequest(request);
+    setPaymentModalOpen(true);
+  };
+
   const handleMarkAsPaid = async (requestId: string) => {
     setProcessingId(requestId);
     await markAsPaid(requestId);
     setProcessingId(null);
     setSelectedRequest(null);
+    setPaymentRequest(null);
   };
 
   const handleReject = async () => {
@@ -236,7 +245,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                     <TableCell className="text-right">
                       {req.status === 'pending' && (
                         <div className="flex gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
-                          <Button size="sm" onClick={() => handleMarkAsPaid(req.id)} disabled={processingId === req.id}>
+                          <Button size="sm" onClick={() => handleOpenPaymentModal(req)} disabled={processingId === req.id}>
                             {processingId === req.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-1" />}
                             Pagar
                           </Button>
@@ -336,9 +345,9 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                 <Button variant="destructive" className="flex-1" onClick={() => setRejectDialogOpen(true)}>
                   <Ban className="h-4 w-4 mr-2" /> Rejeitar
                 </Button>
-                <Button className="flex-1" onClick={() => handleMarkAsPaid(selectedRequest.id)} disabled={processingId === selectedRequest.id}>
+                <Button className="flex-1" onClick={() => handleOpenPaymentModal(selectedRequest)} disabled={processingId === selectedRequest.id}>
                   {processingId === selectedRequest.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
-                  Marcar como Pago
+                  Pagar via PIX
                 </Button>
               </div>
             )}
@@ -376,6 +385,20 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Payment Modal with PIX QR Code */}
+      {paymentRequest && (
+        <WithdrawalPaymentModal
+          open={paymentModalOpen}
+          onOpenChange={setPaymentModalOpen}
+          affiliateName={paymentRequest.affiliate_name || 'Afiliado'}
+          affiliatePixKey={paymentRequest.pix_key}
+          amount={paymentRequest.amount}
+          requestId={paymentRequest.id}
+          onConfirmPayment={handleMarkAsPaid}
+          isProcessing={processingId === paymentRequest.id}
+        />
+      )}
     </div>
   );
 }
