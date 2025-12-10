@@ -1182,7 +1182,19 @@ export const AffiliatesManager = ({
                   </p>
                 </div>
                 <div className="col-span-2">
-                  <Label>Vincular Cupom</Label>
+                  <div className="flex items-center justify-between mb-1">
+                    <Label>Vincular Cupom</Label>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6 px-2 text-xs text-primary hover:text-primary/80"
+                      onClick={() => setNewCouponDialogOpen(true)}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Criar Novo Cupom
+                    </Button>
+                  </div>
                   <Select 
                     value={formData.coupon_ids[0] || ''} 
                     onValueChange={(value) => setFormData({
@@ -1209,7 +1221,7 @@ export const AffiliatesManager = ({
                   </Select>
                   <p className="text-xs text-muted-foreground mt-1">
                     {availableCoupons.length === 0 
-                      ? 'Nenhum cupom disponível. Crie um cupom na aba Cupons.' 
+                      ? 'Nenhum cupom disponível. Clique em "+ Criar Novo Cupom".' 
                       : 'Selecione um cupom para vincular ao afiliado'}
                   </p>
                 </div>
