@@ -141,7 +141,9 @@ export const AffiliatesManager = ({
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
   const [couponProductsModalOpen, setCouponProductsModalOpen] = useState(false);
   const [savingData, setSavingData] = useState(false);
-  const [confirmLinkCoupon, setConfirmLinkCoupon] = useState<{ coupon: typeof availableCoupons[0] } | null>(null);
+  const [confirmLinkCoupon, setConfirmLinkCoupon] = useState<{
+    coupon: typeof availableCoupons[0];
+  } | null>(null);
   const [newCouponData, setNewCouponData] = useState({
     code: '',
     discount_type: 'percentage' as 'percentage' | 'fixed',
@@ -1199,20 +1201,15 @@ export const AffiliatesManager = ({
                 <div className="col-span-2">
                   <Label className="mb-1 block">Vincular Cupom <span className="text-destructive">*</span></Label>
                   <div className="flex items-center gap-2">
-                    <Select
-                      value={formData.coupon_ids[0] || ''} 
-                      onValueChange={(value) => setFormData({
+                    <Select value={formData.coupon_ids[0] || ''} onValueChange={value => setFormData({
                         ...formData,
                         coupon_ids: value ? [value] : []
-                      })}
-                      required
-                    >
+                      })} required>
                       <SelectTrigger className="glass flex-1">
                         <SelectValue placeholder="Selecione um cupom" />
                       </SelectTrigger>
                       <SelectContent>
-                        {availableCoupons.map(coupon => (
-                          <SelectItem key={coupon.id} value={coupon.id}>
+                        {availableCoupons.map(coupon => <SelectItem key={coupon.id} value={coupon.id}>
                             <div className="flex items-center gap-2">
                               <Tag className="h-4 w-4 text-primary" />
                               <span className="font-mono font-medium">{coupon.code}</span>
@@ -1220,25 +1217,15 @@ export const AffiliatesManager = ({
                                 {coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : `R$ ${coupon.discount_value}`}
                               </Badge>
                             </div>
-                          </SelectItem>
-                        ))}
+                          </SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="icon" 
-                      className="h-10 w-10 shrink-0"
-                      onClick={() => setNewCouponDialogOpen(true)}
-                      title="Criar Novo Cupom"
-                    >
+                    <Button type="button" variant="outline" size="icon" className="h-10 w-10 shrink-0" onClick={() => setNewCouponDialogOpen(true)} title="Criar Novo Cupom">
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {availableCoupons.length === 0 
-                      ? 'Nenhum cupom disponível. Clique no + para criar.' 
-                      : 'Cupom obrigatório para vincular ao afiliado'}
+                    {availableCoupons.length === 0 ? 'Nenhum cupom disponível. Clique no + para criar.' : 'Cupom obrigatório para vincular ao afiliado'}
                   </p>
                 </div>
               </div>
@@ -2366,9 +2353,7 @@ export const AffiliatesManager = ({
                         Novo Cupom
                       </Button>
                     </div>
-                    <CardDescription>
-                      Cupons de desconto vinculados a este afiliado
-                    </CardDescription>
+                    <CardDescription>Ao vincular cupons, clique em Vincular para confirmar. Verifique cuidadosamente se os cupons estão corretos, pois a ação de vinculação não pode ser desfeita posteriormente.</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
@@ -2397,20 +2382,15 @@ export const AffiliatesManager = ({
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                  {!isLinked && (
-                                    <Button 
-                                      size="sm" 
-                                      variant="outline" 
-                                      className="h-8 text-xs bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700"
-                                      onClick={() => {
-                                        if (!selectedAffiliate) return;
-                                        setConfirmLinkCoupon({ coupon });
-                                      }}
-                                    >
+                                  {!isLinked && <Button size="sm" variant="outline" className="h-8 text-xs bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700" onClick={() => {
+                                if (!selectedAffiliate) return;
+                                setConfirmLinkCoupon({
+                                  coupon
+                                });
+                              }}>
                                       <Link2 className="h-3 w-3 mr-1" />
                                       Vincular
-                                    </Button>
-                                  )}
+                                    </Button>}
                                   <Button size="icon" variant="ghost" className="h-8 w-8" onClick={async () => {
                                 setEditingCouponId(coupon.id);
                                 setNewCouponData({
