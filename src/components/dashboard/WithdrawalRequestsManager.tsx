@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useWithdrawalRequests, WithdrawalRequest } from '@/hooks/useWithdrawalRequests';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,14 +11,26 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ScrollableTable } from '@/components/ui/scrollable-table';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Loader2, Wallet, Clock, CheckCircle, XCircle, DollarSign, User, Phone, Key, FileText, Search, Filter, Ban } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, Wallet, Clock, CheckCircle, XCircle, DollarSign, User, Phone, Key, FileText, Search, Filter, Ban, ShoppingBag } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { WithdrawalPaymentModal } from './WithdrawalPaymentModal';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WithdrawalRequestsManagerProps {
   storeId: string;
+}
+
+interface WithdrawalOrder {
+  earning_id: string;
+  order_id: string;
+  order_number: string;
+  customer_name: string;
+  order_date: string;
+  order_total: number;
+  commission_amount: number;
 }
 
 export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManagerProps) {
@@ -32,6 +44,68 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [paymentRequest, setPaymentRequest] = useState<WithdrawalRequest | null>(null);
+  const [withdrawalOrders, setWithdrawalOrders] = useState<WithdrawalOrder[]>([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+
+  // Fetch orders associated with the withdrawal
+  useEffect(() => {
+    if (!selectedRequest) {
+      setWithdrawalOrders([]);
+      return;
+    }
+
+    const fetchWithdrawalOrders = async () => {
+      setIsLoadingOrders(true);
+      try {
+        // Get paid earnings for this store affiliate
+        const { data, error } = await supabase
+          .from('affiliate_earnings')
+          .select(`
+            id,
+            order_id,
+            order_total,
+            commission_amount,
+            orders!inner (
+              order_number,
+              customer_name,
+              created_at
+            )
+          `)
+          .eq('store_affiliate_id', selectedRequest.store_affiliate_id)
+          .eq('status', 'paid')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        // Filter orders by withdrawal date range
+        const orders: WithdrawalOrder[] = (data || [])
+          .filter((earning: any) => {
+            if (!selectedRequest.paid_at) return false;
+            const earningDate = new Date(earning.orders?.created_at);
+            const requestedAt = new Date(selectedRequest.requested_at);
+            const paidAt = new Date(selectedRequest.paid_at);
+            return earningDate <= paidAt && earningDate >= new Date(requestedAt.getTime() - 30 * 24 * 60 * 60 * 1000);
+          })
+          .map((earning: any) => ({
+            earning_id: earning.id,
+            order_id: earning.order_id,
+            order_number: earning.orders?.order_number || '',
+            customer_name: earning.orders?.customer_name || '',
+            order_date: earning.orders?.created_at || '',
+            order_total: earning.order_total,
+            commission_amount: earning.commission_amount,
+          }));
+
+        setWithdrawalOrders(orders);
+      } catch (error) {
+        console.error('Error fetching withdrawal orders:', error);
+      } finally {
+        setIsLoadingOrders(false);
+      }
+    };
+
+    fetchWithdrawalOrders();
+  }, [selectedRequest]);
 
   const filteredRequests = useMemo(() => {
     return requests.filter(req => {
@@ -266,7 +340,7 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
 
       {/* Details Modal */}
       <ResponsiveDialog open={!!selectedRequest && !rejectDialogOpen} onOpenChange={(open) => !open && setSelectedRequest(null)}>
-        <ResponsiveDialogContent className="max-w-md">
+        <ResponsiveDialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>Detalhes do Saque</ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
@@ -275,84 +349,139 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
           </ResponsiveDialogHeader>
 
           {selectedRequest && (
-            <div className="space-y-4 py-4">
-              <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Status</span>
-                {getStatusBadge(selectedRequest.status)}
-              </div>
+            <Tabs defaultValue="details" className="mt-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="details">
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Detalhes
+                </TabsTrigger>
+                <TabsTrigger value="orders">
+                  <ShoppingBag className="h-4 w-4 mr-2" />
+                  Pedidos
+                </TabsTrigger>
+              </TabsList>
 
-              <div className="p-4 bg-primary/10 rounded-lg text-center">
-                <p className="text-sm text-muted-foreground mb-1">Valor Solicitado</p>
-                <p className="text-3xl font-bold text-primary">{formatCurrency(selectedRequest.amount)}</p>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <User className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Afiliado:</span>
-                  <span className="font-medium">{selectedRequest.affiliate_name}</span>
+              <TabsContent value="details" className="mt-4 space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Status</span>
+                  {getStatusBadge(selectedRequest.status)}
                 </div>
 
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Telefone:</span>
-                  <span className="font-medium">{selectedRequest.affiliate_phone || '-'}</span>
+                <div className="p-4 bg-primary/10 rounded-lg text-center">
+                  <p className="text-sm text-muted-foreground mb-1">Valor Solicitado</p>
+                  <p className="text-3xl font-bold text-primary">{formatCurrency(selectedRequest.amount)}</p>
                 </div>
 
-                <div className="flex items-center gap-2 text-sm">
-                  <Key className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Chave PIX:</span>
-                  <span className="font-mono font-medium">{selectedRequest.pix_key || '-'}</span>
-                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Afiliado:</span>
+                    <span className="font-medium">{selectedRequest.affiliate_name}</span>
+                  </div>
 
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-muted-foreground">Solicitado em:</span>
-                  <span className="font-medium">
-                    {format(new Date(selectedRequest.requested_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                  </span>
-                </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Telefone:</span>
+                    <span className="font-medium">{selectedRequest.affiliate_phone || '-'}</span>
+                  </div>
 
-                {selectedRequest.notes && (
-                  <div className="p-3 bg-muted/50 rounded-lg">
-                    <div className="flex items-center gap-2 text-sm mb-1">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Observações:</span>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Key className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Chave PIX:</span>
+                    <span className="font-mono font-medium">{selectedRequest.pix_key || '-'}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">Solicitado em:</span>
+                    <span className="font-medium">
+                      {format(new Date(selectedRequest.requested_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                    </span>
+                  </div>
+
+                  {selectedRequest.notes && (
+                    <div className="p-3 bg-muted/50 rounded-lg">
+                      <div className="flex items-center gap-2 text-sm mb-1">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Observações:</span>
+                      </div>
+                      <p className="text-sm">{selectedRequest.notes}</p>
                     </div>
-                    <p className="text-sm">{selectedRequest.notes}</p>
-                  </div>
-                )}
+                  )}
 
-                {selectedRequest.admin_notes && (
-                  <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
-                    <p className="text-xs text-muted-foreground mb-1">Resposta do lojista:</p>
-                    <p className="text-sm">{selectedRequest.admin_notes}</p>
-                  </div>
-                )}
+                  {selectedRequest.admin_notes && (
+                    <div className="p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20">
+                      <p className="text-xs text-muted-foreground mb-1">Resposta do lojista:</p>
+                      <p className="text-sm">{selectedRequest.admin_notes}</p>
+                    </div>
+                  )}
 
-                {selectedRequest.paid_at && (
-                  <div className="flex items-center gap-2 text-sm text-green-600">
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Pago em: {format(new Date(selectedRequest.paid_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                  {selectedRequest.paid_at && (
+                    <div className="flex items-center gap-2 text-sm text-green-600">
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Pago em: {format(new Date(selectedRequest.paid_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                    </div>
+                  )}
+                </div>
+
+                {selectedRequest.status === 'pending' && (
+                  <div className="flex gap-2 w-full pt-4">
+                    <Button variant="destructive" className="flex-1" onClick={() => setRejectDialogOpen(true)}>
+                      <Ban className="h-4 w-4 mr-2" /> Rejeitar
+                    </Button>
+                    <Button className="flex-1" onClick={() => handleOpenPaymentModal(selectedRequest)} disabled={processingId === selectedRequest.id}>
+                      {processingId === selectedRequest.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                      Pagar via PIX
+                    </Button>
                   </div>
                 )}
-              </div>
-            </div>
+              </TabsContent>
+
+              <TabsContent value="orders" className="mt-4">
+                {isLoadingOrders ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                ) : withdrawalOrders.length === 0 ? (
+                  <div className="text-center py-8">
+                    <ShoppingBag className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-muted-foreground text-sm">Nenhum pedido encontrado para este saque</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {/* Summary */}
+                    <div className="p-3 bg-primary/10 rounded-lg flex justify-between items-center">
+                      <span className="text-sm font-medium">{withdrawalOrders.length} pedido(s)</span>
+                      <span className="font-bold text-primary">
+                        {formatCurrency(withdrawalOrders.reduce((sum, o) => sum + o.commission_amount, 0))}
+                      </span>
+                    </div>
+
+                    {/* Orders List */}
+                    {withdrawalOrders.map((order) => (
+                      <Card key={order.earning_id} className="bg-muted/30">
+                        <CardContent className="p-3">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className="font-medium text-sm">Pedido #{order.order_number}</p>
+                              <p className="text-xs text-muted-foreground">{order.customer_name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {format(new Date(order.order_date), "dd/MM/yy HH:mm", { locale: ptBR })}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-muted-foreground">Comissão</p>
+                              <p className="font-bold text-green-600">{formatCurrency(order.commission_amount)}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           )}
-
-          <ResponsiveDialogFooter>
-            {selectedRequest?.status === 'pending' && (
-              <div className="flex gap-2 w-full">
-                <Button variant="destructive" className="flex-1" onClick={() => setRejectDialogOpen(true)}>
-                  <Ban className="h-4 w-4 mr-2" /> Rejeitar
-                </Button>
-                <Button className="flex-1" onClick={() => handleOpenPaymentModal(selectedRequest)} disabled={processingId === selectedRequest.id}>
-                  {processingId === selectedRequest.id ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
-                  Pagar via PIX
-                </Button>
-              </div>
-            )}
-          </ResponsiveDialogFooter>
         </ResponsiveDialogContent>
       </ResponsiveDialog>
 
