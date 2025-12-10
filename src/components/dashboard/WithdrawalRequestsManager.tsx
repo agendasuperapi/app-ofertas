@@ -12,7 +12,7 @@ import { ScrollableTable } from '@/components/ui/scrollable-table';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Wallet, Clock, CheckCircle, XCircle, DollarSign, User, Phone, Key, FileText, Search, Filter, Ban, ShoppingBag } from 'lucide-react';
+import { Loader2, Wallet, Clock, CheckCircle, XCircle, DollarSign, User, Phone, Key, FileText, Search, Filter, Ban, ShoppingBag, Image, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -454,6 +454,32 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                     <div className="flex items-center gap-2 text-sm text-green-600">
                       <CheckCircle className="h-4 w-4" />
                       <span>Pago em: {format(new Date(selectedRequest.paid_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</span>
+                    </div>
+                  )}
+
+                  {selectedRequest.payment_proof && selectedRequest.status === 'paid' && (
+                    <div className="p-3 bg-green-500/10 rounded-lg border border-green-500/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Image className="h-4 w-4 text-green-600" />
+                        <p className="text-sm font-medium text-green-600">Comprovante de Pagamento</p>
+                      </div>
+                      {selectedRequest.payment_proof.endsWith('.pdf') ? (
+                        <a 
+                          href={selectedRequest.payment_proof} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                        >
+                          <Eye className="h-4 w-4" />
+                          Ver Comprovante PDF
+                        </a>
+                      ) : (
+                        <img 
+                          src={selectedRequest.payment_proof} 
+                          alt="Comprovante de pagamento" 
+                          className="max-w-full rounded-lg border border-border mt-2"
+                        />
+                      )}
                     </div>
                   )}
                 </div>
