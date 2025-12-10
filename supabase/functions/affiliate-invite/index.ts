@@ -887,10 +887,10 @@ serve(async (req) => {
 
         const affiliateAccountId = validation[0].affiliate_id;
 
-        // Buscar store_affiliates deste afiliado
+        // Buscar store_affiliates deste afiliado COM commission_maturity_days
         let storeAffiliatesQuery = supabase
           .from("store_affiliates")
-          .select("id, store_id")
+          .select("id, store_id, commission_maturity_days")
           .eq("affiliate_account_id", affiliateAccountId)
           .eq("is_active", true);
 
@@ -908,8 +908,14 @@ serve(async (req) => {
         }
 
         const storeAffiliateIds = storeAffiliates.map(sa => sa.id);
+        
+        // Criar mapa de store_affiliate_id -> maturity_days
+        const maturityMap = new Map<string, number>();
+        storeAffiliates.forEach(sa => {
+          maturityMap.set(sa.id, sa.commission_maturity_days || 7);
+        });
 
-        // Buscar earnings por store_affiliate_id
+        // Buscar earnings por store_affiliate_id COM updated_at do pedido
         const { data: earnings, error: earningsError } = await supabase
           .from("affiliate_earnings")
           .select(`
@@ -924,6 +930,7 @@ serve(async (req) => {
               order_number,
               customer_name,
               created_at,
+              updated_at,
               store_id,
               subtotal,
               coupon_discount,
@@ -943,24 +950,40 @@ serve(async (req) => {
           );
         }
 
-        // Formatar resposta
-        const orders = (earnings || []).map((e: any) => ({
-          earning_id: e.id,
-          order_id: e.orders?.id || e.order_id,
-          order_number: e.orders?.order_number,
-          customer_name: e.orders?.customer_name,
-          order_date: e.orders?.created_at,
-          store_id: e.orders?.store_id,
-          store_name: e.orders?.stores?.name,
-          store_affiliate_id: e.store_affiliate_id,
-          order_total: e.order_total,
-          order_subtotal: e.orders?.subtotal,
-          coupon_discount: e.orders?.coupon_discount || 0,
-          commission_amount: e.commission_amount,
-          commission_status: e.status,
-          coupon_code: e.orders?.coupon_code,
-          order_status: e.orders?.status,
-        }));
+        // Formatar resposta COM maturity data
+        const orders = (earnings || []).map((e: any) => {
+          const maturityDays = maturityMap.get(e.store_affiliate_id) || 7;
+          const orderStatus = e.orders?.status;
+          const isDelivered = orderStatus === 'entregue' || orderStatus === 'delivered';
+          
+          // Calcular commission_available_at para pedidos entregues
+          let commissionAvailableAt: string | null = null;
+          if (isDelivered && e.orders?.updated_at) {
+            const updatedAt = new Date(e.orders.updated_at);
+            const availableAt = new Date(updatedAt.getTime() + (maturityDays * 24 * 60 * 60 * 1000));
+            commissionAvailableAt = availableAt.toISOString();
+          }
+          
+          return {
+            earning_id: e.id,
+            order_id: e.orders?.id || e.order_id,
+            order_number: e.orders?.order_number,
+            customer_name: e.orders?.customer_name,
+            order_date: e.orders?.created_at,
+            store_id: e.orders?.store_id,
+            store_name: e.orders?.stores?.name,
+            store_affiliate_id: e.store_affiliate_id,
+            order_total: e.order_total,
+            order_subtotal: e.orders?.subtotal,
+            coupon_discount: e.orders?.coupon_discount || 0,
+            commission_amount: e.commission_amount,
+            commission_status: e.status,
+            coupon_code: e.orders?.coupon_code,
+            order_status: orderStatus,
+            commission_available_at: commissionAvailableAt,
+            maturity_days: maturityDays,
+          };
+        });
 
         return new Response(
           JSON.stringify({ orders }),
