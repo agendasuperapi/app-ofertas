@@ -1,11 +1,12 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, Copy, Check, CheckCircle, Key, DollarSign, User } from 'lucide-react';
+import { Loader2, Copy, Check, CheckCircle, Key, DollarSign, User, Upload, Image, X } from 'lucide-react';
 import { generatePixQrCode, isValidPixKey } from '@/lib/pixQrCode';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface WithdrawalPaymentModalProps {
   open: boolean;
@@ -14,7 +15,7 @@ interface WithdrawalPaymentModalProps {
   affiliatePixKey: string | null;
   amount: number;
   requestId: string;
-  onConfirmPayment: (requestId: string) => Promise<void>;
+  onConfirmPayment: (requestId: string, adminNotes?: string, paymentProof?: string) => Promise<boolean>;
   isProcessing: boolean;
 }
 
@@ -29,6 +30,10 @@ export function WithdrawalPaymentModal({
   isProcessing,
 }: WithdrawalPaymentModalProps) {
   const [copied, setCopied] = useState(false);
+  const [paymentProofFile, setPaymentProofFile] = useState<File | null>(null);
+  const [paymentProofPreview, setPaymentProofPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -65,16 +70,96 @@ export function WithdrawalPaymentModal({
     }
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/') && file.type !== 'application/pdf') {
+      toast.error('Apenas imagens ou PDF são permitidos');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Arquivo deve ter no máximo 5MB');
+      return;
+    }
+
+    setPaymentProofFile(file);
+    
+    // Create preview for images
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPaymentProofPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setPaymentProofPreview(null);
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setPaymentProofFile(null);
+    setPaymentProofPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadPaymentProof = async (): Promise<string | null> => {
+    if (!paymentProofFile) return null;
+
+    setIsUploading(true);
+    try {
+      const fileExt = paymentProofFile.name.split('.').pop();
+      const fileName = `${requestId}_${Date.now()}.${fileExt}`;
+      const filePath = `receipts/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('payment-receipts')
+        .upload(filePath, paymentProofFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('payment-receipts')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (error) {
+      console.error('Erro ao fazer upload do comprovante:', error);
+      toast.error('Erro ao enviar comprovante');
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleConfirmPayment = async () => {
-    await onConfirmPayment(requestId);
-    onOpenChange(false);
+    let paymentProofUrl: string | undefined;
+    
+    if (paymentProofFile) {
+      const url = await uploadPaymentProof();
+      if (url) {
+        paymentProofUrl = url;
+      }
+    }
+
+    const success = await onConfirmPayment(requestId, undefined, paymentProofUrl);
+    if (success) {
+      setPaymentProofFile(null);
+      setPaymentProofPreview(null);
+      onOpenChange(false);
+    }
   };
 
   const isValidPix = affiliatePixKey && isValidPixKey(affiliatePixKey);
 
   return (
     <ResponsiveDialog open={open} onOpenChange={onOpenChange}>
-      <ResponsiveDialogContent className="max-w-md">
+      <ResponsiveDialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <ResponsiveDialogHeader>
           <ResponsiveDialogTitle>Pagamento via PIX</ResponsiveDialogTitle>
           <ResponsiveDialogDescription>
@@ -159,6 +244,58 @@ export function WithdrawalPaymentModal({
               </p>
             </div>
           )}
+
+          {/* Upload de comprovante */}
+          <div className="space-y-2">
+            <p className="text-sm font-medium">Anexar Comprovante (opcional)</p>
+            
+            {!paymentProofFile ? (
+              <div 
+                className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                <p className="text-sm text-muted-foreground">
+                  Clique para anexar comprovante
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Imagem ou PDF (máx. 5MB)
+                </p>
+              </div>
+            ) : (
+              <div className="relative p-4 bg-muted/50 rounded-lg border">
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full"
+                  onClick={handleRemoveFile}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+                
+                {paymentProofPreview ? (
+                  <img 
+                    src={paymentProofPreview} 
+                    alt="Comprovante" 
+                    className="w-full max-h-32 object-contain rounded"
+                  />
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <Image className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-sm truncate">{paymentProofFile.name}</span>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,application/pdf"
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+          </div>
         </div>
 
         <ResponsiveDialogFooter>
@@ -173,14 +310,14 @@ export function WithdrawalPaymentModal({
             <Button 
               className="flex-1"
               onClick={handleConfirmPayment}
-              disabled={isProcessing}
+              disabled={isProcessing || isUploading}
             >
-              {isProcessing ? (
+              {(isProcessing || isUploading) ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (
                 <CheckCircle className="h-4 w-4 mr-2" />
               )}
-              Confirmar Pagamento
+              {isUploading ? 'Enviando...' : 'Confirmar Pagamento'}
             </Button>
           </div>
         </ResponsiveDialogFooter>

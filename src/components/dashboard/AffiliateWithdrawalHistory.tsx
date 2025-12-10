@@ -1,10 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollableTable } from '@/components/ui/scrollable-table';
-import { Wallet, Clock, CheckCircle, XCircle, DollarSign, Loader2, Store, FileText } from 'lucide-react';
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription } from '@/components/ui/responsive-dialog';
+import { Wallet, Clock, CheckCircle, XCircle, DollarSign, Loader2, Store, FileText, Image, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -19,6 +21,7 @@ interface WithdrawalRequest {
   requested_at: string;
   paid_at: string | null;
   store_name?: string;
+  payment_proof?: string | null;
 }
 
 interface AffiliateWithdrawalHistoryProps {
@@ -29,6 +32,8 @@ interface AffiliateWithdrawalHistoryProps {
 
 export function AffiliateWithdrawalHistory({ requests, isLoading, stores }: AffiliateWithdrawalHistoryProps) {
   const isMobile = useIsMobile();
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -45,6 +50,11 @@ export function AffiliateWithdrawalHistory({ requests, isLoading, stores }: Affi
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
+  };
+
+  const handleViewReceipt = (receiptUrl: string) => {
+    setSelectedReceipt(receiptUrl);
+    setReceiptModalOpen(true);
   };
 
   const stats = useMemo(() => {
@@ -160,6 +170,17 @@ export function AffiliateWithdrawalHistory({ requests, isLoading, stores }: Affi
                       {req.admin_notes}
                     </div>
                   )}
+                  {req.payment_proof && req.status === 'paid' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-2 w-full"
+                      onClick={() => handleViewReceipt(req.payment_proof!)}
+                    >
+                      <Image className="h-4 w-4 mr-2" />
+                      Ver Comprovante
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
@@ -176,6 +197,7 @@ export function AffiliateWithdrawalHistory({ requests, isLoading, stores }: Affi
                   <TableHead>Data</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Observações</TableHead>
+                  <TableHead>Comprovante</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -190,6 +212,20 @@ export function AffiliateWithdrawalHistory({ requests, isLoading, stores }: Affi
                     <TableCell className="text-sm max-w-[200px] truncate">
                       {req.admin_notes || '-'}
                     </TableCell>
+                    <TableCell>
+                      {req.payment_proof && req.status === 'paid' ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleViewReceipt(req.payment_proof!)}
+                        >
+                          <Image className="h-4 w-4 mr-1" />
+                          Ver
+                        </Button>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -197,6 +233,49 @@ export function AffiliateWithdrawalHistory({ requests, isLoading, stores }: Affi
           </ScrollableTable>
         </Card>
       )}
+
+      {/* Receipt Modal */}
+      <ResponsiveDialog open={receiptModalOpen} onOpenChange={setReceiptModalOpen}>
+        <ResponsiveDialogContent className="max-w-lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Comprovante de Pagamento</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              Comprovante anexado pelo lojista
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          
+          {selectedReceipt && (
+            <div className="py-4 space-y-4">
+              {selectedReceipt.endsWith('.pdf') ? (
+                <div className="text-center p-8 bg-muted/50 rounded-lg">
+                  <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-sm text-muted-foreground mb-4">Arquivo PDF</p>
+                  <Button asChild>
+                    <a href={selectedReceipt} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Abrir PDF
+                    </a>
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <img 
+                    src={selectedReceipt} 
+                    alt="Comprovante" 
+                    className="w-full max-h-[60vh] object-contain rounded-lg border"
+                  />
+                  <Button asChild variant="outline" className="w-full">
+                    <a href={selectedReceipt} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Abrir em Nova Aba
+                    </a>
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }
