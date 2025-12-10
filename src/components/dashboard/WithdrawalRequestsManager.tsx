@@ -759,28 +759,28 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                                           <span>{item.product_name}</span>
                                         </div>
                                         <div className="text-right">
-                                          {item.item_discount && item.item_discount > 0 ? (
+                                          {item.item_discount && Number(item.item_discount) > 0 ? (
                                             <>
-                                              <span className="text-muted-foreground line-through mr-1">{formatCurrency(item.subtotal)}</span>
-                                              <span className="text-primary font-medium">{formatCurrency(item.item_value_with_discount)}</span>
+                                              <span className="text-muted-foreground line-through mr-1">{formatCurrency(Number(item.subtotal) || 0)}</span>
+                                              <span className="text-primary font-medium">{formatCurrency(Number(item.item_value_with_discount) || 0)}</span>
                                             </>
                                           ) : (
-                                            <span className="text-muted-foreground">{formatCurrency(item.subtotal)}</span>
+                                            <span className="text-muted-foreground">{formatCurrency(Number(item.subtotal) || 0)}</span>
                                           )}
                                         </div>
                                       </div>
                                       <div className="flex justify-between items-center text-[10px] text-muted-foreground">
                                         <div className="flex gap-2">
-                                          {item.item_discount && item.item_discount > 0 && (
+                                          {item.item_discount && Number(item.item_discount) > 0 && (
                                             <span className="text-orange-500">
-                                              Desconto: -{formatCurrency(item.item_discount)}
+                                              Desconto: -{formatCurrency(Number(item.item_discount) || 0)}
                                             </span>
                                           )}
                                         </div>
                                         <span className="text-green-600 font-medium">
-                                          Comissão: {formatCurrency(item.commission_amount)}
-                                          {item.commission_type === 'percentage' && (
-                                            <span className="text-muted-foreground ml-1">({item.commission_value}%)</span>
+                                          Comissão: {formatCurrency(Number(item.commission_amount) || 0)}
+                                          {item.commission_type === 'percentage' && item.commission_value > 0 && (
+                                            <span className="text-muted-foreground ml-1">({Number(item.commission_value) || 0}%)</span>
                                           )}
                                         </span>
                                       </div>
