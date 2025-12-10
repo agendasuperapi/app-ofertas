@@ -141,6 +141,7 @@ export const AffiliatesManager = ({
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
   const [couponProductsModalOpen, setCouponProductsModalOpen] = useState(false);
   const [savingData, setSavingData] = useState(false);
+  const [confirmLinkCoupon, setConfirmLinkCoupon] = useState<{ coupon: typeof availableCoupons[0] } | null>(null);
   const [newCouponData, setNewCouponData] = useState({
     code: '',
     discount_type: 'percentage' as 'percentage' | 'fixed',
@@ -2381,40 +2382,9 @@ export const AffiliatesManager = ({
                                 <div className="flex items-center gap-3">
                                   {isLinked ? <div className="flex items-center justify-center h-4 w-4 text-primary" title="Cupom vinculado permanentemente">
                                       <Lock className="h-4 w-4" />
-                                    </div> : <Checkbox id={`detail-coupon-${coupon.id}`} checked={false} onCheckedChange={async checked => {
+                                    </div> : <Checkbox id={`detail-coupon-${coupon.id}`} checked={false} onCheckedChange={checked => {
                                 if (!selectedAffiliate || !checked) return;
-                                const currentIds = selectedAffiliate?.affiliate_coupons?.map(ac => ac.coupon_id) || [];
-                                const newCouponIds = [...currentIds, coupon.id];
-                                await updateAffiliate(selectedAffiliate.id, {
-                                  coupon_ids: newCouponIds
-                                });
-
-                                // Update local state with new affiliate_coupons structure
-                                const newAffiliateCoupons = newCouponIds.map(id => {
-                                  const existingCoupon = availableCoupons.find(c => c.id === id);
-                                  return {
-                                    coupon_id: id,
-                                    coupon: existingCoupon ? {
-                                      id: existingCoupon.id,
-                                      code: existingCoupon.code,
-                                      discount_type: existingCoupon.discount_type,
-                                      discount_value: existingCoupon.discount_value
-                                    } : {
-                                      id,
-                                      code: '',
-                                      discount_type: 'percentage',
-                                      discount_value: 0
-                                    }
-                                  };
-                                });
-                                setSelectedAffiliate({
-                                  ...selectedAffiliate,
-                                  affiliate_coupons: newAffiliateCoupons
-                                });
-                                toast({
-                                  title: 'Cupom vinculado',
-                                  description: `${coupon.code} foi vinculado ao afiliado.`
-                                });
+                                setConfirmLinkCoupon({ coupon });
                               }} />}
                                   <div>
                                     <div className="flex items-center gap-2">
@@ -3065,6 +3035,59 @@ export const AffiliatesManager = ({
                 }
               }}>
               {toggleStatusAffiliate?.is_active ? 'Inativar' : 'Ativar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* AlertDialog: Confirmar Vínculo de Cupom */}
+      <AlertDialog open={!!confirmLinkCoupon} onOpenChange={open => !open && setConfirmLinkCoupon(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar vínculo de cupom</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja confirmar o vínculo do cupom <strong>{confirmLinkCoupon?.coupon.code}</strong> ao afiliado <strong>{selectedAffiliate?.name}</strong>?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction className="bg-primary hover:bg-primary/90" onClick={async () => {
+                if (!selectedAffiliate || !confirmLinkCoupon) return;
+                const currentIds = selectedAffiliate?.affiliate_coupons?.map(ac => ac.coupon_id) || [];
+                const newCouponIds = [...currentIds, confirmLinkCoupon.coupon.id];
+                await updateAffiliate(selectedAffiliate.id, {
+                  coupon_ids: newCouponIds
+                });
+
+                // Update local state with new affiliate_coupons structure
+                const newAffiliateCoupons = newCouponIds.map(id => {
+                  const existingCoupon = availableCoupons.find(c => c.id === id);
+                  return {
+                    coupon_id: id,
+                    coupon: existingCoupon ? {
+                      id: existingCoupon.id,
+                      code: existingCoupon.code,
+                      discount_type: existingCoupon.discount_type,
+                      discount_value: existingCoupon.discount_value
+                    } : {
+                      id,
+                      code: '',
+                      discount_type: 'percentage',
+                      discount_value: 0
+                    }
+                  };
+                });
+                setSelectedAffiliate({
+                  ...selectedAffiliate,
+                  affiliate_coupons: newAffiliateCoupons
+                });
+                toast({
+                  title: 'Cupom vinculado',
+                  description: `${confirmLinkCoupon.coupon.code} foi vinculado ao afiliado.`
+                });
+                setConfirmLinkCoupon(null);
+              }}>
+              Confirmar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
