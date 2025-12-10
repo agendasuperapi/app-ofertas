@@ -496,8 +496,8 @@ export function WithdrawalRequestsManager({ storeId }: WithdrawalRequestsManager
                     <div className="p-3 bg-primary/10 rounded-lg border border-primary/20 text-center">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <Image className="h-4 w-4 text-green-600" />
-                          <p className="text-sm font-medium text-green-600">Comprovante de Pagamento</p>
+                          <Image className="h-4 w-4 text-muted-foreground" />
+                          <p className="text-sm font-medium text-muted-foreground">Comprovante de Pagamento</p>
                         </div>
                         <label className="cursor-pointer">
                           <input
