@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription, ResponsiveDialogFooter } from '@/components/ui/responsive-dialog';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Loader2, Copy, Check, CheckCircle, Key, DollarSign, User, Upload, Image, X, ZoomIn } from 'lucide-react';
 import { generatePixQrCode, isValidPixKey } from '@/lib/pixQrCode';
@@ -35,6 +36,7 @@ export function WithdrawalPaymentModal({
   const [paymentProofPreview, setPaymentProofPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const formatCurrency = (value: number) => {
@@ -271,7 +273,7 @@ export function WithdrawalPaymentModal({
                   size="sm"
                   variant="destructive"
                   className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full"
-                  onClick={handleRemoveFile}
+                  onClick={() => setConfirmDeleteOpen(true)}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -347,6 +349,30 @@ export function WithdrawalPaymentModal({
         )}
       </DialogContent>
     </Dialog>
+
+    {/* Confirm Delete Dialog */}
+    <AlertDialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remover Comprovante</AlertDialogTitle>
+          <AlertDialogDescription>
+            Tem certeza que deseja remover o comprovante anexado?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive hover:bg-destructive/90"
+            onClick={() => {
+              handleRemoveFile();
+              setConfirmDeleteOpen(false);
+            }}
+          >
+            Remover
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
     </>
   );
 }
