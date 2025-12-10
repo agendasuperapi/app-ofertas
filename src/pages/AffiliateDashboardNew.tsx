@@ -2137,23 +2137,38 @@ export default function AffiliateDashboardNew() {
                   const store = affiliateStores.find(s => s.store_id === order.store_id);
                   const isDelivered = order.order_status === 'entregue' || order.order_status === 'delivered';
                   const isCancelled = order.order_status === 'cancelado' || order.order_status === 'cancelled';
+                  const isMaturing = isDelivered && order.commission_available_at && new Date(order.commission_available_at) > new Date();
                   
                   return (
                     <div key={order.earning_id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg cursor-pointer hover:bg-muted/70 transition-colors" onClick={() => {
                       openOrderModal(order);
                     }}>
                       <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <span className="font-medium">#{order.order_number}</span>
                           <Badge variant={isCancelled ? 'destructive' : isDelivered ? 'default' : 'secondary'} className="text-xs">
                             {isCancelled ? 'Cancelado' : isDelivered ? 'Entregue' : 'Pendente'}
                           </Badge>
+                          {isMaturing && order.commission_available_at && (
+                            <MaturityCountdown 
+                              commissionAvailableAt={order.commission_available_at} 
+                              orderStatus={order.order_status}
+                              variant="inline"
+                            />
+                          )}
                         </div>
                         <span className="text-xs text-muted-foreground">{store?.store_name || 'Loja'}</span>
                       </div>
-                      <span className={`font-semibold ${isCancelled ? 'text-destructive line-through' : 'text-green-600'}`}>
-                        {formatCurrency(order.commission_amount)}
-                      </span>
+                      <div className="flex flex-col items-end gap-1">
+                        <span className={`font-semibold ${isCancelled ? 'text-destructive line-through' : 'text-green-600'}`}>
+                          {formatCurrency(order.commission_amount)}
+                        </span>
+                        {isDelivered && !isMaturing && !isCancelled && (
+                          <Badge variant="outline" className="text-xs text-green-600 border-green-600">
+                            Disponível
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
