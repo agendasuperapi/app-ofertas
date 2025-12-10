@@ -2371,7 +2371,7 @@ export const AffiliatesManager = ({
                                     <div className="flex flex-wrap items-center gap-2">
                                       <p className="font-medium break-all">{coupon.code}</p>
                                       <Badge variant={coupon.is_active ? "default" : "destructive"} className={coupon.is_active ? "bg-green-600 text-white text-xs flex-shrink-0" : "text-xs flex-shrink-0"}>
-                                        {coupon.is_active ? "Ativo" : "Inativo"}
+                                        {coupon.is_active ? "Cupom Ativo" : "Cupom Inativo"}
                                       </Badge>
                                       {isLinked && <Badge variant="secondary" className="text-xs flex-shrink-0">
                                           Permanente
