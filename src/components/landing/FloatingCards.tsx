@@ -99,8 +99,8 @@ const FloatingCards = () => {
             <motion.div
               className={`
                 flex items-center gap-3 px-4 py-3 
-                bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl 
-                border border-orange-200/50 dark:border-white/10 rounded-xl
+                bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl 
+                border border-gray-200/60 dark:border-white/10 rounded-xl
                 shadow-xl ${card.shadow}
               `}
               animate={{ 

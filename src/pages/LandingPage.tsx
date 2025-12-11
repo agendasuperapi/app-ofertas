@@ -220,7 +220,7 @@ const LandingPage = () => {
   const heroContentY = useTransform(scrollYProgress, [0, 1], [0, 50]);
 
   return (
-    <div className="min-h-screen bg-orange-50 dark:bg-slate-950 text-slate-900 dark:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-white overflow-x-hidden">
       <LandingHeader />
       
       {/* Hero Section */}
@@ -241,7 +241,7 @@ const LandingPage = () => {
                 animate={{ opacity: 1, scale: 1 }} 
                 transition={{ delay: 0.2 }}
               >
-                <Badge className="mb-6 bg-orange-100 text-orange-600 border-orange-200 dark:bg-primary/20 dark:text-primary dark:border-primary/30 px-4 py-2 backdrop-blur-sm">
+                <Badge className="mb-6 bg-gray-100 text-orange-500 border-gray-200 dark:bg-primary/20 dark:text-primary dark:border-primary/30 px-4 py-2 backdrop-blur-sm">
                   <Sparkles className="w-4 h-4 mr-2" />
                   Plataforma completa para seu negócio
                 </Badge>
@@ -267,7 +267,7 @@ const LandingPage = () => {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
-                <Button asChild size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-orange-500 to-amber-500 dark:from-primary dark:to-orange-500 hover:from-orange-600 hover:to-amber-600 dark:hover:from-primary/90 dark:hover:to-orange-500/90 shadow-lg shadow-orange-500/30 dark:shadow-primary/30 group relative overflow-hidden">
+                <Button asChild size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-orange-500 to-amber-500 dark:from-primary dark:to-orange-500 hover:from-orange-600 hover:to-amber-600 dark:hover:from-primary/90 dark:hover:to-orange-500/90 shadow-lg shadow-orange-400/20 dark:shadow-primary/30 group relative overflow-hidden">
                   <Link to="/become-partner">
                     <span className="relative z-10 flex items-center">
                       Criar Minha Loja Grátis
@@ -281,7 +281,7 @@ const LandingPage = () => {
                     />
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 border-2 border-orange-300/50 dark:border-white/20 backdrop-blur-sm bg-white/50 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 text-slate-800 dark:text-white">
+                <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 border-2 border-gray-300/50 dark:border-white/20 backdrop-blur-sm bg-white/50 dark:bg-white/5 hover:bg-white/80 dark:hover:bg-white/10 text-slate-800 dark:text-white">
                   <Link to="/heymax">
                     <Play className="mr-2 h-5 w-5" />
                     Ver Demonstração
@@ -316,8 +316,8 @@ const LandingPage = () => {
               >
                 {/* Glow effect behind phone with parallax */}
                 <motion.div 
-                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-orange-400/30 to-amber-400/30 dark:from-primary/30 dark:to-cyan-500/30 rounded-full blur-[100px]" 
-                  style={{ y: heroGlowY, opacity: heroGlowOpacity }} 
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-gray-300/20 to-gray-200/20 dark:from-primary/30 dark:to-cyan-500/30 rounded-full blur-[100px]" 
+                  style={{ y: heroGlowY, opacity: heroGlowOpacity }}
                 />
                 
                 <IPhoneMockup className="w-64 relative z-10" />
@@ -348,7 +348,7 @@ const LandingPage = () => {
               icon: Heart,
               text: '+2.500 lojistas'
             }].map((item, i) => (
-              <div key={i} className="flex items-center gap-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-full border border-orange-200/50 dark:border-white/10">
+              <div key={i} className="flex items-center gap-2 bg-white/90 dark:bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-full border border-gray-200/60 dark:border-white/10">
                 <item.icon className="h-4 w-4 text-green-500" />
                 <span className="text-slate-700 dark:text-slate-300">{item.text}</span>
               </div>
@@ -362,7 +362,7 @@ const LandingPage = () => {
           animate={{ y: [0, 10, 0] }} 
           transition={{ repeat: Infinity, duration: 2 }}
         >
-          <div className="w-6 h-10 border-2 border-orange-300/50 dark:border-white/20 rounded-full flex justify-center pt-2 backdrop-blur-sm">
+          <div className="w-6 h-10 border-2 border-gray-300/50 dark:border-white/20 rounded-full flex justify-center pt-2 backdrop-blur-sm">
             <motion.div 
               className="w-1.5 h-3 bg-orange-500 dark:bg-primary rounded-full" 
               animate={{ y: [0, 8, 0], opacity: [1, 0.5, 1] }} 
@@ -389,7 +389,7 @@ const LandingPage = () => {
             </h2>
           </motion.div>
           <div className="flex justify-center relative">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-r from-orange-400/30 to-amber-400/30 dark:from-primary/30 dark:to-cyan-500/30 rounded-full blur-[60px]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-gradient-to-r from-gray-300/20 to-gray-200/20 dark:from-primary/30 dark:to-cyan-500/30 rounded-full blur-[60px]" />
             <IPhoneMockup className="w-48 relative z-10" />
           </div>
         </div>
@@ -397,7 +397,7 @@ const LandingPage = () => {
 
       {/* Benefits Section */}
       <section className="py-24 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-orange-50 via-amber-50/50 to-orange-50 dark:from-slate-950 dark:via-slate-900/50 dark:to-slate-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-slate-950 dark:via-slate-900/50 dark:to-slate-950" />
         
         <div className="container mx-auto px-4 relative z-10">
           <motion.div 
@@ -406,7 +406,7 @@ const LandingPage = () => {
             whileInView={{ opacity: 1, y: 0 }} 
             viewport={{ once: true }}
           >
-            <Badge className="mb-4 bg-orange-100 text-orange-600 border-orange-200 dark:bg-primary/20 dark:text-primary dark:border-primary/30">
+            <Badge className="mb-4 bg-gray-100 text-orange-500 border-gray-200 dark:bg-primary/20 dark:text-primary dark:border-primary/30">
               Vantagens
             </Badge>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
@@ -426,7 +426,7 @@ const LandingPage = () => {
               <GlassCard key={index} delay={index * 0.1} variant="dark">
                 <div className="p-6 text-center">
                   <motion.div 
-                    className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 dark:from-primary dark:to-cyan-500 flex items-center justify-center shadow-lg shadow-orange-500/30 dark:shadow-primary/30" 
+                    className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-500 dark:from-primary dark:to-cyan-500 flex items-center justify-center shadow-lg shadow-orange-400/20 dark:shadow-primary/30" 
                     whileHover={{ scale: 1.1, rotate: 5 }} 
                     transition={{ type: "spring", stiffness: 300 }}
                   >
@@ -508,7 +508,7 @@ const LandingPage = () => {
 
       {/* Dashboard Features - Bento Grid */}
       <section className="py-24 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-orange-50 via-amber-50/30 to-orange-50 dark:from-slate-950 dark:via-slate-900/30 dark:to-slate-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-slate-950 dark:via-slate-900/30 dark:to-slate-950" />
         
         <div className="container mx-auto px-4 relative z-10">
           <motion.div 
@@ -537,7 +537,7 @@ const LandingPage = () => {
 
       {/* Affiliate System Section */}
       <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-green-100/50 via-orange-50 to-emerald-100/50 dark:from-emerald-500/5 dark:via-slate-950 dark:to-green-500/5" />
+        <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 via-gray-50 to-emerald-50/50 dark:from-emerald-500/5 dark:via-slate-950 dark:to-green-500/5" />
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -615,7 +615,7 @@ const LandingPage = () => {
                       <p className="text-xs text-slate-500 dark:text-slate-400">Total em Vendas</p>
                     </motion.div>
                     <motion.div 
-                      className="p-4 bg-white/80 dark:bg-slate-900/80 rounded-xl text-center border border-orange-200/50 dark:border-white/10" 
+                      className="p-4 bg-white/80 dark:bg-slate-900/80 rounded-xl text-center border border-gray-200/50 dark:border-white/10" 
                       whileHover={{ scale: 1.02 }}
                     >
                       <p className="text-3xl font-bold text-orange-500 dark:text-primary">
@@ -650,7 +650,7 @@ const LandingPage = () => {
 
       {/* Categories Section */}
       <section className="py-24 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-orange-50 via-amber-50/30 to-orange-50 dark:from-slate-950 dark:via-slate-900/30 dark:to-slate-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-slate-950 dark:via-slate-900/30 dark:to-slate-950" />
         
         <div className="container mx-auto px-4 relative z-10">
           <motion.div 
@@ -720,8 +720,8 @@ const LandingPage = () => {
                   whileHover={{ scale: 1.05, y: -2 }}
                   className="flex-shrink-0"
                 >
-                  <div className="flex items-center gap-3 px-6 py-3 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-full border border-orange-200/50 dark:border-white/10 hover:border-orange-400/50 dark:hover:border-orange-500/50 hover:shadow-lg hover:shadow-orange-200/20 dark:hover:shadow-orange-500/10 transition-all duration-300 cursor-pointer group">
-                    <category.icon className="h-5 w-5 text-orange-600 dark:text-orange-400 group-hover:scale-110 transition-transform" />
+                  <div className="flex items-center gap-3 px-6 py-3 bg-white/90 dark:bg-slate-900/80 backdrop-blur-sm rounded-full border border-gray-200/60 dark:border-white/10 hover:border-gray-300/80 dark:hover:border-orange-500/50 hover:shadow-lg hover:shadow-gray-200/20 dark:hover:shadow-orange-500/10 transition-all duration-300 cursor-pointer group">
+                    <category.icon className="h-5 w-5 text-orange-500 dark:text-orange-400 group-hover:scale-110 transition-transform" />
                     <span className="font-medium text-slate-700 dark:text-slate-300 whitespace-nowrap">{category.name}</span>
                   </div>
                 </motion.div>
@@ -788,7 +788,7 @@ const LandingPage = () => {
                     
                     {/* Author */}
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 dark:from-primary dark:to-orange-500 flex items-center justify-center text-white font-bold shadow-lg shadow-orange-500/30 dark:shadow-primary/30">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 dark:from-primary dark:to-orange-500 flex items-center justify-center text-white font-bold shadow-lg shadow-orange-400/20 dark:shadow-primary/30">
                         {testimonial.avatar}
                       </div>
                       <div>
@@ -806,7 +806,7 @@ const LandingPage = () => {
 
       {/* FAQ Section */}
       <section className="py-24 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-orange-50 via-amber-50/30 to-orange-50 dark:from-slate-950 dark:via-slate-900/30 dark:to-slate-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-slate-950 dark:via-slate-900/30 dark:to-slate-950" />
         
         <div className="container mx-auto px-4 relative z-10">
           <motion.div 
@@ -840,7 +840,7 @@ const LandingPage = () => {
                 <AccordionItem 
                   key={index} 
                   value={`item-${index}`} 
-                  className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-orange-200/50 dark:border-white/10 px-6 overflow-hidden data-[state=open]:border-orange-400/50 dark:data-[state=open]:border-primary/40 transition-colors"
+                  className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-gray-200/60 dark:border-white/10 px-6 overflow-hidden data-[state=open]:border-gray-300/80 dark:data-[state=open]:border-primary/40 transition-colors"
                 >
                   <AccordionTrigger className="text-left hover:no-underline py-5 [&[data-state=open]>svg]:rotate-180 text-slate-900 dark:text-white">
                     <span className="font-semibold text-lg">{faq.question}</span>
@@ -871,7 +871,7 @@ const LandingPage = () => {
               whileInView={{ scale: 1 }} 
               viewport={{ once: true }} 
               transition={{ type: "spring", stiffness: 200 }} 
-              className="w-20 h-20 mx-auto mb-8 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 dark:from-primary dark:to-cyan-500 flex items-center justify-center shadow-2xl shadow-orange-500/30 dark:shadow-primary/30"
+              className="w-20 h-20 mx-auto mb-8 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-500 dark:from-primary dark:to-cyan-500 flex items-center justify-center shadow-2xl shadow-orange-400/20 dark:shadow-primary/30"
             >
               <Sparkles className="h-10 w-10 text-white" />
             </motion.div>
@@ -888,7 +888,7 @@ const LandingPage = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="text-lg px-10 py-7 bg-gradient-to-r from-orange-500 to-amber-500 dark:from-primary dark:to-orange-500 hover:from-orange-600 hover:to-amber-600 dark:hover:from-primary/90 dark:hover:to-orange-500/90 shadow-xl shadow-orange-500/30 dark:shadow-primary/30 group">
+              <Button asChild size="lg" className="text-lg px-10 py-7 bg-gradient-to-r from-orange-500 to-amber-500 dark:from-primary dark:to-orange-500 hover:from-orange-600 hover:to-amber-600 dark:hover:from-primary/90 dark:hover:to-orange-500/90 shadow-xl shadow-orange-400/20 dark:shadow-primary/30 group">
                 <Link to="/become-partner">
                   <span className="flex items-center">
                     Criar Minha Loja Grátis
@@ -896,7 +896,7 @@ const LandingPage = () => {
                   </span>
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-10 py-7 backdrop-blur-sm bg-white/50 dark:bg-white/5 border-orange-300/50 dark:border-white/20 hover:bg-white/80 dark:hover:bg-white/10 text-slate-800 dark:text-white">
+              <Button asChild variant="outline" size="lg" className="text-lg px-10 py-7 backdrop-blur-sm bg-white/50 dark:bg-white/5 border-gray-300/50 dark:border-white/20 hover:bg-white/80 dark:hover:bg-white/10 text-slate-800 dark:text-white">
                 <Link to="/heymax">
                   Ver Lojas Parceiras
                 </Link>
@@ -923,7 +923,7 @@ const LandingPage = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-orange-200/50 dark:border-white/10 relative">
+      <footer className="py-12 border-t border-gray-200/60 dark:border-white/10 relative">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
             <div className="col-span-2 md:col-span-1">
@@ -959,7 +959,7 @@ const LandingPage = () => {
             </div>
           </div>
           
-          <div className="border-t border-orange-200/50 dark:border-white/10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="border-t border-gray-200/60 dark:border-white/10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
             <p className="text-slate-500 dark:text-slate-500 text-sm">
               © 2024 Ofertas.app. Todos os direitos reservados.
             </p>
