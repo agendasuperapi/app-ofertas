@@ -22,7 +22,7 @@ import { useProductManagement } from "@/hooks/useProductManagement";
 import { useStoreOrders } from "@/hooks/useStoreOrders";
 import { useCategories } from "@/hooks/useCategories";
 import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, ArrowUp, ArrowDown, FolderTree, User, Lock, Edit2, Eye, Printer, AlertCircle, CheckCircle, Loader2, Bell, Shield, XCircle, Receipt, Truck, Save, Sparkles, LayoutGrid, Table as TableIcon, Star, LogOut, Users, ShoppingCart, Layers, ChevronDown, MapPin } from "lucide-react";
-import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { validatePixKey, normalizePixKeyPhone, formatPixKey, detectPixKeyType } from "@/lib/pixValidation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ProductAddonsManager from "./ProductAddonsManager";
@@ -2989,12 +2989,16 @@ export const StoreOwnerDashboard = ({
                     setExpandedOrderId(prev => prev === order.id ? null : order.id);
                   };
                   
-                  return <div key={order.id}>
+                  return <Collapsible 
+                    key={order.id} 
+                    open={isExpanded} 
+                    onOpenChange={toggleExpanded}
+                  >
                     <Card className="hover:shadow-lg transition-shadow">
                       {/* Header clicável - sempre visível */}
+                      <CollapsibleTrigger asChild>
                       <div 
                         className="p-4 sm:p-6 cursor-pointer select-none"
-                        onClick={toggleExpanded}
                       >
                         <div className="flex items-center justify-between gap-3">
                           {/* Lado esquerdo: info resumida */}
@@ -3080,10 +3084,10 @@ export const StoreOwnerDashboard = ({
                           </Badge>
                         </div>
                       </div>
+                      </CollapsibleTrigger>
 
                       {/* Conteúdo expandido */}
-                      <Collapsible open={isExpanded}>
-                        <CollapsibleContent>
+                      <CollapsibleContent>
                           <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
                             <Separator className="mb-4" />
                             
@@ -3255,14 +3259,13 @@ export const StoreOwnerDashboard = ({
                             </div>
                           </CardContent>
                         </CollapsibleContent>
-                      </Collapsible>
                     </Card>
                     
                     {/* Separador grosso entre pedidos */}
                     {index < paginatedOrdersData.orders.length - 1 && <div className="relative py-4">
                       <Separator className="h-[3px] bg-orange-500" />
                     </div>}
-                  </div>;
+                  </Collapsible>;
                 })}
 
                 {/* Informação de pedidos e Paginação */}
