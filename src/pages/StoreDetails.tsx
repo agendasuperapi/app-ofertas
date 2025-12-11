@@ -745,7 +745,7 @@ export default function StoreDetails() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="sticky top-20 z-10 bg-background/80 backdrop-blur-lg border-y border-border/50 -mx-4 px-4 py-3 shadow-sm"
+              className="sticky top-16 z-10 bg-background/80 backdrop-blur-lg border-y border-border/50 -mx-4 px-4 py-3 shadow-sm"
             >
               <ScrollArea className="w-full">
                 <div className="flex gap-2">
