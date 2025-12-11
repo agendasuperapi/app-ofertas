@@ -15,6 +15,7 @@ interface EmojiPickerInputProps {
   value: string;
   onChange: (emoji: string) => void;
   label?: string;
+  categoryName?: string;
 }
 
 // Categorias em português
@@ -330,7 +331,7 @@ const normalizeText = (text: string) => {
   return text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 };
 
-export const EmojiPickerInput = ({ value, onChange, label }: EmojiPickerInputProps) => {
+export const EmojiPickerInput = ({ value, onChange, label, categoryName }: EmojiPickerInputProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
@@ -389,7 +390,7 @@ export const EmojiPickerInput = ({ value, onChange, label }: EmojiPickerInputPro
       >
         <ResponsiveDialogContent className="max-w-md">
           <ResponsiveDialogHeader>
-            <ResponsiveDialogTitle>Escolher Emoji</ResponsiveDialogTitle>
+            <ResponsiveDialogTitle>Escolher Emoji{categoryName ? ` - ${categoryName}` : ''}</ResponsiveDialogTitle>
             <ResponsiveDialogDescription>
               Selecione um emoji para a categoria
             </ResponsiveDialogDescription>
