@@ -254,6 +254,28 @@ export default function AffiliateDashboardNew() {
   // Extrair store_ids das lojas do afiliado para monitorar novos pedidos
   const affiliateStoreIds = useMemo(() => affiliateStores.map(s => s.store_id).filter(Boolean), [affiliateStores]);
 
+  // Extrair códigos de cupom do afiliado para validar se novos pedidos são do afiliado
+  const affiliateCouponCodes = useMemo(() => {
+    const codes: string[] = [];
+    affiliateStores.forEach(store => {
+      // Cupons do array (novo sistema com múltiplos cupons)
+      if (store.coupons && Array.isArray(store.coupons)) {
+        store.coupons.forEach((coupon: any) => {
+          if (coupon?.code) {
+            codes.push(coupon.code.toUpperCase());
+          }
+        });
+      }
+      // Cupom legado (campo único)
+      if (store.coupon_code) {
+        codes.push(store.coupon_code.toUpperCase());
+      }
+    });
+    const uniqueCodes = [...new Set(codes)];
+    console.log('[Dashboard] 🎫 Códigos de cupom do afiliado:', uniqueCodes);
+    return uniqueCodes;
+  }, [affiliateStores]);
+
   // Debounced refresh para evitar chamadas múltiplas e dar tempo ao banco processar
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const debouncedRefreshData = useCallback(() => {
@@ -293,6 +315,7 @@ export default function AffiliateDashboardNew() {
     orderIds: affiliateOrderIds,
     storeAffiliateIds,
     storeIds: affiliateStoreIds,
+    affiliateCouponCodes, // Códigos de cupom para validar novos pedidos
     onStatusChange: debouncedRefreshData
   });
 
