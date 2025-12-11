@@ -21,7 +21,7 @@ import { useStoreManagement, type StoreFormData } from "@/hooks/useStoreManageme
 import { useProductManagement } from "@/hooks/useProductManagement";
 import { useStoreOrders } from "@/hooks/useStoreOrders";
 import { useCategories } from "@/hooks/useCategories";
-import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, ArrowUp, ArrowDown, FolderTree, User, Lock, Edit2, Eye, Printer, AlertCircle, CheckCircle, Loader2, Bell, Shield, XCircle, Receipt, Truck, Save, Sparkles, LayoutGrid, Table as TableIcon, Star, LogOut, Users, ShoppingCart, Layers, ChevronDown } from "lucide-react";
+import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, ArrowUp, ArrowDown, FolderTree, User, Lock, Edit2, Eye, Printer, AlertCircle, CheckCircle, Loader2, Bell, Shield, XCircle, Receipt, Truck, Save, Sparkles, LayoutGrid, Table as TableIcon, Star, LogOut, Users, ShoppingCart, Layers, ChevronDown, MapPin } from "lucide-react";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { validatePixKey, normalizePixKeyPhone, formatPixKey, detectPixKeyType } from "@/lib/pixValidation";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -3009,6 +3009,17 @@ export const StoreOwnerDashboard = ({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h3 className="font-semibold text-base md:text-lg">Pedido #{order.order_number}</h3>
+                              <Badge variant="outline" className={`text-xs flex items-center gap-1 ${
+                                order.delivery_type === 'delivery' 
+                                  ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                                  : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              }`}>
+                                {order.delivery_type === 'delivery' ? (
+                                  <><MapPin className="h-3 w-3" /> Entrega</>
+                                ) : (
+                                  <><Store className="h-3 w-3" /> Retirada</>
+                                )}
+                              </Badge>
                               {(() => {
                                 // Verifica se o pedido foi feito fora do horário de funcionamento
                                 if (myStore?.operating_hours) {
@@ -3020,7 +3031,7 @@ export const StoreOwnerDashboard = ({
                                     const wasOpen = !daySchedule.is_closed && orderTime >= daySchedule.open && orderTime <= daySchedule.close;
                                     const isScheduled = !wasOpen && myStore.allow_orders_when_closed;
                                     if (isScheduled) {
-                                      return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-300 flex items-center gap-1">
+                                      return <Badge className="bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200 flex items-center gap-1">
                                         <Clock className="h-3 w-3" />
                                         Agendado
                                       </Badge>;
