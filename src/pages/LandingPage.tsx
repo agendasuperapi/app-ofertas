@@ -171,7 +171,7 @@ const LandingPage = () => {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-primary/10 to-orange-500/10 rounded-full blur-3xl" />
         </div>
 
-        <div className="container mx-auto px-4 pt-8 pb-20 relative z-10">
+        <div className="container mx-auto px-4 pt-1 pb-20 relative z-10">
           <motion.div 
             className="text-center max-w-4xl mx-auto"
             initial={{ opacity: 0, y: 30 }}
