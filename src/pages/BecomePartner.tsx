@@ -236,7 +236,7 @@ export default function BecomePartner() {
     });
   };
 
-  const inputStyles = "bg-slate-800/60 border-white/10 text-white placeholder:text-white/60 focus:border-primary/50 focus:ring-primary/20";
+  const inputStyles = "bg-white border-white/20 text-slate-900 placeholder:text-slate-400 focus:border-primary/50 focus:ring-primary/20";
 
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
