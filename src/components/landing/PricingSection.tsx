@@ -68,7 +68,7 @@ const PricingSection = () => {
   return (
     <section className="py-24 relative overflow-hidden">
       {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-background dark:from-slate-950 dark:via-slate-900/50 dark:to-slate-950" />
+      <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900/50 to-slate-950" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-primary/10 rounded-full blur-[150px]" />
       
       <div className="container mx-auto px-4 relative z-10">
@@ -82,13 +82,13 @@ const PricingSection = () => {
             <Crown className="w-4 h-4 mr-2" />
             Planos e Preços
           </Badge>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-white">
             Escolha o plano{' '}
             <span className="bg-gradient-to-r from-primary via-orange-500 to-cyan-500 bg-clip-text text-transparent">
               ideal para você
             </span>
           </h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+          <p className="text-slate-400 text-lg max-w-2xl mx-auto">
             Comece grátis e escale quando precisar. Sem surpresas, sem taxas escondidas.
           </p>
         </motion.div>
@@ -118,9 +118,9 @@ const PricingSection = () => {
                 <motion.div
                   className={`
                     relative h-full p-6 lg:p-8 rounded-2xl
-                    bg-card/80 dark:bg-slate-900/80 backdrop-blur-xl
-                    border ${plan.popular ? 'border-primary/50' : 'border-border/50 dark:border-white/10'}
-                    ${plan.popular ? 'shadow-2xl shadow-primary/20' : 'shadow-xl shadow-black/10 dark:shadow-black/20'}
+                    bg-slate-900/80 backdrop-blur-xl
+                    border ${plan.popular ? 'border-primary/50' : 'border-white/10'}
+                    ${plan.popular ? 'shadow-2xl shadow-primary/20' : 'shadow-xl shadow-black/20'}
                     transition-all duration-500
                   `}
                   whileHover={{ 
@@ -140,19 +140,19 @@ const PricingSection = () => {
                         <Icon className="h-6 w-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold">{plan.name}</h3>
-                        <p className="text-sm text-muted-foreground">{plan.description}</p>
+                        <h3 className="text-xl font-bold text-white">{plan.name}</h3>
+                        <p className="text-sm text-slate-400">{plan.description}</p>
                       </div>
                     </div>
                     
                     {/* Price */}
                     <div className="mb-6">
                       <div className="flex items-baseline gap-1">
-                        <span className="text-muted-foreground text-lg">R$</span>
+                        <span className="text-slate-400 text-lg">R$</span>
                         <span className={`text-5xl font-bold bg-gradient-to-r ${plan.gradient} bg-clip-text text-transparent`}>
                           {plan.price}
                         </span>
-                        <span className="text-muted-foreground">{plan.period}</span>
+                        <span className="text-slate-400">{plan.period}</span>
                       </div>
                     </div>
                     
@@ -161,7 +161,7 @@ const PricingSection = () => {
                       {plan.features.map((feature, i) => (
                         <motion.li 
                           key={i}
-                          className="flex items-center gap-3 text-muted-foreground"
+                          className="flex items-center gap-3 text-slate-300"
                           initial={{ opacity: 0, x: -10 }}
                           whileInView={{ opacity: 1, x: 0 }}
                           viewport={{ once: true }}
@@ -182,7 +182,7 @@ const PricingSection = () => {
                         w-full py-6 text-base font-semibold
                         ${plan.popular 
                           ? 'bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 shadow-lg shadow-primary/30' 
-                          : 'bg-muted dark:bg-slate-800 hover:bg-muted/80 dark:hover:bg-slate-700 border border-border/50 dark:border-white/10'
+                          : 'bg-slate-800 hover:bg-slate-700 border border-white/10'
                         }
                       `}
                     >
@@ -199,7 +199,7 @@ const PricingSection = () => {
         
         {/* Trust note */}
         <motion.p 
-          className="text-center text-muted-foreground text-sm mt-8"
+          className="text-center text-slate-500 text-sm mt-8"
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
