@@ -10,6 +10,7 @@ import { ArrowLeft, Share2, ShoppingCart, Store } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { toast } from '@/hooks/use-toast';
 import { Helmet } from 'react-helmet-async';
+import { useForceTheme } from '@/hooks/useForceTheme';
 
 interface Product {
   id: string;
@@ -29,6 +30,7 @@ interface Product {
 }
 
 export default function ProductPage() {
+  useForceTheme('light');
   const { shortId } = useParams<{ shortId: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

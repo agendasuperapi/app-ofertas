@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { useStores } from "@/hooks/useStores";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useForceTheme } from "@/hooks/useForceTheme";
 
 const categories = [
   { value: "all", label: "Todas as Categorias" },
@@ -21,6 +22,7 @@ const categories = [
 ];
 
 const Index = () => {
+  useForceTheme('light');
   const [category, setCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const { data: stores, isLoading } = useStores(category, searchTerm);

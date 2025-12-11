@@ -6,8 +6,10 @@ import { User, Lock, LogOut } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PersonalDataSettings } from "@/components/settings/PersonalDataSettings";
 import { SecuritySettings } from "@/components/settings/SecuritySettings";
+import { useForceTheme } from "@/hooks/useForceTheme";
 
 export default function Profile() {
+  useForceTheme('light');
   const { signOut } = useAuth();
 
   return (

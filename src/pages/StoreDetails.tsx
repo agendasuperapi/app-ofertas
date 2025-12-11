@@ -26,8 +26,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProductDetailsDialog } from "@/components/product/ProductDetailsDialog";
 import { useFeaturedProducts } from "@/hooks/useFeaturedProducts";
 import { FeaturedProductsCarousel } from "@/components/store/FeaturedProductsCarousel";
+import { useForceTheme } from "@/hooks/useForceTheme";
 
 export default function StoreDetails() {
+  useForceTheme('light');
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

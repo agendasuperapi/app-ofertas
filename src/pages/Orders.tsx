@@ -21,6 +21,7 @@ import { isStoreOpen, getStoreStatusText } from "@/lib/storeUtils";
 import { QRCodeCanvas } from "qrcode.react";
 import { generatePixQrCode } from "@/lib/pixQrCode";
 import { supabase } from "@/integrations/supabase/client";
+import { useForceTheme } from "@/hooks/useForceTheme";
 
 // Interface para regra de desconto específica
 interface CouponDiscountRule {
@@ -206,6 +207,7 @@ type FilterType = 'day' | 'week' | 'month' | 'custom';
 type PaymentFilterType = 'all' | 'pending' | 'received';
 
 export default function Orders() {
+  useForceTheme('light');
   const navigate = useNavigate();
   const location = useLocation();
   const { orders, isLoading } = useOrders();
