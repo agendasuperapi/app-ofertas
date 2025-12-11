@@ -333,25 +333,106 @@ export const AffiliatesManager = ({
       });
       return;
     }
-    const affiliateData = {
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      cpf_cnpj: formData.cpf_cnpj,
-      pix_key: formData.pix_key,
-      coupon_ids: formData.coupon_ids,
-      commission_enabled: formData.commission_enabled,
-      default_commission_type: formData.default_commission_type,
-      default_commission_value: formData.default_commission_value,
-      use_default_commission: formData.commission_enabled && formData.default_commission_value > 0,
-      commission_maturity_days: formData.commission_maturity_days
-    };
-    let result;
+
     const isNewAffiliate = !editingAffiliate;
-    if (editingAffiliate) {
-      result = await updateAffiliate(editingAffiliate.id, affiliateData);
-    } else {
+    const affiliateName = formData.name;
+    const affiliateEmail = formData.email;
+    const affiliateCpf = formData.cpf_cnpj;
+    const cpfNumbers = affiliateCpf?.replace(/\D/g, '') || '';
+
+    let result;
+    let affiliateAccountId: string | undefined;
+
+    if (isNewAffiliate) {
+      // NOVO FLUXO: Chamar edge function PRIMEIRO para criar affiliate_accounts e store_affiliates
+      try {
+        const { data, error } = await supabase.functions.invoke('affiliate-invite', {
+          body: {
+            action: 'send',
+            store_id: storeId,
+            store_name: storeName,
+            cpf: cpfNumbers,
+            email: affiliateEmail,
+            name: affiliateName,
+            coupon_ids: formData.coupon_ids,
+            default_commission_type: formData.default_commission_type,
+            default_commission_value: formData.default_commission_value,
+            use_default_commission: formData.commission_enabled && formData.default_commission_value > 0,
+            commission_maturity_days: formData.commission_maturity_days
+          }
+        });
+
+        if (error) {
+          console.error('Error calling affiliate-invite:', error);
+          toast({
+            title: 'Erro ao criar afiliado',
+            description: error.message || 'Erro desconhecido',
+            variant: 'destructive'
+          });
+          return;
+        }
+
+        if (data?.error) {
+          toast({
+            title: 'Erro ao criar afiliado',
+            description: data.error,
+            variant: 'destructive'
+          });
+          return;
+        }
+
+        // Capturar affiliate_account_id do response
+        affiliateAccountId = data?.affiliate_account_id;
+
+        // Se teve sucesso, mostrar link de convite
+        if (data?.success && data?.invite_token) {
+          const link = `${window.location.origin}/afiliado/cadastro?token=${data.invite_token}`;
+          setGeneratedInviteLink(link);
+          setCreatedAffiliateName(affiliateName);
+          setInviteLinkDialogOpen(true);
+        }
+      } catch (err) {
+        console.error('Error generating invite link:', err);
+        toast({
+          title: 'Erro ao criar afiliado',
+          description: 'Erro ao processar convite',
+          variant: 'destructive'
+        });
+        return;
+      }
+
+      // AGORA criar registro em affiliates com affiliate_account_id já disponível
+      const affiliateData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        cpf_cnpj: formData.cpf_cnpj,
+        pix_key: formData.pix_key,
+        coupon_ids: formData.coupon_ids,
+        commission_enabled: formData.commission_enabled,
+        default_commission_type: formData.default_commission_type,
+        default_commission_value: formData.default_commission_value,
+        use_default_commission: formData.commission_enabled && formData.default_commission_value > 0,
+        commission_maturity_days: formData.commission_maturity_days,
+        affiliate_account_id: affiliateAccountId, // Passar o ID da conta criada
+      };
       result = await createAffiliate(affiliateData);
+    } else {
+      // EDIÇÃO: manter fluxo atual
+      const affiliateData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        cpf_cnpj: formData.cpf_cnpj,
+        pix_key: formData.pix_key,
+        coupon_ids: formData.coupon_ids,
+        commission_enabled: formData.commission_enabled,
+        default_commission_type: formData.default_commission_type,
+        default_commission_value: formData.default_commission_value,
+        use_default_commission: formData.commission_enabled && formData.default_commission_value > 0,
+        commission_maturity_days: formData.commission_maturity_days
+      };
+      result = await updateAffiliate(editingAffiliate.id, affiliateData);
     }
 
     // Se a comissão é por categoria ou produto, criar regra específica
@@ -377,49 +458,8 @@ export const AffiliatesManager = ({
       }
     }
 
-    // Salvar dados antes de resetar o form
-    const affiliateName = formData.name;
-    const affiliateEmail = formData.email;
-    const affiliateCpf = formData.cpf_cnpj;
-    const affiliateCouponId = formData.coupon_ids[0] || null;
     setDialogOpen(false);
     resetForm();
-
-    // Gerar link de convite automaticamente para novos afiliados
-    if (isNewAffiliate && result) {
-      try {
-        // Remove formatação do CPF antes de enviar
-        const cpfNumbers = affiliateCpf?.replace(/\D/g, '') || '';
-        const {
-          data,
-          error
-        } = await supabase.functions.invoke('affiliate-invite', {
-          body: {
-            action: 'send',
-            store_id: storeId,
-            store_name: storeName,
-            cpf: cpfNumbers,
-            email: affiliateEmail,
-            name: affiliateName,
-            // Pass ALL coupon IDs instead of just the first one
-            coupon_ids: formData.coupon_ids,
-            // Pass commission configuration values
-            default_commission_type: formData.default_commission_type,
-            default_commission_value: formData.default_commission_value,
-            use_default_commission: formData.commission_enabled && formData.default_commission_value > 0,
-            commission_maturity_days: formData.commission_maturity_days
-          }
-        });
-        if (data?.success && data?.invite_token) {
-          const link = `${window.location.origin}/afiliado/cadastro?token=${data.invite_token}`;
-          setGeneratedInviteLink(link);
-          setCreatedAffiliateName(affiliateName);
-          setInviteLinkDialogOpen(true);
-        }
-      } catch (err) {
-        console.error('Error generating invite link:', err);
-      }
-    }
   };
   const handleViewDetails = async (affiliate: Affiliate) => {
     setSelectedAffiliate(affiliate);
