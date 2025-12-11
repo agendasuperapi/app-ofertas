@@ -25,6 +25,7 @@ import GlassCard from '@/components/landing/GlassCard';
 import BentoGrid from '@/components/landing/BentoGrid';
 import FloatingCards from '@/components/landing/FloatingCards';
 import PricingSection from '@/components/landing/PricingSection';
+import { LandingHeader } from '@/components/landing/LandingHeader';
 
 const LandingPage = () => {
   const containerVariants = {
@@ -177,8 +178,10 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
+      <LandingHeader />
+      
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 md:pt-20">
         <GridPattern variant="dark" />
         
         <div className="container mx-auto px-4 pt-8 pb-20 relative z-10">
