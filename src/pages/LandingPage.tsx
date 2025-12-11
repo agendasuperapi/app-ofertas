@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { 
   Store, ShoppingCart, Users, BarChart3, Package, Tag, 
   Clock, MapPin, MessageCircle, CreditCard, Smartphone,
@@ -176,15 +176,26 @@ const LandingPage = () => {
     { value: 24, suffix: '/7', label: 'Suporte Disponível' }
   ];
 
+  // Parallax scroll effects
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start']
+  });
+  
+  const heroGlowY = useTransform(scrollYProgress, [0, 1], [0, 150]);
+  const heroGlowOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0.3]);
+  const heroContentY = useTransform(scrollYProgress, [0, 1], [0, 50]);
+
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
       <LandingHeader />
       
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 md:pt-20">
+      <section ref={heroRef} className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16 md:pt-20">
         <GridPattern variant="dark" />
         
-        <div className="container mx-auto px-4 pt-8 pb-20 relative z-10">
+        <motion.div style={{ y: heroContentY }} className="container mx-auto px-4 pt-8 pb-20 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left content */}
             <motion.div 
@@ -268,15 +279,18 @@ const LandingPage = () => {
 
             {/* Right content - iPhone with Floating Cards */}
             <div className="relative hidden lg:block">
-              <div className="relative flex justify-center">
-                {/* Glow effect behind phone */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-primary/30 to-cyan-500/30 rounded-full blur-[100px]" />
+              <motion.div className="relative flex justify-center" style={{ y: useTransform(scrollYProgress, [0, 1], [0, 30]) }}>
+                {/* Glow effect behind phone with parallax */}
+                <motion.div 
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-primary/30 to-cyan-500/30 rounded-full blur-[100px]" 
+                  style={{ y: heroGlowY, opacity: heroGlowOpacity }}
+                />
                 
                 <IPhoneMockup className="w-64 relative z-10" />
                 
                 {/* Floating Cards */}
                 <FloatingCards />
-              </div>
+              </motion.div>
             </div>
           </div>
 
@@ -299,7 +313,7 @@ const LandingPage = () => {
               </div>
             ))}
           </motion.div>
-        </div>
+        </motion.div>
 
         {/* Scroll Indicator */}
         <motion.div 
