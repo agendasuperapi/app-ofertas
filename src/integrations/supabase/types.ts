@@ -3185,22 +3185,20 @@ export type Database = {
         }[]
       }
       get_affiliate_order_items: {
-        Args: { p_order_id: string; p_store_affiliate_id?: string }
+        Args: { p_affiliate_account_id: string; p_order_id: string }
         Returns: {
+          commission_amount: number
           commission_source: string
           commission_type: string
           commission_value: number
-          coupon_scope: string
           is_coupon_eligible: boolean
-          item_commission: number
           item_discount: number
           item_id: string
+          item_subtotal: number
           item_value_with_discount: number
           product_category: string
-          product_id: string
           product_name: string
           quantity: number
-          subtotal: number
           unit_price: number
         }[]
       }
