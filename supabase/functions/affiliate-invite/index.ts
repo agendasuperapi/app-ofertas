@@ -912,7 +912,7 @@ serve(async (req) => {
         // Criar mapa de store_affiliate_id -> maturity_days
         const maturityMap = new Map<string, number>();
         storeAffiliates.forEach(sa => {
-          maturityMap.set(sa.id, sa.commission_maturity_days || 7);
+          maturityMap.set(sa.id, sa.commission_maturity_days ?? 7);
         });
 
         // Buscar earnings por store_affiliate_id COM updated_at do pedido
@@ -952,7 +952,7 @@ serve(async (req) => {
 
         // Formatar resposta COM maturity data
         const orders = (earnings || []).map((e: any) => {
-          const maturityDays = maturityMap.get(e.store_affiliate_id) || 7;
+          const maturityDays = maturityMap.get(e.store_affiliate_id) ?? 7;
           const orderStatus = e.orders?.status;
           const isDelivered = orderStatus === 'entregue' || orderStatus === 'delivered';
           
