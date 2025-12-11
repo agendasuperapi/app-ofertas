@@ -22,6 +22,8 @@ interface CommissionAuditLog {
   commission_difference: number;
   reason: string;
   recalculated_by: string | null;
+  editor_name: string | null;
+  editor_email: string | null;
   recalculated_at: string;
   created_at: string;
 }

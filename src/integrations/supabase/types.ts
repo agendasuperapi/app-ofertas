@@ -205,6 +205,8 @@ export type Database = {
           created_at: string | null
           earning_id_after: string | null
           earning_id_before: string | null
+          editor_email: string | null
+          editor_name: string | null
           id: string
           items_count_after: number | null
           items_count_before: number | null
@@ -229,6 +231,8 @@ export type Database = {
           created_at?: string | null
           earning_id_after?: string | null
           earning_id_before?: string | null
+          editor_email?: string | null
+          editor_name?: string | null
           id?: string
           items_count_after?: number | null
           items_count_before?: number | null
@@ -253,6 +257,8 @@ export type Database = {
           created_at?: string | null
           earning_id_after?: string | null
           earning_id_before?: string | null
+          editor_email?: string | null
+          editor_name?: string | null
           id?: string
           items_count_after?: number | null
           items_count_before?: number | null
@@ -3535,10 +3541,17 @@ export type Database = {
         Args: { p_order_id: string }
         Returns: undefined
       }
-      reprocess_affiliate_commission_for_order: {
-        Args: { p_order_id: string }
-        Returns: undefined
-      }
+      reprocess_affiliate_commission_for_order:
+        | { Args: { p_order_id: string }; Returns: undefined }
+        | {
+            Args: {
+              p_editor_email?: string
+              p_editor_id?: string
+              p_editor_name?: string
+              p_order_id: string
+            }
+            Returns: undefined
+          }
       text_to_bytea: { Args: { data: string }; Returns: string }
       update_order_status_skip_notification: {
         Args: { p_new_status: string; p_order_id: string }

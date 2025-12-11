@@ -15,7 +15,8 @@ import {
   Download,
   Filter,
   Search,
-  Minus
+  Minus,
+  User
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -93,6 +94,8 @@ export function CommissionAuditReport({ storeId }: CommissionAuditReportProps) {
       'Data/Hora',
       'Pedido',
       'Afiliado',
+      'Editado por',
+      'Email do Editor',
       'Comissão Antes',
       'Comissão Depois',
       'Variação',
@@ -105,6 +108,8 @@ export function CommissionAuditReport({ storeId }: CommissionAuditReportProps) {
       format(new Date(log.recalculated_at), 'dd/MM/yyyy HH:mm'),
       log.order_number || '-',
       log.affiliate_name || '-',
+      log.editor_name || '-',
+      log.editor_email || '-',
       log.commission_amount_before.toFixed(2),
       log.commission_amount_after.toFixed(2),
       (log.commission_difference || 0).toFixed(2),
@@ -389,6 +394,17 @@ export function CommissionAuditReport({ storeId }: CommissionAuditReportProps) {
                             {log.reason === 'order_edit' ? 'Edição de Pedido' : log.reason}
                           </Badge>
                         </div>
+                        {(log.editor_name || log.editor_email) && (
+                          <div className="flex items-start gap-2 text-sm pt-2 border-t border-border/50 mt-2">
+                            <User className="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <div>
+                              <p className="font-medium text-foreground">{log.editor_name || 'Usuário'}</p>
+                              {log.editor_email && (
+                                <p className="text-xs text-muted-foreground">{log.editor_email}</p>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -404,6 +420,7 @@ export function CommissionAuditReport({ storeId }: CommissionAuditReportProps) {
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Data/Hora</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Pedido</th>
                     <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Afiliado</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Editado por</th>
                     <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Antes</th>
                     <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Depois</th>
                     <th className="px-4 py-3 text-right text-sm font-medium text-muted-foreground">Variação</th>
@@ -427,6 +444,18 @@ export function CommissionAuditReport({ storeId }: CommissionAuditReportProps) {
                         </td>
                         <td className="px-4 py-3 text-sm">
                           {log.affiliate_name || '-'}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          {log.editor_name || log.editor_email ? (
+                            <div>
+                              <p className="font-medium">{log.editor_name || '-'}</p>
+                              {log.editor_email && (
+                                <p className="text-xs text-muted-foreground">{log.editor_email}</p>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-sm text-right text-muted-foreground">
                           {formatCurrency(log.commission_amount_before)}
@@ -457,7 +486,7 @@ export function CommissionAuditReport({ storeId }: CommissionAuditReportProps) {
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                           >
-                            <td colSpan={8} className="px-4 py-3 bg-muted/20">
+                            <td colSpan={9} className="px-4 py-3 bg-muted/20">
                               <div className="grid grid-cols-3 gap-4 text-sm">
                                 <div className="flex items-center gap-2">
                                   <Package className="h-4 w-4 text-muted-foreground" />

@@ -692,7 +692,10 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
         console.log('[EDIT ORDER] Reprocessando comissão do afiliado para pedido:', order.id);
         try {
           const { error: rpcError } = await supabase.rpc('reprocess_affiliate_commission_for_order', {
-            p_order_id: order.id
+            p_order_id: order.id,
+            p_editor_id: user?.id || null,
+            p_editor_name: editorName,
+            p_editor_email: user?.email || null
           });
           
           if (rpcError) {
