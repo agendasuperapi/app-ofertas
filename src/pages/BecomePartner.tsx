@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { EmailInput } from "@/components/ui/email-input";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useStoreManagement } from "@/hooks/useStoreManagement";
-import { Store, Rocket, CheckCircle, TrendingUp, Users, DollarSign, AlertCircle, Loader2 } from "lucide-react";
+import { Store, Rocket, CheckCircle, TrendingUp, Users, DollarSign, AlertCircle, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { storeSchema } from "@/hooks/useStoreValidation";
 import { z } from "zod";
@@ -242,6 +242,15 @@ export default function BecomePartner() {
     <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
       <main className="container mx-auto px-4 py-12 relative">
         <GridPattern variant="neutral-dark" />
+        
+        {/* Back button */}
+        <Link 
+          to="/" 
+          className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8 relative z-10"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Voltar ao início</span>
+        </Link>
         
         <div className="relative z-10">
           {/* Hero Section */}
