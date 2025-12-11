@@ -36,10 +36,46 @@ const playEarningsSound = () => {
   }
 };
 
+// Som diferente para comissão recalculada
+const playRecalculatedSound = () => {
+  const soundEnabled = localStorage.getItem('notification-sound-enabled');
+  if (soundEnabled !== null && !JSON.parse(soundEnabled)) {
+    return;
+  }
+
+  const volumeString = localStorage.getItem('notification-volume');
+  const volume = volumeString !== null ? JSON.parse(volumeString) / 100 : 0.7;
+
+  try {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    // Som de "atualização" - tom mais baixo e curto
+    oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+    oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.1);
+    oscillator.type = 'triangle';
+
+    gainNode.gain.setValueAtTime(volume * 0.4, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.25);
+
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.3);
+  } catch (error) {
+    console.error('Erro ao tocar som de recálculo:', error);
+  }
+};
+
 interface UseAffiliateEarningsNotificationOptions {
   storeAffiliateIds: string[];
   onNewEarning?: () => void;
 }
+
+// Rastrear comissões conhecidas para detectar recálculo
+const knownOrderCommissions = new Map<string, number>();
 
 export const useAffiliateEarningsNotification = ({
   storeAffiliateIds,
@@ -90,22 +126,15 @@ export const useAffiliateEarningsNotification = ({
         },
         async (payload) => {
           const earning = payload.new as any;
+          const oldEarning = payload.old as any;
           
-          console.log('💰 Novo registro de comissão criado:', earning);
+          console.log('💰 Atualização de comissão detectada:', { new: earning, old: oldEarning });
           
           // Verificar se é para este afiliado
           if (!earning.store_affiliate_id || !storeAffiliateIds.includes(earning.store_affiliate_id)) {
             console.log('💰 Evento não é para este afiliado, ignorando');
             return;
           }
-
-          // Evitar duplicatas usando order_id e updated_at
-          const eventId = `${earning.order_id}-${earning.commission_amount}`;
-          if (lastProcessedRef.current === eventId) {
-            console.log('💰 Evento duplicado, ignorando');
-            return;
-          }
-          lastProcessedRef.current = eventId;
 
           const commissionAmount = earning.commission_amount || 0;
 
@@ -115,8 +144,21 @@ export const useAffiliateEarningsNotification = ({
             return;
           }
 
+          // Detectar se é recálculo: old tinha valor > 0 diferente do novo
+          const oldAmount = oldEarning?.commission_amount || 0;
+          const isRecalculation = oldAmount > 0 && oldAmount !== commissionAmount;
+
+          // Evitar duplicatas usando order_id e commission_amount
+          const eventId = `${earning.order_id}-${commissionAmount}-${isRecalculation ? 'recalc' : 'new'}`;
+          if (lastProcessedRef.current === eventId) {
+            console.log('💰 Evento duplicado, ignorando');
+            return;
+          }
+          lastProcessedRef.current = eventId;
+
           // Buscar nome do cliente do pedido
           let customerName = 'Cliente';
+          let orderNumber = '';
           if (earning.order_id) {
             const { data: orderData } = await supabase
               .from('orders')
@@ -127,22 +169,48 @@ export const useAffiliateEarningsNotification = ({
             if (orderData?.customer_name) {
               customerName = orderData.customer_name;
             }
+            if (orderData?.order_number) {
+              orderNumber = orderData.order_number;
+            }
           }
 
-          console.log('💰 Nova comissão recebida:', {
-            customerName,
-            commissionAmount,
-            orderId: earning.order_id
-          });
+          if (isRecalculation) {
+            console.log('🔄 Comissão RECALCULADA:', {
+              customerName,
+              oldAmount,
+              newAmount: commissionAmount,
+              orderId: earning.order_id
+            });
 
-          // Tocar som
-          playEarningsSound();
+            // Som diferente para recálculo
+            playRecalculatedSound();
 
-          // Mostrar toast com sonner
-          toast.success('💰 Nova Comissão Gerada!', {
-            description: `${customerName} - R$ ${commissionAmount.toFixed(2)}`,
-            duration: 8000,
-          });
+            // Toast diferenciado para recálculo
+            const difference = commissionAmount - oldAmount;
+            const differenceText = difference > 0 
+              ? `(+R$ ${difference.toFixed(2)})` 
+              : `(-R$ ${Math.abs(difference).toFixed(2)})`;
+
+            toast.info('🔄 Comissão Atualizada', {
+              description: `Pedido ${orderNumber} - ${customerName}: R$ ${commissionAmount.toFixed(2)} ${differenceText}`,
+              duration: 8000,
+            });
+          } else {
+            console.log('💰 Nova comissão recebida:', {
+              customerName,
+              commissionAmount,
+              orderId: earning.order_id
+            });
+
+            // Tocar som de nova comissão
+            playEarningsSound();
+
+            // Mostrar toast com sonner
+            toast.success('💰 Nova Comissão Gerada!', {
+              description: `${customerName} - R$ ${commissionAmount.toFixed(2)}`,
+              duration: 8000,
+            });
+          }
 
           // Callback para atualizar dados
           if (onNewEarningRef.current) {
@@ -163,5 +231,5 @@ export const useAffiliateEarningsNotification = ({
         channelRef.current = null;
       }
     };
-  }, [storeAffiliateIds.join(','), isAffiliateDashboard]); // Adiciona isAffiliateDashboard como dependência
+  }, [storeAffiliateIds.join(','), isAffiliateDashboard]);
 };
