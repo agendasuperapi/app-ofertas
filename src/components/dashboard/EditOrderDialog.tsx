@@ -68,6 +68,13 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
   const [isRecalculating, setIsRecalculating] = useState(false);
   const recalculateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
+  // Estado para descontos individuais por item
+  const [itemDiscounts, setItemDiscounts] = useState<Record<string, {
+    discount: number;
+    ruleType: 'product' | 'category' | 'default' | null;
+    discountPercent?: number;
+  }>>({});
+  
   const [storePaymentMethods, setStorePaymentMethods] = useState({
     accepts_pix: true,
     accepts_card: true,
@@ -240,6 +247,7 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
 
       if (!couponData) {
         setIsRecalculating(false);
+        setItemDiscounts({});
         return;
       }
 
@@ -257,15 +265,21 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
       const appliesTo = couponData.applies_to as 'all' | 'category' | 'product';
       const categoryNames = couponData.category_names || [];
       const productIds = couponData.product_ids || [];
+      
+      // Novo: armazenar descontos individuais
+      const newItemDiscounts: Record<string, { discount: number; ruleType: 'product' | 'category' | 'default' | null; discountPercent?: number }> = {};
 
       // Para cada item ativo, calcular desconto
       for (const item of activeItems) {
         // Buscar categoria do produto
         let productCategory = '';
+        let productId = '';
+        
         if (item.id.startsWith('temp_')) {
           // Novo item - buscar categoria do produto
           const product = availableProducts.find(p => p.name === item.product_name);
           if (product?.id) {
+            productId = product.id;
             const { data: productData } = await supabase
               .from('products')
               .select('category')
@@ -282,6 +296,7 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
             .single();
           
           if (orderItemData?.product_id) {
+            productId = orderItemData.product_id;
             const { data: productData } = await supabase
               .from('products')
               .select('category')
@@ -305,13 +320,16 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
           isEligible = product?.id && productIds.includes(product.id);
         }
 
-        if (!isEligible) continue;
+        if (!isEligible) {
+          newItemDiscounts[item.id] = { discount: 0, ruleType: null };
+          continue;
+        }
 
         // Verificar regra específica
         const productRule = discountRules.find(r => {
           if (r.rule_type === 'product') {
             const product = availableProducts.find(p => p.name === item.product_name);
-            return product?.id && r.product_id === product.id;
+            return (product?.id && r.product_id === product.id) || (productId && r.product_id === productId);
           }
           return false;
         });
@@ -322,32 +340,43 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
         );
 
         const ruleToApply = productRule || categoryRule;
+        let itemDiscount = 0;
+        let ruleType: 'product' | 'category' | 'default' | null = null;
+        let discountPercent: number | undefined;
 
         // Calcular desconto
         if (ruleToApply) {
+          ruleType = productRule ? 'product' : 'category';
           if (ruleToApply.discount_type === 'percentage') {
-            totalDiscount += (item.subtotal * ruleToApply.discount_value) / 100;
+            itemDiscount = (item.subtotal * ruleToApply.discount_value) / 100;
+            discountPercent = ruleToApply.discount_value;
           } else {
             // Valor fixo proporcional
-            totalDiscount += Math.min(ruleToApply.discount_value, item.subtotal);
+            itemDiscount = Math.min(ruleToApply.discount_value, item.subtotal);
           }
         } else {
           // Desconto padrão do cupom
+          ruleType = 'default';
           if (couponData.discount_type === 'percentage') {
-            totalDiscount += (item.subtotal * couponData.discount_value) / 100;
+            itemDiscount = (item.subtotal * couponData.discount_value) / 100;
+            discountPercent = couponData.discount_value;
           } else {
             // Valor fixo proporcional ao subtotal total elegível
             const eligibleSubtotal = activeItems.reduce((sum, i) => sum + i.subtotal, 0);
             if (eligibleSubtotal > 0) {
-              totalDiscount += (item.subtotal / eligibleSubtotal) * Math.min(couponData.discount_value, eligibleSubtotal);
+              itemDiscount = (item.subtotal / eligibleSubtotal) * Math.min(couponData.discount_value, eligibleSubtotal);
             }
           }
         }
+        
+        totalDiscount += itemDiscount;
+        newItemDiscounts[item.id] = { discount: itemDiscount, ruleType, discountPercent };
       }
 
       // Limitar desconto ao subtotal
       totalDiscount = Math.min(totalDiscount, subtotal);
       setCouponDiscount(totalDiscount);
+      setItemDiscounts(newItemDiscounts);
       
       // Atualizar appliedCoupon com novo desconto
       setAppliedCoupon(prev => ({
@@ -472,6 +501,7 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
     setAppliedCoupon(null);
     setCouponDiscount(0);
     setCouponDiscountRules([]);
+    setItemDiscounts({});
     toast({
       title: 'Cupom removido',
       description: 'O desconto foi removido do pedido',
@@ -862,6 +892,51 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
                       />
                     </div>
                   </div>
+                  
+                  {/* Exibir desconto do item se houver cupom aplicado */}
+                  {itemDiscounts[item.id]?.discount > 0 && (
+                    <div className="mt-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Tag className="h-3.5 w-3.5 text-emerald-600" />
+                          <span className="text-emerald-700 font-medium">Desconto:</span>
+                          {itemDiscounts[item.id].ruleType === 'product' && (
+                            <Badge variant="outline" className="text-xs bg-purple-100 text-purple-700 border-purple-200">
+                              Regra Produto
+                            </Badge>
+                          )}
+                          {itemDiscounts[item.id].ruleType === 'category' && (
+                            <Badge variant="outline" className="text-xs bg-orange-100 text-orange-700 border-orange-200">
+                              Regra Categoria
+                            </Badge>
+                          )}
+                          {itemDiscounts[item.id].ruleType === 'default' && (
+                            <Badge variant="outline" className="text-xs bg-blue-100 text-blue-700 border-blue-200">
+                              Cupom Padrão
+                            </Badge>
+                          )}
+                          {isRecalculating && (
+                            <RefreshCw className="h-3 w-3 animate-spin text-muted-foreground" />
+                          )}
+                        </div>
+                        <span className="text-emerald-600 font-semibold">
+                          - R$ {itemDiscounts[item.id].discount.toFixed(2)}
+                          {itemDiscounts[item.id].discountPercent && (
+                            <span className="text-xs text-muted-foreground ml-1">
+                              ({itemDiscounts[item.id].discountPercent}%)
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-sm mt-2 pt-2 border-t border-emerald-500/20">
+                        <span className="font-medium text-foreground">Valor c/ Desconto:</span>
+                        <span className="font-bold text-foreground">
+                          R$ {(item.subtotal - itemDiscounts[item.id].discount).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div>
                     <Label>Observação</Label>
                     <Button
