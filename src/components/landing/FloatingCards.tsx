@@ -99,8 +99,8 @@ const FloatingCards = () => {
             <motion.div
               className={`
                 flex items-center gap-3 px-4 py-3 
-                bg-slate-900/90 backdrop-blur-xl 
-                border border-white/10 rounded-xl
+                bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl 
+                border border-orange-200/50 dark:border-white/10 rounded-xl
                 shadow-xl ${card.shadow}
               `}
               animate={{ 
@@ -119,8 +119,8 @@ const FloatingCards = () => {
                 <Icon className="h-5 w-5 text-white" />
               </div>
               <div>
-                <p className="font-bold text-white text-sm">{card.title}</p>
-                <p className="text-xs text-slate-400">{card.subtitle}</p>
+                <p className="font-bold text-slate-900 dark:text-white text-sm">{card.title}</p>
+                <p className="text-xs text-slate-600 dark:text-slate-400">{card.subtitle}</p>
               </div>
             </motion.div>
           </motion.div>
