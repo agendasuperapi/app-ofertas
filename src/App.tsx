@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./hooks/useAuth";
 import { CartProvider } from "./contexts/CartContext";
 import { AffiliateAuthProvider } from "./hooks/useAffiliateAuth";
@@ -43,13 +44,14 @@ const queryClient = new QueryClient({
 });
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <AuthProvider>
-        <AffiliateAuthProvider>
-          <CartProvider>
+  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AuthProvider>
+          <AffiliateAuthProvider>
+            <CartProvider>
             <div className="pb-20 md:pb-0">
               <Routes>
                 <Route path="/" element={<LandingPage />} />
@@ -114,13 +116,14 @@ const App = () => (
                 <Route path="/:slug" element={<StoreDetails />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </div>
-            <MobileBottomNav />
-          </CartProvider>
-        </AffiliateAuthProvider>
-      </AuthProvider>
-    </TooltipProvider>
-  </QueryClientProvider>
+              </div>
+              <MobileBottomNav />
+            </CartProvider>
+          </AffiliateAuthProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

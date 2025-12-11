@@ -1,6 +1,6 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useTheme } from 'next-themes';
 import { 
   Store, ShoppingCart, Users, BarChart3, Package, Tag, 
   Clock, MapPin, MessageCircle, CreditCard, Smartphone,
@@ -25,8 +25,11 @@ import GlassCard from '@/components/landing/GlassCard';
 import BentoGrid from '@/components/landing/BentoGrid';
 import FloatingCards from '@/components/landing/FloatingCards';
 import PricingSection from '@/components/landing/PricingSection';
+import ThemeToggle from '@/components/landing/ThemeToggle';
 
 const LandingPage = () => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -176,10 +179,12 @@ const LandingPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+      <ThemeToggle />
+      
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        <GridPattern variant="dark" />
+        <GridPattern variant={isDark ? 'dark' : 'light'} />
         
         <div className="container mx-auto px-4 pt-8 pb-20 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -216,7 +221,7 @@ const LandingPage = () => {
                 </span>
               </h1>
               
-              <p className="text-lg sm:text-xl text-slate-400 mb-8 max-w-xl mx-auto lg:mx-0">
+              <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0">
                 Crie sua loja online em minutos, receba pedidos pelo WhatsApp e 
                 gerencie tudo em um único lugar. Sem complicação, sem taxas iniciais.
               </p>
@@ -236,7 +241,7 @@ const LandingPage = () => {
                     />
                   </Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 border-2 border-white/20 backdrop-blur-sm bg-white/5 hover:bg-white/10 text-white">
+                <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 border-2 border-border/50 dark:border-white/20 backdrop-blur-sm bg-background/50 dark:bg-white/5 hover:bg-background/80 dark:hover:bg-white/10">
                   <Link to="/heymax">
                     <Play className="mr-2 h-5 w-5" />
                     Ver Demonstração
@@ -257,7 +262,7 @@ const LandingPage = () => {
                     <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary via-orange-500 to-cyan-500 bg-clip-text text-transparent">
                       <AnimatedCounter end={stat.value} suffix={stat.suffix} />
                     </div>
-                    <div className="text-sm text-slate-500">{stat.label}</div>
+                    <div className="text-sm text-muted-foreground">{stat.label}</div>
                   </motion.div>
                 ))}
               </div>
@@ -290,9 +295,9 @@ const LandingPage = () => {
               { icon: Zap, text: 'Suporte incluso' },
               { icon: Heart, text: '+2.500 lojistas' }
             ].map((item, i) => (
-              <div key={i} className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-full border border-white/10">
+              <div key={i} className="flex items-center gap-2 bg-card/80 dark:bg-slate-900/80 backdrop-blur-sm px-4 py-2 rounded-full border border-border/50 dark:border-white/10">
                 <item.icon className="h-4 w-4 text-green-500" />
-                <span className="text-slate-300">{item.text}</span>
+                <span className="text-muted-foreground">{item.text}</span>
               </div>
             ))}
           </motion.div>
@@ -304,7 +309,7 @@ const LandingPage = () => {
           animate={{ y: [0, 10, 0] }}
           transition={{ repeat: Infinity, duration: 2 }}
         >
-          <div className="w-6 h-10 border-2 border-white/20 rounded-full flex justify-center pt-2 backdrop-blur-sm">
+          <div className="w-6 h-10 border-2 border-border/50 dark:border-white/20 rounded-full flex justify-center pt-2 backdrop-blur-sm">
             <motion.div 
               className="w-1.5 h-3 bg-primary rounded-full"
               animate={{ y: [0, 8, 0], opacity: [1, 0.5, 1] }}
@@ -339,7 +344,7 @@ const LandingPage = () => {
 
       {/* Benefits Section */}
       <section className="py-24 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900/50 to-slate-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-background dark:from-slate-950 dark:via-slate-900/50 dark:to-slate-950" />
         
         <div className="container mx-auto px-4 relative z-10">
           <motion.div 
@@ -358,14 +363,14 @@ const LandingPage = () => {
               </span>
               ?
             </h2>
-            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Tudo o que você precisa para vender online, em uma única plataforma
             </p>
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {benefits.map((benefit, index) => (
-              <GlassCard key={index} delay={index * 0.1} variant="dark">
+              <GlassCard key={index} delay={index * 0.1} variant="auto">
                 <div className="p-6 text-center">
                   <motion.div 
                     className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary to-cyan-500 flex items-center justify-center shadow-lg shadow-primary/30"
@@ -374,8 +379,8 @@ const LandingPage = () => {
                   >
                     <benefit.icon className="h-8 w-8 text-white" />
                   </motion.div>
-                  <h3 className="font-bold text-lg mb-2 text-white">{benefit.title}</h3>
-                  <p className="text-slate-400 text-sm">{benefit.description}</p>
+                  <h3 className="font-bold text-lg mb-2">{benefit.title}</h3>
+                  <p className="text-muted-foreground text-sm">{benefit.description}</p>
                 </div>
               </GlassCard>
             ))}
@@ -401,7 +406,7 @@ const LandingPage = () => {
                 começar a vender
               </span>
             </h2>
-            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Em poucos minutos, sua loja estará pronta para receber pedidos
             </p>
           </motion.div>
@@ -431,7 +436,7 @@ const LandingPage = () => {
                 
                 <div className="text-center group">
                   <motion.div 
-                    className="w-28 h-28 mx-auto mb-6 rounded-full bg-slate-900/80 border-2 border-cyan-500/30 flex items-center justify-center relative overflow-hidden group-hover:border-cyan-500/60 transition-colors"
+                    className="w-28 h-28 mx-auto mb-6 rounded-full bg-card/80 dark:bg-slate-900/80 border-2 border-cyan-500/30 flex items-center justify-center relative overflow-hidden group-hover:border-cyan-500/60 transition-colors"
                     whileHover={{ scale: 1.05 }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -439,8 +444,8 @@ const LandingPage = () => {
                       {step.number}
                     </span>
                   </motion.div>
-                  <h3 className="font-bold text-xl mb-2 group-hover:text-cyan-400 transition-colors text-white">{step.title}</h3>
-                  <p className="text-slate-400">{step.description}</p>
+                  <h3 className="font-bold text-xl mb-2 group-hover:text-cyan-400 transition-colors">{step.title}</h3>
+                  <p className="text-muted-foreground">{step.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -450,7 +455,7 @@ const LandingPage = () => {
 
       {/* Dashboard Features - Bento Grid */}
       <section className="py-24 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900/30 to-slate-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background dark:from-slate-950 dark:via-slate-900/30 dark:to-slate-950" />
         
         <div className="container mx-auto px-4 relative z-10">
           <motion.div 
@@ -468,18 +473,18 @@ const LandingPage = () => {
                 um só lugar
               </span>
             </h2>
-            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Gerencie pedidos, produtos, cupons, entregas e muito mais
             </p>
           </motion.div>
 
-          <BentoGrid items={dashboardFeatures} variant="dark" />
+          <BentoGrid items={dashboardFeatures} variant="auto" />
         </div>
       </section>
 
       {/* Affiliate System Section */}
       <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-slate-950 to-green-500/5" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-background to-green-500/5 dark:via-slate-950" />
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -498,7 +503,7 @@ const LandingPage = () => {
                   vendedores
                 </span>
               </h2>
-              <p className="text-slate-400 text-lg mb-8">
+              <p className="text-muted-foreground text-lg mb-8">
                 Crie um exército de afiliados que divulgam sua loja. 
                 Cada venda gera comissão automática para o afiliado.
               </p>
@@ -517,8 +522,8 @@ const LandingPage = () => {
                       <feature.icon className="h-5 w-5 text-green-400" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-sm text-white">{feature.title}</h4>
-                      <p className="text-slate-500 text-xs">{feature.description}</p>
+                      <h4 className="font-semibold text-sm">{feature.title}</h4>
+                      <p className="text-muted-foreground text-xs">{feature.description}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -531,16 +536,16 @@ const LandingPage = () => {
               viewport={{ once: true }}
               className="relative"
             >
-              <GlassCard hoverEffect={false} variant="dark" className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/30">
+              <GlassCard hoverEffect={false} variant="auto" className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/30">
                 <div className="p-8 space-y-6">
-                  <div className="flex items-center justify-between p-4 bg-slate-900/80 rounded-xl border border-white/10">
+                  <div className="flex items-center justify-between p-4 bg-card/80 dark:bg-slate-900/80 rounded-xl border border-border/50 dark:border-white/10">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-green-500/30">
                         F
                       </div>
                       <div>
-                        <p className="font-semibold text-white">Felipe Afiliado</p>
-                        <p className="text-xs text-slate-400">Cupom: FELIPE</p>
+                        <p className="font-semibold">Felipe Afiliado</p>
+                        <p className="text-xs text-muted-foreground">Cupom: FELIPE</p>
                       </div>
                     </div>
                     <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Ativo</Badge>
@@ -548,28 +553,28 @@ const LandingPage = () => {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <motion.div 
-                      className="p-4 bg-slate-900/80 rounded-xl text-center border border-white/10"
+                      className="p-4 bg-card/80 dark:bg-slate-900/80 rounded-xl text-center border border-border/50 dark:border-white/10"
                       whileHover={{ scale: 1.02 }}
                     >
                       <p className="text-3xl font-bold text-green-400">
                         <AnimatedCounter end={2450} prefix="R$ " />
                       </p>
-                      <p className="text-xs text-slate-400">Total em Vendas</p>
+                      <p className="text-xs text-muted-foreground">Total em Vendas</p>
                     </motion.div>
                     <motion.div 
-                      className="p-4 bg-slate-900/80 rounded-xl text-center border border-white/10"
+                      className="p-4 bg-card/80 dark:bg-slate-900/80 rounded-xl text-center border border-border/50 dark:border-white/10"
                       whileHover={{ scale: 1.02 }}
                     >
                       <p className="text-3xl font-bold text-primary">
                         <AnimatedCounter end={367} prefix="R$ " suffix=",50" />
                       </p>
-                      <p className="text-xs text-slate-400">Comissões (15%)</p>
+                      <p className="text-xs text-muted-foreground">Comissões (15%)</p>
                     </motion.div>
                   </div>
 
-                  <div className="p-4 bg-slate-900/80 rounded-xl border border-white/10">
+                  <div className="p-4 bg-card/80 dark:bg-slate-900/80 rounded-xl border border-border/50 dark:border-white/10">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm text-slate-400">Disponível para saque</span>
+                      <span className="text-sm text-muted-foreground">Disponível para saque</span>
                       <span className="font-bold text-green-400 text-lg">R$ 245,00</span>
                     </div>
                     <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-500/30">
@@ -592,7 +597,7 @@ const LandingPage = () => {
 
       {/* Categories Section */}
       <section className="py-24 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900/30 to-slate-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background dark:from-slate-950 dark:via-slate-900/30 dark:to-slate-950" />
         
         <div className="container mx-auto px-4 relative z-10">
           <motion.div 
@@ -610,7 +615,7 @@ const LandingPage = () => {
                 tipos de negócio
               </span>
             </h2>
-            <p className="text-slate-400 text-lg">
+            <p className="text-muted-foreground text-lg">
               Seja qual for seu ramo, temos a solução ideal para você
             </p>
           </motion.div>
@@ -628,9 +633,9 @@ const LandingPage = () => {
                 variants={itemVariants}
                 whileHover={{ scale: 1.05, y: -2 }}
               >
-                <div className="flex items-center gap-3 px-6 py-3 bg-slate-900/80 backdrop-blur-sm rounded-full border border-white/10 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10 transition-all duration-300 cursor-pointer group">
+                <div className="flex items-center gap-3 px-6 py-3 bg-card/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-full border border-border/50 dark:border-white/10 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10 transition-all duration-300 cursor-pointer group">
                   <category.icon className="h-5 w-5 text-cyan-400 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium text-slate-300">{category.name}</span>
+                  <span className="font-medium text-muted-foreground">{category.name}</span>
                 </div>
               </motion.div>
             ))}
@@ -657,7 +662,7 @@ const LandingPage = () => {
                 clientes dizem
               </span>
             </h2>
-            <p className="text-slate-400 text-lg">
+            <p className="text-muted-foreground text-lg">
               Milhares de lojistas já transformaram seus negócios
             </p>
           </motion.div>
@@ -671,7 +676,7 @@ const LandingPage = () => {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.15 }}
               >
-                <GlassCard className="h-full" variant="dark">
+                <GlassCard className="h-full" variant="auto">
                   <div className="p-6">
                     {/* Stars */}
                     <div className="flex gap-1 mb-4">
@@ -689,7 +694,7 @@ const LandingPage = () => {
                     </div>
                     
                     {/* Quote */}
-                    <p className="text-slate-400 mb-6 italic text-lg leading-relaxed">
+                    <p className="text-muted-foreground mb-6 italic text-lg leading-relaxed">
                       "{testimonial.text}"
                     </p>
                     
@@ -699,8 +704,8 @@ const LandingPage = () => {
                         {testimonial.avatar}
                       </div>
                       <div>
-                        <p className="font-semibold text-white">{testimonial.name}</p>
-                        <p className="text-sm text-slate-500">{testimonial.business}</p>
+                        <p className="font-semibold">{testimonial.name}</p>
+                        <p className="text-sm text-muted-foreground">{testimonial.business}</p>
                       </div>
                     </div>
                   </div>
@@ -713,7 +718,7 @@ const LandingPage = () => {
 
       {/* FAQ Section */}
       <section className="py-24 relative">
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900/30 to-slate-950" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background dark:from-slate-950 dark:via-slate-900/30 dark:to-slate-950" />
         
         <div className="container mx-auto px-4 relative z-10">
           <motion.div 
@@ -731,7 +736,7 @@ const LandingPage = () => {
                 Frequentes
               </span>
             </h2>
-            <p className="text-slate-400 text-lg">
+            <p className="text-muted-foreground text-lg">
               Tire suas dúvidas sobre a plataforma
             </p>
           </motion.div>
@@ -747,12 +752,12 @@ const LandingPage = () => {
                 <AccordionItem 
                   key={index} 
                   value={`item-${index}`}
-                  className="bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-white/10 px-6 overflow-hidden data-[state=open]:border-primary/40 transition-colors"
+                  className="bg-card/80 dark:bg-slate-900/80 backdrop-blur-sm rounded-2xl border border-border/50 dark:border-white/10 px-6 overflow-hidden data-[state=open]:border-primary/40 transition-colors"
                 >
-                  <AccordionTrigger className="text-left hover:no-underline py-5 [&[data-state=open]>svg]:rotate-180 text-white">
+                  <AccordionTrigger className="text-left hover:no-underline py-5 [&[data-state=open]>svg]:rotate-180">
                     <span className="font-semibold text-lg">{faq.question}</span>
                   </AccordionTrigger>
-                  <AccordionContent className="text-slate-400 pb-5 text-base leading-relaxed">
+                  <AccordionContent className="text-muted-foreground pb-5 text-base leading-relaxed">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -764,7 +769,7 @@ const LandingPage = () => {
 
       {/* Final CTA Section */}
       <section className="py-24 relative overflow-hidden">
-        <GridPattern variant="dark" />
+        <GridPattern variant={isDark ? 'dark' : 'light'} />
         
         <div className="container mx-auto px-4 relative z-10">
           <motion.div 
@@ -790,7 +795,7 @@ const LandingPage = () => {
               </span>{' '}
               seu negócio?
             </h2>
-            <p className="text-slate-400 text-lg sm:text-xl mb-10 max-w-2xl mx-auto">
+            <p className="text-muted-foreground text-lg sm:text-xl mb-10 max-w-2xl mx-auto">
               Junte-se a milhares de lojistas que já estão vendendo mais com o Ofertas.app
             </p>
             
@@ -803,7 +808,7 @@ const LandingPage = () => {
                   </span>
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-10 py-7 backdrop-blur-sm bg-white/5 border-white/20 hover:bg-white/10 text-white">
+              <Button asChild variant="outline" size="lg" className="text-lg px-10 py-7 backdrop-blur-sm bg-background/50 dark:bg-white/5 border-border/50 dark:border-white/20 hover:bg-background/80 dark:hover:bg-white/10">
                 <Link to="/heymax">
                   Ver Lojas Parceiras
                 </Link>
