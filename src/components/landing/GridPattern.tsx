@@ -16,9 +16,9 @@ const GridPattern = ({ className = '', variant = 'dark' }: GridPatternProps) => 
         ${isDark 
           ? (isNeutralDark 
             ? 'bg-gradient-to-b from-cyan-500/5 via-slate-950 to-slate-950' 
-            : 'dark:bg-gradient-to-b dark:from-primary/10 dark:via-slate-950 dark:to-slate-950 bg-gradient-to-b from-orange-200/30 via-orange-50 to-white') 
+            : 'dark:bg-gradient-to-b dark:from-primary/10 dark:via-slate-950 dark:to-slate-950 bg-gradient-to-b from-gray-100 via-orange-50/20 to-white') 
           : 'bg-gradient-to-b from-primary/15 via-orange-100/20 to-transparent md:from-primary/5 md:via-transparent'
-        }`} 
+        }`}
       />
       
       {/* Centralized radial gradient */}
@@ -26,9 +26,9 @@ const GridPattern = ({ className = '', variant = 'dark' }: GridPatternProps) => 
         ${isDark 
           ? (isNeutralDark 
             ? 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(190_80%_50%/0.15),transparent)]' 
-            : 'dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(var(--primary)/0.20),transparent)] bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(30_100%_60%/0.25),transparent)]') 
+            : 'dark:bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(var(--primary)/0.20),transparent)] bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(30_100%_70%/0.15),transparent)]') 
           : 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(var(--primary)/0.25),transparent)] md:bg-[radial-gradient(ellipse_50%_50%_at_50%_-20%,hsl(var(--primary)/0.12),transparent)]'
-        }`} 
+        }`}
       />
       
       {/* Animated grid */}
@@ -49,7 +49,7 @@ const GridPattern = ({ className = '', variant = 'dark' }: GridPatternProps) => 
           ${isDark 
             ? (isNeutralDark 
               ? 'bg-gradient-to-b from-cyan-500/20 via-blue-500/15 to-transparent' 
-              : 'dark:bg-gradient-to-b dark:from-primary/25 dark:via-orange-500/20 dark:to-transparent bg-gradient-to-b from-orange-400/40 via-amber-300/30 to-transparent') 
+              : 'dark:bg-gradient-to-b dark:from-primary/25 dark:via-orange-500/20 dark:to-transparent bg-gradient-to-b from-gray-300/30 via-orange-200/20 to-transparent') 
             : 'bg-gradient-to-b from-primary/35 via-orange-400/30 to-transparent'
           } rounded-full blur-[80px] md:blur-[120px]`}
         animate={{ 
@@ -67,7 +67,7 @@ const GridPattern = ({ className = '', variant = 'dark' }: GridPatternProps) => 
       <motion.div 
         className={`absolute top-1/4 -left-16 md:-left-32 w-64 h-64 md:w-[500px] md:h-[500px] 
           ${isDark 
-            ? 'dark:bg-gradient-to-r dark:from-cyan-500/20 dark:to-blue-500/15 bg-gradient-to-r from-orange-400/30 to-amber-400/25' 
+            ? 'dark:bg-gradient-to-r dark:from-cyan-500/20 dark:to-blue-500/15 bg-gradient-to-r from-gray-300/25 to-orange-200/15' 
             : 'bg-gradient-to-r from-primary/40 md:from-primary/30 to-orange-500/30 md:to-orange-500/20'
           } rounded-full blur-[60px] md:blur-[120px]`}
         animate={{ 
@@ -88,7 +88,7 @@ const GridPattern = ({ className = '', variant = 'dark' }: GridPatternProps) => 
           ${isDark 
             ? (isNeutralDark 
               ? 'bg-gradient-to-l from-blue-500/20 to-indigo-500/15' 
-              : 'dark:bg-gradient-to-l dark:from-primary/20 dark:to-orange-500/15 bg-gradient-to-l from-amber-400/30 to-orange-400/25') 
+              : 'dark:bg-gradient-to-l dark:from-primary/20 dark:to-orange-500/15 bg-gradient-to-l from-gray-300/20 to-orange-200/15') 
             : 'bg-gradient-to-l from-primary/35 md:from-primary/20 to-purple-500/25 md:to-purple-500/20'
           } rounded-full blur-[60px] md:blur-[120px]`}
         animate={{ 
@@ -110,7 +110,7 @@ const GridPattern = ({ className = '', variant = 'dark' }: GridPatternProps) => 
           ${isDark 
             ? (isNeutralDark 
               ? 'bg-gradient-radial from-cyan-500/8 to-transparent' 
-              : 'dark:bg-gradient-radial dark:from-primary/8 dark:to-transparent bg-gradient-radial from-orange-300/15 to-transparent') 
+              : 'dark:bg-gradient-radial dark:from-primary/8 dark:to-transparent bg-gradient-radial from-gray-200/10 to-transparent') 
             : 'bg-gradient-radial from-primary/15 md:from-primary/10 to-transparent'
           } rounded-full blur-[60px] md:blur-[100px]`}
         animate={{ 
@@ -126,7 +126,7 @@ const GridPattern = ({ className = '', variant = 'dark' }: GridPatternProps) => 
       
       {/* Additional cyan orb for dark mode */}
       <motion.div 
-        className="absolute top-1/3 right-1/4 w-48 h-48 md:w-[300px] md:h-[300px] dark:bg-gradient-to-br dark:from-cyan-500/15 dark:to-transparent bg-gradient-to-br from-amber-400/20 to-transparent rounded-full blur-[80px] hidden dark:block"
+        className="absolute top-1/3 right-1/4 w-48 h-48 md:w-[300px] md:h-[300px] dark:bg-gradient-to-br dark:from-cyan-500/15 dark:to-transparent bg-gradient-to-br from-orange-100/15 to-transparent rounded-full blur-[80px] hidden dark:block"
         animate={{ 
           scale: [1, 1.15, 1],
           opacity: [0.2, 0.4, 0.2],
@@ -145,8 +145,8 @@ const GridPattern = ({ className = '', variant = 'dark' }: GridPatternProps) => 
           key={i}
           className={`absolute w-1 h-1 rounded-full 
             ${i % 2 === 0 
-              ? 'dark:bg-primary/50 bg-orange-500/50' 
-              : 'dark:bg-cyan-500/50 bg-amber-500/50'
+              ? 'dark:bg-primary/50 bg-orange-400/40' 
+              : 'dark:bg-cyan-500/50 bg-gray-400/40'
             }`}
           style={{
             left: `${Math.random() * 100}%`,
