@@ -204,6 +204,7 @@ export type Database = {
           id: string
           is_active: boolean
           product_id: string | null
+          store_affiliate_id: string | null
           updated_at: string
         }
         Insert: {
@@ -216,6 +217,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           product_id?: string | null
+          store_affiliate_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -228,6 +230,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           product_id?: string | null
+          store_affiliate_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -243,6 +246,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commission_rules_store_affiliate_id_fkey"
+            columns: ["store_affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "store_affiliates"
             referencedColumns: ["id"]
           },
         ]
@@ -446,6 +456,7 @@ export type Database = {
           paid_at: string
           payment_method: string | null
           payment_proof: string | null
+          store_affiliate_id: string | null
         }
         Insert: {
           affiliate_id: string
@@ -456,6 +467,7 @@ export type Database = {
           paid_at?: string
           payment_method?: string | null
           payment_proof?: string | null
+          store_affiliate_id?: string | null
         }
         Update: {
           affiliate_id?: string
@@ -466,6 +478,7 @@ export type Database = {
           paid_at?: string
           payment_method?: string | null
           payment_proof?: string | null
+          store_affiliate_id?: string | null
         }
         Relationships: [
           {
@@ -473,6 +486,13 @@ export type Database = {
             columns: ["affiliate_id"]
             isOneToOne: false
             referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_payments_store_affiliate_id_fkey"
+            columns: ["store_affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "store_affiliates"
             referencedColumns: ["id"]
           },
         ]
