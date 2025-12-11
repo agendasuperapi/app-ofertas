@@ -18,6 +18,7 @@ import { toast } from "@/hooks/use-toast";
 import { storeSchema } from "@/hooks/useStoreValidation";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
+import GridPattern from "@/components/landing/GridPattern";
 
 const categories = [
   "Restaurante",
@@ -99,22 +100,19 @@ export default function BecomePartner() {
   };
 
   const sanitizeSlug = (value: string) => {
-    // Remove espaços e caracteres inválidos em tempo real
     return value
       .toLowerCase()
       .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "") // Remove acentos
-      .replace(/[^a-z0-9-]/g, "") // Permite apenas letras minúsculas, números e hífens
-      .replace(/-+/g, "-") // Remove hífens duplicados
-      .replace(/^-|-$/g, ""); // Remove hífens no início e fim
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9-]/g, "")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
   };
 
-  // Check slug availability in real-time
   useEffect(() => {
     const checkSlugAvailability = async () => {
       const slug = formData.slug.trim();
       
-      // Reset if empty
       if (!slug) {
         setSlugAvailability({
           isChecking: false,
@@ -124,7 +122,6 @@ export default function BecomePartner() {
         return;
       }
 
-      // Start checking
       setSlugAvailability({
         isChecking: true,
         isAvailable: null,
@@ -171,7 +168,6 @@ export default function BecomePartner() {
       }
     };
 
-    // Debounce the check
     const timeoutId = setTimeout(() => {
       checkSlugAvailability();
     }, 500);
@@ -181,7 +177,6 @@ export default function BecomePartner() {
 
   const validateForm = () => {
     try {
-      // Validate using zod schema
       storeSchema.parse(formData);
       setErrors({});
       return true;
@@ -195,7 +190,6 @@ export default function BecomePartner() {
         });
         setErrors(newErrors);
 
-        // Scroll to first error and focus the field
         const first = error.issues[0];
         const firstField = first?.path?.[0] ? String(first.path[0]) : undefined;
         if (firstField) {
@@ -206,7 +200,6 @@ export default function BecomePartner() {
           }, 0);
         }
 
-        // Show a specific toast message
         toast({
           title: 'Erro no formulário',
           description: first?.message || 'Por favor, corrija os campos destacados',
@@ -221,7 +214,6 @@ export default function BecomePartner() {
     e.preventDefault();
 
     if (!validateForm()) {
-      // The validateForm already showed toast and focused the first error
       return;
     }
 
@@ -237,7 +229,6 @@ export default function BecomePartner() {
           duration: 5000,
         });
         
-        // Aguardar um momento para garantir que o estado do auth foi atualizado
         setTimeout(() => {
           navigate("/dashboard-lojista");
         }, 1000);
@@ -245,342 +236,356 @@ export default function BecomePartner() {
     });
   };
 
+  const inputStyles = "bg-slate-800/60 border-white/10 text-white placeholder:text-slate-500 focus:border-primary/50 focus:ring-primary/20";
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
       <Navigation />
 
-      <main className="container mx-auto px-4 pt-24 pb-12">
-        {/* Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <div className="inline-flex items-center gap-2 bg-primary/10 px-4 py-2 rounded-full mb-4">
-            <Rocket className="w-5 h-5 text-primary" />
-            <span className="text-sm font-medium">Seja um Parceiro</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-bold gradient-text mb-4">
-            Venda na Nossa Plataforma
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Cadastre sua loja e comece a vender para milhares de clientes
-          </p>
-        </motion.div>
+      <main className="container mx-auto px-4 pt-24 pb-12 relative">
+        <GridPattern variant="dark" />
+        
+        <div className="relative z-10">
+          {/* Hero Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
+          >
+            <div className="inline-flex items-center gap-2 bg-slate-800/60 backdrop-blur-sm border border-white/10 px-4 py-2 rounded-full mb-4">
+              <Rocket className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium text-white">Seja um Parceiro</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-primary to-orange-400 bg-clip-text text-transparent mb-4">
+              Venda na Nossa Plataforma
+            </h1>
+            <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+              Cadastre sua loja e comece a vender para milhares de clientes
+            </p>
+          </motion.div>
 
-        {/* Benefits */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {benefits.map((benefit, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card className="text-center h-full">
-                <CardContent className="pt-6">
-                  <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center mx-auto mb-4">
-                    <benefit.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="font-bold mb-2">{benefit.title}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {benefit.description}
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Registration Form */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="max-w-3xl mx-auto"
-          id="registration-form"
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-2xl">
-                <Store className="w-6 h-6" />
-                Cadastre sua Loja
-              </CardTitle>
-              <CardDescription>
-                Preencha as informações abaixo para começar a vender
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-
-                {/* Owner Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5" />
-                    Dados do Proprietário
-                  </h3>
-
-                  <div>
-                    <Label htmlFor="owner_name">Nome Completo *</Label>
-                    <Input
-                      id="owner_name"
-                      value={formData.owner_name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, owner_name: e.target.value })
-                      }
-                      placeholder="Ex: João Silva"
-                      className={errors.owner_name ? "border-red-500" : ""}
-                    />
-                    {errors.owner_name && (
-                      <p className="text-sm text-red-500 mt-1">{errors.owner_name}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="owner_phone">Telefone do Proprietário *</Label>
-                    <PhoneInput
-                      id="owner_phone"
-                      value={formData.owner_phone}
-                      onChange={(value) =>
-                        setFormData({ ...formData, owner_phone: value })
-                      }
-                      className={errors.owner_phone ? "border-red-500" : ""}
-                    />
-                    {errors.owner_phone && (
-                      <p className="text-sm text-red-500 mt-1">{errors.owner_phone}</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Basic Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <CheckCircle className="w-5 h-5" />
-                    Informações Básicas
-                  </h3>
-
-                  <div>
-                    <Label htmlFor="name">Nome da Loja *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => {
-                        const name = e.target.value;
-                        setFormData({
-                          ...formData,
-                          name,
-                          slug: handleSlugGeneration(name),
-                        });
-                      }}
-                      placeholder="Ex: Pizzaria Bella Italia"
-                      className={errors.name ? "border-red-500" : ""}
-                    />
-                    {errors.name && (
-                      <p className="text-sm text-red-500 mt-1">{errors.name}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <Label htmlFor="slug">URL da Loja *</Label>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground whitespace-nowrap">
-                        /
-                      </span>
-                      <Input
-                        id="slug"
-                        value={formData.slug}
-                        onChange={(e) => {
-                          const sanitized = sanitizeSlug(e.target.value);
-                          setFormData({ ...formData, slug: sanitized });
-                        }}
-                        placeholder="pizzaria-bella-italia"
-                        className={errors.slug ? "border-red-500" : ""}
-                      />
+          {/* Benefits */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            {benefits.map((benefit, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ y: -5, transition: { duration: 0.2 } }}
+              >
+                <Card className="text-center h-full bg-slate-900/60 backdrop-blur-xl border-white/10 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300">
+                  <CardContent className="pt-6">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/30">
+                      <benefit.icon className="w-6 h-6 text-white" />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Apenas letras minúsculas, números e hífens
+                    <h3 className="font-bold mb-2 text-white">{benefit.title}</h3>
+                    <p className="text-sm text-slate-400">
+                      {benefit.description}
                     </p>
-                    {formData.slug && (
-                      <div className="mt-2 p-3 bg-muted/50 rounded-lg border border-border">
-                        <p className="text-xs text-muted-foreground mb-1">Preview da URL:</p>
-                        <div className="flex items-center gap-2">
-                          <Store className="w-4 h-4 text-primary" />
-                          <code className="text-sm font-mono text-foreground">
-                            https://ofertas.app/{formData.slug}
-                          </code>
-                        </div>
-                        
-                        {/* Availability status */}
-                        <div className="mt-2 flex items-center gap-2">
-                          {slugAvailability.isChecking && (
-                            <>
-                              <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">
-                                Verificando disponibilidade...
-                              </span>
-                            </>
-                          )}
-                          {!slugAvailability.isChecking && slugAvailability.isAvailable === true && (
-                            <>
-                              <CheckCircle className="w-4 h-4 text-green-600" />
-                              <span className="text-xs text-green-600 font-medium">
-                                {slugAvailability.message}
-                              </span>
-                            </>
-                          )}
-                          {!slugAvailability.isChecking && slugAvailability.isAvailable === false && (
-                            <>
-                              <AlertCircle className="w-4 h-4 text-red-600" />
-                              <span className="text-xs text-red-600 font-medium">
-                                {slugAvailability.message}
-                              </span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    {errors.slug && (
-                      <p className="text-sm text-red-500 mt-1">{errors.slug}</p>
-                    )}
-                  </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
 
-                  <div>
-                    <Label htmlFor="category">Categoria *</Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, category: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
-                            {cat}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+          {/* Registration Form */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="max-w-3xl mx-auto"
+            id="registration-form"
+          >
+            <Card className="bg-slate-900/70 backdrop-blur-xl border-white/10">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-2xl text-white">
+                  <Store className="w-6 h-6 text-primary" />
+                  Cadastre sua Loja
+                </CardTitle>
+                <CardDescription className="text-slate-400">
+                  Preencha as informações abaixo para começar a vender
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
 
-                  <div>
-                    <Label htmlFor="description">Descrição da Loja</Label>
-                    <Textarea
-                      id="description"
-                      value={formData.description}
-                      onChange={(e) =>
-                        setFormData({ ...formData, description: e.target.value })
-                      }
-                      placeholder="Conte sobre sua loja e o que a torna especial..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
-
-                {/* User Account Section - Only if not logged in */}
-                {!user && (
+                  {/* Owner Information */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5" />
-                      Dados de Acesso
+                    <h3 className="text-lg font-semibold flex items-center gap-2 text-white">
+                      <CheckCircle className="w-5 h-5 text-primary" />
+                      Dados do Proprietário
                     </h3>
 
                     <div>
-                      <Label htmlFor="email">E-mail *</Label>
-                      <EmailInput
-                        id="email"
-                        value={formData.email}
-                        onChange={(value) =>
-                          setFormData({ ...formData, email: value })
+                      <Label htmlFor="owner_name" className="text-slate-200">Nome Completo *</Label>
+                      <Input
+                        id="owner_name"
+                        value={formData.owner_name}
+                        onChange={(e) =>
+                          setFormData({ ...formData, owner_name: e.target.value })
                         }
-                        className={errors.email ? "border-red-500" : ""}
+                        placeholder="Ex: João Silva"
+                        className={`${inputStyles} ${errors.owner_name ? "border-red-500" : ""}`}
                       />
-                      {errors.email && (
-                        <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                      {errors.owner_name && (
+                        <p className="text-sm text-red-400 mt-1">{errors.owner_name}</p>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="password">Senha *</Label>
-                        <Input
-                          id="password"
-                          type="password"
-                          value={formData.password}
-                          onChange={(e) =>
-                            setFormData({ ...formData, password: e.target.value })
-                          }
-                          placeholder="Mínimo 6 caracteres"
-                          className={errors.password ? "border-red-500" : ""}
-                        />
-                        {errors.password && (
-                          <p className="text-sm text-red-500 mt-1">{errors.password}</p>
-                        )}
-                      </div>
+                    <div>
+                      <Label htmlFor="owner_phone" className="text-slate-200">Telefone do Proprietário *</Label>
+                      <PhoneInput
+                        id="owner_phone"
+                        value={formData.owner_phone}
+                        onChange={(value) =>
+                          setFormData({ ...formData, owner_phone: value })
+                        }
+                        className={`${inputStyles} ${errors.owner_phone ? "border-red-500" : ""}`}
+                      />
+                      {errors.owner_phone && (
+                        <p className="text-sm text-red-400 mt-1">{errors.owner_phone}</p>
+                      )}
+                    </div>
+                  </div>
 
-                      <div>
-                        <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
-                        <Input
-                          id="confirmPassword"
-                          type="password"
-                          value={formData.confirmPassword}
-                          onChange={(e) =>
-                            setFormData({ ...formData, confirmPassword: e.target.value })
-                          }
-                          placeholder="Repita a senha"
-                          className={errors.confirmPassword ? "border-red-500" : ""}
-                        />
-                        {errors.confirmPassword && (
-                          <p className="text-sm text-red-500 mt-1">{errors.confirmPassword}</p>
-                        )}
-                      </div>
+                  {/* Basic Information */}
+                  <div className="space-y-4">
+                    <h3 className="text-lg font-semibold flex items-center gap-2 text-white">
+                      <CheckCircle className="w-5 h-5 text-primary" />
+                      Informações Básicas
+                    </h3>
+
+                    <div>
+                      <Label htmlFor="name" className="text-slate-200">Nome da Loja *</Label>
+                      <Input
+                        id="name"
+                        value={formData.name}
+                        onChange={(e) => {
+                          const name = e.target.value;
+                          setFormData({
+                            ...formData,
+                            name,
+                            slug: handleSlugGeneration(name),
+                          });
+                        }}
+                        placeholder="Ex: Pizzaria Bella Italia"
+                        className={`${inputStyles} ${errors.name ? "border-red-500" : ""}`}
+                      />
+                      {errors.name && (
+                        <p className="text-sm text-red-400 mt-1">{errors.name}</p>
+                      )}
                     </div>
 
-                    <p className="text-sm text-muted-foreground">
-                      Uma conta será criada automaticamente para você acessar o painel de gerenciamento.
-                    </p>
+                    <div>
+                      <Label htmlFor="slug" className="text-slate-200">URL da Loja *</Label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-slate-400 whitespace-nowrap">
+                          /
+                        </span>
+                        <Input
+                          id="slug"
+                          value={formData.slug}
+                          onChange={(e) => {
+                            const sanitized = sanitizeSlug(e.target.value);
+                            setFormData({ ...formData, slug: sanitized });
+                          }}
+                          placeholder="pizzaria-bella-italia"
+                          className={`${inputStyles} ${errors.slug ? "border-red-500" : ""}`}
+                        />
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Apenas letras minúsculas, números e hífens
+                      </p>
+                      {formData.slug && (
+                        <div className="mt-2 p-3 bg-slate-800/40 rounded-lg border border-white/10">
+                          <p className="text-xs text-slate-400 mb-1">Preview da URL:</p>
+                          <div className="flex items-center gap-2">
+                            <Store className="w-4 h-4 text-primary" />
+                            <code className="text-sm font-mono text-slate-200">
+                              https://ofertas.app/{formData.slug}
+                            </code>
+                          </div>
+                          
+                          {/* Availability status */}
+                          <div className="mt-2 flex items-center gap-2">
+                            {slugAvailability.isChecking && (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin text-slate-400" />
+                                <span className="text-xs text-slate-400">
+                                  Verificando disponibilidade...
+                                </span>
+                              </>
+                            )}
+                            {!slugAvailability.isChecking && slugAvailability.isAvailable === true && (
+                              <>
+                                <CheckCircle className="w-4 h-4 text-emerald-400" />
+                                <span className="text-xs text-emerald-400 font-medium">
+                                  {slugAvailability.message}
+                                </span>
+                              </>
+                            )}
+                            {!slugAvailability.isChecking && slugAvailability.isAvailable === false && (
+                              <>
+                                <AlertCircle className="w-4 h-4 text-red-400" />
+                                <span className="text-xs text-red-400 font-medium">
+                                  {slugAvailability.message}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      {errors.slug && (
+                        <p className="text-sm text-red-400 mt-1">{errors.slug}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label htmlFor="category" className="text-slate-200">Categoria *</Label>
+                      <Select
+                        value={formData.category}
+                        onValueChange={(value) =>
+                          setFormData({ ...formData, category: value })
+                        }
+                      >
+                        <SelectTrigger className={inputStyles}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-white/10">
+                          {categories.map((cat) => (
+                            <SelectItem key={cat} value={cat} className="text-white hover:bg-slate-800 focus:bg-slate-800">
+                              {cat}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="description" className="text-slate-200">Descrição da Loja</Label>
+                      <Textarea
+                        id="description"
+                        value={formData.description}
+                        onChange={(e) =>
+                          setFormData({ ...formData, description: e.target.value })
+                        }
+                        placeholder="Conte sobre sua loja e o que a torna especial..."
+                        rows={3}
+                        className={inputStyles}
+                      />
+                    </div>
                   </div>
-                )}
 
+                  {/* User Account Section - Only if not logged in */}
+                  {!user && (
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold flex items-center gap-2 text-white">
+                        <CheckCircle className="w-5 h-5 text-primary" />
+                        Dados de Acesso
+                      </h3>
 
-                <Button
-                  type="submit"
-                  disabled={isCreating}
-                  className="w-full bg-gradient-primary"
-                  size="lg"
-                >
-                  {isCreating ? (
-                    "Cadastrando..."
-                  ) : (
-                    <>
-                      <Rocket className="w-5 h-5 mr-2" />
-                      Cadastrar Minha Loja
-                    </>
+                      <div>
+                        <Label htmlFor="email" className="text-slate-200">E-mail *</Label>
+                        <EmailInput
+                          id="email"
+                          value={formData.email}
+                          onChange={(value) =>
+                            setFormData({ ...formData, email: value })
+                          }
+                          className={`${inputStyles} ${errors.email ? "border-red-500" : ""}`}
+                        />
+                        {errors.email && (
+                          <p className="text-sm text-red-400 mt-1">{errors.email}</p>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="password" className="text-slate-200">Senha *</Label>
+                          <Input
+                            id="password"
+                            type="password"
+                            value={formData.password}
+                            onChange={(e) =>
+                              setFormData({ ...formData, password: e.target.value })
+                            }
+                            placeholder="Mínimo 6 caracteres"
+                            className={`${inputStyles} ${errors.password ? "border-red-500" : ""}`}
+                          />
+                          {errors.password && (
+                            <p className="text-sm text-red-400 mt-1">{errors.password}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <Label htmlFor="confirmPassword" className="text-slate-200">Confirmar Senha *</Label>
+                          <Input
+                            id="confirmPassword"
+                            type="password"
+                            value={formData.confirmPassword}
+                            onChange={(e) =>
+                              setFormData({ ...formData, confirmPassword: e.target.value })
+                            }
+                            placeholder="Repita a senha"
+                            className={`${inputStyles} ${errors.confirmPassword ? "border-red-500" : ""}`}
+                          />
+                          {errors.confirmPassword && (
+                            <p className="text-sm text-red-400 mt-1">{errors.confirmPassword}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-slate-400">
+                        Uma conta será criada automaticamente para você acessar o painel de gerenciamento.
+                      </p>
+                    </div>
                   )}
-                </Button>
 
-                <p className="text-sm text-muted-foreground text-center">
-                  {!user ? (
-                    <>
-                      Ao cadastrar você automaticamente cria uma conta e faz login.
-                      <br />
-                      Já tem uma conta? <a href="/login-lojista" className="text-primary hover:underline">Faça login primeiro</a> ou{" "}
-                      <a href="/" className="text-primary hover:underline">entre como cliente</a> e depois cadastre sua loja.
-                    </>
-                  ) : (
-                    <>
-                      Você está logado como <strong>{user.email}</strong>.
-                      <br />
-                      Sua loja será vinculada à sua conta atual.
-                    </>
-                  )}
-                </p>
-              </form>
-            </CardContent>
-          </Card>
-        </motion.div>
+                  {/* Submit Button with Glow */}
+                  <div className="relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-primary to-orange-500 rounded-lg blur-xl opacity-40 group-hover:opacity-60 transition-opacity" />
+                    <Button
+                      type="submit"
+                      disabled={isCreating}
+                      className="relative w-full bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 text-white shadow-lg shadow-primary/30 border-0"
+                      size="lg"
+                    >
+                      {isCreating ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Cadastrando...
+                        </>
+                      ) : (
+                        <>
+                          <Rocket className="w-5 h-5 mr-2" />
+                          Cadastrar Minha Loja
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  <p className="text-sm text-slate-400 text-center">
+                    {!user ? (
+                      <>
+                        Ao cadastrar você automaticamente cria uma conta e faz login.
+                        <br />
+                        Já tem uma conta? <a href="/login-lojista" className="text-primary hover:text-primary/80 hover:underline">Faça login primeiro</a> ou{" "}
+                        <a href="/" className="text-primary hover:text-primary/80 hover:underline">entre como cliente</a> e depois cadastre sua loja.
+                      </>
+                    ) : (
+                      <>
+                        Você está logado como <strong className="text-white">{user.email}</strong>.
+                        <br />
+                        Sua loja será vinculada à sua conta atual.
+                      </>
+                    )}
+                  </p>
+                </form>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
       </main>
     </div>
   );
