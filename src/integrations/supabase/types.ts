@@ -2396,6 +2396,7 @@ export type Database = {
           affiliate_account_id: string
           commission_enabled: boolean | null
           commission_maturity_days: number | null
+          coupon_id: string | null
           created_at: string | null
           default_commission_type: string
           default_commission_value: number
@@ -2414,6 +2415,7 @@ export type Database = {
           affiliate_account_id: string
           commission_enabled?: boolean | null
           commission_maturity_days?: number | null
+          coupon_id?: string | null
           created_at?: string | null
           default_commission_type?: string
           default_commission_value?: number
@@ -2432,6 +2434,7 @@ export type Database = {
           affiliate_account_id?: string
           commission_enabled?: boolean | null
           commission_maturity_days?: number | null
+          coupon_id?: string | null
           created_at?: string | null
           default_commission_type?: string
           default_commission_value?: number
@@ -2451,6 +2454,13 @@ export type Database = {
             columns: ["affiliate_account_id"]
             isOneToOne: false
             referencedRelation: "affiliate_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_affiliates_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
             referencedColumns: ["id"]
           },
           {
