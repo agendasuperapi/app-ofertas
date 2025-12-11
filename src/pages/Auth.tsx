@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useForceTheme } from "@/hooks/useForceTheme";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, User, Lock, Check, Mail, Eye, EyeOff } from "lucide-react";
 import { Navigation } from "@/components/layout/Navigation";
@@ -12,6 +13,7 @@ import { toast } from "@/hooks/use-toast";
 import { z } from "zod";
 
 export default function Auth() {
+  useForceTheme('light');
   const navigate = useNavigate();
   const { user } = useAuth();
   const { hasRole, loading: roleLoading } = useUserRole();
