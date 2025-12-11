@@ -3445,6 +3445,10 @@ export type Database = {
         Args: { p_order_id: string }
         Returns: undefined
       }
+      reprocess_affiliate_commission_for_order: {
+        Args: { p_order_id: string }
+        Returns: undefined
+      }
       text_to_bytea: { Args: { data: string }; Returns: string }
       update_order_status_skip_notification: {
         Args: { p_new_status: string; p_order_id: string }
