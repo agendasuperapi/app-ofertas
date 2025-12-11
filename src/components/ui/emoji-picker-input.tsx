@@ -396,18 +396,21 @@ export const EmojiPickerInput = ({ value, onChange, label, categoryName }: Emoji
             </ResponsiveDialogDescription>
           </ResponsiveDialogHeader>
 
-          <div className="flex flex-col gap-4 mt-4">
-            {/* Portuguese search */}
-            <div>
-              <Input
-                placeholder="Pesquisar emoji (português)..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="mb-2"
-              />
-              
-              {/* Portuguese search results */}
-              {searchResults.length > 0 && (
+          <div className="flex flex-col gap-3 mt-4">
+            {/* Unified search input */}
+            <Input
+              placeholder="Pesquisar emoji (português ou inglês)..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              autoFocus
+            />
+
+            {/* Portuguese search results */}
+            {searchTerm && searchResults.length > 0 && (
+              <div>
+                <Label className="text-xs text-muted-foreground mb-2 block">
+                  Resultados ({searchResults.length})
+                </Label>
                 <div className="flex flex-wrap gap-1 max-h-[120px] overflow-y-auto p-2 bg-accent/30 rounded-lg">
                   {searchResults.map((emoji, index) => (
                     <button
@@ -420,10 +423,10 @@ export const EmojiPickerInput = ({ value, onChange, label, categoryName }: Emoji
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
 
-            {/* Quick suggestions */}
+            {/* Quick suggestions (only when not searching) */}
             {!searchTerm && (
               <div>
                 <Label className="text-xs text-muted-foreground mb-2 block">Sugestões Rápidas</Label>
@@ -442,7 +445,7 @@ export const EmojiPickerInput = ({ value, onChange, label, categoryName }: Emoji
               </div>
             )}
 
-            {/* EmojiPicker for browsing and English search */}
+            {/* EmojiPicker for browsing (search hidden when using main search) */}
             <div className="border rounded-lg overflow-hidden">
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
@@ -450,7 +453,7 @@ export const EmojiPickerInput = ({ value, onChange, label, categoryName }: Emoji
                 width="100%"
                 height={280}
                 categories={CATEGORIES_PT}
-                searchPlaceHolder="Pesquisar (inglês)..."
+                searchDisabled={!!searchTerm}
                 previewConfig={{ showPreview: false }}
                 lazyLoadEmojis={true}
               />
