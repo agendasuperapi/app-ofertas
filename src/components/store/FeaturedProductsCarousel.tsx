@@ -92,7 +92,7 @@ export const FeaturedProductsCarousel = ({
             Destaques
           </h2>
         </div>
-        <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-700 dark:text-yellow-400 border-yellow-500/30 text-xs md:text-sm">
+        <Badge variant="secondary" className="bg-yellow-500/20 text-yellow-700 border-yellow-500/30 text-xs md:text-sm">
           {products.length} {products.length === 1 ? 'produto' : 'produtos'}
         </Badge>
       </div>

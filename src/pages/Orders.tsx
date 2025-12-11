@@ -555,7 +555,7 @@ export default function Orders() {
                           </Badge>
                           
                           {isScheduledOrder && (
-                            <Badge variant="outline" className="border-amber-500 text-amber-700 dark:text-amber-400 w-fit">
+                            <Badge variant="outline" className="border-amber-500 text-amber-700 w-fit">
                               <Clock className="w-3 h-3 mr-1" />
                               Pedido Agendado
                             </Badge>
@@ -609,7 +609,7 @@ export default function Orders() {
                                 
                                 {/* Mostrar desconto aplicado ao item */}
                                 {itemDiscount.isEligible && itemDiscount.discountAmount > 0 && (
-                                  <div className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400 mt-1">
+                                  <div className="flex items-center gap-1 text-sm text-green-600 mt-1">
                                     <Tag className="w-3 h-3" />
                                     <span>Desconto: -R$ {itemDiscount.discountAmount.toFixed(2)}</span>
                                   </div>
@@ -628,7 +628,7 @@ export default function Orders() {
                                 </p>
                                 {/* Valor com desconto */}
                                 {itemDiscount.discountAmount > 0 && (
-                                  <p className="text-sm text-green-600 dark:text-green-400 whitespace-nowrap">
+                                  <p className="text-sm text-green-600 whitespace-nowrap">
                                     R$ {(Number(item.subtotal) - itemDiscount.discountAmount).toFixed(2)}
                                   </p>
                                 )}
