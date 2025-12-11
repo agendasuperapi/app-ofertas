@@ -2,19 +2,20 @@ import { motion } from 'framer-motion';
 
 interface GridPatternProps {
   className?: string;
-  variant?: 'light' | 'dark';
+  variant?: 'light' | 'dark' | 'neutral-dark';
 }
 
 const GridPattern = ({ className = '', variant = 'dark' }: GridPatternProps) => {
-  const isDark = variant === 'dark';
+  const isDark = variant === 'dark' || variant === 'neutral-dark';
+  const isNeutralDark = variant === 'neutral-dark';
   
   return (
     <div className={`absolute inset-0 overflow-hidden ${className}`}>
       {/* Base gradient - dark theme */}
-      <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-b from-primary/10 via-slate-950 to-slate-950' : 'bg-gradient-to-b from-primary/15 via-orange-100/20 to-transparent md:from-primary/5 md:via-transparent'}`} />
+      <div className={`absolute inset-0 ${isDark ? (isNeutralDark ? 'bg-gradient-to-b from-cyan-500/5 via-slate-950 to-slate-950' : 'bg-gradient-to-b from-primary/10 via-slate-950 to-slate-950') : 'bg-gradient-to-b from-primary/15 via-orange-100/20 to-transparent md:from-primary/5 md:via-transparent'}`} />
       
       {/* Centralized radial gradient */}
-      <div className={`absolute top-0 left-0 right-0 h-[60vh] md:h-[80vh] ${isDark ? 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(var(--primary)/0.20),transparent)]' : 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(var(--primary)/0.25),transparent)] md:bg-[radial-gradient(ellipse_50%_50%_at_50%_-20%,hsl(var(--primary)/0.12),transparent)]'}`} />
+      <div className={`absolute top-0 left-0 right-0 h-[60vh] md:h-[80vh] ${isDark ? (isNeutralDark ? 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(190_80%_50%/0.15),transparent)]' : 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(var(--primary)/0.20),transparent)]') : 'bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,hsl(var(--primary)/0.25),transparent)] md:bg-[radial-gradient(ellipse_50%_50%_at_50%_-20%,hsl(var(--primary)/0.12),transparent)]'}`} />
       
       {/* Animated grid - more subtle in dark mode */}
       <div 
@@ -28,9 +29,9 @@ const GridPattern = ({ className = '', variant = 'dark' }: GridPatternProps) => 
         }}
       />
       
-      {/* Top center orb - primary/orange */}
+      {/* Top center orb */}
       <motion.div 
-        className={`absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80 md:w-[600px] md:h-[400px] ${isDark ? 'bg-gradient-to-b from-primary/25 via-orange-500/20 to-transparent' : 'bg-gradient-to-b from-primary/35 via-orange-400/30 to-transparent'} rounded-full blur-[80px] md:blur-[120px]`}
+        className={`absolute -top-20 left-1/2 -translate-x-1/2 w-80 h-80 md:w-[600px] md:h-[400px] ${isDark ? (isNeutralDark ? 'bg-gradient-to-b from-cyan-500/20 via-blue-500/15 to-transparent' : 'bg-gradient-to-b from-primary/25 via-orange-500/20 to-transparent') : 'bg-gradient-to-b from-primary/35 via-orange-400/30 to-transparent'} rounded-full blur-[80px] md:blur-[120px]`}
         animate={{ 
           opacity: [0.5, 0.7, 0.5],
           scale: [1, 1.05, 1],
@@ -57,9 +58,9 @@ const GridPattern = ({ className = '', variant = 'dark' }: GridPatternProps) => 
         }}
       />
       
-      {/* Right orb - primary accent */}
+      {/* Right orb */}
       <motion.div 
-        className={`absolute bottom-1/4 -right-16 md:-right-32 w-72 h-72 md:w-[600px] md:h-[600px] ${isDark ? 'bg-gradient-to-l from-primary/20 to-orange-500/15' : 'bg-gradient-to-l from-primary/35 md:from-primary/20 to-purple-500/25 md:to-purple-500/20'} rounded-full blur-[60px] md:blur-[120px]`}
+        className={`absolute bottom-1/4 -right-16 md:-right-32 w-72 h-72 md:w-[600px] md:h-[600px] ${isDark ? (isNeutralDark ? 'bg-gradient-to-l from-blue-500/20 to-indigo-500/15' : 'bg-gradient-to-l from-primary/20 to-orange-500/15') : 'bg-gradient-to-l from-primary/35 md:from-primary/20 to-purple-500/25 md:to-purple-500/20'} rounded-full blur-[60px] md:blur-[120px]`}
         animate={{ 
           x: [0, -25, 0],
           y: [0, -25, 0],
@@ -75,7 +76,7 @@ const GridPattern = ({ className = '', variant = 'dark' }: GridPatternProps) => 
       
       {/* Center orb */}
       <motion.div 
-        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 md:w-[800px] md:h-[800px] ${isDark ? 'bg-gradient-radial from-primary/8 to-transparent' : 'bg-gradient-radial from-primary/15 md:from-primary/10 to-transparent'} rounded-full blur-[60px] md:blur-[100px]`}
+        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 md:w-[800px] md:h-[800px] ${isDark ? (isNeutralDark ? 'bg-gradient-radial from-cyan-500/8 to-transparent' : 'bg-gradient-radial from-primary/8 to-transparent') : 'bg-gradient-radial from-primary/15 md:from-primary/10 to-transparent'} rounded-full blur-[60px] md:blur-[100px]`}
         animate={{ 
           scale: [1, 1.2, 1],
           opacity: [0.3, 0.5, 0.3],
@@ -108,7 +109,7 @@ const GridPattern = ({ className = '', variant = 'dark' }: GridPatternProps) => 
       {[...Array(isDark ? 15 : 12)].map((_, i) => (
         <motion.div
           key={i}
-          className={`absolute w-1 h-1 rounded-full ${isDark ? (i % 2 === 0 ? 'bg-primary/50' : 'bg-cyan-500/50') : (i < 8 ? 'bg-primary/60 md:bg-primary/40' : 'hidden md:block bg-primary/40')}`}
+          className={`absolute w-1 h-1 rounded-full ${isDark ? (i % 2 === 0 ? (isNeutralDark ? 'bg-cyan-400/50' : 'bg-primary/50') : 'bg-cyan-500/50') : (i < 8 ? 'bg-primary/60 md:bg-primary/40' : 'hidden md:block bg-primary/40')}`}
           style={{
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,

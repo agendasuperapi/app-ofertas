@@ -243,7 +243,7 @@ export default function BecomePartner() {
       <Navigation />
 
       <main className="container mx-auto px-4 pt-24 pb-12 relative">
-        <GridPattern variant="dark" />
+        <GridPattern variant="neutral-dark" />
         
         <div className="relative z-10">
           {/* Hero Section */}
