@@ -1,5 +1,6 @@
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { MessageCircle, Package, CreditCard, Tag, TrendingUp, Users } from 'lucide-react';
+import { useRef } from 'react';
 
 const floatingCards = [
   { 
@@ -9,7 +10,8 @@ const floatingCards = [
     color: 'from-green-500 to-emerald-500',
     shadow: 'shadow-green-500/30',
     position: 'top-0 -left-4 md:top-10 md:-left-8',
-    delay: 0
+    delay: 0,
+    parallaxSpeed: 0.3
   },
   { 
     icon: Package, 
@@ -18,7 +20,8 @@ const floatingCards = [
     color: 'from-primary to-orange-500',
     shadow: 'shadow-primary/30',
     position: 'top-1/4 -right-2 md:-right-12',
-    delay: 0.2
+    delay: 0.2,
+    parallaxSpeed: 0.5
   },
   { 
     icon: CreditCard, 
@@ -27,7 +30,8 @@ const floatingCards = [
     color: 'from-cyan-500 to-blue-500',
     shadow: 'shadow-cyan-500/30',
     position: 'bottom-1/3 -left-4 md:-left-16',
-    delay: 0.4
+    delay: 0.4,
+    parallaxSpeed: 0.4
   },
   { 
     icon: Tag, 
@@ -36,7 +40,8 @@ const floatingCards = [
     color: 'from-purple-500 to-pink-500',
     shadow: 'shadow-purple-500/30',
     position: 'bottom-10 -right-2 md:-right-8',
-    delay: 0.6
+    delay: 0.6,
+    parallaxSpeed: 0.6
   },
   { 
     icon: TrendingUp, 
@@ -45,7 +50,8 @@ const floatingCards = [
     color: 'from-emerald-500 to-green-500',
     shadow: 'shadow-emerald-500/30',
     position: 'top-1/2 -left-8 md:-left-20 hidden md:flex',
-    delay: 0.8
+    delay: 0.8,
+    parallaxSpeed: 0.35
   },
   { 
     icon: Users, 
@@ -54,22 +60,41 @@ const floatingCards = [
     color: 'from-amber-500 to-orange-500',
     shadow: 'shadow-amber-500/30',
     position: 'top-4 -right-4 md:top-0 md:-right-16 hidden md:flex',
-    delay: 1
+    delay: 1,
+    parallaxSpeed: 0.45
   }
 ];
 
 const FloatingCards = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ['start end', 'end start']
+  });
+
   return (
-    <>
+    <div ref={containerRef}>
       {floatingCards.map((card, index) => {
         const Icon = card.icon;
+        const y = useTransform(
+          scrollYProgress, 
+          [0, 1], 
+          [0, -50 * card.parallaxSpeed]
+        );
+        
         return (
           <motion.div
             key={index}
             className={`absolute ${card.position} z-20`}
-            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ delay: 0.5 + card.delay, duration: 0.5, type: "spring" }}
+            initial={{ opacity: 0, scale: 0.8, y: 20, filter: 'blur(8px)' }}
+            animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ 
+              delay: 0.5 + card.delay, 
+              duration: 0.6, 
+              type: "spring",
+              ease: [0.25, 0.1, 0.25, 1]
+            }}
+            style={{ y }}
           >
             <motion.div
               className={`
@@ -101,7 +126,7 @@ const FloatingCards = () => {
           </motion.div>
         );
       })}
-    </>
+    </div>
   );
 };
 

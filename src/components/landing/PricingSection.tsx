@@ -125,7 +125,9 @@ const PricingSection = () => {
                   `}
                   whileHover={{ 
                     y: -8, 
-                    borderColor: plan.popular ? 'hsl(var(--primary))' : 'hsl(var(--primary) / 0.3)'
+                    boxShadow: plan.popular 
+                      ? '0 25px 50px -12px rgba(249, 115, 22, 0.35)' 
+                      : '0 25px 50px -12px rgba(249, 115, 22, 0.15)'
                   }}
                 >
                   {/* Glow effect for popular */}

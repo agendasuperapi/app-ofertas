@@ -37,10 +37,14 @@ const BentoGrid = ({ items, variant = 'dark' }: BentoGridProps) => {
               ${isFeatured ? 'md:col-span-2 md:row-span-2' : ''}
               ${item.className || ''}
             `}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: index * 0.1, duration: 0.5 }}
+            initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
+            whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ 
+              delay: index * 0.08, 
+              duration: 0.7,
+              ease: [0.25, 0.1, 0.25, 1]
+            }}
             whileHover={{ y: -5 }}
           >
             {/* Background gradient */}

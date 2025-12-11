@@ -35,10 +35,14 @@ const GlassCard = ({
         transition-all duration-500
         ${className}
       `}
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay }}
+      initial={{ opacity: 0, y: 40, filter: 'blur(10px)' }}
+      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ 
+        duration: 0.7, 
+        delay,
+        ease: [0.25, 0.1, 0.25, 1]
+      }}
       whileHover={hoverEffect ? { y: -5, scale: 1.02 } : {}}
     >
       {/* Gradient border effect */}
