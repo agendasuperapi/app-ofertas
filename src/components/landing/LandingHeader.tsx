@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Menu, X, Store, Users, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export const LandingHeader = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -29,7 +30,7 @@ export const LandingHeader = () => {
       transition={{ duration: 0.5, ease: "easeOut" }}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-slate-900/95 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/20"
+          ? "bg-slate-900/95 dark:bg-slate-900/95 light:bg-white/95 backdrop-blur-xl border-b border-white/10 dark:border-white/10 light:border-slate-200 shadow-lg shadow-black/20 dark:shadow-black/20 light:shadow-slate-200/50"
           : "bg-transparent"
       }`}
     >
@@ -51,13 +52,14 @@ export const LandingHeader = () => {
               <Link key={link.href} to={link.href}>
                 <Button
                   variant="ghost"
-                  className="text-slate-300 hover:text-white hover:bg-white/10 gap-2"
+                  className="text-slate-300 dark:text-slate-300 light:text-slate-700 hover:text-white dark:hover:text-white light:hover:text-slate-900 hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-slate-100 gap-2"
                 >
                   <link.icon className="w-4 h-4" />
                   {link.label}
                 </Button>
               </Link>
             ))}
+            <ThemeToggle />
             <Link to="/become-partner">
               <Button className="ml-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 transition-all gap-2">
                 <LogIn className="w-4 h-4" />
@@ -75,22 +77,25 @@ export const LandingHeader = () => {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="w-[280px] bg-slate-900/98 backdrop-blur-xl border-l border-white/10 p-0"
+              className="w-[280px] bg-slate-900/98 dark:bg-slate-900/98 light:bg-white/98 backdrop-blur-xl border-l border-white/10 dark:border-white/10 light:border-slate-200 p-0"
             >
               <div className="flex flex-col h-full">
                 {/* Mobile Header */}
-                <div className="flex items-center justify-between p-4 border-b border-white/10">
+                <div className="flex items-center justify-between p-4 border-b border-white/10 dark:border-white/10 light:border-slate-200">
                   <span className="text-lg font-bold bg-gradient-to-r from-orange-400 to-cyan-400 bg-clip-text text-transparent">
                     Ofertas.app
                   </span>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="text-slate-400 hover:text-white hover:bg-white/10"
-                  >
-                    <X className="w-5 h-5" />
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <ThemeToggle />
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="text-slate-400 dark:text-slate-400 light:text-slate-600 hover:text-white dark:hover:text-white light:hover:text-slate-900 hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-slate-100"
+                    >
+                      <X className="w-5 h-5" />
+                    </Button>
+                  </div>
                 </div>
 
                 {/* Mobile Links */}
@@ -103,7 +108,7 @@ export const LandingHeader = () => {
                     >
                       <Button
                         variant="ghost"
-                        className="w-full justify-start text-slate-300 hover:text-white hover:bg-white/10 gap-3"
+                        className="w-full justify-start text-slate-300 dark:text-slate-300 light:text-slate-700 hover:text-white dark:hover:text-white light:hover:text-slate-900 hover:bg-white/10 dark:hover:bg-white/10 light:hover:bg-slate-100 gap-3"
                       >
                         <link.icon className="w-5 h-5" />
                         {link.label}
