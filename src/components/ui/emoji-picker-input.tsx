@@ -1,9 +1,15 @@
 import { useState, useEffect } from 'react';
 import EmojiPicker, { EmojiClickData, Theme, Categories } from 'emoji-picker-react';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { 
+  ResponsiveDialog, 
+  ResponsiveDialogContent, 
+  ResponsiveDialogHeader, 
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription 
+} from '@/components/ui/responsive-dialog';
 
 interface EmojiPickerInputProps {
   value: string;
@@ -365,91 +371,99 @@ export const EmojiPickerInput = ({ value, onChange, label }: EmojiPickerInputPro
   return (
     <div className="space-y-2">
       {label && <Label>{label}</Label>}
-      <Popover open={isOpen} onOpenChange={(open) => {
-        setIsOpen(open);
-        if (!open) setSearchTerm('');
-      }}>
-        <PopoverTrigger asChild>
-          <Button 
-            variant="outline" 
-            className="w-full h-14 text-3xl hover:bg-accent flex items-center justify-center"
-            type="button"
-          >
-            {value || '📁'}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent 
-          className="w-[350px] p-0" 
-          align="start"
-          side="bottom"
-          sideOffset={8}
-        >
-          {/* Search in Portuguese */}
-          <div className="p-3 border-b">
-            <Input
-              placeholder="Pesquisar emoji em português..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="mb-2"
-              autoFocus
-            />
-            
-            {/* Search results */}
-            {searchResults.length > 0 && (
-              <div className="flex flex-wrap gap-1 max-h-[120px] overflow-y-auto">
-                {searchResults.map((emoji, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    className="w-9 h-9 flex items-center justify-center text-xl hover:bg-accent rounded-md transition-colors"
-                    onClick={() => handleQuickSelect(emoji)}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            )}
-            
-            {/* No results message */}
-            {searchTerm && searchResults.length === 0 && (
-              <p className="text-sm text-muted-foreground py-2">
-                Nenhum resultado. Tente o picker abaixo (inglês).
-              </p>
-            )}
-          </div>
+      <Button 
+        variant="outline" 
+        className="w-full h-14 text-3xl hover:bg-accent flex items-center justify-center"
+        type="button"
+        onClick={() => setIsOpen(true)}
+      >
+        {value || '📁'}
+      </Button>
+      
+      <ResponsiveDialog
+        open={isOpen}
+        onOpenChange={(open) => {
+          setIsOpen(open);
+          if (!open) setSearchTerm('');
+        }}
+      >
+        <ResponsiveDialogContent className="max-w-md">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle>Escolher Emoji</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
+              Selecione um emoji para a categoria
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
 
-          {/* Quick suggestions (when not searching) */}
-          {!searchTerm && (
-            <div className="p-3 border-b">
-              <Label className="text-xs text-muted-foreground mb-2 block">Sugestões Rápidas</Label>
-              <div className="flex flex-wrap gap-1 max-h-[120px] overflow-y-auto">
-                {QUICK_SUGGESTIONS.map((emoji, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    className="w-8 h-8 flex items-center justify-center text-xl hover:bg-accent rounded transition-colors"
-                    onClick={() => handleQuickSelect(emoji)}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
+          <div className="flex flex-col gap-4 mt-4">
+            {/* Search in Portuguese */}
+            <div>
+              <Input
+                placeholder="Pesquisar emoji em português..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                autoFocus
+              />
+              
+              {/* Search results */}
+              {searchResults.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-3 max-h-[120px] overflow-y-auto">
+                  {searchResults.map((emoji, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      className="w-10 h-10 flex items-center justify-center text-2xl hover:bg-accent rounded-md transition-colors"
+                      onClick={() => handleQuickSelect(emoji)}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              {/* No results message */}
+              {searchTerm && searchResults.length === 0 && (
+                <p className="text-sm text-muted-foreground py-2">
+                  Nenhum resultado. Tente o picker abaixo (inglês).
+                </p>
+              )}
             </div>
-          )}
 
-          {/* EmojiPicker with Portuguese categories */}
-          <EmojiPicker
-            onEmojiClick={handleEmojiClick}
-            theme={Theme.AUTO}
-            width="100%"
-            height={300}
-            categories={CATEGORIES_PT}
-            searchPlaceHolder="Pesquisar (inglês)..."
-            previewConfig={{ showPreview: false }}
-            lazyLoadEmojis={true}
-          />
-        </PopoverContent>
-      </Popover>
+            {/* Quick suggestions (when not searching) */}
+            {!searchTerm && (
+              <div>
+                <Label className="text-xs text-muted-foreground mb-2 block">Sugestões Rápidas</Label>
+                <div className="flex flex-wrap gap-1 max-h-[120px] overflow-y-auto">
+                  {QUICK_SUGGESTIONS.map((emoji, index) => (
+                    <button
+                      key={index}
+                      type="button"
+                      className="w-9 h-9 flex items-center justify-center text-xl hover:bg-accent rounded transition-colors"
+                      onClick={() => handleQuickSelect(emoji)}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* EmojiPicker with Portuguese categories */}
+            <div className="border rounded-lg overflow-hidden">
+              <EmojiPicker
+                onEmojiClick={handleEmojiClick}
+                theme={Theme.AUTO}
+                width="100%"
+                height={300}
+                categories={CATEGORIES_PT}
+                searchPlaceHolder="Pesquisar (inglês)..."
+                previewConfig={{ showPreview: false }}
+                lazyLoadEmojis={true}
+              />
+            </div>
+          </div>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 };
