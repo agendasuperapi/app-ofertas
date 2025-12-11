@@ -86,6 +86,7 @@ import { AffiliatesManager } from "./AffiliatesManager";
 import { AffiliateInvitesManager } from "./AffiliateInvitesManager";
 import { AffiliatesReportsTab } from "./AffiliatesReportsTab";
 import { WithdrawalRequestsManager } from "./WithdrawalRequestsManager";
+import { CommissionAuditReport } from "./CommissionAuditReport";
 import { useEmployeeAccess } from "@/hooks/useEmployeeAccess";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
@@ -3378,6 +3379,21 @@ export const StoreOwnerDashboard = ({
                 </div>
               </div>
               <WithdrawalRequestsManager storeId={myStore.id} />
+            </motion.div>
+          </div>}
+
+        {/* Afiliados Auditoria Tab */}
+        {myStore?.id && <div className={cn("p-3 sm:p-4 md:p-6 lg:p-8", activeTab !== 'afiliados-auditoria' && 'hidden')}>
+            <motion.div initial={{
+              opacity: 0,
+              y: 20
+            }} animate={{
+              opacity: 1,
+              y: 0
+            }} transition={{
+              duration: 0.5
+            }}>
+              <CommissionAuditReport storeId={myStore.id} />
             </motion.div>
           </div>}
 
