@@ -52,8 +52,8 @@ const App = () => (
           <CartProvider>
             <div className="pb-20 md:pb-0">
               <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/sobre" element={<LandingPage />} />
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/lojas" element={<Index />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
