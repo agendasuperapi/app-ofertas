@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAffiliateAuth, AffiliateOrderItem, AffiliateOrder } from '@/hooks/useAffiliateAuth';
 import { useAffiliateEarningsNotification } from '@/hooks/useAffiliateEarningsNotification';
@@ -254,10 +254,31 @@ export default function AffiliateDashboardNew() {
   // Extrair store_ids das lojas do afiliado para monitorar novos pedidos
   const affiliateStoreIds = useMemo(() => affiliateStores.map(s => s.store_id).filter(Boolean), [affiliateStores]);
 
+  // Debounced refresh para evitar chamadas múltiplas e dar tempo ao banco processar
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debouncedRefreshData = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      console.log('[Dashboard] 🔄 Executando refreshData com debounce');
+      refreshData();
+    }, 1500); // 1.5 segundos de delay para garantir que trigger processou
+  }, [refreshData]);
+
+  // Cleanup do timer no unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
   // Hook de notificação de ganhos em tempo real
   const handleNewEarning = useCallback(() => {
-    refreshData();
-  }, [refreshData]);
+    debouncedRefreshData();
+  }, [debouncedRefreshData]);
   useAffiliateEarningsNotification({
     storeAffiliateIds,
     onNewEarning: handleNewEarning
@@ -272,7 +293,7 @@ export default function AffiliateDashboardNew() {
     orderIds: affiliateOrderIds,
     storeAffiliateIds,
     storeIds: affiliateStoreIds,
-    onStatusChange: refreshData
+    onStatusChange: debouncedRefreshData
   });
 
   // Hook de notificação de status de saque (notifica quando lojista aprova ou rejeita)
