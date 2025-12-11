@@ -246,9 +246,9 @@ export default function BecomePartner() {
         {/* Back button */}
         <Link 
           to="/" 
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8 relative z-10"
+          className="inline-flex items-center gap-2 text-white font-semibold hover:text-primary transition-colors mb-8 relative z-10"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-5 h-5" />
           <span>Voltar ao início</span>
         </Link>
         
