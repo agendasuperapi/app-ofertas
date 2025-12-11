@@ -709,25 +709,25 @@ const LandingPage = () => {
             </p>
           </motion.div>
 
-          <div className="relative overflow-hidden py-4">
+          <div className="relative overflow-hidden py-4 space-y-4">
+            {/* First row - moving left */}
             <motion.div 
               className="flex gap-4 w-max"
               animate={{
-                x: [0, -1920]
+                x: [0, -1200]
               }}
               transition={{
                 x: {
                   repeat: Infinity,
                   repeatType: "loop",
-                  duration: 30,
+                  duration: 25,
                   ease: "linear"
                 }
               }}
             >
-              {/* First set */}
-              {categories.map((category, index) => (
+              {[...categories, ...categories, ...categories].map((category, index) => (
                 <motion.div 
-                  key={`first-${index}`} 
+                  key={`row1-${index}`} 
                   whileHover={{ scale: 1.05, y: -2 }}
                   className="flex-shrink-0"
                 >
@@ -737,15 +737,31 @@ const LandingPage = () => {
                   </div>
                 </motion.div>
               ))}
-              {/* Duplicate set for seamless loop */}
-              {categories.map((category, index) => (
+            </motion.div>
+
+            {/* Second row - moving right (reversed) */}
+            <motion.div 
+              className="flex gap-4 w-max"
+              animate={{
+                x: [-1200, 0]
+              }}
+              transition={{
+                x: {
+                  repeat: Infinity,
+                  repeatType: "loop",
+                  duration: 28,
+                  ease: "linear"
+                }
+              }}
+            >
+              {[...categories.slice().reverse(), ...categories.slice().reverse(), ...categories.slice().reverse()].map((category, index) => (
                 <motion.div 
-                  key={`second-${index}`} 
+                  key={`row2-${index}`} 
                   whileHover={{ scale: 1.05, y: -2 }}
                   className="flex-shrink-0"
                 >
-                  <div className="flex items-center gap-3 px-6 py-3 bg-slate-900/80 backdrop-blur-sm rounded-full border border-white/10 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10 transition-all duration-300 cursor-pointer group">
-                    <category.icon className="h-5 w-5 text-cyan-400 group-hover:scale-110 transition-transform" />
+                  <div className="flex items-center gap-3 px-6 py-3 bg-slate-900/80 backdrop-blur-sm rounded-full border border-white/10 hover:border-orange-500/50 hover:shadow-lg hover:shadow-orange-500/10 transition-all duration-300 cursor-pointer group">
+                    <category.icon className="h-5 w-5 text-orange-400 group-hover:scale-110 transition-transform" />
                     <span className="font-medium text-slate-300 whitespace-nowrap">{category.name}</span>
                   </div>
                 </motion.div>
