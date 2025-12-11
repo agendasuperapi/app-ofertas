@@ -20,10 +20,10 @@ const GlassCard = ({
     <motion.div
       className={`
         relative overflow-hidden rounded-2xl
-        bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl 
-        border border-orange-200/50 dark:border-white/10
+        bg-white/90 dark:bg-slate-900/60 backdrop-blur-xl 
+        border border-gray-200/60 dark:border-white/10
         ${hoverEffect 
-          ? 'hover:border-orange-400/50 dark:hover:border-primary/40 hover:shadow-xl hover:shadow-orange-200/20 dark:hover:shadow-primary/10' 
+          ? 'hover:border-gray-300/80 dark:hover:border-primary/40 hover:shadow-xl hover:shadow-gray-200/30 dark:hover:shadow-primary/10' 
           : ''
         }
         transition-all duration-500
@@ -40,7 +40,7 @@ const GlassCard = ({
       whileHover={hoverEffect ? { y: -5, scale: 1.02 } : {}}
     >
       {/* Gradient border effect */}
-      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-400/10 via-transparent to-amber-400/10 dark:from-primary/10 dark:via-transparent dark:to-cyan-500/10 opacity-0 hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-gray-200/10 via-transparent to-gray-200/10 dark:from-primary/10 dark:via-transparent dark:to-cyan-500/10 opacity-0 hover:opacity-100 transition-opacity duration-500" />
       
       {/* Content */}
       <div className="relative z-10">
