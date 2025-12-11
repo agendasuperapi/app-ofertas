@@ -37,12 +37,32 @@ const formatCurrency = (value: number): string => {
   }).format(value);
 };
 
+// Helper function to get emoji by category
+const getCategoryEmoji = (category: string): string => {
+  const categoryLower = category.toLowerCase();
+  if (categoryLower.includes('hamburguer') || categoryLower.includes('burger') || categoryLower.includes('lanche')) return '🍔';
+  if (categoryLower.includes('pizza')) return '🍕';
+  if (categoryLower.includes('porção') || categoryLower.includes('porcao') || categoryLower.includes('batata') || categoryLower.includes('frita')) return '🍟';
+  if (categoryLower.includes('bebida') || categoryLower.includes('drink') || categoryLower.includes('refrigerante')) return '🥤';
+  if (categoryLower.includes('sobremesa') || categoryLower.includes('doce')) return '🍰';
+  if (categoryLower.includes('churrasco') || categoryLower.includes('carne')) return '🥩';
+  if (categoryLower.includes('salada') || categoryLower.includes('veggie') || categoryLower.includes('vegetariano')) return '🥗';
+  if (categoryLower.includes('sushi') || categoryLower.includes('japonês') || categoryLower.includes('japones')) return '🍣';
+  return '🍽️';
+};
+
 export const FeaturedProductsCarousel = ({
   products,
   onAddToCart,
   onProductClick,
 }: FeaturedProductsCarouselProps) => {
   const [api, setApi] = useState<CarouselApi>();
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+
+  // Handler for image load errors
+  const handleImageError = (productId: string) => {
+    setFailedImages(prev => new Set(prev).add(productId));
+  };
 
   // Auto-play functionality
   useEffect(() => {
@@ -117,15 +137,16 @@ export const FeaturedProductsCarousel = ({
 
                     {/* Imagem do Produto */}
                     <div className="relative w-full aspect-[4/3] overflow-hidden bg-muted/30">
-                      {(product.resolved_image_url || product.image_url) ? (
+                      {!failedImages.has(product.id) && (product.resolved_image_url || product.image_url) ? (
                         <img
                           src={product.resolved_image_url || product.image_url}
                           alt={product.name}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          onError={() => handleImageError(product.id)}
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <ShoppingCart className="h-16 w-16 text-muted-foreground/30" />
+                        <div className="w-full h-full flex items-center justify-center bg-muted">
+                          <span className="text-4xl">{getCategoryEmoji(product.category)}</span>
                         </div>
                       )}
                       

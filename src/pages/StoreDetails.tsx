@@ -40,6 +40,7 @@ export default function StoreDetails() {
   const [detailsProduct, setDetailsProduct] = useState<any>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const lastSwitchRef = useRef<string | null>(null);
   
@@ -251,6 +252,25 @@ export default function StoreDetails() {
   const storeStatus = store ? getStoreStatusText(store.operating_hours) : '';
   const allowOrdersWhenClosed = (store as any)?.allow_orders_when_closed ?? false;
   const canAcceptOrders = storeIsOpen || allowOrdersWhenClosed;
+
+  // Helper function to get emoji by category
+  const getCategoryEmoji = (category: string): string => {
+    const categoryLower = category.toLowerCase();
+    if (categoryLower.includes('hamburguer') || categoryLower.includes('burger') || categoryLower.includes('lanche')) return '🍔';
+    if (categoryLower.includes('pizza')) return '🍕';
+    if (categoryLower.includes('porção') || categoryLower.includes('porcao') || categoryLower.includes('batata') || categoryLower.includes('frita')) return '🍟';
+    if (categoryLower.includes('bebida') || categoryLower.includes('drink') || categoryLower.includes('refrigerante')) return '🥤';
+    if (categoryLower.includes('sobremesa') || categoryLower.includes('doce')) return '🍰';
+    if (categoryLower.includes('churrasco') || categoryLower.includes('carne')) return '🥩';
+    if (categoryLower.includes('salada') || categoryLower.includes('veggie') || categoryLower.includes('vegetariano')) return '🥗';
+    if (categoryLower.includes('sushi') || categoryLower.includes('japonês') || categoryLower.includes('japones')) return '🍣';
+    return '🍽️';
+  };
+
+  // Handler for image load errors
+  const handleImageError = (productId: string) => {
+    setFailedImages(prev => new Set(prev).add(productId));
+  };
 
   // Auto-switch to store cart when entering a store page (with protection against duplicate calls)
   useEffect(() => {
@@ -830,15 +850,16 @@ export default function StoreDetails() {
                             {/* Product Image on Left */}
                             <div className="flex-shrink-0 relative">
                               <div className="w-36 h-24 md:w-48 md:h-32 rounded-xl overflow-hidden bg-muted/30">
-                            {(product.resolved_image_url || product.image_url) ? (
+                            {!failedImages.has(product.id) && (product.resolved_image_url || product.image_url) ? (
                                   <img 
                                     src={product.resolved_image_url || product.image_url} 
                                     alt={product.name}
                                     className="w-full h-full object-cover"
+                                    onError={() => handleImageError(product.id)}
                                   />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center bg-muted">
-                                    <span className="text-3xl">🍕</span>
+                                    <span className="text-3xl">{getCategoryEmoji(product.category)}</span>
                                   </div>
                                 )}
                               </div>
@@ -933,15 +954,16 @@ export default function StoreDetails() {
                             {/* Product Image on Left */}
                             <div className="flex-shrink-0 relative">
                               <div className="w-36 h-24 md:w-48 md:h-32 rounded-xl overflow-hidden bg-muted/30">
-                            {(product.resolved_image_url || product.image_url) ? (
+                            {!failedImages.has(product.id) && (product.resolved_image_url || product.image_url) ? (
                                   <img 
                                     src={product.resolved_image_url || product.image_url} 
                                     alt={product.name}
                                     className="w-full h-full object-cover"
+                                    onError={() => handleImageError(product.id)}
                                   />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center bg-muted">
-                                    <span className="text-3xl">🍕</span>
+                                    <span className="text-3xl">{getCategoryEmoji(product.category)}</span>
                                   </div>
                                 )}
                               </div>
@@ -1046,17 +1068,23 @@ export default function StoreDetails() {
                           }`}
                           onClick={() => setDetailsProduct(product)}
                         >
-                          {(product.resolved_image_url || product.image_url) && (
-                            <div className="relative aspect-[4/3] overflow-hidden bg-muted/30">
+                          <div className="relative aspect-[4/3] overflow-hidden bg-muted/30">
+                            {!failedImages.has(product.id) && (product.resolved_image_url || product.image_url) ? (
                               <motion.img
                                 initial={{ scale: 0.95, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ duration: 0.6, ease: "easeOut" }}
                                 whileHover={{ scale: 1.15 }}
                                 src={product.resolved_image_url || product.image_url}
-                              alt={product.name}
-                              className="w-full h-full object-cover transition-transform duration-500 ease-out"
-                            />
+                                alt={product.name}
+                                className="w-full h-full object-cover transition-transform duration-500 ease-out"
+                                onError={() => handleImageError(product.id)}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-muted">
+                                <span className="text-5xl">{getCategoryEmoji(product.category)}</span>
+                              </div>
+                            )}
                             {/* Gradiente suave */}
                             <div className="absolute inset-0 bg-gradient-to-t from-gray-900/5 via-transparent to-transparent pointer-events-none" />
                             {isInCart && (
@@ -1069,8 +1097,7 @@ export default function StoreDetails() {
                                   <span>{cartQuantity}</span>
                                 </motion.div>
                               )}
-                            </div>
-                          )}
+                          </div>
                           <CardContent className="p-2 sm:p-3 pt-1.5 flex-1 flex flex-col">
                             <div className="flex-grow">
                               <h4 className="font-bold text-base sm:text-lg group-hover:text-primary transition-colors line-clamp-2 h-[2.75rem]">{product.name}</h4>
@@ -1182,17 +1209,23 @@ export default function StoreDetails() {
                           }`}
                           onClick={() => setDetailsProduct(product)}
                         >
-                          {(product.resolved_image_url || product.image_url) && (
-                            <div className="relative h-56 md:h-44 overflow-hidden bg-muted/30">
+                          <div className="relative h-56 md:h-44 overflow-hidden bg-muted/30">
+                            {!failedImages.has(product.id) && (product.resolved_image_url || product.image_url) ? (
                               <motion.img
                                 initial={{ scale: 0.95, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 transition={{ duration: 0.6, ease: "easeOut" }}
                                 whileHover={{ scale: 1.15 }}
                                 src={product.resolved_image_url || product.image_url}
-                              alt={product.name}
-                              className="w-full h-full object-cover transition-transform duration-500 ease-out"
-                            />
+                                alt={product.name}
+                                className="w-full h-full object-cover transition-transform duration-500 ease-out"
+                                onError={() => handleImageError(product.id)}
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-muted">
+                                <span className="text-5xl">{getCategoryEmoji(product.category)}</span>
+                              </div>
+                            )}
                             {/* Gradiente suave */}
                             <div className="absolute inset-0 bg-gradient-to-t from-gray-900/5 via-transparent to-transparent pointer-events-none" />
                             {isInCart && (
@@ -1205,8 +1238,7 @@ export default function StoreDetails() {
                                   {cartQuantity}
                                 </motion.div>
                               )}
-                            </div>
-                          )}
+                          </div>
                           <CardContent className="p-3 md:p-4 pt-1.5 md:pt-2 space-y-0 flex-1 flex flex-col">
                             <div className="flex-grow">
                               <h4 className="font-bold text-lg md:text-xl group-hover:text-primary transition-colors line-clamp-2 h-[3.25rem]">
