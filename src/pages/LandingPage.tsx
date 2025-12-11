@@ -7,7 +7,7 @@ import {
   ChevronRight, Check, Star, ArrowRight, Play,
   Utensils, Pizza, Sandwich, ShoppingBag, Pill, PawPrint,
   Coffee, Cake, Sparkles, Zap, Shield, TrendingUp,
-  DollarSign, Bell, Settings, FileText, Truck
+  DollarSign, Bell, Settings, FileText, Truck, Heart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,10 +18,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import MacBookMockup from '@/components/landing/MacBookMockup';
+import IPhoneMockup from '@/components/landing/IPhoneMockup';
+import AnimatedCounter from '@/components/landing/AnimatedCounter';
+import GridPattern from '@/components/landing/GridPattern';
+import GlassCard from '@/components/landing/GlassCard';
+import BentoGrid from '@/components/landing/BentoGrid';
 
 const LandingPage = () => {
-  const [activeFeature, setActiveFeature] = useState(0);
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -82,14 +86,14 @@ const LandingPage = () => {
   ];
 
   const dashboardFeatures = [
-    { icon: Package, title: "Gestão de Pedidos", description: "Acompanhe pedidos em tempo real com status personalizáveis" },
+    { icon: Package, title: "Gestão de Pedidos", description: "Acompanhe pedidos em tempo real com status personalizáveis e notificações automáticas", featured: true },
     { icon: ShoppingCart, title: "Catálogo de Produtos", description: "Produtos com variações de tamanho, cor e adicionais" },
     { icon: Tag, title: "Sistema de Cupons", description: "Crie cupons de desconto com regras personalizadas" },
-    { icon: MapPin, title: "Zonas de Entrega", description: "Configure taxas por bairro e cidade" },
+    { icon: MapPin, title: "Zonas de Entrega", description: "Configure taxas por bairro e cidade com precisão total", featured: true },
     { icon: MessageCircle, title: "Integração WhatsApp", description: "Receba pedidos e notifique clientes automaticamente" },
-    { icon: Clock, title: "Horários de Funcionamento", description: "Configure dias e horários de atendimento" },
-    { icon: BarChart3, title: "Relatórios e Métricas", description: "Visualize vendas, produtos mais vendidos e clientes" },
-    { icon: CreditCard, title: "Múltiplos Pagamentos", description: "PIX, cartão de crédito/débito e dinheiro" }
+    { icon: Clock, title: "Horários", description: "Configure dias e horários de atendimento" },
+    { icon: BarChart3, title: "Relatórios", description: "Visualize vendas, produtos mais vendidos e clientes" },
+    { icon: CreditCard, title: "Pagamentos", description: "PIX, cartão de crédito/débito e dinheiro" }
   ];
 
   const affiliateFeatures = [
@@ -116,20 +120,23 @@ const LandingPage = () => {
     {
       name: "Maria Silva",
       business: "Restaurante Sabor Caseiro",
-      text: "Triplicamos nossas vendas em 3 meses! O sistema é muito fácil de usar.",
-      rating: 5
+      text: "Triplicamos nossas vendas em 3 meses! O sistema é muito fácil de usar e meus clientes adoram.",
+      rating: 5,
+      avatar: "MS"
     },
     {
       name: "João Santos",
       business: "Pizzaria do João",
-      text: "A integração com WhatsApp mudou meu negócio. Recebo pedidos 24h por dia.",
-      rating: 5
+      text: "A integração com WhatsApp mudou meu negócio. Recebo pedidos 24h por dia e a gestão ficou muito mais fácil.",
+      rating: 5,
+      avatar: "JS"
     },
     {
       name: "Ana Costa",
       business: "Pet Shop Amigo Fiel",
-      text: "O sistema de afiliados trouxe muitos clientes novos. Recomendo!",
-      rating: 5
+      text: "O sistema de afiliados trouxe muitos clientes novos. Recomendo para qualquer negócio!",
+      rating: 5,
+      avatar: "AC"
     }
   ];
 
@@ -160,70 +167,130 @@ const LandingPage = () => {
     }
   ];
 
+  const stats = [
+    { value: 2500, suffix: '+', label: 'Lojas Ativas' },
+    { value: 50000, suffix: '+', label: 'Pedidos Entregues' },
+    { value: 98, suffix: '%', label: 'Clientes Satisfeitos' },
+    { value: 24, suffix: '/7', label: 'Suporte Disponível' }
+  ];
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Hero Section */}
-      <section className="relative py-12 flex items-center justify-center overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 -left-20 w-96 h-96 bg-primary/20 rounded-full blur-3xl animate-pulse" />
-          <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-primary/30 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-primary/10 to-orange-500/10 rounded-full blur-3xl" />
-        </div>
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <GridPattern />
+        
+        <div className="container mx-auto px-4 pt-8 pb-20 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left content */}
+            <motion.div 
+              className="text-center lg:text-left"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Badge className="mb-6 bg-primary/10 text-primary border-primary/20 px-4 py-2 backdrop-blur-sm">
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Plataforma completa para seu negócio
+                </Badge>
+              </motion.div>
+              
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
+                Transforme sua Loja em um{' '}
+                <span className="relative">
+                  <span className="bg-gradient-to-r from-primary via-orange-500 to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
+                    Sucesso Digital
+                  </span>
+                  <motion.span 
+                    className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-primary to-orange-500 rounded-full"
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: 1 }}
+                    transition={{ delay: 0.8, duration: 0.6 }}
+                  />
+                </span>
+              </h1>
+              
+              <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0">
+                Crie sua loja online em minutos, receba pedidos pelo WhatsApp e 
+                gerencie tudo em um único lugar. Sem complicação, sem taxas iniciais.
+              </p>
 
-        <div className="container mx-auto px-4 pt-0 pb-20 relative z-10">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-8">
+                <Button asChild size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 shadow-lg shadow-primary/25 group relative overflow-hidden">
+                  <Link to="/become-partner">
+                    <span className="relative z-10 flex items-center">
+                      Criar Minha Loja Grátis
+                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                    <motion.div 
+                      className="absolute inset-0 bg-gradient-to-r from-orange-500 to-primary"
+                      initial={{ x: '100%' }}
+                      whileHover={{ x: 0 }}
+                      transition={{ duration: 0.3 }}
+                    />
+                  </Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 border-2 backdrop-blur-sm bg-background/50 hover:bg-background/80">
+                  <Link to="/heymax">
+                    <Play className="mr-2 h-5 w-5" />
+                    Ver Demonstração
+                  </Link>
+                </Button>
+              </div>
+
+              {/* Stats inline */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
+                {stats.map((stat, index) => (
+                  <motion.div 
+                    key={index}
+                    className="text-center lg:text-left"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6 + index * 0.1 }}
+                  >
+                    <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+                      <AnimatedCounter end={stat.value} suffix={stat.suffix} />
+                    </div>
+                    <div className="text-sm text-muted-foreground">{stat.label}</div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Right content - Device Mockups */}
+            <div className="relative hidden lg:block">
+              <div className="relative">
+                <MacBookMockup className="w-full max-w-2xl" />
+                <div className="absolute -right-8 top-1/2 -translate-y-1/3 z-20">
+                  <IPhoneMockup className="w-40" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Trust badges */}
           <motion.div 
-            className="text-center max-w-4xl mx-auto"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            className="mt-16 flex flex-wrap justify-center gap-8 text-sm text-muted-foreground"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
           >
-            <Badge className="mb-6 bg-primary/10 text-primary border-primary/20 px-4 py-2">
-              <Sparkles className="w-4 h-4 mr-2" />
-              Plataforma completa para seu negócio
-            </Badge>
-            
-            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              Transforme sua Loja em um{' '}
-              <span className="bg-gradient-to-r from-primary via-orange-500 to-primary bg-clip-text text-transparent">
-                Sucesso Digital
-              </span>
-            </h1>
-            
-            <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Crie sua loja online em minutos, receba pedidos pelo WhatsApp e 
-              gerencie tudo em um único lugar. Sem complicação, sem taxas iniciais.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 shadow-lg shadow-primary/25">
-                <Link to="/become-partner">
-                  Criar Minha Loja Grátis
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6 border-2">
-                <Link to="/heymax">
-                  <Play className="mr-2 h-5 w-5" />
-                  Ver Demonstração
-                </Link>
-              </Button>
-            </div>
-
-            <div className="mt-12 flex flex-wrap justify-center gap-8 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-500" />
-                <span>Cadastro gratuito</span>
+            {[
+              { icon: Check, text: 'Cadastro gratuito' },
+              { icon: Shield, text: 'Dados seguros' },
+              { icon: Zap, text: 'Suporte incluso' },
+              { icon: Heart, text: '+2.500 lojistas' }
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 bg-card/50 backdrop-blur-sm px-4 py-2 rounded-full border border-border/50">
+                <item.icon className="h-4 w-4 text-green-500" />
+                <span>{item.text}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-500" />
-                <span>Sem mensalidade</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="h-5 w-5 text-green-500" />
-                <span>Suporte incluso</span>
-              </div>
-            </div>
+            ))}
           </motion.div>
         </div>
 
@@ -233,22 +300,53 @@ const LandingPage = () => {
           animate={{ y: [0, 10, 0] }}
           transition={{ repeat: Infinity, duration: 2 }}
         >
-          <div className="w-6 h-10 border-2 border-muted-foreground/30 rounded-full flex justify-center pt-2">
-            <div className="w-1.5 h-3 bg-primary rounded-full" />
+          <div className="w-6 h-10 border-2 border-muted-foreground/30 rounded-full flex justify-center pt-2 backdrop-blur-sm">
+            <motion.div 
+              className="w-1.5 h-3 bg-primary rounded-full"
+              animate={{ y: [0, 8, 0], opacity: [1, 0.5, 1] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+            />
           </div>
         </motion.div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="py-20 bg-muted/30">
+      {/* Device Showcase Mobile */}
+      <section className="py-16 lg:hidden">
         <div className="container mx-auto px-4">
+          <motion.div 
+            className="text-center mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2">
+              Sua loja em{' '}
+              <span className="bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+                qualquer dispositivo
+              </span>
+            </h2>
+          </motion.div>
+          <div className="flex justify-center">
+            <IPhoneMockup className="w-48" />
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits Section */}
+      <section className="py-24 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-muted/50 to-transparent" />
+        
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div 
             className="text-center mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+              Vantagens
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
               Por que escolher o{' '}
               <span className="bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
                 Ofertas.app
@@ -260,32 +358,28 @@ const LandingPage = () => {
             </p>
           </motion.div>
 
-          <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {benefits.map((benefit, index) => (
-              <motion.div key={index} variants={itemVariants}>
-                <Card className="h-full hover:shadow-lg hover:-translate-y-1 transition-all duration-300 border-0 bg-background/80 backdrop-blur-sm">
-                  <CardContent className="p-6 text-center">
-                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center shadow-lg shadow-primary/25">
-                      <benefit.icon className="h-7 w-7 text-white" />
-                    </div>
-                    <h3 className="font-semibold text-lg mb-2">{benefit.title}</h3>
-                    <p className="text-muted-foreground text-sm">{benefit.description}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
+              <GlassCard key={index} delay={index * 0.1}>
+                <div className="p-6 text-center">
+                  <motion.div 
+                    className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center shadow-lg shadow-primary/25"
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <benefit.icon className="h-8 w-8 text-white" />
+                  </motion.div>
+                  <h3 className="font-bold text-lg mb-2">{benefit.title}</h3>
+                  <p className="text-muted-foreground text-sm">{benefit.description}</p>
+                </div>
+              </GlassCard>
             ))}
-          </motion.div>
+          </div>
         </div>
       </section>
 
       {/* How it Works Section */}
-      <section className="py-20">
+      <section className="py-24 relative overflow-hidden">
         <div className="container mx-auto px-4">
           <motion.div 
             className="text-center mb-16"
@@ -293,11 +387,17 @@ const LandingPage = () => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+            <Badge className="mb-4 bg-blue-500/10 text-blue-500 border-blue-500/20">
               Como Funciona
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+              4 passos simples para{' '}
+              <span className="bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">
+                começar a vender
+              </span>
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              Em apenas 4 passos simples, sua loja estará pronta para vender
+              Em poucos minutos, sua loja estará pronta para receber pedidos
             </p>
           </motion.div>
 
@@ -306,22 +406,36 @@ const LandingPage = () => {
               <motion.div 
                 key={index}
                 className="relative"
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.15 }}
               >
+                {/* Connection line */}
                 {index < steps.length - 1 && (
-                  <div className="hidden lg:block absolute top-12 left-[60%] w-full h-0.5 bg-gradient-to-r from-primary/50 to-transparent" />
+                  <div className="hidden lg:block absolute top-14 left-[60%] w-full h-0.5">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-primary/50 to-primary/20"
+                      initial={{ scaleX: 0 }}
+                      whileInView={{ scaleX: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: index * 0.2 + 0.5, duration: 0.5 }}
+                    />
+                  </div>
                 )}
-                <div className="text-center">
-                  <div className="w-24 h-24 mx-auto mb-4 rounded-full bg-gradient-to-br from-primary/10 to-orange-500/10 border-2 border-primary/20 flex items-center justify-center">
-                    <span className="text-3xl font-bold bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+                
+                <div className="text-center group">
+                  <motion.div 
+                    className="w-28 h-28 mx-auto mb-6 rounded-full bg-gradient-to-br from-card to-muted border-2 border-primary/20 flex items-center justify-center relative overflow-hidden group-hover:border-primary/50 transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <span className="text-4xl font-bold bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent relative z-10">
                       {step.number}
                     </span>
-                  </div>
-                  <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
-                  <p className="text-muted-foreground text-sm">{step.description}</p>
+                  </motion.div>
+                  <h3 className="font-bold text-xl mb-2 group-hover:text-primary transition-colors">{step.title}</h3>
+                  <p className="text-muted-foreground">{step.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -329,60 +443,41 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Dashboard Features Section */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
+      {/* Dashboard Features - Bento Grid */}
+      <section className="py-24 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/30 to-transparent" />
+        
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div 
             className="text-center mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
+            <Badge className="mb-4 bg-purple-500/10 text-purple-500 border-purple-500/20">
               Dashboard Completo
             </Badge>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Tudo que você precisa em um só lugar
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+              Tudo que você precisa em{' '}
+              <span className="bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent">
+                um só lugar
+              </span>
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               Gerencie pedidos, produtos, cupons, entregas e muito mais
             </p>
           </motion.div>
 
-          <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-          >
-            {dashboardFeatures.map((feature, index) => (
-              <motion.div key={index} variants={itemVariants}>
-                <Card className="h-full hover:shadow-md hover:border-primary/30 transition-all duration-300 bg-background/80 backdrop-blur-sm">
-                  <CardContent className="p-5">
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-orange-500/20 flex items-center justify-center flex-shrink-0">
-                        <feature.icon className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold mb-1">{feature.title}</h3>
-                        <p className="text-muted-foreground text-sm">{feature.description}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </motion.div>
+          <BentoGrid items={dashboardFeatures} />
         </div>
       </section>
 
       {/* Affiliate System Section */}
-      <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-orange-500/5" />
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-emerald-500/5" />
         
         <div className="container mx-auto px-4 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -392,7 +487,7 @@ const LandingPage = () => {
                 <Users className="w-4 h-4 mr-2" />
                 Sistema de Afiliados
               </Badge>
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
                 Transforme clientes em{' '}
                 <span className="bg-gradient-to-r from-green-500 to-emerald-500 bg-clip-text text-transparent">
                   vendedores
@@ -405,7 +500,14 @@ const LandingPage = () => {
 
               <div className="grid sm:grid-cols-2 gap-4">
                 {affiliateFeatures.map((feature, index) => (
-                  <div key={index} className="flex items-start gap-3">
+                  <motion.div 
+                    key={index} 
+                    className="flex items-start gap-3"
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.1 }}
+                  >
                     <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center flex-shrink-0">
                       <feature.icon className="h-5 w-5 text-green-600" />
                     </div>
@@ -413,7 +515,7 @@ const LandingPage = () => {
                       <h4 className="font-semibold text-sm">{feature.title}</h4>
                       <p className="text-muted-foreground text-xs">{feature.description}</p>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </motion.div>
@@ -424,11 +526,11 @@ const LandingPage = () => {
               viewport={{ once: true }}
               className="relative"
             >
-              <div className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-3xl p-8 border border-green-500/20">
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-background rounded-xl">
+              <GlassCard hoverEffect={false} className="bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
+                <div className="p-8 space-y-6">
+                  <div className="flex items-center justify-between p-4 bg-card rounded-xl border border-border/50">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-bold">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-green-500/25">
                         F
                       </div>
                       <div>
@@ -440,43 +542,65 @@ const LandingPage = () => {
                   </div>
                   
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-background rounded-xl text-center">
-                      <p className="text-2xl font-bold text-green-600">R$ 2.450</p>
+                    <motion.div 
+                      className="p-4 bg-card rounded-xl text-center border border-border/50"
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <p className="text-3xl font-bold text-green-600">
+                        <AnimatedCounter end={2450} prefix="R$ " />
+                      </p>
                       <p className="text-xs text-muted-foreground">Total em Vendas</p>
-                    </div>
-                    <div className="p-4 bg-background rounded-xl text-center">
-                      <p className="text-2xl font-bold text-primary">R$ 367,50</p>
+                    </motion.div>
+                    <motion.div 
+                      className="p-4 bg-card rounded-xl text-center border border-border/50"
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <p className="text-3xl font-bold text-primary">
+                        <AnimatedCounter end={367} prefix="R$ " suffix=",50" />
+                      </p>
                       <p className="text-xs text-muted-foreground">Comissões (15%)</p>
-                    </div>
+                    </motion.div>
                   </div>
 
-                  <div className="p-4 bg-background rounded-xl">
-                    <div className="flex items-center justify-between mb-2">
+                  <div className="p-4 bg-card rounded-xl border border-border/50">
+                    <div className="flex items-center justify-between mb-3">
                       <span className="text-sm text-muted-foreground">Disponível para saque</span>
-                      <span className="font-bold text-green-600">R$ 245,00</span>
+                      <span className="font-bold text-green-600 text-lg">R$ 245,00</span>
                     </div>
-                    <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600">
+                    <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 shadow-lg shadow-green-500/25">
                       Solicitar Saque
                     </Button>
                   </div>
                 </div>
-              </div>
+              </GlassCard>
+              
+              {/* Decorative elements */}
+              <div className="absolute -top-4 -right-4 w-24 h-24 bg-green-500/20 rounded-full blur-2xl" />
+              <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-emerald-500/20 rounded-full blur-2xl" />
             </motion.div>
           </div>
         </div>
       </section>
 
       {/* Categories Section */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
+      <section className="py-24 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/30 to-transparent" />
+        
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div 
             className="text-center mb-12"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Para todos os tipos de negócio
+            <Badge className="mb-4 bg-cyan-500/10 text-cyan-600 border-cyan-500/20">
+              Segmentos
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+              Para todos os{' '}
+              <span className="bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+                tipos de negócio
+              </span>
             </h2>
             <p className="text-muted-foreground text-lg">
               Seja qual for seu ramo, temos a solução ideal para você
@@ -491,8 +615,12 @@ const LandingPage = () => {
             viewport={{ once: true }}
           >
             {categories.map((category, index) => (
-              <motion.div key={index} variants={itemVariants}>
-                <div className="flex items-center gap-2 px-5 py-3 bg-background rounded-full border hover:border-primary/50 hover:shadow-md transition-all duration-300 cursor-pointer group">
+              <motion.div 
+                key={index} 
+                variants={itemVariants}
+                whileHover={{ scale: 1.05, y: -2 }}
+              >
+                <div className="flex items-center gap-3 px-6 py-3 bg-card/50 backdrop-blur-sm rounded-full border border-border/50 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 cursor-pointer group">
                   <category.icon className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
                   <span className="font-medium">{category.name}</span>
                 </div>
@@ -503,50 +631,72 @@ const LandingPage = () => {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20">
+      <section className="py-24 relative overflow-hidden">
         <div className="container mx-auto px-4">
           <motion.div 
-            className="text-center mb-12"
+            className="text-center mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              O que nossos clientes dizem
+            <Badge className="mb-4 bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+              <Star className="w-4 h-4 mr-2 fill-yellow-500" />
+              Depoimentos
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+              O que nossos{' '}
+              <span className="bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent">
+                clientes dizem
+              </span>
             </h2>
             <p className="text-muted-foreground text-lg">
               Milhares de lojistas já transformaram seus negócios
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                transition={{ delay: index * 0.15 }}
               >
-                <Card className="h-full bg-background/80 backdrop-blur-sm hover:shadow-lg transition-shadow">
-                  <CardContent className="p-6">
+                <GlassCard className="h-full">
+                  <div className="p-6">
+                    {/* Stars */}
                     <div className="flex gap-1 mb-4">
                       {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, scale: 0 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: index * 0.1 + i * 0.1 }}
+                        >
+                          <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                        </motion.div>
                       ))}
                     </div>
-                    <p className="text-muted-foreground mb-4 italic">"{testimonial.text}"</p>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center text-white font-bold">
-                        {testimonial.name[0]}
+                    
+                    {/* Quote */}
+                    <p className="text-muted-foreground mb-6 italic text-lg leading-relaxed">
+                      "{testimonial.text}"
+                    </p>
+                    
+                    {/* Author */}
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center text-white font-bold shadow-lg shadow-primary/25">
+                        {testimonial.avatar}
                       </div>
                       <div>
-                        <p className="font-semibold text-sm">{testimonial.name}</p>
-                        <p className="text-xs text-muted-foreground">{testimonial.business}</p>
+                        <p className="font-semibold">{testimonial.name}</p>
+                        <p className="text-sm text-muted-foreground">{testimonial.business}</p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </GlassCard>
               </motion.div>
             ))}
           </div>
@@ -554,16 +704,24 @@ const LandingPage = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
+      <section className="py-24 relative">
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-muted/30 to-transparent" />
+        
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div 
-            className="text-center mb-12"
+            className="text-center mb-16"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Perguntas Frequentes
+            <Badge className="mb-4 bg-indigo-500/10 text-indigo-600 border-indigo-500/20">
+              FAQ
+            </Badge>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+              Perguntas{' '}
+              <span className="bg-gradient-to-r from-indigo-500 to-purple-500 bg-clip-text text-transparent">
+                Frequentes
+              </span>
             </h2>
             <p className="text-muted-foreground text-lg">
               Tire suas dúvidas sobre a plataforma
@@ -581,12 +739,12 @@ const LandingPage = () => {
                 <AccordionItem 
                   key={index} 
                   value={`item-${index}`}
-                  className="bg-background rounded-xl border px-6"
+                  className="bg-card/50 backdrop-blur-sm rounded-2xl border border-border/50 px-6 overflow-hidden data-[state=open]:border-primary/30 transition-colors"
                 >
-                  <AccordionTrigger className="text-left hover:no-underline py-4">
-                    <span className="font-semibold">{faq.question}</span>
+                  <AccordionTrigger className="text-left hover:no-underline py-5 [&[data-state=open]>svg]:rotate-180">
+                    <span className="font-semibold text-lg">{faq.question}</span>
                   </AccordionTrigger>
-                  <AccordionContent className="text-muted-foreground pb-4">
+                  <AccordionContent className="text-muted-foreground pb-5 text-base leading-relaxed">
                     {faq.answer}
                   </AccordionContent>
                 </AccordionItem>
@@ -597,68 +755,98 @@ const LandingPage = () => {
       </section>
 
       {/* Final CTA Section */}
-      <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-orange-500/10" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl" />
+      <section className="py-24 relative overflow-hidden">
+        <GridPattern />
         
         <div className="container mx-auto px-4 relative z-10">
           <motion.div 
-            className="text-center max-w-3xl mx-auto"
+            className="text-center max-w-4xl mx-auto"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
+            <motion.div
+              initial={{ scale: 0 }}
+              whileInView={{ scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ type: "spring", stiffness: 200 }}
+              className="w-20 h-20 mx-auto mb-8 rounded-2xl bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center shadow-2xl shadow-primary/25"
+            >
+              <Sparkles className="h-10 w-10 text-white" />
+            </motion.div>
+            
+            <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
               Pronto para{' '}
-              <span className="bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-primary via-orange-500 to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
                 transformar
               </span>{' '}
               seu negócio?
             </h2>
-            <p className="text-muted-foreground text-lg mb-8">
+            <p className="text-muted-foreground text-lg sm:text-xl mb-10 max-w-2xl mx-auto">
               Junte-se a milhares de lojistas que já estão vendendo mais com o Ofertas.app
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="text-lg px-8 py-6 bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 shadow-lg shadow-primary/25">
+              <Button asChild size="lg" className="text-lg px-10 py-7 bg-gradient-to-r from-primary to-orange-500 hover:from-primary/90 hover:to-orange-500/90 shadow-xl shadow-primary/25 group">
                 <Link to="/become-partner">
-                  Criar Minha Loja Grátis
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <span className="flex items-center">
+                    Criar Minha Loja Grátis
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </span>
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
+              <Button asChild variant="outline" size="lg" className="text-lg px-10 py-7 backdrop-blur-sm bg-background/50">
                 <Link to="/heymax">
                   Ver Loja Demonstração
                 </Link>
               </Button>
             </div>
 
-            <p className="mt-6 text-sm text-muted-foreground">
-              Sem cartão de crédito • Configuração em minutos • Suporte gratuito
-            </p>
+            <motion.p 
+              className="mt-8 text-sm text-muted-foreground flex flex-wrap justify-center gap-4"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 }}
+            >
+              {['Sem cartão de crédito', 'Configuração em minutos', 'Suporte gratuito'].map((text, i) => (
+                <span key={i} className="flex items-center gap-1">
+                  <Check className="h-4 w-4 text-green-500" />
+                  {text}
+                </span>
+              ))}
+            </motion.p>
           </motion.div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t bg-background">
+      <footer className="py-16 border-t bg-card/50 backdrop-blur-sm relative">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div className="col-span-2 md:col-span-1">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center">
-                  <Store className="h-5 w-5 text-white" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center shadow-lg shadow-primary/25">
+                  <Store className="h-6 w-6 text-white" />
                 </div>
-                <span className="font-bold text-xl">Ofertas.app</span>
+                <span className="font-bold text-2xl">Ofertas.app</span>
               </div>
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground text-sm mb-4">
                 A plataforma completa para criar e gerenciar sua loja online.
               </p>
+              <div className="flex gap-3">
+                <a href="#" className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-white transition-colors">
+                  <Smartphone className="h-5 w-5" />
+                </a>
+                <a href="#" className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:bg-green-500 hover:text-white transition-colors">
+                  <MessageCircle className="h-5 w-5" />
+                </a>
+              </div>
             </div>
             
             <div>
               <h4 className="font-semibold mb-4">Produto</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+              <ul className="space-y-3 text-sm text-muted-foreground">
                 <li><Link to="/become-partner" className="hover:text-primary transition-colors">Criar Loja</Link></li>
                 <li><Link to="/heymax" className="hover:text-primary transition-colors">Demonstração</Link></li>
                 <li><a href="#" className="hover:text-primary transition-colors">Preços</a></li>
@@ -667,7 +855,7 @@ const LandingPage = () => {
             
             <div>
               <h4 className="font-semibold mb-4">Recursos</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+              <ul className="space-y-3 text-sm text-muted-foreground">
                 <li><a href="#" className="hover:text-primary transition-colors">Central de Ajuda</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">Blog</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">API</a></li>
@@ -676,7 +864,7 @@ const LandingPage = () => {
             
             <div>
               <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
+              <ul className="space-y-3 text-sm text-muted-foreground">
                 <li><a href="#" className="hover:text-primary transition-colors">Termos de Uso</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">Privacidade</a></li>
                 <li><a href="#" className="hover:text-primary transition-colors">Cookies</a></li>
@@ -688,13 +876,9 @@ const LandingPage = () => {
             <p className="text-sm text-muted-foreground">
               © 2024 Ofertas.app. Todos os direitos reservados.
             </p>
-            <div className="flex gap-4">
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                <Smartphone className="h-5 w-5" />
-              </a>
-              <a href="#" className="text-muted-foreground hover:text-primary transition-colors">
-                <MessageCircle className="h-5 w-5" />
-              </a>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Shield className="h-4 w-4 text-green-500" />
+              <span>Site seguro</span>
             </div>
           </div>
         </div>
