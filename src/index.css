@@ -164,6 +164,29 @@ All colors MUST be HSL.
     --glass-bg: hsl(222 47% 15% / 0.7);
     --glass-border: hsl(0 0% 100% / 0.1);
   }
+
+  /* Force light theme override - applied via body class on store pages */
+  body.force-light-theme,
+  body.force-light-theme * {
+    --background: 0 0% 100% !important;
+    --foreground: 222 47% 11% !important;
+    --card: 0 0% 100% !important;
+    --card-foreground: 222 47% 11% !important;
+    --card-hover: 0 0% 98% !important;
+    --popover: 0 0% 100% !important;
+    --popover-foreground: 222 47% 11% !important;
+    --muted: 210 40% 96% !important;
+    --muted-foreground: 215 16% 47% !important;
+    --border: 214 32% 91% !important;
+    --input: 214 32% 91% !important;
+    --sidebar-background: 0 0% 98% !important;
+    --sidebar-foreground: 222 47% 11% !important;
+    --sidebar-accent: 0 0% 96% !important;
+    --sidebar-accent-foreground: 222 47% 11% !important;
+    --sidebar-border: 214 32% 91% !important;
+    --glass-bg: hsl(0 0% 100% / 0.98) !important;
+    --glass-border: hsl(0 0% 95% / 0.5) !important;
+  }
 }
 
 @layer base {
