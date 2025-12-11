@@ -39,7 +39,7 @@ BEGIN
     owner_id, name, slug, description, category, 
     logo_url, banner_url, phone, email,
     accepts_pix, accepts_card, accepts_cash, 
-    delivery_enabled, pickup_enabled, is_open
+    accepts_delivery, accepts_pickup, is_open
   ) VALUES (
     v_user_id,
     'Brasa & Burguer',
