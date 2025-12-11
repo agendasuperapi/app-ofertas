@@ -140,6 +140,7 @@ export const AffiliatesManager = ({
   const [affiliateSearchTerm, setAffiliateSearchTerm] = useState('');
   const [affiliateStatusFilter, setAffiliateStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [toggleStatusAffiliate, setToggleStatusAffiliate] = useState<Affiliate | null>(null);
+  const [deleteConfirmAffiliate, setDeleteConfirmAffiliate] = useState<Affiliate | null>(null);
   const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
   const [couponProductsModalOpen, setCouponProductsModalOpen] = useState(false);
   const [savingData, setSavingData] = useState(false);
@@ -1201,6 +1202,10 @@ export const AffiliatesManager = ({
                             <UserCheck className="h-4 w-4 mr-1" />
                             Ativar
                           </>}
+                      </Button>
+                      <Button variant="outline" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setDeleteConfirmAffiliate(affiliate)}>
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Excluir
                       </Button>
                     </div>
                   </div>
@@ -3062,6 +3067,32 @@ export const AffiliatesManager = ({
                 }
               }}>
               {toggleStatusAffiliate?.is_active ? 'Inativar' : 'Ativar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* AlertDialog: Confirmar Exclusão de Afiliado */}
+      <AlertDialog open={!!deleteConfirmAffiliate} onOpenChange={open => !open && setDeleteConfirmAffiliate(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir afiliado?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deseja excluir permanentemente o afiliado "{deleteConfirmAffiliate?.name}"? 
+              Esta ação não pode ser desfeita e todos os dados de comissão serão removidos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-destructive hover:bg-destructive/90" 
+              onClick={async () => {
+                if (deleteConfirmAffiliate) {
+                  await deleteAffiliate(deleteConfirmAffiliate.id);
+                  setDeleteConfirmAffiliate(null);
+                }
+              }}>
+              Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
