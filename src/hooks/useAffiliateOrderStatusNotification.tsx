@@ -246,10 +246,12 @@ export const useAffiliateOrderStatusNotification = ({
 
           console.log('[AffiliateOrderStatus] 💰 Earnings atualizado:', payload.eventType);
           
-          // Atualizar dados do dashboard
-          if (onStatusChangeRef.current) {
-            onStatusChangeRef.current();
-          }
+          // Delay para garantir que dados estão consistentes após trigger processar
+          setTimeout(() => {
+            if (onStatusChangeRef.current) {
+              onStatusChangeRef.current();
+            }
+          }, 500);
         }
       )
       .subscribe((status) => {
@@ -325,10 +327,12 @@ export const useAffiliateOrderStatusNotification = ({
             duration: 5000
           });
           
-          // Atualizar dados do dashboard
-          if (onStatusChangeRef.current) {
-            onStatusChangeRef.current();
-          }
+          // Delay maior para novos pedidos - aguardar trigger processar comissão
+          setTimeout(() => {
+            if (onStatusChangeRef.current) {
+              onStatusChangeRef.current();
+            }
+          }, 2000); // 2 segundos para aguardar trigger de comissão
         }
       )
       .subscribe((status) => {
