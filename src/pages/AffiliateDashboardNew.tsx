@@ -6,6 +6,7 @@ import { useAffiliateOrderStatusNotification } from '@/hooks/useAffiliateOrderSt
 import { useWithdrawalNotification } from '@/hooks/useWithdrawalNotification';
 import { useAffiliateDataSync } from '@/hooks/useAffiliateDataSync';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useForceTheme } from '@/hooks/useForceTheme';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -38,6 +39,7 @@ import { supabase } from '@/integrations/supabase/client';
 // Cores para gráfico de pizza
 const COLORS = ['hsl(var(--primary))', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 export default function AffiliateDashboardNew() {
+  useForceTheme('light');
   const {
     affiliateUser,
     affiliateStores,
