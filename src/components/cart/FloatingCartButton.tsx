@@ -35,8 +35,8 @@ export const FloatingCartButton = ({ storeId }: { storeId?: string }) => {
     navigate('/cart');
   };
 
-  // Hide on cart page
-  if (location.pathname === '/cart') {
+  // Hide on landing page and cart page
+  if (location.pathname === '/' || location.pathname === '/cart') {
     return null;
   }
 
