@@ -216,10 +216,10 @@ const LandingPage = () => {
               </motion.div>
               
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-                Transforme sua Loja em um{' '}
+                Transforme suas Ofertas em uma{' '}
                 <span className="relative">
                   <span className="bg-gradient-to-r from-primary via-orange-500 to-cyan-500 bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
-                    Sucesso Digital
+                    máquina de Vendas Online
                   </span>
                   <motion.span 
                     className="absolute -bottom-2 left-0 w-full h-1 bg-gradient-to-r from-primary via-orange-500 to-cyan-500 rounded-full"
