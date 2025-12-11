@@ -104,6 +104,7 @@ import { SortableCategoryCard } from "./SortableCategoryCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ScrollableTable } from "@/components/ui/scrollable-table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { EmojiPickerInput } from "@/components/ui/emoji-picker-input";
 interface StoreOwnerDashboardProps {
   onSignOut?: () => void;
 }
@@ -422,7 +423,9 @@ export const StoreOwnerDashboard = ({
   const [isEditCategoryDialogOpen, setIsEditCategoryDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<any>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryEmoji, setNewCategoryEmoji] = useState('📁');
   const [editCategoryName, setEditCategoryName] = useState('');
+  const [editCategoryEmoji, setEditCategoryEmoji] = useState('📁');
   const [categoryStatusFilter, setCategoryStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [copiedUrl, setCopiedUrl] = useState(false);
@@ -3509,7 +3512,10 @@ export const StoreOwnerDashboard = ({
                                     </SelectTrigger>
                                     <SelectContent>
                                       {categories.filter(cat => cat.is_active && cat.name && cat.name.trim() !== '').map(cat => <SelectItem key={cat.id} value={cat.name}>
-                                            {cat.name}
+                                            <span className="flex items-center gap-2">
+                                              <span>{cat.emoji || '📁'}</span>
+                                              <span>{cat.name}</span>
+                                            </span>
                                           </SelectItem>)}
                                     </SelectContent>
                                   </Select>
@@ -3522,19 +3528,27 @@ export const StoreOwnerDashboard = ({
                                         <ResponsiveDialogTitle>Nova Categoria</ResponsiveDialogTitle>
                                       </ResponsiveDialogHeader>
                                       <div className="space-y-4">
-                                        <div>
-                                          <Label>Nome da Categoria</Label>
-                                          <Input value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="Ex: Hamb\xFArgueres, Bebidas, Ofertas..." />
+                                        <div className="grid grid-cols-[80px_1fr] gap-4 items-end">
+                                          <EmojiPickerInput 
+                                            value={newCategoryEmoji} 
+                                            onChange={setNewCategoryEmoji}
+                                            label="Emoji"
+                                          />
+                                          <div>
+                                            <Label>Nome da Categoria</Label>
+                                            <Input value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="Ex: Hambúrgueres, Bebidas, Ofertas..." />
+                                          </div>
                                         </div>
                                         <Button onClick={async () => {
                                               if (newCategoryName.trim()) {
                                                 const categoryName = newCategoryName.trim();
-                                                await addCategory(categoryName);
+                                                await addCategory(categoryName, newCategoryEmoji);
                                                 setProductForm(prev => ({
                                                   ...prev,
                                                   category: categoryName
                                                 }));
                                                 setNewCategoryName('');
+                                                setNewCategoryEmoji('📁');
                                                 setIsCategoryDialogOpen(false);
                                               }
                                             }} className="w-full">
@@ -4062,14 +4076,22 @@ export const StoreOwnerDashboard = ({
                             <ResponsiveDialogTitle>Nova Categoria</ResponsiveDialogTitle>
                           </ResponsiveDialogHeader>
                           <div className="space-y-4">
-                            <div>
-                              <Label>Nome da Categoria</Label>
-                              <Input value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="Ex: Hambúrgueres, Bebidas, Sobremesas..." />
+                            <div className="grid grid-cols-[80px_1fr] gap-4 items-end">
+                              <EmojiPickerInput 
+                                value={newCategoryEmoji} 
+                                onChange={setNewCategoryEmoji}
+                                label="Emoji"
+                              />
+                              <div>
+                                <Label>Nome da Categoria</Label>
+                                <Input value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)} placeholder="Ex: Hambúrgueres, Bebidas, Sobremesas..." />
+                              </div>
                             </div>
                             <Button onClick={async () => {
                             if (newCategoryName.trim()) {
-                              await addCategory(newCategoryName.trim());
+                              await addCategory(newCategoryName.trim(), newCategoryEmoji);
                               setNewCategoryName('');
+                              setNewCategoryEmoji('📁');
                               setIsCategoryDialogOpen(false);
                             }
                           }} className="w-full">
@@ -4120,8 +4142,8 @@ export const StoreOwnerDashboard = ({
                         return <TableRow key={category.id} className={!category.is_active ? 'opacity-60' : ''}>
                                 <TableCell>
                                   <div className="flex items-center gap-3">
-                                    <div className="p-2 rounded-lg bg-primary/10">
-                                      <FolderTree className="w-5 h-5 text-primary" />
+                                    <div className="p-2 rounded-lg bg-primary/10 text-2xl">
+                                      {category.emoji || '📁'}
                                     </div>
                                     <div>
                                       <div className="font-semibold">{category.name}</div>
@@ -4143,6 +4165,7 @@ export const StoreOwnerDashboard = ({
                                     {hasPermission('categories', 'update') && <Button size="sm" variant="outline" onClick={() => {
                                 setEditingCategory(category);
                                 setEditCategoryName(category.name);
+                                setEditCategoryEmoji(category.emoji || '📁');
                                 setIsEditCategoryDialogOpen(true);
                               }}>
                                         <Edit className="w-4 h-4 mr-2" />
@@ -4163,6 +4186,7 @@ export const StoreOwnerDashboard = ({
                           {localCategories.filter(cat => categoryStatusFilter === 'all' || categoryStatusFilter === 'active' && cat.is_active || categoryStatusFilter === 'inactive' && !cat.is_active).map((category, index) => <SortableCategoryCard key={category.id} category={category} index={index} isReorderMode={true} hasPermission={hasPermission} products={products} onEdit={cat => {
                         setEditingCategory(cat);
                         setEditCategoryName(cat.name);
+                        setEditCategoryEmoji(cat.emoji || '📁');
                         setIsEditCategoryDialogOpen(true);
                       }} onDelete={deleteCategory} onToggleStatus={toggleCategoryStatus} />)}
                         </div>
@@ -4171,6 +4195,7 @@ export const StoreOwnerDashboard = ({
                       {filteredCategories.map((category, index) => <SortableCategoryCard key={category.id} category={category} index={index} isReorderMode={false} hasPermission={hasPermission} products={products} onEdit={cat => {
                     setEditingCategory(cat);
                     setEditCategoryName(cat.name);
+                    setEditCategoryEmoji(cat.emoji || '📁');
                     setIsEditCategoryDialogOpen(true);
                   }} onDelete={deleteCategory} onToggleStatus={toggleCategoryStatus} />)}
                     </div> : <Card className="border-dashed">
@@ -4194,13 +4219,20 @@ export const StoreOwnerDashboard = ({
                       <ResponsiveDialogTitle>Editar Categoria</ResponsiveDialogTitle>
                     </ResponsiveDialogHeader>
                     <div className="space-y-4">
-                      <div>
-                        <Label>Nome da Categoria</Label>
-                        <Input value={editCategoryName} onChange={e => setEditCategoryName(e.target.value)} placeholder="Ex: Hambúrgueres, Bebidas, Sobremesas..." />
+                      <div className="grid grid-cols-[80px_1fr] gap-4 items-end">
+                        <EmojiPickerInput 
+                          value={editCategoryEmoji} 
+                          onChange={setEditCategoryEmoji}
+                          label="Emoji"
+                        />
+                        <div>
+                          <Label>Nome da Categoria</Label>
+                          <Input value={editCategoryName} onChange={e => setEditCategoryName(e.target.value)} placeholder="Ex: Hambúrgueres, Bebidas, Sobremesas..." />
+                        </div>
                       </div>
                       <Button onClick={async () => {
                         if (editCategoryName.trim() && editingCategory) {
-                          await updateCategory(editingCategory.id, editCategoryName.trim());
+                          await updateCategory(editingCategory.id, editCategoryName.trim(), editCategoryEmoji);
                           queryClient.invalidateQueries({
                             queryKey: ['my-products', myStore?.id]
                           });
@@ -4210,6 +4242,7 @@ export const StoreOwnerDashboard = ({
                           setIsEditCategoryDialogOpen(false);
                           setEditingCategory(null);
                           setEditCategoryName('');
+                          setEditCategoryEmoji('📁');
                         }
                       }} className="w-full">
                         Salvar Alterações

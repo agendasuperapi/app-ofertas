@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { FolderTree, GripVertical, Edit, Trash2 } from "lucide-react";
+import { GripVertical, Edit, Trash2 } from "lucide-react";
 
 interface SortableCategoryCardProps {
   category: any;
@@ -60,8 +60,8 @@ export const SortableCategoryCard = ({
                   <GripVertical className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
                 </div>
               )}
-              <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 flex-shrink-0">
-                <FolderTree className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 flex-shrink-0 text-xl sm:text-2xl">
+                {category.emoji || '📁'}
               </div>
               <div className="min-w-0 flex-1">
                 <CardTitle className="text-sm sm:text-base lg:text-lg truncate">{category.name}</CardTitle>

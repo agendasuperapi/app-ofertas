@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 interface Category {
   id: string;
   name: string;
+  emoji: string;
   store_id: string;
   created_at: string;
   is_active: boolean;
@@ -42,13 +43,13 @@ export const useCategories = (storeId: string | undefined) => {
     fetchCategories();
   }, [storeId]);
 
-  const addCategory = async (name: string) => {
+  const addCategory = async (name: string, emoji: string = '📁') => {
     if (!storeId) return;
 
     try {
       const { data, error } = await supabase
         .from('product_categories')
-        .insert([{ store_id: storeId, name }])
+        .insert([{ store_id: storeId, name, emoji }])
         .select()
         .single();
 
@@ -68,7 +69,7 @@ export const useCategories = (storeId: string | undefined) => {
     }
   };
 
-  const updateCategory = async (categoryId: string, newName: string) => {
+  const updateCategory = async (categoryId: string, newName: string, newEmoji?: string) => {
     try {
       // Buscar o nome antigo da categoria
       const oldCategory = categories.find(c => c.id === categoryId);
@@ -81,14 +82,20 @@ export const useCategories = (storeId: string | undefined) => {
       console.log('🔄 Atualizando categoria:', { 
         categoryId, 
         oldName, 
-        newName, 
+        newName,
+        newEmoji,
         storeId: oldCategory.store_id 
       });
 
       // Atualizar a categoria
+      const updateData: { name: string; emoji?: string } = { name: newName };
+      if (newEmoji !== undefined) {
+        updateData.emoji = newEmoji;
+      }
+
       const { data, error } = await supabase
         .from('product_categories')
-        .update({ name: newName })
+        .update(updateData)
         .eq('id', categoryId)
         .select()
         .single();
