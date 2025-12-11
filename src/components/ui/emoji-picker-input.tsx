@@ -397,18 +397,18 @@ export const EmojiPickerInput = ({ value, onChange, label, categoryName }: Emoji
           </ResponsiveDialogHeader>
 
           <div className="flex flex-col gap-4 mt-4">
-            {/* Search in Portuguese */}
+            {/* Portuguese search */}
             <div>
               <Input
-                placeholder="Pesquisar emoji em português..."
+                placeholder="Pesquisar emoji (português)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                autoFocus
+                className="mb-2"
               />
               
-              {/* Search results */}
+              {/* Portuguese search results */}
               {searchResults.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-3 max-h-[120px] overflow-y-auto">
+                <div className="flex flex-wrap gap-1 max-h-[120px] overflow-y-auto p-2 bg-accent/30 rounded-lg">
                   {searchResults.map((emoji, index) => (
                     <button
                       key={index}
@@ -421,20 +421,13 @@ export const EmojiPickerInput = ({ value, onChange, label, categoryName }: Emoji
                   ))}
                 </div>
               )}
-              
-              {/* No results message */}
-              {searchTerm && searchResults.length === 0 && (
-                <p className="text-sm text-muted-foreground py-2">
-                  Nenhum resultado. Tente o picker abaixo (inglês).
-                </p>
-              )}
             </div>
 
-            {/* Quick suggestions (when not searching) */}
+            {/* Quick suggestions */}
             {!searchTerm && (
               <div>
                 <Label className="text-xs text-muted-foreground mb-2 block">Sugestões Rápidas</Label>
-                <div className="flex flex-wrap gap-1 max-h-[120px] overflow-y-auto">
+                <div className="flex flex-wrap gap-1 max-h-[100px] overflow-y-auto">
                   {QUICK_SUGGESTIONS.map((emoji, index) => (
                     <button
                       key={index}
@@ -449,13 +442,13 @@ export const EmojiPickerInput = ({ value, onChange, label, categoryName }: Emoji
               </div>
             )}
 
-            {/* EmojiPicker with Portuguese categories */}
+            {/* EmojiPicker for browsing and English search */}
             <div className="border rounded-lg overflow-hidden">
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
                 theme={Theme.AUTO}
                 width="100%"
-                height={300}
+                height={280}
                 categories={CATEGORIES_PT}
                 searchPlaceHolder="Pesquisar (inglês)..."
                 previewConfig={{ showPreview: false }}
