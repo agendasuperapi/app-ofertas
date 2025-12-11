@@ -932,8 +932,8 @@ const LandingPage = () => {
       {/* Footer */}
       <footer className="py-12 border-t border-white/10 relative">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div className="col-span-full md:col-span-1">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-8">
+            <div className="col-span-2 md:col-span-1">
               <Link to="/" className="text-2xl font-bold bg-gradient-to-r from-primary to-cyan-500 bg-clip-text text-transparent">
                 Ofertas.app
               </Link>
@@ -941,7 +941,7 @@ const LandingPage = () => {
                 A plataforma completa para sua loja online
               </p>
             </div>
-            <div className="hidden md:block">
+            <div>
               <h4 className="font-semibold mb-4 text-white">Produto</h4>
               <ul className="space-y-2 text-slate-500 text-sm">
                 <li><Link to="/become-partner" className="hover:text-primary transition-colors">Criar Loja</Link></li>
@@ -949,7 +949,7 @@ const LandingPage = () => {
                 <li><a href="#" className="hover:text-primary transition-colors">Preços</a></li>
               </ul>
             </div>
-            <div className="hidden md:block">
+            <div>
               <h4 className="font-semibold mb-4 text-white">Recursos</h4>
               <ul className="space-y-2 text-slate-500 text-sm">
                 <li><a href="#" className="hover:text-primary transition-colors">Blog</a></li>
@@ -957,7 +957,7 @@ const LandingPage = () => {
                 <li><a href="#" className="hover:text-primary transition-colors">API</a></li>
               </ul>
             </div>
-            <div className="hidden md:block">
+            <div>
               <h4 className="font-semibold mb-4 text-white">Contato</h4>
               <ul className="space-y-2 text-slate-500 text-sm">
                 <li><a href="mailto:contato@ofertas.app" className="hover:text-primary transition-colors">contato@ofertas.app</a></li>
