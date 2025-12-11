@@ -257,42 +257,6 @@ export type Database = {
           },
         ]
       }
-      affiliate_coupons: {
-        Row: {
-          affiliate_id: string
-          coupon_id: string
-          created_at: string | null
-          id: string
-        }
-        Insert: {
-          affiliate_id: string
-          coupon_id: string
-          created_at?: string | null
-          id?: string
-        }
-        Update: {
-          affiliate_id?: string
-          coupon_id?: string
-          created_at?: string | null
-          id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "affiliate_coupons_affiliate_id_fkey"
-            columns: ["affiliate_id"]
-            isOneToOne: false
-            referencedRelation: "affiliates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "affiliate_coupons_coupon_id_fkey"
-            columns: ["coupon_id"]
-            isOneToOne: false
-            referencedRelation: "coupons"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       affiliate_earnings: {
         Row: {
           affiliate_id: string
@@ -629,7 +593,6 @@ export type Database = {
           affiliate_account_id: string | null
           commission_enabled: boolean
           commission_maturity_days: number | null
-          coupon_id: string | null
           cpf_cnpj: string | null
           created_at: string
           default_commission_type: string
@@ -649,7 +612,6 @@ export type Database = {
           affiliate_account_id?: string | null
           commission_enabled?: boolean
           commission_maturity_days?: number | null
-          coupon_id?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           default_commission_type?: string
@@ -669,7 +631,6 @@ export type Database = {
           affiliate_account_id?: string | null
           commission_enabled?: boolean
           commission_maturity_days?: number | null
-          coupon_id?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           default_commission_type?: string
@@ -691,13 +652,6 @@ export type Database = {
             columns: ["affiliate_account_id"]
             isOneToOne: false
             referencedRelation: "affiliate_accounts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "affiliates_coupon_id_fkey"
-            columns: ["coupon_id"]
-            isOneToOne: false
-            referencedRelation: "coupons"
             referencedColumns: ["id"]
           },
           {
@@ -2396,7 +2350,6 @@ export type Database = {
           affiliate_account_id: string
           commission_enabled: boolean | null
           commission_maturity_days: number | null
-          coupon_id: string | null
           created_at: string | null
           default_commission_type: string
           default_commission_value: number
@@ -2415,7 +2368,6 @@ export type Database = {
           affiliate_account_id: string
           commission_enabled?: boolean | null
           commission_maturity_days?: number | null
-          coupon_id?: string | null
           created_at?: string | null
           default_commission_type?: string
           default_commission_value?: number
@@ -2434,7 +2386,6 @@ export type Database = {
           affiliate_account_id?: string
           commission_enabled?: boolean | null
           commission_maturity_days?: number | null
-          coupon_id?: string | null
           created_at?: string | null
           default_commission_type?: string
           default_commission_value?: number
@@ -2454,13 +2405,6 @@ export type Database = {
             columns: ["affiliate_account_id"]
             isOneToOne: false
             referencedRelation: "affiliate_accounts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "store_affiliates_coupon_id_fkey"
-            columns: ["coupon_id"]
-            isOneToOne: false
-            referencedRelation: "coupons"
             referencedColumns: ["id"]
           },
           {
