@@ -28,8 +28,10 @@ import { isStoreOpen, getStoreStatusText } from "@/lib/storeUtils";
 import { EditCartItemDialog } from "@/components/cart/EditCartItemDialog";
 import { normalizePhone } from "@/lib/phone";
 import { fetchCepData, formatCep, isValidCepFormat } from "@/lib/cepValidation";
+import { useForceTheme } from "@/hooks/useForceTheme";
 
 export default function Cart() {
+  useForceTheme('light');
   const navigate = useNavigate();
   const { user, signUp, signIn } = useAuth();
   const { cart, updateQuantity, removeFromCart, getTotal, clearCart, updateCartItem, applyCoupon, removeCoupon } = useCart();
