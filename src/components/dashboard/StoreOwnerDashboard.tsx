@@ -3533,6 +3533,7 @@ export const StoreOwnerDashboard = ({
                                             value={newCategoryEmoji} 
                                             onChange={setNewCategoryEmoji}
                                             label="Emoji"
+                                            categoryName={newCategoryName}
                                           />
                                           <div>
                                             <Label>Nome da Categoria</Label>
@@ -4081,6 +4082,7 @@ export const StoreOwnerDashboard = ({
                                 value={newCategoryEmoji} 
                                 onChange={setNewCategoryEmoji}
                                 label="Emoji"
+                                categoryName={newCategoryName}
                               />
                               <div>
                                 <Label>Nome da Categoria</Label>
@@ -4224,6 +4226,7 @@ export const StoreOwnerDashboard = ({
                           value={editCategoryEmoji} 
                           onChange={setEditCategoryEmoji}
                           label="Emoji"
+                          categoryName={editCategoryName}
                         />
                         <div>
                           <Label>Nome da Categoria</Label>
