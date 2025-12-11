@@ -397,9 +397,9 @@ export const EmojiPickerInput = ({ value, onChange, label, categoryName }: Emoji
           </ResponsiveDialogHeader>
 
           <div className="flex flex-col gap-3 mt-4">
-            {/* Unified search input */}
+            {/* Unified search input - Portuguese search */}
             <Input
-              placeholder="Pesquisar emoji (português ou inglês)..."
+              placeholder="Pesquisar emoji em português..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               autoFocus
@@ -426,6 +426,13 @@ export const EmojiPickerInput = ({ value, onChange, label, categoryName }: Emoji
               </div>
             )}
 
+            {/* No Portuguese results message */}
+            {searchTerm && searchResults.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-1">
+                Não encontrado. Use a busca em inglês abaixo.
+              </p>
+            )}
+
             {/* Quick suggestions (only when not searching) */}
             {!searchTerm && (
               <div>
@@ -445,7 +452,7 @@ export const EmojiPickerInput = ({ value, onChange, label, categoryName }: Emoji
               </div>
             )}
 
-            {/* EmojiPicker for browsing (search hidden when using main search) */}
+            {/* EmojiPicker - search enabled only when no Portuguese results */}
             <div className="border rounded-lg overflow-hidden">
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
@@ -453,7 +460,8 @@ export const EmojiPickerInput = ({ value, onChange, label, categoryName }: Emoji
                 width="100%"
                 height={280}
                 categories={CATEGORIES_PT}
-                searchDisabled={!!searchTerm}
+                searchDisabled={searchResults.length > 0}
+                searchPlaceHolder="Pesquisar em inglês..."
                 previewConfig={{ showPreview: false }}
                 lazyLoadEmojis={true}
               />
