@@ -709,19 +709,49 @@ const LandingPage = () => {
             </p>
           </motion.div>
 
-          <motion.div className="flex flex-wrap justify-center gap-4" variants={containerVariants} initial="hidden" whileInView="visible" viewport={{
-          once: true
-        }}>
-            {categories.map((category, index) => <motion.div key={index} variants={itemVariants} whileHover={{
-            scale: 1.05,
-            y: -2
-          }}>
-                <div className="flex items-center gap-3 px-6 py-3 bg-slate-900/80 backdrop-blur-sm rounded-full border border-white/10 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10 transition-all duration-300 cursor-pointer group">
-                  <category.icon className="h-5 w-5 text-cyan-400 group-hover:scale-110 transition-transform" />
-                  <span className="font-medium text-slate-300">{category.name}</span>
-                </div>
-              </motion.div>)}
-          </motion.div>
+          <div className="relative overflow-hidden py-4">
+            <motion.div 
+              className="flex gap-4 w-max"
+              animate={{
+                x: [0, -1920]
+              }}
+              transition={{
+                x: {
+                  repeat: Infinity,
+                  repeatType: "loop",
+                  duration: 30,
+                  ease: "linear"
+                }
+              }}
+            >
+              {/* First set */}
+              {categories.map((category, index) => (
+                <motion.div 
+                  key={`first-${index}`} 
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  className="flex-shrink-0"
+                >
+                  <div className="flex items-center gap-3 px-6 py-3 bg-slate-900/80 backdrop-blur-sm rounded-full border border-white/10 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10 transition-all duration-300 cursor-pointer group">
+                    <category.icon className="h-5 w-5 text-cyan-400 group-hover:scale-110 transition-transform" />
+                    <span className="font-medium text-slate-300 whitespace-nowrap">{category.name}</span>
+                  </div>
+                </motion.div>
+              ))}
+              {/* Duplicate set for seamless loop */}
+              {categories.map((category, index) => (
+                <motion.div 
+                  key={`second-${index}`} 
+                  whileHover={{ scale: 1.05, y: -2 }}
+                  className="flex-shrink-0"
+                >
+                  <div className="flex items-center gap-3 px-6 py-3 bg-slate-900/80 backdrop-blur-sm rounded-full border border-white/10 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10 transition-all duration-300 cursor-pointer group">
+                    <category.icon className="h-5 w-5 text-cyan-400 group-hover:scale-110 transition-transform" />
+                    <span className="font-medium text-slate-300 whitespace-nowrap">{category.name}</span>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
         </div>
       </section>
 
