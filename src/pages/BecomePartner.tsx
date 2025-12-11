@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { Navigation } from "@/components/layout/Navigation";
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -240,9 +240,7 @@ export default function BecomePartner() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
-      <Navigation />
-
-      <main className="container mx-auto px-4 pt-24 pb-12 relative">
+      <main className="container mx-auto px-4 py-12 relative">
         <GridPattern variant="neutral-dark" />
         
         <div className="relative z-10">
