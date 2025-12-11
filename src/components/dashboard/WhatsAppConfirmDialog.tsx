@@ -113,11 +113,15 @@ export function WhatsAppConfirmDialog({
       };
       const paymentMethod = paymentMap[order.payment_method] || order.payment_method;
 
+      // Monta a URL da loja
+      const storeUrl = `${window.location.origin}/${store.slug}`;
+
       // Substitui variáveis na mensagem
       let message = statusConfig.whatsapp_message;
       message = message.replace(/\{customer_name\}/g, order.customer_name);
       message = message.replace(/\{order_number\}/g, order.order_number);
       message = message.replace(/\{store_name\}/g, store.name);
+      message = message.replace(/\{store_url\}/g, storeUrl);
       message = message.replace(/\{total\}/g, `R$ ${order.total.toFixed(2)}`);
       message = message.replace(/\{items\}/g, itemsList);
       message = message.replace(/\{delivery_type\}/g, order.delivery_type === 'delivery' ? 'Entrega' : 'Retirada');
