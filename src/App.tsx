@@ -22,6 +22,7 @@ import LoginLojista from "./pages/LoginLojista";
 import AdminDashboard from "./pages/AdminDashboard";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import LandingPage from "./pages/LandingPage";
 import ProductPage from "./pages/ProductPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
@@ -52,6 +53,7 @@ const App = () => (
             <div className="pb-20 md:pb-0">
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/sobre" element={<LandingPage />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
