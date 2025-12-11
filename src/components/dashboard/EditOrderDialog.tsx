@@ -899,7 +899,9 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2 flex-wrap">
                           <Tag className="h-3.5 w-3.5 text-emerald-600" />
-                          <span className="text-emerald-700 font-medium">Desconto:</span>
+                          <span className="text-emerald-700 font-medium">
+                            {appliedCoupon?.code}:
+                          </span>
                           {itemDiscounts[item.id].ruleType === 'product' && (
                             <Badge variant="outline" className="text-xs bg-purple-100 text-purple-700 border-purple-200">
                               Regra Produto
