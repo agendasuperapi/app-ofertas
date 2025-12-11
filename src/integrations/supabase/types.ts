@@ -3465,6 +3465,16 @@ export type Database = {
               error: true
             } & "Could not choose the best candidate function between: public.urlencode(string => bytea), public.urlencode(string => varchar). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
           }
+      validate_affiliate_data_integrity: {
+        Args: never
+        Returns: {
+          description: string
+          issue_type: string
+          record_id: string
+          suggested_fix: string
+          table_name: string
+        }[]
+      }
       validate_affiliate_session: {
         Args: { session_token: string }
         Returns: {
