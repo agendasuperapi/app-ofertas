@@ -204,7 +204,6 @@ export type Database = {
           id: string
           is_active: boolean
           product_id: string | null
-          store_affiliate_id: string | null
           updated_at: string
         }
         Insert: {
@@ -217,7 +216,6 @@ export type Database = {
           id?: string
           is_active?: boolean
           product_id?: string | null
-          store_affiliate_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -230,7 +228,6 @@ export type Database = {
           id?: string
           is_active?: boolean
           product_id?: string | null
-          store_affiliate_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -248,11 +245,40 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      affiliate_coupons: {
+        Row: {
+          affiliate_id: string
+          coupon_id: string
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          affiliate_id: string
+          coupon_id: string
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          affiliate_id?: string
+          coupon_id?: string
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: [
           {
-            foreignKeyName: "affiliate_commission_rules_store_affiliate_id_fkey"
-            columns: ["store_affiliate_id"]
+            foreignKeyName: "affiliate_coupons_affiliate_id_fkey"
+            columns: ["affiliate_id"]
             isOneToOne: false
-            referencedRelation: "store_affiliates"
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_coupons_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
             referencedColumns: ["id"]
           },
         ]
@@ -420,7 +446,6 @@ export type Database = {
           paid_at: string
           payment_method: string | null
           payment_proof: string | null
-          store_affiliate_id: string | null
         }
         Insert: {
           affiliate_id: string
@@ -431,7 +456,6 @@ export type Database = {
           paid_at?: string
           payment_method?: string | null
           payment_proof?: string | null
-          store_affiliate_id?: string | null
         }
         Update: {
           affiliate_id?: string
@@ -442,7 +466,6 @@ export type Database = {
           paid_at?: string
           payment_method?: string | null
           payment_proof?: string | null
-          store_affiliate_id?: string | null
         }
         Relationships: [
           {
@@ -450,13 +473,6 @@ export type Database = {
             columns: ["affiliate_id"]
             isOneToOne: false
             referencedRelation: "affiliates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "affiliate_payments_store_affiliate_id_fkey"
-            columns: ["store_affiliate_id"]
-            isOneToOne: false
-            referencedRelation: "store_affiliates"
             referencedColumns: ["id"]
           },
         ]
@@ -593,6 +609,7 @@ export type Database = {
           affiliate_account_id: string | null
           commission_enabled: boolean
           commission_maturity_days: number | null
+          coupon_id: string | null
           cpf_cnpj: string | null
           created_at: string
           default_commission_type: string
@@ -612,6 +629,7 @@ export type Database = {
           affiliate_account_id?: string | null
           commission_enabled?: boolean
           commission_maturity_days?: number | null
+          coupon_id?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           default_commission_type?: string
@@ -631,6 +649,7 @@ export type Database = {
           affiliate_account_id?: string | null
           commission_enabled?: boolean
           commission_maturity_days?: number | null
+          coupon_id?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           default_commission_type?: string
@@ -652,6 +671,13 @@ export type Database = {
             columns: ["affiliate_account_id"]
             isOneToOne: false
             referencedRelation: "affiliate_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliates_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
             referencedColumns: ["id"]
           },
           {
@@ -2350,6 +2376,7 @@ export type Database = {
           affiliate_account_id: string
           commission_enabled: boolean | null
           commission_maturity_days: number | null
+          coupon_id: string | null
           created_at: string | null
           default_commission_type: string
           default_commission_value: number
@@ -2368,6 +2395,7 @@ export type Database = {
           affiliate_account_id: string
           commission_enabled?: boolean | null
           commission_maturity_days?: number | null
+          coupon_id?: string | null
           created_at?: string | null
           default_commission_type?: string
           default_commission_value?: number
@@ -2386,6 +2414,7 @@ export type Database = {
           affiliate_account_id?: string
           commission_enabled?: boolean | null
           commission_maturity_days?: number | null
+          coupon_id?: string | null
           created_at?: string | null
           default_commission_type?: string
           default_commission_value?: number
@@ -2405,6 +2434,13 @@ export type Database = {
             columns: ["affiliate_account_id"]
             isOneToOne: false
             referencedRelation: "affiliate_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "store_affiliates_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
             referencedColumns: ["id"]
           },
           {
@@ -3129,20 +3165,22 @@ export type Database = {
         }[]
       }
       get_affiliate_order_items: {
-        Args: { p_affiliate_account_id: string; p_order_id: string }
+        Args: { p_order_id: string; p_store_affiliate_id?: string }
         Returns: {
-          commission_amount: number
           commission_source: string
           commission_type: string
           commission_value: number
+          coupon_scope: string
           is_coupon_eligible: boolean
+          item_commission: number
           item_discount: number
           item_id: string
-          item_subtotal: number
           item_value_with_discount: number
           product_category: string
+          product_id: string
           product_name: string
           quantity: number
+          subtotal: number
           unit_price: number
         }[]
       }
@@ -3409,16 +3447,6 @@ export type Database = {
               error: true
             } & "Could not choose the best candidate function between: public.urlencode(string => bytea), public.urlencode(string => varchar). Try renaming the parameters or the function itself in the database so function overloading can be resolved"
           }
-      validate_affiliate_data_integrity: {
-        Args: never
-        Returns: {
-          description: string
-          issue_type: string
-          record_id: string
-          suggested_fix: string
-          table_name: string
-        }[]
-      }
       validate_affiliate_session: {
         Args: { session_token: string }
         Returns: {

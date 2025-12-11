@@ -18,7 +18,7 @@ export interface Affiliate {
   phone?: string | null;
   cpf_cnpj?: string | null;
   pix_key?: string | null;
-  coupon_id?: string | null; // Legacy field - kept for fallback reading only
+  coupon_id?: string | null; // Legacy field
   is_active: boolean;
   commission_enabled: boolean;
   default_commission_type: 'percentage' | 'fixed';
@@ -27,25 +27,14 @@ export interface Affiliate {
   commission_maturity_days: number; // Days before commission becomes available for withdrawal
   created_at: string;
   updated_at: string;
-  // Legacy coupon field - kept for fallback reading only
   coupon?: {
     id: string;
     code: string;
     discount_type: string;
     discount_value: number;
   } | null;
-  // Legacy junction table - kept for fallback reading only
+  // Multiple coupons
   affiliate_coupons?: Array<{
-    coupon_id: string;
-    coupon: {
-      id: string;
-      code: string;
-      discount_type: string;
-      discount_value: number;
-    };
-  }>;
-  // New: coupons from store_affiliate_coupons (primary source)
-  store_affiliate_coupons?: Array<{
     coupon_id: string;
     coupon: {
       id: string;
@@ -120,46 +109,14 @@ export const affiliateKeys = {
 };
 
 const fetchAffiliatesFromDB = async (storeId: string): Promise<Affiliate[]> => {
-  // Fetch affiliates with legacy coupon fields (for fallback)
-  const { data: affiliatesData, error } = await (supabase as any)
+  const { data, error } = await (supabase as any)
     .from('affiliates')
     .select(`*, coupon:coupons(id, code, discount_type, discount_value), affiliate_coupons(coupon_id, coupon:coupons(id, code, discount_type, discount_value))`)
     .eq('store_id', storeId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  if (!affiliatesData) return [];
-
-  // For each affiliate, fetch coupons from store_affiliate_coupons (primary source)
-  const affiliatesWithCoupons = await Promise.all(affiliatesData.map(async (affiliate: any) => {
-    // Find store_affiliate by affiliate_account_id or CPF
-    let storeAffiliateCoupons: any[] = [];
-    
-    if (affiliate.affiliate_account_id) {
-      const { data: storeAffiliate } = await (supabase as any)
-        .from('store_affiliates')
-        .select('id')
-        .eq('affiliate_account_id', affiliate.affiliate_account_id)
-        .eq('store_id', storeId)
-        .maybeSingle();
-      
-      if (storeAffiliate) {
-        const { data: sacData } = await (supabase as any)
-          .from('store_affiliate_coupons')
-          .select('coupon_id, coupon:coupons(id, code, discount_type, discount_value)')
-          .eq('store_affiliate_id', storeAffiliate.id);
-        
-        storeAffiliateCoupons = sacData || [];
-      }
-    }
-    
-    return {
-      ...affiliate,
-      store_affiliate_coupons: storeAffiliateCoupons,
-    };
-  }));
-
-  return affiliatesWithCoupons;
+  return data || [];
 };
 
 export const useAffiliates = (storeId?: string) => {
@@ -199,7 +156,7 @@ export const useAffiliates = (storeId?: string) => {
           phone: rest.phone,
           cpf_cnpj: normalizedCpf, // CPF normalizado (apenas números)
           pix_key: rest.pix_key,
-          // Note: coupon_id is no longer set here - coupons are managed via store_affiliate_coupons
+          coupon_id: coupon_ids?.[0] || rest.coupon_id,
           is_active: rest.is_active ?? true,
           commission_enabled: rest.commission_enabled ?? true,
           default_commission_type: rest.default_commission_type || 'percentage',
@@ -213,8 +170,13 @@ export const useAffiliates = (storeId?: string) => {
 
       if (error) throw error;
 
-      // Insert coupons ONLY into store_affiliate_coupons (primary table)
+      // Insert multiple coupons into junction table
       if (coupon_ids && coupon_ids.length > 0) {
+        const couponInserts = coupon_ids.map(couponId => ({
+          affiliate_id: data.id,
+          coupon_id: couponId,
+        }));
+        await (supabase as any).from('affiliate_coupons').insert(couponInserts);
         
         // Se affiliate_account_id foi passado, usar diretamente para sincronizar
         // Caso contrário, buscar por CPF (fallback para compatibilidade)
@@ -290,7 +252,9 @@ export const useAffiliates = (storeId?: string) => {
       if (normalizedCpf !== undefined) {
         updateData.cpf_cnpj = normalizedCpf; // CPF normalizado (apenas números)
       }
-      // Note: coupon_id is no longer updated here - coupons are managed via store_affiliate_coupons
+      if (coupon_ids) {
+        updateData.coupon_id = coupon_ids[0] || null;
+      }
       
       const { data, error } = await (supabase as any)
         .from('affiliates')
@@ -301,8 +265,17 @@ export const useAffiliates = (storeId?: string) => {
 
       if (error) throw error;
 
-      // Note: affiliate_coupons junction table is no longer updated
-      // Coupons are managed exclusively via store_affiliate_coupons
+      // Update junction table if coupon_ids provided
+      if (coupon_ids !== undefined) {
+        await (supabase as any).from('affiliate_coupons').delete().eq('affiliate_id', id);
+        if (coupon_ids.length > 0) {
+          const couponInserts = coupon_ids.map(couponId => ({
+            affiliate_id: id,
+            coupon_id: couponId,
+          }));
+          await (supabase as any).from('affiliate_coupons').insert(couponInserts);
+        }
+      }
 
       // Sync with store_affiliates when relevant fields are updated
       const needsStoreAffiliateSync = 
@@ -364,7 +337,11 @@ export const useAffiliates = (storeId?: string) => {
             use_default_commission: rest.use_default_commission ?? data.use_default_commission ?? true,
             commission_maturity_days: rest.commission_maturity_days ?? data.commission_maturity_days ?? 7
           };
-          // Note: coupon_id is no longer updated in store_affiliates
+          
+          // Only update coupon_id if coupon_ids was explicitly provided
+          if (coupon_ids !== undefined) {
+            storeAffiliateUpdate.coupon_id = coupon_ids[0] || null;
+          }
 
           await (supabase as any)
             .from('store_affiliates')

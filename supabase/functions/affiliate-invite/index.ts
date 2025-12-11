@@ -82,7 +82,8 @@ serve(async (req) => {
           cpf,
           email, // Email agora é opcional
           name,
-          coupon_ids, // Array of coupon IDs (primary - coupon_id legacy removed)
+          coupon_id, // Legacy: single coupon ID
+          coupon_ids, // New: array of coupon IDs
           // Commission values from user configuration
           default_commission_type = 'percentage',
           default_commission_value = 0,
@@ -90,8 +91,10 @@ serve(async (req) => {
           commission_maturity_days = 7,
         } = body;
         
-        // Only use coupon_ids array (legacy coupon_id support removed)
-        const allCouponIds: string[] = coupon_ids && Array.isArray(coupon_ids) ? coupon_ids : [];
+        // Support both single coupon_id and array of coupon_ids
+        const allCouponIds: string[] = coupon_ids && Array.isArray(coupon_ids) && coupon_ids.length > 0 
+          ? coupon_ids 
+          : (coupon_id ? [coupon_id] : []);
 
         console.log(`[affiliate-invite] Send action: cpf=${cpf}, store_id=${store_id}, name=${name}, email=${email}`);
 
@@ -229,7 +232,7 @@ serve(async (req) => {
                 default_commission_value: default_commission_value,
                 use_default_commission: use_default_commission,
                 commission_maturity_days: commission_maturity_days,
-                // Note: coupon_id no longer set - coupons managed via store_affiliate_coupons
+                coupon_id: allCouponIds[0] || null,
               })
               .eq("id", existingAffiliation.id)
               .select()
@@ -328,7 +331,7 @@ serve(async (req) => {
           .insert({
             affiliate_account_id: affiliateAccount.id,
             store_id: store_id,
-            // Note: coupon_id no longer set - coupons managed via store_affiliate_coupons
+            coupon_id: allCouponIds[0] || null,
             default_commission_type: default_commission_type,
             default_commission_value: default_commission_value,
             use_default_commission: use_default_commission,

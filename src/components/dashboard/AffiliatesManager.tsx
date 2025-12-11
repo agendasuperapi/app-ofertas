@@ -76,18 +76,13 @@ export const AffiliatesManager = ({
   const [selectedAffiliate, setSelectedAffiliate] = useState<Affiliate | null>(null);
 
   // Filter coupons: only show coupons not linked to other affiliates
-  // Primary source: store_affiliate_coupons, fallback: legacy affiliate_coupons and coupon_id
   const availableCoupons = coupons.filter(coupon => {
-    // Check if coupon is linked via store_affiliate_coupons (primary source)
-    const linkedViaStoreAffiliateCoupons = affiliates.find(a => 
-      a.store_affiliate_coupons?.some(sac => sac.coupon_id === coupon.id)
-    );
+    // Check if coupon is linked via legacy field (coupon_id)
+    const linkedViaLegacy = affiliates.find(a => a.coupon_id === coupon.id);
 
-    // Fallback: Check legacy fields
-    const linkedViaLegacyCouponId = affiliates.find(a => a.coupon_id === coupon.id);
-    const linkedViaLegacyJunction = affiliates.find(a => a.affiliate_coupons?.some(ac => ac.coupon_id === coupon.id));
-    
-    const linkedAffiliate = linkedViaStoreAffiliateCoupons || linkedViaLegacyCouponId || linkedViaLegacyJunction;
+    // Check if coupon is linked via junction table (affiliate_coupons)
+    const linkedViaJunction = affiliates.find(a => a.affiliate_coupons?.some(ac => ac.coupon_id === coupon.id));
+    const linkedAffiliate = linkedViaLegacy || linkedViaJunction;
 
     // If not linked to any affiliate, it's available
     if (!linkedAffiliate) return true;
@@ -275,10 +270,8 @@ export const AffiliatesManager = ({
   const handleOpenDialog = async (affiliate?: Affiliate) => {
     if (affiliate) {
       setEditingAffiliate(affiliate);
-      // Get coupon IDs - Primary: store_affiliate_coupons, Fallback: legacy fields
-      const couponIdsFromStoreAffiliate = affiliate.store_affiliate_coupons?.filter(sac => sac.coupon !== null && sac.coupon !== undefined).map(sac => sac.coupon_id) || [];
-      const couponIdsFromLegacy = affiliate.affiliate_coupons?.filter(ac => ac.coupon !== null && ac.coupon !== undefined).map(ac => ac.coupon_id) || (affiliate.coupon_id && affiliate.coupon ? [affiliate.coupon_id] : []);
-      const couponIds = couponIdsFromStoreAffiliate.length > 0 ? couponIdsFromStoreAffiliate : couponIdsFromLegacy;
+      // Get coupon IDs from junction table or legacy field - filter out deleted coupons
+      const couponIds = affiliate.affiliate_coupons?.filter(ac => ac.coupon !== null && ac.coupon !== undefined).map(ac => ac.coupon_id) || (affiliate.coupon_id && affiliate.coupon ? [affiliate.coupon_id] : []);
 
       // Load existing commission rules
       const existingRules = await getCommissionRules(affiliate.id);
@@ -1166,10 +1159,8 @@ export const AffiliatesManager = ({
                         </div>
                         <p className="text-sm text-muted-foreground truncate">{affiliate.email}</p>
                         {(() => {
-                          // Primary: store_affiliate_coupons, Fallback: legacy fields
-                          const couponsFromStoreAffiliate = affiliate.store_affiliate_coupons?.map(sac => sac.coupon).filter(coupon => coupon !== null && coupon !== undefined) || [];
-                          const couponsFromLegacy = (affiliate.affiliate_coupons?.map(ac => ac.coupon).filter(coupon => coupon !== null && coupon !== undefined) || []).concat(affiliate.coupon && !affiliate.affiliate_coupons?.some(ac => ac.coupon?.id === affiliate.coupon?.id) ? [affiliate.coupon] : []).filter(coupon => coupon !== null && coupon !== undefined);
-                          const affiliateCoupons = couponsFromStoreAffiliate.length > 0 ? couponsFromStoreAffiliate : couponsFromLegacy;
+                          // Filter out deleted coupons (null references)
+                          const affiliateCoupons = (affiliate.affiliate_coupons?.map(ac => ac.coupon).filter(coupon => coupon !== null && coupon !== undefined) || []).concat(affiliate.coupon && !affiliate.affiliate_coupons?.some(ac => ac.coupon?.id === affiliate.coupon?.id) ? [affiliate.coupon] : []).filter(coupon => coupon !== null && coupon !== undefined);
                           if (affiliateCoupons.length === 0) return null;
                           return <div className="flex flex-wrap items-center gap-2 mt-1">
                               <Tag className="h-3 w-3 text-muted-foreground" />
