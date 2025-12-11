@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EmailInput } from "@/components/ui/email-input";
 import { supabase } from "@/integrations/supabase/client";
-import { Store, LogIn, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { Store, LogIn, AlertCircle, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/useAuth";
@@ -183,6 +183,14 @@ export default function LoginLojista() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-md mx-auto"
         >
+          <Link 
+            to="/" 
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Voltar ao início
+          </Link>
+
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-primary mb-4">
               <Store className="w-8 h-8 text-white" />
