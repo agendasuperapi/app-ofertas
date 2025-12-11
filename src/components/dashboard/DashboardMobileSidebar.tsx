@@ -1,4 +1,4 @@
-import { Home, Package, ShoppingCart, MessageSquare, Settings, FolderOpen, FileBarChart, TrendingUp, Tag, FolderTree, UserCog, Users, Store, Truck, LogOut, UserPlus, Mail, Wallet } from "lucide-react";
+import { Home, Package, ShoppingCart, MessageSquare, Settings, FolderOpen, FileBarChart, TrendingUp, Tag, FolderTree, UserCog, Users, Store, Truck, LogOut, UserPlus, Mail, Wallet, History } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -83,6 +83,7 @@ export const DashboardMobileSidebar = ({
     { id: 'afiliados-convites', label: 'convites', icon: Mail },
     { id: 'afiliados-saques', label: 'saques', icon: Wallet },
     { id: 'afiliados-relatorios', label: 'relatórios', icon: FileBarChart },
+    { id: 'afiliados-auditoria', label: 'auditoria', icon: History },
   ];
 
   const handleNavigation = (tab: string) => {

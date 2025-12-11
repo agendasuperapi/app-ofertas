@@ -193,6 +193,96 @@ export type Database = {
           },
         ]
       }
+      affiliate_commission_recalc_log: {
+        Row: {
+          affiliate_id: string | null
+          affiliate_name: string | null
+          commission_amount_after: number | null
+          commission_amount_before: number | null
+          commission_difference: number | null
+          coupon_discount_after: number | null
+          coupon_discount_before: number | null
+          created_at: string | null
+          earning_id_after: string | null
+          earning_id_before: string | null
+          id: string
+          items_count_after: number | null
+          items_count_before: number | null
+          order_id: string
+          order_number: string | null
+          order_total_after: number | null
+          order_total_before: number | null
+          reason: string | null
+          recalculated_at: string | null
+          recalculated_by: string | null
+          store_affiliate_id: string | null
+          store_id: string | null
+        }
+        Insert: {
+          affiliate_id?: string | null
+          affiliate_name?: string | null
+          commission_amount_after?: number | null
+          commission_amount_before?: number | null
+          commission_difference?: number | null
+          coupon_discount_after?: number | null
+          coupon_discount_before?: number | null
+          created_at?: string | null
+          earning_id_after?: string | null
+          earning_id_before?: string | null
+          id?: string
+          items_count_after?: number | null
+          items_count_before?: number | null
+          order_id: string
+          order_number?: string | null
+          order_total_after?: number | null
+          order_total_before?: number | null
+          reason?: string | null
+          recalculated_at?: string | null
+          recalculated_by?: string | null
+          store_affiliate_id?: string | null
+          store_id?: string | null
+        }
+        Update: {
+          affiliate_id?: string | null
+          affiliate_name?: string | null
+          commission_amount_after?: number | null
+          commission_amount_before?: number | null
+          commission_difference?: number | null
+          coupon_discount_after?: number | null
+          coupon_discount_before?: number | null
+          created_at?: string | null
+          earning_id_after?: string | null
+          earning_id_before?: string | null
+          id?: string
+          items_count_after?: number | null
+          items_count_before?: number | null
+          order_id?: string
+          order_number?: string | null
+          order_total_after?: number | null
+          order_total_before?: number | null
+          reason?: string | null
+          recalculated_at?: string | null
+          recalculated_by?: string | null
+          store_affiliate_id?: string | null
+          store_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_commission_recalc_log_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "order_complete_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_commission_recalc_log_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliate_commission_rules: {
         Row: {
           affiliate_id: string
