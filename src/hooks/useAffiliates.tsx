@@ -109,13 +109,20 @@ export const affiliateKeys = {
 };
 
 const fetchAffiliatesFromDB = async (storeId: string): Promise<Affiliate[]> => {
+  console.log('[useAffiliates] 🔄 Fetching affiliates for store:', storeId);
+  
   const { data, error } = await (supabase as any)
     .from('affiliates')
     .select(`*, coupon:coupons(id, code, discount_type, discount_value), affiliate_coupons(coupon_id, coupon:coupons(id, code, discount_type, discount_value))`)
     .eq('store_id', storeId)
     .order('created_at', { ascending: false });
 
-  if (error) throw error;
+  if (error) {
+    console.error('[useAffiliates] ❌ Error fetching affiliates:', error);
+    throw error;
+  }
+  
+  console.log('[useAffiliates] ✅ Fetched', data?.length || 0, 'affiliates:', data?.map((a: any) => a.name));
   return data || [];
 };
 
@@ -127,7 +134,8 @@ export const useAffiliates = (storeId?: string) => {
     queryKey: affiliateKeys.list(storeId || ''),
     queryFn: () => fetchAffiliatesFromDB(storeId!),
     enabled: !!storeId,
-    staleTime: 30000,
+    staleTime: 5000, // Reduzido de 30s para 5s para dados mais frescos
+    refetchOnMount: 'always', // Sempre refetch quando montar
   });
 
   const fetchAffiliates = useCallback(() => {
@@ -234,6 +242,8 @@ export const useAffiliates = (storeId?: string) => {
       toast({ title: 'Afiliado criado!' });
       // Invalidate all affiliates queries to ensure all components get updated
       queryClient.invalidateQueries({ queryKey: ['affiliates'] });
+      // Forçar refetch imediato
+      queryClient.refetchQueries({ queryKey: affiliateKeys.list(storeId!) });
       // Invalidate coupons to update available coupons list
       queryClient.invalidateQueries({ queryKey: ['coupons'] });
     },

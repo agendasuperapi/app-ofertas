@@ -23,7 +23,7 @@ import { useCategories } from '@/hooks/useCategories';
 import { useProducts } from '@/hooks/useProducts';
 import { InviteAffiliateDialog } from './InviteAffiliateDialog';
 import { AffiliateInvitesManager } from './AffiliateInvitesManager';
-import { Users, Plus, Edit, Trash2, DollarSign, TrendingUp, Copy, Check, Tag, Percent, Settings, Eye, Clock, CheckCircle, XCircle, CreditCard, Loader2, AlertCircle, Search, Mail, Link2, Package, ChevronDown, ChevronRight, Pencil, X, Save, UserCheck, UserX, Lock, Calendar } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, DollarSign, TrendingUp, Copy, Check, Tag, Percent, Settings, Eye, Clock, CheckCircle, XCircle, CreditCard, Loader2, AlertCircle, Search, Mail, Link2, Package, ChevronDown, ChevronRight, Pencil, X, Save, UserCheck, UserX, Lock, Calendar, RefreshCw } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -243,6 +243,12 @@ export const AffiliatesManager = ({
     const search = couponRuleProductSearch.toLowerCase().trim();
     return product.name?.toLowerCase().includes(search) || product.id?.toLowerCase().includes(search) || product.short_id?.toLowerCase().includes(search) || product.external_code?.toLowerCase().includes(search);
   });
+
+  // Force refetch affiliates on mount to ensure fresh data
+  useEffect(() => {
+    console.log('[AffiliatesManager] 🔄 Component mounted, forcing affiliates refetch for store:', storeId);
+    invalidateAffiliates();
+  }, [storeId, invalidateAffiliates]);
 
   // Load all earnings for reports tab
   useEffect(() => {
@@ -1095,6 +1101,12 @@ export const AffiliatesManager = ({
                 <SelectItem value="inactive">Inativos</SelectItem>
               </SelectContent>
             </Select>
+            <Button variant="outline" size="icon" onClick={() => {
+              console.log('[AffiliatesManager] 🔄 Manual refresh triggered');
+              invalidateAffiliates();
+            }} title="Atualizar lista">
+              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            </Button>
           </div>}
 
         {affiliates.length === 0 ? <Card className="glass-card">
