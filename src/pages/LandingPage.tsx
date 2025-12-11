@@ -215,7 +215,7 @@ const LandingPage = () => {
                 </span>
               </h1>
               
-              <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0">
+              <p className="text-lg sm:text-xl text-white md:text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0">
                 Crie sua loja online em minutos, receba pedidos pelo WhatsApp e 
                 gerencie tudo em um único lugar. Sem complicação, sem taxas iniciais.
               </p>
