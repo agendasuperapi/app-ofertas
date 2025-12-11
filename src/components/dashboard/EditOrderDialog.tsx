@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { ResponsiveDialog as ObservationDialog, ResponsiveDialogContent as ObservationDialogContent, ResponsiveDialogHeader as ObservationDialogHeader, ResponsiveDialogTitle as ObservationDialogTitle, ResponsiveDialogDescription as ObservationDialogDescription } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ImageUpload } from "./ImageUpload";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Package, MapPin, CreditCard, History, Trash2, Plus, Tag, X } from "lucide-react";
+import { Package, MapPin, CreditCard, History, Trash2, Plus, Tag, X, RefreshCw } from "lucide-react";
 import { useOrderHistory } from "@/hooks/useOrderHistory";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCoupons } from "@/hooks/useCoupons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { CouponDiscountRule } from "@/lib/couponUtils";
 
 interface OrderItem {
   id: string;
@@ -63,6 +64,9 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
   const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
   const [couponDiscount, setCouponDiscount] = useState(order?.coupon_discount || 0);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [couponDiscountRules, setCouponDiscountRules] = useState<CouponDiscountRule[]>([]);
+  const [isRecalculating, setIsRecalculating] = useState(false);
+  const recalculateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const [storePaymentMethods, setStorePaymentMethods] = useState({
     accepts_pix: true,
@@ -104,6 +108,10 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
           code: order.coupon_code,
           discount: order.coupon_discount
         });
+        // Carregar regras de desconto do cupom
+        loadCouponDiscountRules(order.coupon_code);
+      } else {
+        setCouponDiscountRules([]);
       }
       loadOrderItems();
       loadAvailableProducts();
@@ -170,6 +178,210 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
     setOrderItems(itemsWithStatus);
     setOriginalOrderItems(itemsWithStatus);
   };
+
+  // Carregar regras de desconto do cupom
+  const loadCouponDiscountRules = async (couponCodeToLoad: string) => {
+    if (!order?.store_id || !couponCodeToLoad) {
+      setCouponDiscountRules([]);
+      return;
+    }
+
+    // Buscar cupom
+    const { data: couponData } = await supabase
+      .from('coupons')
+      .select('id, discount_type, discount_value, applies_to, category_names, product_ids')
+      .eq('store_id', order.store_id)
+      .ilike('code', couponCodeToLoad)
+      .single();
+
+    if (!couponData) {
+      setCouponDiscountRules([]);
+      return;
+    }
+
+    // Buscar regras de desconto
+    const { data: rules } = await supabase
+      .from('coupon_discount_rules')
+      .select('*')
+      .eq('coupon_id', couponData.id);
+
+    setCouponDiscountRules((rules || []) as CouponDiscountRule[]);
+    
+    // Atualizar dados do cupom aplicado
+    setAppliedCoupon(prev => ({
+      ...prev,
+      id: couponData.id,
+      discountType: couponData.discount_type,
+      discountValue: couponData.discount_value,
+      appliesTo: couponData.applies_to,
+      categoryNames: couponData.category_names || [],
+      productIds: couponData.product_ids || []
+    }));
+  };
+
+  // Recalcular desconto do cupom quando itens mudam
+  const recalculateCouponDiscount = useCallback(async () => {
+    if (!appliedCoupon?.code || orderItems.length === 0) return;
+    
+    setIsRecalculating(true);
+    
+    try {
+      // Calcular subtotal dos itens ativos
+      const activeItems = orderItems.filter(item => !item.pendingRemoval);
+      const subtotal = activeItems.reduce((sum, item) => sum + item.subtotal, 0);
+      
+      // Buscar informações atualizadas do cupom
+      const { data: couponData } = await supabase
+        .from('coupons')
+        .select('id, discount_type, discount_value, applies_to, category_names, product_ids')
+        .eq('store_id', order?.store_id)
+        .ilike('code', appliedCoupon.code)
+        .single();
+
+      if (!couponData) {
+        setIsRecalculating(false);
+        return;
+      }
+
+      // Buscar regras específicas
+      const { data: rules } = await supabase
+        .from('coupon_discount_rules')
+        .select('*')
+        .eq('coupon_id', couponData.id);
+
+      const discountRules = (rules || []) as CouponDiscountRule[];
+      setCouponDiscountRules(discountRules);
+
+      // Calcular desconto baseado no escopo e regras
+      let totalDiscount = 0;
+      const appliesTo = couponData.applies_to as 'all' | 'category' | 'product';
+      const categoryNames = couponData.category_names || [];
+      const productIds = couponData.product_ids || [];
+
+      // Para cada item ativo, calcular desconto
+      for (const item of activeItems) {
+        // Buscar categoria do produto
+        let productCategory = '';
+        if (item.id.startsWith('temp_')) {
+          // Novo item - buscar categoria do produto
+          const product = availableProducts.find(p => p.name === item.product_name);
+          if (product?.id) {
+            const { data: productData } = await supabase
+              .from('products')
+              .select('category')
+              .eq('id', product.id)
+              .single();
+            productCategory = productData?.category || '';
+          }
+        } else {
+          // Item existente - buscar categoria via product_id no order_items
+          const { data: orderItemData } = await supabase
+            .from('order_items')
+            .select('product_id')
+            .eq('id', item.id)
+            .single();
+          
+          if (orderItemData?.product_id) {
+            const { data: productData } = await supabase
+              .from('products')
+              .select('category')
+              .eq('id', orderItemData.product_id)
+              .single();
+            productCategory = productData?.category || '';
+          }
+        }
+
+        // Verificar elegibilidade
+        let isEligible = false;
+        if (appliesTo === 'all') {
+          isEligible = true;
+        } else if (appliesTo === 'category') {
+          isEligible = categoryNames.some((cat: string) => 
+            cat.toLowerCase().trim() === productCategory.toLowerCase().trim()
+          );
+        } else if (appliesTo === 'product') {
+          // Para novos itens, buscar ID pelo nome
+          const product = availableProducts.find(p => p.name === item.product_name);
+          isEligible = product?.id && productIds.includes(product.id);
+        }
+
+        if (!isEligible) continue;
+
+        // Verificar regra específica
+        const productRule = discountRules.find(r => {
+          if (r.rule_type === 'product') {
+            const product = availableProducts.find(p => p.name === item.product_name);
+            return product?.id && r.product_id === product.id;
+          }
+          return false;
+        });
+
+        const categoryRule = discountRules.find(r => 
+          r.rule_type === 'category' && 
+          r.category_name?.toLowerCase().trim() === productCategory.toLowerCase().trim()
+        );
+
+        const ruleToApply = productRule || categoryRule;
+
+        // Calcular desconto
+        if (ruleToApply) {
+          if (ruleToApply.discount_type === 'percentage') {
+            totalDiscount += (item.subtotal * ruleToApply.discount_value) / 100;
+          } else {
+            // Valor fixo proporcional
+            totalDiscount += Math.min(ruleToApply.discount_value, item.subtotal);
+          }
+        } else {
+          // Desconto padrão do cupom
+          if (couponData.discount_type === 'percentage') {
+            totalDiscount += (item.subtotal * couponData.discount_value) / 100;
+          } else {
+            // Valor fixo proporcional ao subtotal total elegível
+            const eligibleSubtotal = activeItems.reduce((sum, i) => sum + i.subtotal, 0);
+            if (eligibleSubtotal > 0) {
+              totalDiscount += (item.subtotal / eligibleSubtotal) * Math.min(couponData.discount_value, eligibleSubtotal);
+            }
+          }
+        }
+      }
+
+      // Limitar desconto ao subtotal
+      totalDiscount = Math.min(totalDiscount, subtotal);
+      setCouponDiscount(totalDiscount);
+      
+      // Atualizar appliedCoupon com novo desconto
+      setAppliedCoupon(prev => ({
+        ...prev,
+        discount: totalDiscount
+      }));
+
+    } catch (error) {
+      console.error('Erro ao recalcular desconto:', error);
+    } finally {
+      setIsRecalculating(false);
+    }
+  }, [appliedCoupon?.code, orderItems, order?.store_id, availableProducts]);
+
+  // Recalcular desconto quando itens mudam (com debounce)
+  useEffect(() => {
+    if (!appliedCoupon?.code || orderItems.length === 0) return;
+
+    // Limpar timeout anterior
+    if (recalculateTimeoutRef.current) {
+      clearTimeout(recalculateTimeoutRef.current);
+    }
+
+    // Debounce de 500ms para evitar recálculos excessivos
+    recalculateTimeoutRef.current = setTimeout(() => {
+      recalculateCouponDiscount();
+    }, 500);
+
+    return () => {
+      if (recalculateTimeoutRef.current) {
+        clearTimeout(recalculateTimeoutRef.current);
+      }
+    };
+  }, [orderItems, recalculateCouponDiscount]);
 
   const updateLocalOrderItem = (itemId: string, updates: Partial<OrderItem>) => {
     setOrderItems(items => 
@@ -240,6 +452,8 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
         discountType: validation.discount_type
       });
       setCouponDiscount(validation.discount_amount || 0);
+      // Carregar regras de desconto do cupom
+      await loadCouponDiscountRules(couponCode);
       toast({
         title: 'Cupom aplicado!',
         description: `Desconto de R$ ${(validation.discount_amount || 0).toFixed(2)} aplicado`,
@@ -257,6 +471,7 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
     setCouponCode('');
     setAppliedCoupon(null);
     setCouponDiscount(0);
+    setCouponDiscountRules([]);
     toast({
       title: 'Cupom removido',
       description: 'O desconto foi removido do pedido',
@@ -437,6 +652,27 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
           editorName,
           changes,
         });
+      }
+
+      // Reprocessar comissão do afiliado se houver cupom e mudanças nos itens/valores
+      const itemsChanged = changes.items_added || changes.items_removed || changes.subtotal;
+      const couponChanged = changes.coupon || changes.coupon_discount;
+      
+      if (order.coupon_code && (itemsChanged || couponChanged)) {
+        console.log('[EDIT ORDER] Reprocessando comissão do afiliado para pedido:', order.id);
+        try {
+          const { error: rpcError } = await supabase.rpc('reprocess_affiliate_commission_for_order', {
+            p_order_id: order.id
+          });
+          
+          if (rpcError) {
+            console.error('[EDIT ORDER] Erro ao reprocessar comissão:', rpcError);
+          } else {
+            console.log('[EDIT ORDER] Comissão reprocessada com sucesso');
+          }
+        } catch (commissionError) {
+          console.error('[EDIT ORDER] Erro ao chamar reprocessamento de comissão:', commissionError);
+        }
       }
 
       toast({
@@ -703,9 +939,19 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
                 {appliedCoupon ? (
                   <div className="flex items-center gap-2 p-3 bg-success/10 border border-success/20 rounded-lg">
                     <div className="flex-1">
-                      <div className="font-medium text-sm">{appliedCoupon.code}</div>
+                      <div className="font-medium text-sm flex items-center gap-2">
+                        {appliedCoupon.code}
+                        {isRecalculating && (
+                          <RefreshCw className="h-3 w-3 animate-spin text-muted-foreground" />
+                        )}
+                      </div>
                       <div className="text-xs text-muted-foreground">
                         Desconto: R$ {couponDiscount.toFixed(2)}
+                        {couponDiscount !== order?.coupon_discount && (
+                          <span className="ml-1 text-warning">
+                            (era R$ {(order?.coupon_discount || 0).toFixed(2)})
+                          </span>
+                        )}
                       </div>
                     </div>
                     <Button
@@ -756,8 +1002,20 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
                 )}
                 {couponDiscount > 0 && (
                   <div className="flex justify-between text-sm text-success">
-                    <span>Desconto:</span>
+                    <span className="flex items-center gap-1">
+                      <Tag className="h-3 w-3" />
+                      Desconto ({appliedCoupon?.code}):
+                      {isRecalculating && (
+                        <RefreshCw className="h-3 w-3 animate-spin" />
+                      )}
+                    </span>
                     <span>- R$ {couponDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                {couponDiscount !== order?.coupon_discount && order?.coupon_discount > 0 && (
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>Desconto original:</span>
+                    <span>- R$ {order.coupon_discount.toFixed(2)}</span>
                   </div>
                 )}
                 <Separator />
