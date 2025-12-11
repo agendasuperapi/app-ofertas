@@ -3020,6 +3020,17 @@ export const StoreOwnerDashboard = ({
                                   <><Store className="h-3 w-3" /> Retirada</>
                                 )}
                               </Badge>
+                              <Badge variant="outline" className={`text-xs flex items-center gap-1 ${
+                                order.payment_received 
+                                  ? 'bg-green-50 text-green-700 border-green-200' 
+                                  : 'bg-orange-50 text-orange-700 border-orange-200'
+                              }`}>
+                                {order.payment_received ? (
+                                  <><CheckCircle className="h-3 w-3" /> Pago</>
+                                ) : (
+                                  <><DollarSign className="h-3 w-3" /> Pendente</>
+                                )}
+                              </Badge>
                               {(() => {
                                 // Verifica se o pedido foi feito fora do horário de funcionamento
                                 if (myStore?.operating_hours) {
