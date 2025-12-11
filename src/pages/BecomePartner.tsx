@@ -13,7 +13,7 @@ import { EmailInput } from "@/components/ui/email-input";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useStoreManagement } from "@/hooks/useStoreManagement";
-import { Store, Rocket, CheckCircle, TrendingUp, Users, DollarSign, AlertCircle, Loader2, ArrowLeft } from "lucide-react";
+import { Store, Rocket, CheckCircle, TrendingUp, Users, DollarSign, AlertCircle, Loader2, ArrowLeft, LogOut } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { storeSchema } from "@/hooks/useStoreValidation";
 import { z } from "zod";
@@ -57,7 +57,7 @@ const benefits = [
 
 export default function BecomePartner() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { hasRole } = useUserRole();
   const { createStore, isCreating } = useStoreManagement();
 
@@ -585,6 +585,14 @@ export default function BecomePartner() {
                         Você está logado como <strong className="text-white">{user.email}</strong>.
                         <br />
                         Sua loja será vinculada à sua conta atual.
+                        <br />
+                        <button 
+                          onClick={() => signOut()} 
+                          className="inline-flex items-center gap-1 text-primary hover:text-primary/80 hover:underline mt-1"
+                        >
+                          <LogOut className="w-3 h-3" />
+                          Sair da conta
+                        </button>
                       </>
                     )}
                   </p>
