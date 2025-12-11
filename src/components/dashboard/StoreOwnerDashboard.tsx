@@ -21,7 +21,8 @@ import { useStoreManagement, type StoreFormData } from "@/hooks/useStoreManageme
 import { useProductManagement } from "@/hooks/useProductManagement";
 import { useStoreOrders } from "@/hooks/useStoreOrders";
 import { useCategories } from "@/hooks/useCategories";
-import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, ArrowUp, ArrowDown, FolderTree, User, Lock, Edit2, Eye, Printer, AlertCircle, CheckCircle, Loader2, Bell, Shield, XCircle, Receipt, Truck, Save, Sparkles, LayoutGrid, Table as TableIcon, Star, LogOut, Users, ShoppingCart, Layers } from "lucide-react";
+import { Store, Package, ShoppingBag, Plus, Edit, Trash2, Settings, Clock, Search, Tag, X, Copy, Check, Pizza, MessageSquare, Menu, TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, ArrowUp, ArrowDown, FolderTree, User, Lock, Edit2, Eye, Printer, AlertCircle, CheckCircle, Loader2, Bell, Shield, XCircle, Receipt, Truck, Save, Sparkles, LayoutGrid, Table as TableIcon, Star, LogOut, Users, ShoppingCart, Layers, ChevronDown } from "lucide-react";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { validatePixKey, normalizePixKeyPhone, formatPixKey, detectPixKeyType } from "@/lib/pixValidation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ProductAddonsManager from "./ProductAddonsManager";
@@ -444,6 +445,7 @@ export const StoreOwnerDashboard = ({
   const [scheduledFilter, setScheduledFilter] = useState<'all' | 'scheduled' | 'normal'>('all');
   const [orderSortBy, setOrderSortBy] = useState<'newest' | 'oldest'>('newest');
   const [orderSearchTerm, setOrderSearchTerm] = useState('');
+  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [productStatusFilter, setProductStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [productSectionTab, setProductSectionTab] = useState('lista');
@@ -2981,215 +2983,273 @@ export const StoreOwnerDashboard = ({
 
             {/* Lista de Pedidos */}
             {paginatedOrdersData.totalOrders > 0 ? <div className="space-y-4 md:space-y-6">
-                {paginatedOrdersData.orders.map((order, index) => <div key={order.id}>
+                {paginatedOrdersData.orders.map((order, index) => {
+                  const isExpanded = expandedOrders.has(order.id);
+                  const toggleExpanded = () => {
+                    setExpandedOrders(prev => {
+                      const newSet = new Set(prev);
+                      if (newSet.has(order.id)) {
+                        newSet.delete(order.id);
+                      } else {
+                        newSet.add(order.id);
+                      }
+                      return newSet;
+                    });
+                  };
+                  
+                  return <div key={order.id}>
                     <Card className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-4 sm:p-6">
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
-                          <div className="flex-1">
+                      {/* Header clicável - sempre visível */}
+                      <div 
+                        className="p-4 sm:p-6 cursor-pointer select-none"
+                        onClick={toggleExpanded}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          {/* Lado esquerdo: info resumida */}
+                          <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <h3 className="font-semibold text-base md:text-lg">Pedido #{order.order_number}</h3>
                               {(() => {
-                            // Verifica se o pedido foi feito fora do horário de funcionamento
-                            if (myStore?.operating_hours) {
-                              const orderDate = new Date(order.created_at);
-                              const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][orderDate.getDay()];
-                              const orderTime = `${String(orderDate.getHours()).padStart(2, '0')}:${String(orderDate.getMinutes()).padStart(2, '0')}`;
-                              const daySchedule = myStore.operating_hours?.[dayOfWeek];
-                              if (daySchedule) {
-                                const wasOpen = !daySchedule.is_closed && orderTime >= daySchedule.open && orderTime <= daySchedule.close;
-                                const isScheduled = !wasOpen && myStore.allow_orders_when_closed;
-                                if (isScheduled) {
-                                  return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-300 flex items-center gap-1">
-                                          <Clock className="h-3 w-3" />
-                                          Agendado
-                                        </Badge>;
+                                // Verifica se o pedido foi feito fora do horário de funcionamento
+                                if (myStore?.operating_hours) {
+                                  const orderDate = new Date(order.created_at);
+                                  const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][orderDate.getDay()];
+                                  const orderTime = `${String(orderDate.getHours()).padStart(2, '0')}:${String(orderDate.getMinutes()).padStart(2, '0')}`;
+                                  const daySchedule = myStore.operating_hours?.[dayOfWeek];
+                                  if (daySchedule) {
+                                    const wasOpen = !daySchedule.is_closed && orderTime >= daySchedule.open && orderTime <= daySchedule.close;
+                                    const isScheduled = !wasOpen && myStore.allow_orders_when_closed;
+                                    if (isScheduled) {
+                                      return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 border-blue-300 flex items-center gap-1">
+                                        <Clock className="h-3 w-3" />
+                                        Agendado
+                                      </Badge>;
+                                    }
+                                  }
                                 }
-                              }
-                            }
-                            return null;
-                          })()}
+                                return null;
+                              })()}
                             </div>
-                            <p className="text-xs md:text-sm text-muted-foreground">
-                              {format(new Date(order.created_at), "dd/MM/yyyy 'às' HH:mm", {
-                            locale: ptBR
-                          })}
-                            </p>
+                            <p className="text-sm text-muted-foreground truncate">{order.customer_name}</p>
                           </div>
-                          <Badge variant="outline" className="capitalize text-xs self-start">
+                          
+                          {/* Lado direito: status, total e seta */}
+                          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
+                            <Badge 
+                              variant="outline" 
+                              className="capitalize text-xs hidden sm:flex"
+                              style={{
+                                backgroundColor: customStatuses.find(s => getEnumFromStatusKey(s.status_key) === order.status)?.status_color || undefined,
+                                color: customStatuses.find(s => getEnumFromStatusKey(s.status_key) === order.status)?.status_color ? '#fff' : undefined,
+                                borderColor: customStatuses.find(s => getEnumFromStatusKey(s.status_key) === order.status)?.status_color || undefined
+                              }}
+                            >
+                              {customStatuses.find(s => getEnumFromStatusKey(s.status_key) === order.status)?.status_label || customStatuses.find(s => s.status_key === normalizeStatusKey(order.status))?.status_label || order.status}
+                            </Badge>
+                            <span className="font-bold text-primary whitespace-nowrap">R$ {order.total.toFixed(2)}</span>
+                            <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                          </div>
+                        </div>
+                        
+                        {/* Status em mobile (abaixo do nome) */}
+                        <div className="flex sm:hidden mt-2">
+                          <Badge 
+                            variant="outline" 
+                            className="capitalize text-xs"
+                            style={{
+                              backgroundColor: customStatuses.find(s => getEnumFromStatusKey(s.status_key) === order.status)?.status_color || undefined,
+                              color: customStatuses.find(s => getEnumFromStatusKey(s.status_key) === order.status)?.status_color ? '#fff' : undefined,
+                              borderColor: customStatuses.find(s => getEnumFromStatusKey(s.status_key) === order.status)?.status_color || undefined
+                            }}
+                          >
                             {customStatuses.find(s => getEnumFromStatusKey(s.status_key) === order.status)?.status_label || customStatuses.find(s => s.status_key === normalizeStatusKey(order.status))?.status_label || order.status}
                           </Badge>
                         </div>
+                      </div>
 
-                        <Separator className="my-4" />
+                      {/* Conteúdo expandido */}
+                      <Collapsible open={isExpanded}>
+                        <CollapsibleContent>
+                          <CardContent className="pt-0 px-4 sm:px-6 pb-4 sm:pb-6">
+                            <Separator className="mb-4" />
+                            
+                            <p className="text-xs text-muted-foreground mb-4">
+                              {format(new Date(order.created_at), "dd/MM/yyyy 'às' HH:mm", {
+                                locale: ptBR
+                              })}
+                            </p>
 
-                        <div className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Cliente:</span>
-                            <span className="font-medium">{order.customer_name}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Telefone:</span>
-                            <span className="font-medium">{order.customer_phone}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Tipo:</span>
-                            <span className="font-medium capitalize">
-                              {order.delivery_type === 'pickup' ? 'Retirada' : order.delivery_type === 'delivery' ? 'Entrega' : order.delivery_type}
-                            </span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Pagamento:</span>
-                            <span className="font-medium capitalize">{order.payment_method}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Status Pgto:</span>
-                            <Badge className={(order as any).payment_received ? "bg-green-600 text-white hover:bg-green-700" : "bg-yellow-600 text-white hover:bg-yellow-700"}>
-                              {(order as any).payment_received ? "Pagamento recebido" : "Pagamento pendente"}
-                            </Badge>
-                          </div>
-                          {(order as any).coupon_code && <div className="flex justify-between">
-                              <span className="text-muted-foreground">Cupom:</span>
-                              <Badge variant="outline" className="gap-1">
-                                <Tag className="h-3 w-3" />
-                                {(order as any).coupon_code}
-                                {(order as any).coupon_discount > 0 && <span className="text-green-600 ml-1">
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Cliente:</span>
+                                <span className="font-medium">{order.customer_name}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Telefone:</span>
+                                <span className="font-medium">{order.customer_phone}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Tipo:</span>
+                                <span className="font-medium capitalize">
+                                  {order.delivery_type === 'pickup' ? 'Retirada' : order.delivery_type === 'delivery' ? 'Entrega' : order.delivery_type}
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Pagamento:</span>
+                                <span className="font-medium capitalize">{order.payment_method}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Status Pgto:</span>
+                                <Badge className={(order as any).payment_received ? "bg-green-600 text-white hover:bg-green-700" : "bg-yellow-600 text-white hover:bg-yellow-700"}>
+                                  {(order as any).payment_received ? "Pagamento recebido" : "Pagamento pendente"}
+                                </Badge>
+                              </div>
+                              {(order as any).coupon_code && <div className="flex justify-between">
+                                <span className="text-muted-foreground">Cupom:</span>
+                                <Badge variant="outline" className="gap-1">
+                                  <Tag className="h-3 w-3" />
+                                  {(order as any).coupon_code}
+                                  {(order as any).coupon_discount > 0 && <span className="text-green-600 ml-1">
                                     (-R$ {(order as any).coupon_discount.toFixed(2)})
                                   </span>}
-                              </Badge>
-                            </div>}
-                          <div className="flex justify-between text-lg font-bold">
-                            <span>Total:</span>
-                            <span className="text-primary">R$ {order.total.toFixed(2)}</span>
-                          </div>
-                        </div>
-
-                        {order.delivery_type === 'delivery' && <>
-                            <Separator className="my-4" />
-                            <div className="space-y-1 text-sm">
-                              <p className="font-medium">Endereço de Entrega:</p>
-                              <p className="text-muted-foreground">
-                                {order.delivery_street}, {order.delivery_number}
-                                {order.delivery_complement && ` - ${order.delivery_complement}`}
-                              </p>
-                              <p className="text-muted-foreground">
-                                {order.delivery_neighborhood}
-                                {(order as any).delivery_city && ` - ${(order as any).delivery_city}`}
-                              </p>
+                                </Badge>
+                              </div>}
+                              <div className="flex justify-between text-lg font-bold">
+                                <span>Total:</span>
+                                <span className="text-primary">R$ {order.total.toFixed(2)}</span>
+                              </div>
                             </div>
-                          </>}
 
-                        {order.notes && <>
+                            {order.delivery_type === 'delivery' && <>
+                              <Separator className="my-4" />
+                              <div className="space-y-1 text-sm">
+                                <p className="font-medium">Endereço de Entrega:</p>
+                                <p className="text-muted-foreground">
+                                  {order.delivery_street}, {order.delivery_number}
+                                  {order.delivery_complement && ` - ${order.delivery_complement}`}
+                                </p>
+                                <p className="text-muted-foreground">
+                                  {order.delivery_neighborhood}
+                                  {(order as any).delivery_city && ` - ${(order as any).delivery_city}`}
+                                </p>
+                              </div>
+                            </>}
+
+                            {order.notes && <>
+                              <Separator className="my-4" />
+                              <div className="text-sm">
+                                <p className="font-medium mb-1">Observações:</p>
+                                <p className="text-muted-foreground">{order.notes}</p>
+                              </div>
+                            </>}
+
                             <Separator className="my-4" />
-                            <div className="text-sm">
-                              <p className="font-medium mb-1">Observações:</p>
-                              <p className="text-muted-foreground">{order.notes}</p>
+
+                            <div className="flex flex-col sm:flex-row gap-2" onClick={e => e.stopPropagation()}>
+                              <Button variant="outline" size="sm" onClick={() => {
+                                setReceiptOrder(order);
+                                setIsReceiptDialogOpen(true);
+                              }} className="flex items-center justify-center gap-2 w-full sm:w-auto">
+                                <Receipt className={`w-4 h-4 sm:w-5 sm:h-5 ${(order as any).payment_received ? 'text-green-600' : 'text-red-600'}`} />
+                                Pagamento
+                              </Button>
+                              
+                              <Button variant="outline" size="sm" onClick={() => {
+                                setViewingOrder(order);
+                                setIsViewOrderDialogOpen(true);
+                              }} className="flex items-center justify-center gap-2 w-full sm:w-auto">
+                                <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
+                                Visualizar
+                              </Button>
+                              
+                              <Button variant="outline" size="sm" onClick={() => handlePrintOrder(order)} className="flex items-center justify-center gap-2 w-full sm:w-auto">
+                                <Printer className="w-3 h-3 sm:w-4 sm:h-4" />
+                                Imprimir
+                              </Button>
+                              
+                              {hasPermission('orders', 'edit_order_details') && <Button variant="outline" size="sm" onClick={() => {
+                                setNotesOrder(order);
+                                setIsNotesDialogOpen(true);
+                              }} className="flex items-center justify-center gap-2 w-full sm:w-auto">
+                                <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4" />
+                                Notas
+                              </Button>}
+
+                              {hasPermission('orders', 'edit_order_details') && <Button variant="outline" size="sm" onClick={() => {
+                                setEditingOrder(order);
+                                setIsEditOrderDialogOpen(true);
+                                setEditDialogInitialTab("items");
+                              }} className="flex items-center justify-center gap-2 w-full sm:w-auto">
+                                <Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                Editar Pedido
+                              </Button>}
+                              <Select value={getStatusKeyFromEnum(order.status)} disabled={isUpdating} onValueChange={newStatus => {
+                                // Verificar permissão antes de permitir mudança
+                                if (!canChangeTo(newStatus)) {
+                                  toast({
+                                    title: "Sem permissão",
+                                    description: "Você não tem permissão para alterar para este status.",
+                                    variant: "destructive"
+                                  });
+                                  return;
+                                }
+
+                                // Abrir diálogo de confirmação de WhatsApp
+                                setPendingStatusChange({
+                                  orderId: order.id,
+                                  orderNumber: order.order_number,
+                                  customerName: order.customer_name,
+                                  customerPhone: order.customer_phone,
+                                  newStatus: newStatus
+                                });
+                                setIsWhatsAppConfirmOpen(true);
+                              }}>
+                                <SelectTrigger className="flex-1">
+                                  {isUpdating ? <div className="flex items-center gap-2">
+                                    <Loader2 className="w-6 h-6 animate-spin text-orange-600" />
+                                    <span>Atualizando...</span>
+                                  </div> : <SelectValue placeholder="Alterar status" />}
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {customStatuses.length > 0 ? customStatuses.filter(status => {
+                                    // Verificar se está ativo e tem status_key válido
+                                    if (!status.is_active || !status.status_key || status.status_key.trim() === '') {
+                                      return false;
+                                    }
+
+                                    // Filtrar baseado no tipo de entrega do pedido
+                                    if (order.delivery_type === 'delivery') {
+                                      return status.show_for_delivery !== false;
+                                    } else if (order.delivery_type === 'pickup') {
+                                      return status.show_for_pickup !== false;
+                                    }
+
+                                    // Se não tiver tipo definido, mostrar todos
+                                    return true;
+                                  }).sort((a, b) => a.display_order - b.display_order).filter(status => canChangeTo(status.status_key)).map(status => <SelectItem key={status.status_key} value={status.status_key}>
+                                    {status.status_label}
+                                  </SelectItem>) : <>
+                                    {canChangeTo('pending') && <SelectItem value="pending">Pendente</SelectItem>}
+                                    {canChangeTo('confirmed') && <SelectItem value="confirmed">Confirmado</SelectItem>}
+                                    {canChangeTo('preparing') && <SelectItem value="preparing">Preparando</SelectItem>}
+                                    {canChangeTo('ready') && <SelectItem value="ready">Pronto</SelectItem>}
+                                    {canChangeTo('delivered') && <SelectItem value="delivered">Entregue</SelectItem>}
+                                    {canChangeTo('cancelled') && <SelectItem value="cancelled">Cancelado</SelectItem>}
+                                  </>}
+                                </SelectContent>
+                              </Select>
                             </div>
-                          </>}
-
-                        <Separator className="my-4" />
-
-                        <div className="flex flex-col sm:flex-row gap-2">
-                          <Button variant="outline" size="sm" onClick={() => {
-                        setReceiptOrder(order);
-                        setIsReceiptDialogOpen(true);
-                      }} className="flex items-center justify-center gap-2 w-full sm:w-auto">
-                            <Receipt className={`w-4 h-4 sm:w-5 sm:h-5 ${(order as any).payment_received ? 'text-green-600' : 'text-red-600'}`} />
-                            Pagamento
-                          </Button>
-                          
-                          <Button variant="outline" size="sm" onClick={() => {
-                        setViewingOrder(order);
-                        setIsViewOrderDialogOpen(true);
-                      }} className="flex items-center justify-center gap-2 w-full sm:w-auto">
-                            <Eye className="w-3 h-3 sm:w-4 sm:h-4" />
-                            Visualizar
-                          </Button>
-                          
-                          <Button variant="outline" size="sm" onClick={() => handlePrintOrder(order)} className="flex items-center justify-center gap-2 w-full sm:w-auto">
-                            <Printer className="w-3 h-3 sm:w-4 sm:h-4" />
-                            Imprimir
-                          </Button>
-                          
-                          {hasPermission('orders', 'edit_order_details') && <Button variant="outline" size="sm" onClick={() => {
-                        setNotesOrder(order);
-                        setIsNotesDialogOpen(true);
-                      }} className="flex items-center justify-center gap-2 w-full sm:w-auto">
-                              <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4" />
-                              Notas
-                            </Button>}
-
-                          {hasPermission('orders', 'edit_order_details') && <Button variant="outline" size="sm" onClick={() => {
-                        setEditingOrder(order);
-                        setIsEditOrderDialogOpen(true);
-                        setEditDialogInitialTab("items");
-                      }} className="flex items-center justify-center gap-2 w-full sm:w-auto">
-                              <Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                              Editar Pedido
-                            </Button>}
-                          <Select value={getStatusKeyFromEnum(order.status)} disabled={isUpdating} onValueChange={newStatus => {
-                        // Verificar permissão antes de permitir mudança
-                        if (!canChangeTo(newStatus)) {
-                          toast({
-                            title: "Sem permissão",
-                            description: "Você não tem permissão para alterar para este status.",
-                            variant: "destructive"
-                          });
-                          return;
-                        }
-
-                        // Abrir diálogo de confirmação de WhatsApp
-                        setPendingStatusChange({
-                          orderId: order.id,
-                          orderNumber: order.order_number,
-                          customerName: order.customer_name,
-                          customerPhone: order.customer_phone,
-                          newStatus: newStatus
-                        });
-                        setIsWhatsAppConfirmOpen(true);
-                      }}>
-                            <SelectTrigger className="flex-1">
-                              {isUpdating ? <div className="flex items-center gap-2">
-                                  <Loader2 className="w-6 h-6 animate-spin text-orange-600" />
-                                  <span>Atualizando...</span>
-                                </div> : <SelectValue placeholder="Alterar status" />}
-                            </SelectTrigger>
-                            <SelectContent>
-                              {customStatuses.length > 0 ? customStatuses.filter(status => {
-                            // Verificar se está ativo e tem status_key válido
-                            if (!status.is_active || !status.status_key || status.status_key.trim() === '') {
-                              return false;
-                            }
-
-                            // Filtrar baseado no tipo de entrega do pedido
-                            if (order.delivery_type === 'delivery') {
-                              return status.show_for_delivery !== false;
-                            } else if (order.delivery_type === 'pickup') {
-                              return status.show_for_pickup !== false;
-                            }
-
-                            // Se não tiver tipo definido, mostrar todos
-                            return true;
-                          }).sort((a, b) => a.display_order - b.display_order).filter(status => canChangeTo(status.status_key)).map(status => <SelectItem key={status.status_key} value={status.status_key}>
-                                      {status.status_label}
-                                    </SelectItem>) : <>
-                                  {canChangeTo('pending') && <SelectItem value="pending">Pendente</SelectItem>}
-                                  {canChangeTo('confirmed') && <SelectItem value="confirmed">Confirmado</SelectItem>}
-                                  {canChangeTo('preparing') && <SelectItem value="preparing">Preparando</SelectItem>}
-                                  {canChangeTo('ready') && <SelectItem value="ready">Pronto</SelectItem>}
-                                  {canChangeTo('delivered') && <SelectItem value="delivered">Entregue</SelectItem>}
-                                  {canChangeTo('cancelled') && <SelectItem value="cancelled">Cancelado</SelectItem>}
-                                </>}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </CardContent>
+                          </CardContent>
+                        </CollapsibleContent>
+                      </Collapsible>
                     </Card>
                     
                     {/* Separador grosso entre pedidos */}
                     {index < paginatedOrdersData.orders.length - 1 && <div className="relative py-4">
-                        <Separator className="h-[3px] bg-orange-500" />
-                      </div>}
-                  </div>)}
+                      <Separator className="h-[3px] bg-orange-500" />
+                    </div>}
+                  </div>;
+                })}
 
                 {/* Informação de pedidos e Paginação */}
                 <div className="mt-8 space-y-4">
