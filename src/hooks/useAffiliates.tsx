@@ -138,10 +138,13 @@ export const useAffiliates = (storeId?: string) => {
 
   // Create affiliate mutation
   const createAffiliateMutation = useMutation({
-    mutationFn: async (affiliateData: Partial<Affiliate> & { coupon_ids?: string[] }) => {
+    mutationFn: async (affiliateData: Partial<Affiliate> & { 
+      coupon_ids?: string[];
+      affiliate_account_id?: string; // ID da conta já criada pela edge function
+    }) => {
       if (!storeId) throw new Error('Store ID required');
       
-      const { coupon_ids, ...rest } = affiliateData;
+      const { coupon_ids, affiliate_account_id, ...rest } = affiliateData;
       const normalizedCpf = normalizeCpf(rest.cpf_cnpj);
       
       const { data, error } = await (supabase as any)
@@ -160,6 +163,7 @@ export const useAffiliates = (storeId?: string) => {
           default_commission_value: rest.default_commission_value || 0,
           use_default_commission: rest.use_default_commission ?? true,
           commission_maturity_days: rest.commission_maturity_days ?? 7,
+          affiliate_account_id: affiliate_account_id || null, // Usar o ID passado se disponível
         })
         .select()
         .single();
@@ -174,26 +178,29 @@ export const useAffiliates = (storeId?: string) => {
         }));
         await (supabase as any).from('affiliate_coupons').insert(couponInserts);
         
-        // Sync with store_affiliates system if affiliate_account exists (busca por CPF)
-        let affiliateAccount = null;
-        if (normalizedCpf) {
+        // Se affiliate_account_id foi passado, usar diretamente para sincronizar
+        // Caso contrário, buscar por CPF (fallback para compatibilidade)
+        let accountId = affiliate_account_id;
+        
+        if (!accountId && normalizedCpf) {
           const { data: account } = await supabase
             .from('affiliate_accounts')
             .select('id')
             .eq('cpf_cnpj', normalizedCpf)
             .maybeSingle();
-          affiliateAccount = account;
+          accountId = account?.id;
         }
 
-        if (affiliateAccount) {
+        if (accountId) {
           const { data: storeAffiliate } = await (supabase as any)
             .from('store_affiliates')
             .select('id')
-            .eq('affiliate_account_id', affiliateAccount.id)
+            .eq('affiliate_account_id', accountId)
             .eq('store_id', storeId)
             .maybeSingle();
 
           if (storeAffiliate) {
+            // Atualizar store_affiliates com as configurações de comissão
             await (supabase as any)
               .from('store_affiliates')
               .update({ 
@@ -205,12 +212,18 @@ export const useAffiliates = (storeId?: string) => {
               })
               .eq('id', storeAffiliate.id);
 
+            // Deletar cupons existentes e inserir novos
+            await (supabase as any)
+              .from('store_affiliate_coupons')
+              .delete()
+              .eq('store_affiliate_id', storeAffiliate.id);
+
             const storeAffiliateInserts = coupon_ids.map(couponId => ({
               store_affiliate_id: storeAffiliate.id,
               coupon_id: couponId,
             }));
             await (supabase as any).from('store_affiliate_coupons').insert(storeAffiliateInserts);
-            console.log('✅ Synced coupons and commission to store_affiliates');
+            console.log('✅ Synced coupons and commission to store_affiliates (affiliate_account_id:', accountId, ')');
           }
         }
       }

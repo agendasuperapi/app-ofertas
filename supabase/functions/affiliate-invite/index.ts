@@ -284,6 +284,8 @@ serve(async (req) => {
                 success: true, 
                 message: "Convite reenviado com sucesso",
                 invite_token: inviteToken,
+                store_affiliate_id: updatedAffiliation.id,
+                affiliate_account_id: existingAccount.id,
                 already_verified: existingAccount.is_verified,
               }),
               { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -381,6 +383,7 @@ serve(async (req) => {
             message: "Convite enviado com sucesso",
             invite_token: inviteToken,
             store_affiliate_id: storeAffiliate.id,
+            affiliate_account_id: affiliateAccount.id,
             already_verified: false,
           }),
           { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
