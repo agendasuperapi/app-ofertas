@@ -331,15 +331,15 @@ export const EmojiPickerInput = ({ value, onChange, label, categoryName }: Emoji
           </ResponsiveDialogHeader>
 
           <div className="flex flex-col gap-3 mt-4">
-            {/* Unified search input - Portuguese search */}
+            {/* Unified search input - Portuguese and English */}
             <Input
-              placeholder="Pesquisar emoji em português..."
+              placeholder="Pesquisar emoji..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               autoFocus
             />
 
-            {/* Portuguese search results */}
+            {/* Search results */}
             {searchTerm && searchResults.length > 0 && (
               <div>
                 <Label className="text-xs text-muted-foreground mb-2 block">
@@ -360,10 +360,10 @@ export const EmojiPickerInput = ({ value, onChange, label, categoryName }: Emoji
               </div>
             )}
 
-            {/* No Portuguese results message */}
+            {/* No results message */}
             {searchTerm && searchResults.length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-1">
-                Não encontrado. Use a busca em inglês abaixo.
+                Nenhum emoji encontrado para "{searchTerm}"
               </p>
             )}
 
@@ -386,7 +386,7 @@ export const EmojiPickerInput = ({ value, onChange, label, categoryName }: Emoji
               </div>
             )}
 
-            {/* EmojiPicker - search enabled only when no Portuguese results */}
+            {/* EmojiPicker - native search disabled, only for browsing */}
             <div className="border rounded-lg overflow-hidden">
               <EmojiPicker
                 onEmojiClick={handleEmojiClick}
@@ -394,8 +394,7 @@ export const EmojiPickerInput = ({ value, onChange, label, categoryName }: Emoji
                 width="100%"
                 height={280}
                 categories={CATEGORIES_PT}
-                searchDisabled={searchResults.length > 0}
-                searchPlaceHolder="Pesquisar em inglês..."
+                searchDisabled={true}
                 previewConfig={{ showPreview: false }}
                 lazyLoadEmojis={true}
               />
