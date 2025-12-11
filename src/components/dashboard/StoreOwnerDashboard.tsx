@@ -445,7 +445,7 @@ export const StoreOwnerDashboard = ({
   const [scheduledFilter, setScheduledFilter] = useState<'all' | 'scheduled' | 'normal'>('all');
   const [orderSortBy, setOrderSortBy] = useState<'newest' | 'oldest'>('newest');
   const [orderSearchTerm, setOrderSearchTerm] = useState('');
-  const [expandedOrders, setExpandedOrders] = useState<Set<string>>(new Set());
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [productStatusFilter, setProductStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [productSectionTab, setProductSectionTab] = useState('lista');
@@ -2984,17 +2984,9 @@ export const StoreOwnerDashboard = ({
             {/* Lista de Pedidos */}
             {paginatedOrdersData.totalOrders > 0 ? <div className="space-y-4 md:space-y-6">
                 {paginatedOrdersData.orders.map((order, index) => {
-                  const isExpanded = expandedOrders.has(order.id);
+                  const isExpanded = expandedOrderId === order.id;
                   const toggleExpanded = () => {
-                    setExpandedOrders(prev => {
-                      const newSet = new Set(prev);
-                      if (newSet.has(order.id)) {
-                        newSet.delete(order.id);
-                      } else {
-                        newSet.add(order.id);
-                      }
-                      return newSet;
-                    });
+                    setExpandedOrderId(prev => prev === order.id ? null : order.id);
                   };
                   
                   return <div key={order.id}>
