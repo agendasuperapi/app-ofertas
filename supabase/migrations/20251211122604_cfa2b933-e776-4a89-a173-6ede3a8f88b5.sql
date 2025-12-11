@@ -1,0 +1,1 @@
+UPDATE stores SET status = 'active' WHERE slug = 'brasa-burguer';
