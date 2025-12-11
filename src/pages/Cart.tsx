@@ -1150,7 +1150,7 @@ export default function Cart() {
                           // Se é elegível mas desconto é zero ou negativo
                           if (itemDiscountInfo.discount <= 0) {
                             return (
-                              <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 mb-2 bg-amber-50 dark:bg-amber-900/20 px-2 py-1 rounded-md w-fit">
+                              <div className="flex items-center gap-1.5 text-xs text-amber-600 mb-2 bg-amber-50 px-2 py-1 rounded-md w-fit">
                                 <Tag className="w-3 h-3" />
                                 <span>R$ 0,00</span>
                               </div>
@@ -1164,7 +1164,7 @@ export default function Cart() {
                           
                           // Desconto normal
                           return (
-                            <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 mb-2 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-md w-fit">
+                            <div className="flex items-center gap-1.5 text-xs text-green-600 mb-2 bg-green-50 px-2 py-1 rounded-md w-fit">
                               <Tag className="w-3 h-3" />
                               <span className="font-medium">
                                 -{discountType === 'percentage' ? `${discountValue}%` : `R$ ${itemDiscountInfo.discount.toFixed(2)}`}
@@ -1789,18 +1789,18 @@ export default function Cart() {
                           <>
                             <div className={`flex items-center gap-2 p-3 border rounded-lg ${
                               cart.couponHasNoEligibleItems 
-                                ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800' 
-                                : 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800'
+                                ? 'bg-amber-50 border-amber-200' 
+                                : 'bg-green-50 border-green-200'
                             }`}>
                               <Tag className={`w-4 h-4 ${
                                 cart.couponHasNoEligibleItems 
-                                  ? 'text-amber-600 dark:text-amber-400' 
-                                  : 'text-green-600 dark:text-green-400'
+                                  ? 'text-amber-600' 
+                                  : 'text-green-600'
                               }`} />
                               <span className={`font-mono font-semibold ${
                                 cart.couponHasNoEligibleItems 
-                                  ? 'text-amber-700 dark:text-amber-300' 
-                                  : 'text-green-700 dark:text-green-300'
+                                  ? 'text-amber-700' 
+                                  : 'text-green-700'
                               }`}>
                                 {cart.couponCode}
                               </span>
@@ -1819,9 +1819,9 @@ export default function Cart() {
                             
                             {/* Aviso de cupom sem itens elegíveis */}
                             {cart.couponHasNoEligibleItems && (
-                              <div className="flex items-start gap-3 p-3 mt-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-                                <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                                <div className="text-sm text-amber-800 dark:text-amber-200">
+                              <div className="flex items-start gap-3 p-3 mt-2 bg-amber-50 border border-amber-200 rounded-lg">
+                                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                                <div className="text-sm text-amber-800">
                                   <p className="font-medium mb-1">Cupom não aplicável</p>
                                   <p className="text-xs">
                                     O desconto do cupom <strong>{cart.couponCode}</strong> não pode ser aplicado, 
@@ -1885,7 +1885,7 @@ export default function Cart() {
                         </div>
                       )}
                       {cart.couponDiscount > 0 && (
-                        <div className="flex justify-between text-sm text-green-600 dark:text-green-400">
+                        <div className="flex justify-between text-sm text-green-600">
                           <span className="flex items-center gap-1">
                             <Tag className="w-3 h-3" />
                             Desconto do Cupom
@@ -1912,7 +1912,7 @@ export default function Cart() {
                     {!storeIsOpen && canAcceptOrders && storeData && (
                       <Alert className="border-amber-500 bg-amber-500/10">
                         <Clock className="h-4 w-4 text-amber-500" />
-                        <AlertDescription className="text-amber-700 dark:text-amber-400">
+                        <AlertDescription className="text-amber-700">
                           <div className="space-y-1">
                             <p><strong>📅 Pedido Agendado</strong></p>
                             <p className="text-sm">A loja está fechada no momento. Seu pedido será processado assim que a loja abrir.</p>
