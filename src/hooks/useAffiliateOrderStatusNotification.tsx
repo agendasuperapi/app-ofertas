@@ -7,6 +7,7 @@ interface UseAffiliateOrderStatusNotificationOptions {
   orderIds: string[];
   storeAffiliateIds?: string[];
   storeIds?: string[];
+  affiliateCouponCodes?: string[]; // Lista de códigos de cupom do afiliado para validar novos pedidos
   onStatusChange?: () => void;
 }
 
@@ -89,6 +90,7 @@ export const useAffiliateOrderStatusNotification = ({
   orderIds,
   storeAffiliateIds,
   storeIds,
+  affiliateCouponCodes,
   onStatusChange
 }: UseAffiliateOrderStatusNotificationOptions) => {
   const lastProcessedEventRef = useRef<string>('');
@@ -302,11 +304,25 @@ export const useAffiliateOrderStatusNotification = ({
           
           // Verificar se é um pedido de uma das lojas do afiliado
           if (!newOrder?.store_id || !storeIds.includes(newOrder.store_id)) {
+            console.log('[AffiliateOrderStatus] ⏭️ Pedido de outra loja ignorado');
             return;
           }
 
           // Verificar se o pedido tem cupom (indica que pode ter comissão)
           if (!newOrder.coupon_code) {
+            console.log('[AffiliateOrderStatus] ⏭️ Pedido sem cupom ignorado');
+            return;
+          }
+
+          // VERIFICAÇÃO CRÍTICA: O cupom deve pertencer ao afiliado logado
+          const couponCodeUpper = newOrder.coupon_code.toUpperCase();
+          if (!affiliateCouponCodes || affiliateCouponCodes.length === 0) {
+            console.log('[AffiliateOrderStatus] ⏭️ Sem cupons do afiliado para comparar');
+            return;
+          }
+          
+          if (!affiliateCouponCodes.includes(couponCodeUpper)) {
+            console.log('[AffiliateOrderStatus] ⏭️ Cupom não pertence a este afiliado:', newOrder.coupon_code, 'Cupons do afiliado:', affiliateCouponCodes);
             return;
           }
 
@@ -318,12 +334,12 @@ export const useAffiliateOrderStatusNotification = ({
           }
           lastProcessedNewOrderRef.current = eventId;
 
-          console.log('[AffiliateOrderStatus] 🆕 Novo pedido detectado:', newOrder.order_number, 'Cupom:', newOrder.coupon_code);
+          console.log('[AffiliateOrderStatus] 🆕 ✅ Novo pedido COM CUPOM DO AFILIADO detectado:', newOrder.order_number, 'Cupom:', newOrder.coupon_code);
           
           // Tocar som e mostrar notificação
           playNewOrderSound();
           toast.success('Novo Pedido! 🛒', {
-            description: `Pedido #${newOrder.order_number} com cupom ${newOrder.coupon_code}`,
+            description: `Pedido #${newOrder.order_number} com seu cupom ${newOrder.coupon_code}`,
             duration: 5000
           });
           
@@ -348,5 +364,5 @@ export const useAffiliateOrderStatusNotification = ({
         newOrdersChannelRef.current = null;
       }
     };
-  }, [storeIds, isAffiliateDashboard]);
+  }, [storeIds, affiliateCouponCodes, isAffiliateDashboard]);
 };
