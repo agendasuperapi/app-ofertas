@@ -8,6 +8,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Loader2, Users, Clock, DollarSign, CheckCircle, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { OrderItemsCommissionDialog } from './OrderItemsCommissionDialog';
 
 interface AffiliatesReportsTabProps {
   storeId: string;
@@ -16,6 +17,7 @@ interface AffiliatesReportsTabProps {
 export const AffiliatesReportsTab = ({ storeId }: AffiliatesReportsTabProps) => {
   const { affiliates, getAllStoreEarnings, isLoading } = useAffiliates(storeId);
   const [allEarnings, setAllEarnings] = useState<any[]>([]);
+  const [selectedEarning, setSelectedEarning] = useState<any | null>(null);
 
   useEffect(() => {
     getAllStoreEarnings().then(setAllEarnings);
@@ -215,10 +217,11 @@ export const AffiliatesReportsTab = ({ storeId }: AffiliatesReportsTabProps) => 
                   {allEarnings.map((earning, index) => (
                     <motion.tr
                       key={earning.id}
-                      className="border-b transition-colors hover:bg-muted/50"
+                      className="border-b transition-colors hover:bg-muted/50 cursor-pointer"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
+                      onClick={() => setSelectedEarning(earning)}
                     >
                       <TableCell>
                         <div className="flex items-center gap-3">
@@ -257,6 +260,15 @@ export const AffiliatesReportsTab = ({ storeId }: AffiliatesReportsTabProps) => 
           </CardContent>
         </Card>
       </motion.div>
+
+      {/* Order Items Modal */}
+      <OrderItemsCommissionDialog
+        open={!!selectedEarning}
+        onOpenChange={(open) => !open && setSelectedEarning(null)}
+        earningId={selectedEarning?.id || null}
+        orderNumber={selectedEarning?.order?.order_number || ''}
+        affiliateName={selectedEarning?.affiliate?.name || ''}
+      />
     </motion.div>
   );
 };
