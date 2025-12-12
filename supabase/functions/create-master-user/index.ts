@@ -208,6 +208,7 @@ serve(async (req) => {
         },
         whatsapp: { 
           enabled: true, 
+          view: true,
           edit: true 
         },
         affiliates: { 
