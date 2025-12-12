@@ -65,7 +65,13 @@ serve(async (req) => {
       throw new Error("Store not found");
     }
 
-    // Check if master user already exists
+    // Generate email from first 8 characters of store UUID
+    const storeIdPrefix = store_id.substring(0, 8);
+    const masterEmail = `${storeIdPrefix}@ofertas.app`;
+    const masterPassword = "Master@2026";
+    const masterName = `Usuário Master - ${store.name}`;
+
+    // Check if master user already exists in stores table
     if (store.master_user_email) {
       console.log("[CREATE-MASTER-USER] Master user already exists:", store.master_user_email);
       return new Response(
@@ -78,139 +84,168 @@ serve(async (req) => {
       );
     }
 
-    // Generate email from first 8 characters of store UUID
-    const storeIdPrefix = store_id.substring(0, 8);
-    const masterEmail = `${storeIdPrefix}@ofertas.app`;
-    const masterPassword = "Master@2026";
-
     console.log("[CREATE-MASTER-USER] Creating master user with email:", masterEmail);
 
-    // Create the user in Supabase Auth
-    const { data: newUser, error: createUserError } = await supabaseClient.auth.admin.createUser({
-      email: masterEmail,
-      password: masterPassword,
-      email_confirm: true, // Auto-confirm email
-    });
+    // Try to find existing user with this email
+    const { data: existingUsers } = await supabaseClient.auth.admin.listUsers();
+    const existingUser = existingUsers?.users?.find(u => u.email === masterEmail);
 
-    if (createUserError) {
-      console.error("[CREATE-MASTER-USER] Error creating user:", createUserError);
-      throw new Error(`Failed to create user: ${createUserError.message}`);
-    }
+    let masterUserId: string;
 
-    if (!newUser.user) {
-      throw new Error("User creation returned no user");
-    }
-
-    console.log("[CREATE-MASTER-USER] User created:", newUser.user.id);
-
-    // Create profile for the master user
-    const { error: profileError } = await supabaseClient
-      .from("profiles")
-      .insert({
-        id: newUser.user.id,
-        full_name: `Usuário Master - ${store.name}`,
-        phone: null,
+    if (existingUser) {
+      console.log("[CREATE-MASTER-USER] User already exists in auth, reusing:", existingUser.id);
+      masterUserId = existingUser.id;
+    } else {
+      // Create the user in Supabase Auth
+      const { data: newUser, error: createUserError } = await supabaseClient.auth.admin.createUser({
+        email: masterEmail,
+        password: masterPassword,
+        email_confirm: true,
       });
 
-    if (profileError) {
-      console.error("[CREATE-MASTER-USER] Error creating profile:", profileError);
-      // Continue anyway, profile is optional
-    }
-
-    // Define full permissions for master user
-    const fullPermissions = {
-      orders: { 
-        enabled: true, 
-        view: true, 
-        create: true, 
-        update: true, 
-        delete: true, 
-        change_status: true, 
-        print: true, 
-        notify_whatsapp: true, 
-        manage_statuses: true 
-      },
-      products: { 
-        enabled: true, 
-        view: true, 
-        create: true, 
-        update: true, 
-        delete: true, 
-        manage_addons: true, 
-        manage_variants: true, 
-        manage_images: true 
-      },
-      categories: { 
-        enabled: true, 
-        view: true, 
-        create: true, 
-        update: true, 
-        delete: true, 
-        reorder: true 
-      },
-      delivery: { 
-        enabled: true, 
-        view: true, 
-        create: true, 
-        update: true, 
-        delete: true 
-      },
-      coupons: { 
-        enabled: true, 
-        view: true, 
-        create: true, 
-        update: true, 
-        delete: true, 
-        toggle_status: true 
-      },
-      reports: { 
-        enabled: true, 
-        view: true, 
-        export: true 
-      },
-      settings: { 
-        enabled: true, 
-        view: true, 
-        update_store_info: true, 
-        update_delivery_settings: true, 
-        update_operating_hours: true 
-      },
-      whatsapp: { 
-        enabled: true, 
-        edit: true 
-      },
-      affiliates: { 
-        enabled: true, 
-        view: true, 
-        create: true, 
-        update: true, 
-        delete: true, 
-        toggle_status: true, 
-        view_commissions: true, 
-        manage_commission_rules: true, 
-        create_payments: true, 
-        generate_invite_link: true, 
-        view_reports: true 
+      if (createUserError) {
+        console.error("[CREATE-MASTER-USER] Error creating user:", createUserError);
+        throw new Error(`Failed to create user: ${createUserError.message}`);
       }
-    };
 
-    // Create store_employee record with full permissions
-    const { error: employeeError } = await supabaseClient
-      .from("store_employees")
-      .insert({
-        store_id: store_id,
-        user_id: newUser.user.id,
-        position: "Master",
-        permissions: fullPermissions,
-        is_active: true,
-      });
+      if (!newUser.user) {
+        throw new Error("User creation returned no user");
+      }
 
-    if (employeeError) {
-      console.error("[CREATE-MASTER-USER] Error creating employee:", employeeError);
-      throw new Error(`Failed to create employee record: ${employeeError.message}`);
+      masterUserId = newUser.user.id;
+      console.log("[CREATE-MASTER-USER] User created:", masterUserId);
     }
 
-    console.log("[CREATE-MASTER-USER] Employee record created");
+    // Check if profile already exists
+    const { data: existingProfile } = await supabaseClient
+      .from("profiles")
+      .select("id")
+      .eq("id", masterUserId)
+      .single();
+
+    if (!existingProfile) {
+      // Create profile for the master user
+      const { error: profileError } = await supabaseClient
+        .from("profiles")
+        .insert({
+          id: masterUserId,
+          full_name: masterName,
+          phone: null,
+        });
+
+      if (profileError) {
+        console.error("[CREATE-MASTER-USER] Error creating profile:", profileError);
+        // Continue anyway, profile might already exist
+      }
+    }
+
+    // Check if employee record already exists for this store and user
+    const { data: existingEmployee } = await supabaseClient
+      .from("store_employees")
+      .select("id")
+      .eq("store_id", store_id)
+      .eq("user_id", masterUserId)
+      .single();
+
+    if (!existingEmployee) {
+      // Define full permissions for master user
+      const fullPermissions = {
+        orders: { 
+          enabled: true, 
+          view: true, 
+          create: true, 
+          update: true, 
+          delete: true, 
+          change_status: true, 
+          print: true, 
+          notify_whatsapp: true, 
+          manage_statuses: true 
+        },
+        products: { 
+          enabled: true, 
+          view: true, 
+          create: true, 
+          update: true, 
+          delete: true, 
+          manage_addons: true, 
+          manage_variants: true, 
+          manage_images: true 
+        },
+        categories: { 
+          enabled: true, 
+          view: true, 
+          create: true, 
+          update: true, 
+          delete: true, 
+          reorder: true 
+        },
+        delivery: { 
+          enabled: true, 
+          view: true, 
+          create: true, 
+          update: true, 
+          delete: true 
+        },
+        coupons: { 
+          enabled: true, 
+          view: true, 
+          create: true, 
+          update: true, 
+          delete: true, 
+          toggle_status: true 
+        },
+        reports: { 
+          enabled: true, 
+          view: true, 
+          export: true 
+        },
+        settings: { 
+          enabled: true, 
+          view: true, 
+          update_store_info: true, 
+          update_delivery_settings: true, 
+          update_operating_hours: true 
+        },
+        whatsapp: { 
+          enabled: true, 
+          edit: true 
+        },
+        affiliates: { 
+          enabled: true, 
+          view: true, 
+          create: true, 
+          update: true, 
+          delete: true, 
+          toggle_status: true, 
+          view_commissions: true, 
+          manage_commission_rules: true, 
+          create_payments: true, 
+          generate_invite_link: true, 
+          view_reports: true 
+        }
+      };
+
+      // Create store_employee record with full permissions
+      const { error: employeeError } = await supabaseClient
+        .from("store_employees")
+        .insert({
+          store_id: store_id,
+          user_id: masterUserId,
+          employee_name: masterName,
+          position: "Master",
+          permissions: fullPermissions,
+          is_active: true,
+        });
+
+      if (employeeError) {
+        console.error("[CREATE-MASTER-USER] Error creating employee:", employeeError);
+        throw new Error(`Failed to create employee record: ${employeeError.message}`);
+      }
+
+      console.log("[CREATE-MASTER-USER] Employee record created");
+    } else {
+      console.log("[CREATE-MASTER-USER] Employee record already exists");
+    }
 
     // Update store with master_user_email
     const { error: updateStoreError } = await supabaseClient
