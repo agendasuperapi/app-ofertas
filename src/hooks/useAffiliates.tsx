@@ -611,10 +611,15 @@ export const useAffiliates = (storeId?: string) => {
     try {
       const { data } = await (supabase as any)
         .from('affiliate_earnings')
-        .select(`*, affiliate:affiliates!inner(id, name, email, store_id), order:orders(order_number, customer_name, total, created_at)`)
+        .select(`*, affiliate:affiliates!inner(id, name, email, store_id), order:orders(order_number, customer_name, subtotal, coupon_discount, total, created_at, status)`)
         .eq('affiliate.store_id', storeId)
         .order('created_at', { ascending: false });
-      return data || [];
+      
+      // Normalizar order_total usando dados atuais do pedido (subtotal - coupon_discount)
+      return (data || []).map((earning: any) => ({
+        ...earning,
+        order_total: (earning.order?.subtotal || 0) - (earning.order?.coupon_discount || 0)
+      }));
     } catch { return []; }
   };
 

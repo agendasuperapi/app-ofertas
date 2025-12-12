@@ -717,7 +717,15 @@ export const EditOrderDialog = ({ open, onOpenChange, order, onUpdate, initialTa
       await loadOrderItems();
       
       // Invalidar query de orders para atualização automática
+      // Invalidar queries de orders
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      queryClient.invalidateQueries({ queryKey: ['store-orders'] });
+      
+      // Invalidar queries de afiliados para sincronizar relatórios
+      queryClient.invalidateQueries({ queryKey: ['affiliates'] });
+      queryClient.invalidateQueries({ queryKey: ['myAffiliateEarnings'] });
+      queryClient.invalidateQueries({ queryKey: ['myAffiliateOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['myAffiliateStores'] });
       
       onUpdate();
       onOpenChange(false);
