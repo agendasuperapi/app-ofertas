@@ -181,7 +181,7 @@ export function useAdminDataIntegrityCheck(options: UseAdminDataIntegrityCheckOp
       for (const store of storesWithIssues) {
         for (const issue of store.issues) {
           // Only auto-fix supported types
-          if (['order_total_mismatch', 'affiliate_config_desync', 'negative_values'].includes(issue.issue_type)) {
+          if (['order_total_mismatch', 'affiliate_config_desync', 'negative_values', 'coupon_discount_rules_mismatch'].includes(issue.issue_type)) {
             const { data: profile } = await supabase
               .from('profiles')
               .select('full_name')
