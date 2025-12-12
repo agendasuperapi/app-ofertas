@@ -28,9 +28,13 @@ import {
   UserX,
   UserCheck,
   AlertCircle,
-  Search
+  Search,
+  Shield,
+  AlertTriangle
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { DataIntegrityManager } from "@/components/admin/DataIntegrityManager";
+import { useAdminDataIntegrityCheck } from "@/hooks/useAdminDataIntegrityCheck";
 
 interface StoreWithOwner {
   id: string;
@@ -77,12 +81,15 @@ export default function AdminDashboard() {
   });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'stores' | 'users'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'stores' | 'users' | 'integrity'>('overview');
   const [allUsers, setAllUsers] = useState<any[]>([]);
   const [userFilter, setUserFilter] = useState<string>("all");
   const [confirmingEmail, setConfirmingEmail] = useState<string | null>(null);
   const [processingUser, setProcessingUser] = useState<string | null>(null);
   const [storeSearch, setStoreSearch] = useState<string>("");
+  
+  // Data Integrity Check
+  const { totalIssues, totalErrors, storesWithIssuesCount } = useAdminDataIntegrityCheck({ enabled: true });
   const [userSearch, setUserSearch] = useState<string>("");
 
   useEffect(() => {
@@ -390,9 +397,49 @@ export default function AdminDashboard() {
                 <Badge variant="secondary">{unconfirmedUsers.length}</Badge>
               )}
             </TabsTrigger>
+            <TabsTrigger value="integrity" className="gap-2">
+              <Shield className="h-4 w-4" />
+              Integridade
+              {totalIssues > 0 && (
+                <Badge variant="destructive">{totalIssues}</Badge>
+              )}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-8">
+            {/* Data Integrity Alert */}
+            {totalIssues > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <Card className="border-destructive/50 bg-destructive/5">
+                  <CardContent className="py-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="p-2 rounded-full bg-destructive/10">
+                          <AlertTriangle className="h-6 w-6 text-destructive" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">Problemas de Integridade Detectados</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {storesWithIssuesCount} loja(s) com {totalIssues} inconsistência(s) • {totalErrors} erro(s) crítico(s)
+                          </p>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => setActiveTab('integrity')}
+                      >
+                        Ver Detalhes
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <motion.div
@@ -969,6 +1016,11 @@ export default function AdminDashboard() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Data Integrity Tab */}
+          <TabsContent value="integrity" className="space-y-6">
+            <DataIntegrityManager />
           </TabsContent>
         </Tabs>
       </main>
