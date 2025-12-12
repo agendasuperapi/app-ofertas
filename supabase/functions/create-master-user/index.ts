@@ -232,6 +232,7 @@ serve(async (req) => {
           store_id: store_id,
           user_id: masterUserId,
           employee_name: masterName,
+          employee_email: masterEmail,
           position: "Master",
           permissions: fullPermissions,
           is_active: true,
