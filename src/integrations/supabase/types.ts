@@ -1047,6 +1047,57 @@ export type Database = {
           },
         ]
       }
+      data_integrity_corrections: {
+        Row: {
+          details: Json | null
+          fixed_at: string | null
+          fixed_by: string | null
+          fixed_by_name: string | null
+          fixed_count: number | null
+          id: string
+          issue_type: string
+          store_id: string | null
+          store_name: string | null
+        }
+        Insert: {
+          details?: Json | null
+          fixed_at?: string | null
+          fixed_by?: string | null
+          fixed_by_name?: string | null
+          fixed_count?: number | null
+          id?: string
+          issue_type: string
+          store_id?: string | null
+          store_name?: string | null
+        }
+        Update: {
+          details?: Json | null
+          fixed_at?: string | null
+          fixed_by?: string | null
+          fixed_by_name?: string | null
+          fixed_count?: number | null
+          id?: string
+          issue_type?: string
+          store_id?: string | null
+          store_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_integrity_corrections_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_integrity_corrections_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "stores_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       delivery_zones: {
         Row: {
           city: string
@@ -3189,6 +3240,18 @@ export type Database = {
         Returns: undefined
       }
       bytea_to_text: { Args: { data: string }; Returns: string }
+      check_all_stores_data_integrity: {
+        Args: never
+        Returns: {
+          affected_count: number
+          issue_description: string
+          issue_type: string
+          sample_data: Json
+          severity: string
+          store_id: string
+          store_name: string
+        }[]
+      }
       cleanup_expired_affiliate_sessions: { Args: never; Returns: number }
       confirm_user_email: { Args: { user_id: string }; Returns: boolean }
       create_affiliate_session: {
@@ -3236,6 +3299,15 @@ export type Database = {
           cadastrado: boolean
           result: string
         }[]
+      }
+      fix_store_data_integrity: {
+        Args: {
+          p_fixed_by?: string
+          p_fixed_by_name?: string
+          p_issue_type: string
+          p_store_id: string
+        }
+        Returns: Json
       }
       generate_short_id: { Args: never; Returns: string }
       get_admin_users: {
@@ -3369,6 +3441,19 @@ export type Database = {
           full_name: string
           id: string
           phone: string
+        }[]
+      }
+      get_data_integrity_corrections_history: {
+        Args: { p_limit?: number }
+        Returns: {
+          details: Json
+          fixed_at: string
+          fixed_by_name: string
+          fixed_count: number
+          id: string
+          issue_type: string
+          store_id: string
+          store_name: string
         }[]
       }
       get_employee_permissions: {
