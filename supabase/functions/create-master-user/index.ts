@@ -148,36 +148,54 @@ serve(async (req) => {
       .single();
 
     if (!existingEmployee) {
-      // Define full permissions for master user
+      // Define full permissions for master user - ALL permissions enabled
       const fullPermissions = {
         orders: { 
           enabled: true, 
           view: true, 
-          create: true, 
-          update: true, 
-          delete: true, 
-          change_status: true, 
-          print: true, 
-          notify_whatsapp: true, 
-          manage_statuses: true 
+          create: true,
+          // Subgrupo: filters
+          view_all_orders: true,
+          view_pending_orders: true,
+          view_confirmed_orders: true,
+          view_preparing_orders: true,
+          view_ready_orders: true,
+          view_out_for_delivery_orders: true,
+          view_delivered_orders: true,
+          view_cancelled_orders: true,
+          // Subgrupo: actions
+          edit_order_details: true,
+          add_order_notes: true,
+          view_order_history: true,
+          delete_order_items: true,
+          add_order_items: true,
+          export_orders: true,
+          mark_payment_received: true,
+          // Subgrupo: status_changes
+          change_any_status: true,
+          change_status_confirmed: true,
+          change_status_preparing: true,
+          change_status_ready: true,
+          change_status_out_for_delivery: true,
+          change_status_delivered: true,
+          change_status_cancelled: true,
         },
         products: { 
           enabled: true, 
           view: true, 
           create: true, 
           update: true, 
-          delete: true, 
-          manage_addons: true, 
-          manage_variants: true, 
-          manage_images: true 
+          delete: true,
+          manage_stock: true,
+          manage_images: true,
         },
         categories: { 
           enabled: true, 
           view: true, 
           create: true, 
           update: true, 
-          delete: true, 
-          reorder: true 
+          delete: true,
+          toggle_status: true,
         },
         delivery: { 
           enabled: true, 
@@ -217,10 +235,12 @@ serve(async (req) => {
           create: true, 
           update: true, 
           delete: true, 
-          toggle_status: true, 
+          toggle_status: true,
+          // Subgrupo: commissions
           view_commissions: true, 
           manage_commission_rules: true, 
-          create_payments: true, 
+          create_payments: true,
+          // Subgrupo: invites
           generate_invite_link: true, 
           view_reports: true 
         }
