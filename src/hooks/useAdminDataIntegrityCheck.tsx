@@ -46,6 +46,7 @@ export function useAdminDataIntegrityCheck(options: UseAdminDataIntegrityCheckOp
   const [isLoading, setIsLoading] = useState(false);
   const [isFixing, setIsFixing] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
+  const [totalStoresChecked, setTotalStoresChecked] = useState(0);
 
   // Group issues by store
   const storesWithIssues: StoreIssues[] = issues.reduce((acc: StoreIssues[], issue) => {
@@ -78,6 +79,14 @@ export function useAdminDataIntegrityCheck(options: UseAdminDataIntegrityCheckOp
     
     setIsLoading(true);
     try {
+      // Buscar contagem de lojas ativas
+      const { count: storesCount } = await supabase
+        .from('stores')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active');
+      
+      setTotalStoresChecked(storesCount || 0);
+      
       const { data, error } = await supabase.rpc('check_all_stores_data_integrity');
       
       if (error) {
@@ -240,6 +249,7 @@ export function useAdminDataIntegrityCheck(options: UseAdminDataIntegrityCheckOp
     totalErrors,
     totalWarnings,
     storesWithIssuesCount,
+    totalStoresChecked,
     runCheck,
     fetchHistory,
     fixIssue,

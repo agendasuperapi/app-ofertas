@@ -188,6 +188,7 @@ export function DataIntegrityManager() {
     totalErrors,
     totalWarnings,
     storesWithIssuesCount,
+    totalStoresChecked,
     runCheck,
     fixIssue,
     fixAllIssues,
@@ -284,8 +285,8 @@ export function DataIntegrityManager() {
                   <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold">{history.length}</p>
-                  <p className="text-xs text-muted-foreground">Correções realizadas</p>
+                  <p className="text-2xl font-bold">{totalStoresChecked}</p>
+                  <p className="text-xs text-muted-foreground">Lojas verificadas</p>
                 </div>
               </div>
             </CardContent>
@@ -366,7 +367,9 @@ export function DataIntegrityManager() {
                   <div>
                     <h3 className="text-lg font-semibold">Sistema Íntegro</h3>
                     <p className="text-muted-foreground">
-                      Nenhuma inconsistência de dados detectada em todas as lojas.
+                      {totalStoresChecked > 0 
+                        ? `Todas as ${totalStoresChecked} lojas ativas foram verificadas. Nenhuma inconsistência detectada.`
+                        : 'Nenhuma inconsistência de dados detectada em todas as lojas.'}
                     </p>
                   </div>
                 </div>
