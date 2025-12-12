@@ -967,6 +967,9 @@ serve(async (req) => {
             commissionAvailableAt = availableAt.toISOString();
           }
           
+          // Calcular order_total consistente: subtotal - coupon_discount
+          const calculatedOrderTotal = (e.orders?.subtotal || 0) - (e.orders?.coupon_discount || 0);
+          
           return {
             earning_id: e.id,
             order_id: e.orders?.id || e.order_id,
@@ -976,7 +979,7 @@ serve(async (req) => {
             store_id: e.orders?.store_id,
             store_name: e.orders?.stores?.name,
             store_affiliate_id: e.store_affiliate_id,
-            order_total: e.order_total,
+            order_total: calculatedOrderTotal, // Sempre recalculado do pedido atual
             order_subtotal: e.orders?.subtotal,
             coupon_discount: e.orders?.coupon_discount || 0,
             commission_amount: e.commission_amount,
