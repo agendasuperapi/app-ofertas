@@ -2787,6 +2787,7 @@ export type Database = {
           id: string
           is_open: boolean | null
           logo_url: string | null
+          master_user_email: string | null
           menu_label: string
           min_order_value: number | null
           name: string
@@ -2850,6 +2851,7 @@ export type Database = {
           id?: string
           is_open?: boolean | null
           logo_url?: string | null
+          master_user_email?: string | null
           menu_label?: string
           min_order_value?: number | null
           name: string
@@ -2913,6 +2915,7 @@ export type Database = {
           id?: string
           is_open?: boolean | null
           logo_url?: string | null
+          master_user_email?: string | null
           menu_label?: string
           min_order_value?: number | null
           name?: string

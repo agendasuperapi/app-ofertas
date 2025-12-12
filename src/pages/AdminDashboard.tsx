@@ -30,7 +30,9 @@ import {
   AlertCircle,
   Search,
   Shield,
-  AlertTriangle
+  AlertTriangle,
+  Crown,
+  Copy
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { DataIntegrityManager } from "@/components/admin/DataIntegrityManager";
@@ -51,6 +53,7 @@ interface StoreWithOwner {
   delivery_fee: number;
   min_order_value: number;
   avg_delivery_time: number;
+  master_user_email: string | null;
   profiles?: {
     full_name: string;
   };
@@ -87,10 +90,81 @@ export default function AdminDashboard() {
   const [confirmingEmail, setConfirmingEmail] = useState<string | null>(null);
   const [processingUser, setProcessingUser] = useState<string | null>(null);
   const [storeSearch, setStoreSearch] = useState<string>("");
+  const [creatingMaster, setCreatingMaster] = useState<string | null>(null);
+  const [creatingAllMasters, setCreatingAllMasters] = useState(false);
   
   // Data Integrity Check
   const { totalIssues, totalErrors, storesWithIssuesCount } = useAdminDataIntegrityCheck({ enabled: true });
   const [userSearch, setUserSearch] = useState<string>("");
+
+  const handleCreateMasterUser = async (storeId: string) => {
+    setCreatingMaster(storeId);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Não autenticado');
+      
+      const response = await supabase.functions.invoke('create-master-user', {
+        body: { store_id: storeId }
+      });
+      
+      if (response.error) throw response.error;
+      
+      toast({
+        title: "Usuário Master criado!",
+        description: `Email: ${response.data.email} | Senha: Master@2026`,
+      });
+      
+      fetchDashboardData();
+    } catch (error: any) {
+      toast({
+        title: "Erro ao criar usuário master",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setCreatingMaster(null);
+    }
+  };
+
+  const handleCreateMasterForAllStores = async () => {
+    const storesWithoutMaster = stores.filter(s => !s.master_user_email);
+    if (storesWithoutMaster.length === 0) {
+      toast({ title: "Todas as lojas já possuem usuário master" });
+      return;
+    }
+    
+    const confirmed = window.confirm(`Criar usuário master para ${storesWithoutMaster.length} loja(s)?`);
+    if (!confirmed) return;
+    
+    setCreatingAllMasters(true);
+    let created = 0;
+    let failed = 0;
+    
+    for (const store of storesWithoutMaster) {
+      try {
+        const response = await supabase.functions.invoke('create-master-user', {
+          body: { store_id: store.id }
+        });
+        if (!response.error) created++;
+        else failed++;
+      } catch {
+        failed++;
+      }
+    }
+    
+    toast({
+      title: "Criação em massa concluída",
+      description: `${created} criado(s), ${failed} falha(s)`,
+    });
+    
+    fetchDashboardData();
+    setCreatingAllMasters(false);
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({ title: "Copiado!", description: text });
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -659,10 +733,21 @@ export default function AdminDashboard() {
             {/* Stores Management */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Store className="w-5 h-5" />
-                  Todas as Lojas
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Store className="w-5 h-5" />
+                    Todas as Lojas
+                  </CardTitle>
+                  <Button 
+                    onClick={handleCreateMasterForAllStores}
+                    disabled={creatingAllMasters}
+                    variant="secondary"
+                    size="sm"
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    {creatingAllMasters ? 'Criando...' : 'Criar Master para Todas'}
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="mb-4 relative">
@@ -743,6 +828,50 @@ export default function AdminDashboard() {
                                     <span>{store.address}</span>
                                   </div>
                                 )}
+
+                                {/* Store ID Code */}
+                                <div className="flex items-center gap-2 text-sm mt-3 pt-3 border-t">
+                                  <Shield className="w-4 h-4 text-purple-500" />
+                                  <span className="font-mono text-purple-600 font-medium">{store.id.substring(0, 8)}</span>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={() => copyToClipboard(store.id.substring(0, 8))}
+                                  >
+                                    <Copy className="w-3 h-3" />
+                                  </Button>
+                                </div>
+
+                                {/* Master User */}
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Crown className="w-4 h-4 text-amber-500" />
+                                  {store.master_user_email ? (
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-amber-600 font-medium font-mono text-xs">
+                                        {store.master_user_email}
+                                      </span>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-6 w-6 p-0"
+                                        onClick={() => copyToClipboard(store.master_user_email!)}
+                                      >
+                                        <Copy className="w-3 h-3" />
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline"
+                                      onClick={() => handleCreateMasterUser(store.id)}
+                                      disabled={creatingMaster === store.id}
+                                      className="h-7 text-xs"
+                                    >
+                                      {creatingMaster === store.id ? 'Criando...' : 'Criar Usuário Master'}
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             </div>
 
