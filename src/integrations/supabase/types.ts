@@ -3302,8 +3302,8 @@ export type Database = {
       }
       fix_store_data_integrity: {
         Args: {
-          p_fixed_by?: string
-          p_fixed_by_name?: string
+          p_fixed_by: string
+          p_fixed_by_name: string
           p_issue_type: string
           p_store_id: string
         }

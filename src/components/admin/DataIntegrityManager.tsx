@@ -13,7 +13,8 @@ import {
   History,
   Shield,
   XCircle,
-  AlertCircle
+  AlertCircle,
+  Percent
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,11 @@ const ISSUE_TYPE_LABELS: Record<string, { label: string; icon: React.ReactNode; 
   negative_values: { 
     label: 'Valores negativos detectados', 
     icon: <XCircle className="h-4 w-4" />,
+    autoFix: true 
+  },
+  coupon_discount_rules_mismatch: { 
+    label: 'Descontos inconsistentes com regras do cupom', 
+    icon: <Percent className="h-4 w-4" />,
     autoFix: true 
   },
 };
