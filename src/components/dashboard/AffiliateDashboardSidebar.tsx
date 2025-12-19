@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface AffiliateDashboardSidebarProps {
   activeTab: string;
@@ -62,6 +63,11 @@ export function AffiliateDashboardSidebar({
         <p className="mt-2 text-xs font-medium text-muted-foreground text-center px-2 truncate max-w-full">
           {affiliateName?.split(" ")[0] || "Afiliado"}
         </p>
+        
+        {/* Theme Toggle */}
+        <div className="mt-3">
+          <ThemeToggle size="sm" />
+        </div>
       </div>
 
       {/* Menu Items */}
