@@ -236,17 +236,18 @@ export default function BecomePartner() {
     });
   };
 
-  const inputStyles = "bg-white border-white/20 text-slate-900 placeholder:text-slate-400 focus:border-primary/50 focus:ring-primary/20";
+  const inputStyles = "bg-white border-gray-200 dark:border-white/20 text-slate-900 placeholder:text-slate-400 focus:border-primary/50 focus:ring-primary/20";
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-white overflow-x-hidden">
       <main className="container mx-auto px-4 py-12 relative">
-        <GridPattern variant="neutral-dark" />
+        <GridPattern className="dark:block hidden" variant="neutral-dark" />
+        <GridPattern className="dark:hidden block" variant="light" />
         
         {/* Back button */}
         <Link 
           to="/" 
-          className="inline-flex items-center gap-2 text-white font-semibold hover:text-primary transition-colors mb-8 relative z-10"
+          className="inline-flex items-center gap-2 text-slate-700 dark:text-white font-semibold hover:text-primary transition-colors mb-8 relative z-10"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>Voltar ao início</span>
@@ -259,14 +260,14 @@ export default function BecomePartner() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-12"
           >
-            <div className="inline-flex items-center gap-2 bg-slate-800/60 backdrop-blur-sm border border-white/10 px-4 py-2 rounded-full mb-4">
+            <div className="inline-flex items-center gap-2 bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm border border-gray-200 dark:border-white/10 px-4 py-2 rounded-full mb-4">
               <Rocket className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium text-white">Seja um Parceiro</span>
+              <span className="text-sm font-medium text-slate-700 dark:text-white">Seja um Parceiro</span>
             </div>
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-primary to-orange-400 bg-clip-text text-transparent mb-4">
               Venda na Nossa Plataforma
             </h1>
-            <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+            <p className="text-xl text-slate-600 dark:text-slate-300 max-w-2xl mx-auto">
               Cadastre sua loja e comece a vender para milhares de clientes
             </p>
           </motion.div>
@@ -281,13 +282,13 @@ export default function BecomePartner() {
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -5, transition: { duration: 0.2 } }}
               >
-                <Card className="text-center h-full bg-slate-900/60 backdrop-blur-xl border-white/10 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300">
+                <Card className="text-center h-full bg-white/80 dark:bg-slate-900/60 backdrop-blur-xl border-gray-200 dark:border-white/10 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300">
                   <CardContent className="pt-6">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-orange-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/30">
                       <benefit.icon className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="font-bold mb-2 text-white">{benefit.title}</h3>
-                    <p className="text-sm text-slate-400">
+                    <h3 className="font-bold mb-2 text-slate-900 dark:text-white">{benefit.title}</h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
                       {benefit.description}
                     </p>
                   </CardContent>
@@ -304,13 +305,13 @@ export default function BecomePartner() {
             className="max-w-3xl mx-auto"
             id="registration-form"
           >
-            <Card className="bg-slate-900/70 backdrop-blur-xl border-white/10">
+            <Card className="bg-white/90 dark:bg-slate-900/70 backdrop-blur-xl border-gray-200 dark:border-white/10">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-2xl text-white">
+                <CardTitle className="flex items-center gap-2 text-2xl text-slate-900 dark:text-white">
                   <Store className="w-6 h-6 text-primary" />
                   Cadastre sua Loja
                 </CardTitle>
-                <CardDescription className="text-slate-400">
+                <CardDescription className="text-slate-500 dark:text-slate-400">
                   Preencha as informações abaixo para começar a vender
                 </CardDescription>
               </CardHeader>
@@ -319,13 +320,13 @@ export default function BecomePartner() {
 
                   {/* Owner Information */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2 text-white">
+                    <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
                       <CheckCircle className="w-5 h-5 text-primary" />
                       Dados do Proprietário
                     </h3>
 
                     <div>
-                      <Label htmlFor="owner_name" className="text-slate-200">Nome Completo *</Label>
+                      <Label htmlFor="owner_name" className="text-slate-700 dark:text-slate-200">Nome Completo *</Label>
                       <Input
                         id="owner_name"
                         value={formData.owner_name}
@@ -341,7 +342,7 @@ export default function BecomePartner() {
                     </div>
 
                     <div>
-                      <Label htmlFor="owner_phone" className="text-slate-200">Telefone do Proprietário *</Label>
+                      <Label htmlFor="owner_phone" className="text-slate-700 dark:text-slate-200">Telefone do Proprietário *</Label>
                       <PhoneInput
                         id="owner_phone"
                         value={formData.owner_phone}
@@ -358,13 +359,13 @@ export default function BecomePartner() {
 
                   {/* Basic Information */}
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2 text-white">
+                    <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
                       <CheckCircle className="w-5 h-5 text-primary" />
                       Informações Básicas
                     </h3>
 
                     <div>
-                      <Label htmlFor="name" className="text-slate-200">Nome da Loja *</Label>
+                      <Label htmlFor="name" className="text-slate-700 dark:text-slate-200">Nome da Loja *</Label>
                       <Input
                         id="name"
                         value={formData.name}
@@ -385,9 +386,9 @@ export default function BecomePartner() {
                     </div>
 
                     <div>
-                      <Label htmlFor="slug" className="text-slate-200">URL da Loja *</Label>
+                      <Label htmlFor="slug" className="text-slate-700 dark:text-slate-200">URL da Loja *</Label>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-slate-400 whitespace-nowrap">
+                        <span className="text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">
                           /
                         </span>
                         <Input
@@ -405,11 +406,11 @@ export default function BecomePartner() {
                         Apenas letras minúsculas, números e hífens
                       </p>
                       {formData.slug && (
-                        <div className="mt-2 p-3 bg-slate-800/40 rounded-lg border border-white/10">
-                          <p className="text-xs text-slate-400 mb-1">Preview da URL:</p>
+                        <div className="mt-2 p-3 bg-gray-100 dark:bg-slate-800/40 rounded-lg border border-gray-200 dark:border-white/10">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Preview da URL:</p>
                           <div className="flex items-center gap-2">
                             <Store className="w-4 h-4 text-primary" />
-                            <code className="text-sm font-mono text-slate-200">
+                            <code className="text-sm font-mono text-slate-700 dark:text-slate-200">
                               https://ofertas.app/{formData.slug}
                             </code>
                           </div>
@@ -449,7 +450,7 @@ export default function BecomePartner() {
                     </div>
 
                     <div>
-                      <Label htmlFor="category" className="text-slate-200">Categoria *</Label>
+                      <Label htmlFor="category" className="text-slate-700 dark:text-slate-200">Categoria *</Label>
                       <Select
                         value={formData.category}
                         onValueChange={(value) =>
@@ -459,9 +460,9 @@ export default function BecomePartner() {
                         <SelectTrigger className={inputStyles}>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-white/10">
+                        <SelectContent className="bg-white dark:bg-slate-900 border-gray-200 dark:border-white/10">
                           {categories.map((cat) => (
-                            <SelectItem key={cat} value={cat} className="text-white hover:bg-slate-800 focus:bg-slate-800">
+                            <SelectItem key={cat} value={cat} className="text-slate-900 dark:text-white hover:bg-gray-100 dark:hover:bg-slate-800 focus:bg-gray-100 dark:focus:bg-slate-800">
                               {cat}
                             </SelectItem>
                           ))}
@@ -470,7 +471,7 @@ export default function BecomePartner() {
                     </div>
 
                     <div>
-                      <Label htmlFor="description" className="text-slate-200">Descrição da Loja</Label>
+                      <Label htmlFor="description" className="text-slate-700 dark:text-slate-200">Descrição da Loja</Label>
                       <Textarea
                         id="description"
                         value={formData.description}
@@ -487,13 +488,13 @@ export default function BecomePartner() {
                   {/* User Account Section - Only if not logged in */}
                   {!user && (
                     <div className="space-y-4">
-                      <h3 className="text-lg font-semibold flex items-center gap-2 text-white">
+                      <h3 className="text-lg font-semibold flex items-center gap-2 text-slate-900 dark:text-white">
                         <CheckCircle className="w-5 h-5 text-primary" />
                         Dados de Acesso
                       </h3>
 
                       <div>
-                        <Label htmlFor="email" className="text-slate-200">E-mail *</Label>
+                        <Label htmlFor="email" className="text-slate-700 dark:text-slate-200">E-mail *</Label>
                         <EmailInput
                           id="email"
                           value={formData.email}
@@ -509,7 +510,7 @@ export default function BecomePartner() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="password" className="text-slate-200">Senha *</Label>
+                          <Label htmlFor="password" className="text-slate-700 dark:text-slate-200">Senha *</Label>
                           <Input
                             id="password"
                             type="password"
@@ -526,7 +527,7 @@ export default function BecomePartner() {
                         </div>
 
                         <div>
-                          <Label htmlFor="confirmPassword" className="text-slate-200">Confirmar Senha *</Label>
+                          <Label htmlFor="confirmPassword" className="text-slate-700 dark:text-slate-200">Confirmar Senha *</Label>
                           <Input
                             id="confirmPassword"
                             type="password"
@@ -543,7 +544,7 @@ export default function BecomePartner() {
                         </div>
                       </div>
 
-                      <p className="text-sm text-slate-400">
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
                         Uma conta será criada automaticamente para você acessar o painel de gerenciamento.
                       </p>
                     </div>
@@ -572,7 +573,7 @@ export default function BecomePartner() {
                     </Button>
                   </div>
 
-                  <p className="text-sm text-slate-400 text-center">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 text-center">
                     {!user ? (
                       <>
                         Ao cadastrar você automaticamente cria uma conta e faz login.
@@ -582,7 +583,7 @@ export default function BecomePartner() {
                       </>
                     ) : (
                       <>
-                        Você está logado como <strong className="text-white">{user.email}</strong>.
+                        Você está logado como <strong className="text-slate-900 dark:text-white">{user.email}</strong>.
                         <br />
                         Sua loja será vinculada à sua conta atual.
                         <br />

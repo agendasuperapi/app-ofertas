@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { ChevronDown, Menu } from "lucide-react";
 import { EmployeePermissions } from "@/hooks/useStoreEmployees";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface DashboardMobileSidebarProps {
   activeTab: string;
@@ -114,6 +115,10 @@ export const DashboardMobileSidebar = ({
                 {storeName}
               </SheetTitle>
             )}
+            {/* Theme Toggle */}
+            <div className="mt-3 flex justify-center">
+              <ThemeToggle size="sm" />
+            </div>
           </SheetHeader>
 
           {/* Menu Items */}

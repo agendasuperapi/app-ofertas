@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { EmployeePermissions } from "@/hooks/useStoreEmployees";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -121,6 +122,11 @@ export const DashboardSidebar = ({ activeTab, onTabChange, storeLogo, storeName,
           Funcionário
         </Badge>
       )}
+
+      {/* Theme Toggle */}
+      <div className="mb-3">
+        <ThemeToggle size="sm" />
+      </div>
 
       <nav className="flex-1 w-full space-y-0 px-2 overflow-y-auto overflow-x-hidden min-h-0 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
         {menuItems.map((item, index) => {
