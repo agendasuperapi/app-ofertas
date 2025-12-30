@@ -1248,8 +1248,8 @@ export function ProductDetailsDialog({
               <DrawerTitle className="sr-only">{product.name}</DrawerTitle>
               
               {/* Botão de fechar flutuante sobre a imagem */}
-              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="absolute top-1 right-2 z-10 rounded-full h-12 w-12 bg-orange-500 backdrop-blur-sm hover:bg-orange-600">
-                <X className="w-6 h-6 text-white" />
+              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="absolute top-1 right-2 z-50 rounded-full h-8 w-8 bg-red-500 hover:bg-red-600 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+                <X className="h-4 w-4" />
               </Button>
 
               <div ref={drawerContentRef} className="flex-1 overflow-y-auto overscroll-contain" style={{
@@ -1298,8 +1298,8 @@ export function ProductDetailsDialog({
       <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-lg">
         <DialogHeader className="absolute top-0 left-0 right-0 z-10 p-0">
           <DialogTitle className="sr-only">{product.name}</DialogTitle>
-          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="absolute top-2 right-2 rounded-full h-10 w-10 bg-orange-500 hover:bg-orange-600 shadow-lg">
-            <X className="w-5 h-5 text-white" />
+          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="absolute top-2 right-2 z-50 rounded-full h-8 w-8 bg-red-500 hover:bg-red-600 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
+            <X className="h-4 w-4" />
           </Button>
         </DialogHeader>
 
