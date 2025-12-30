@@ -20,12 +20,14 @@ import { useCoupons } from "@/hooks/useCoupons";
 import { useDeliveryZones } from "@/hooks/useDeliveryZones";
 import { usePickupLocations } from "@/hooks/usePickupLocations";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useUserAddresses } from "@/hooks/useUserAddresses";
 import { supabase } from "@/integrations/supabase/client";
 import { Minus, Plus, Trash2, ShoppingBag, Clock, Store, Pencil, ArrowLeft, Package, Tag, X, Loader2, Search, MapPin, Eye, EyeOff, CheckCircle, Percent, AlertTriangle, ShoppingCart } from "lucide-react";
 import { calculateItemDiscount, calculateItemSubtotal } from "@/lib/couponUtils";
 import { toast } from "@/hooks/use-toast";
 import { isStoreOpen, getStoreStatusText } from "@/lib/storeUtils";
 import { EditCartItemDialog } from "@/components/cart/EditCartItemDialog";
+import { AddressSelector } from "@/components/cart/AddressSelector";
 import { normalizePhone } from "@/lib/phone";
 import { fetchCepData, formatCep, isValidCepFormat } from "@/lib/cepValidation";
 import { useForceTheme } from "@/hooks/useForceTheme";
@@ -40,6 +42,15 @@ export default function Cart() {
   const { zones: deliveryZones } = useDeliveryZones(cart.storeId || undefined);
   const { data: pickupLocations = [] } = usePickupLocations(cart.storeId || undefined);
   const isMobile = useIsMobile();
+  const { 
+    addresses, 
+    defaultAddress, 
+    isLoading: isLoadingAddresses, 
+    addAddress, 
+    updateAddress, 
+    deleteAddress, 
+    setDefaultAddress 
+  } = useUserAddresses();
   const [editingItem, setEditingItem] = useState<any>(null);
   const [couponInput, setCouponInput] = useState("");
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
@@ -60,6 +71,7 @@ export default function Cart() {
   const [changeAmount, setChangeAmount] = useState("");
   const [deliveryType, setDeliveryType] = useState<'delivery' | 'pickup' | null>(null);
   const [selectedPickupLocation, setSelectedPickupLocation] = useState<string>("");
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [isSearchingCep, setIsSearchingCep] = useState(false);
   const [cepError, setCepError] = useState("");
   
@@ -278,6 +290,34 @@ export default function Cart() {
 
     loadUserProfile();
   }, [user]);
+
+  // Auto-select default address when addresses are loaded
+  useEffect(() => {
+    if (addresses.length > 0 && !selectedAddressId) {
+      const defaultAddr = defaultAddress || addresses[0];
+      if (defaultAddr) {
+        setSelectedAddressId(defaultAddr.id);
+        // Fill in the address fields
+        setDeliveryCep(formatCep(defaultAddr.cep));
+        setDeliveryCity(defaultAddr.city);
+        setDeliveryStreet(defaultAddr.street);
+        setDeliveryNumber(defaultAddr.street_number);
+        setDeliveryNeighborhood(defaultAddr.neighborhood);
+        setDeliveryComplement(defaultAddr.complement || "");
+      }
+    }
+  }, [addresses, defaultAddress, selectedAddressId]);
+
+  // Handle address selection from AddressSelector
+  const handleSelectAddress = (address: typeof addresses[0]) => {
+    setSelectedAddressId(address.id);
+    setDeliveryCep(formatCep(address.cep));
+    setDeliveryCity(address.city);
+    setDeliveryStreet(address.street);
+    setDeliveryNumber(address.street_number);
+    setDeliveryNeighborhood(address.neighborhood);
+    setDeliveryComplement(address.complement || "");
+  };
 
   // Auto-apply affiliate coupon from localStorage
   useEffect(() => {
@@ -823,6 +863,21 @@ export default function Cart() {
             variant: "destructive",
           });
           return;
+        }
+
+        // Save as first address if user has no addresses saved
+        if (addresses.length === 0 && cleanedCep && deliveryCity && deliveryStreet && deliveryNumber && deliveryNeighborhood) {
+          console.log('📍 Salvando primeiro endereço do usuário');
+          await addAddress({
+            label: 'Endereço Principal',
+            cep: cleanedCep,
+            city: deliveryCity.trim(),
+            street: deliveryStreet,
+            street_number: deliveryNumber,
+            neighborhood: deliveryNeighborhood,
+            complement: deliveryComplement || undefined,
+            is_default: true,
+          });
         }
       }
 
@@ -1544,119 +1599,163 @@ export default function Cart() {
                                 : 'border-2 border-transparent'
                             }`}
                           >
-                            <h3 className="text-lg font-semibold">Endereço de Entrega</h3>
-                            
-                            <Alert>
-                              <MapPin className="h-4 w-4" />
-                              <AlertDescription className="text-sm">
-                                Para calcular a taxa de entrega, preencha seu endereço completo. Os campos com asterisco (*) são obrigatórios.
-                              </AlertDescription>
-                            </Alert>
-
-                            {/* CEP Field */}
-                            <div>
-                              <Label htmlFor="cep" className="text-sm font-medium">
-                                CEP <span className="text-destructive">*</span>
-                              </Label>
-                              <div className="relative mt-1.5">
-                                <Input
-                                  id="cep"
-                                  value={deliveryCep}
-                                  onChange={(e) => handleCepChange(e.target.value)}
-                                  placeholder="00000-000"
-                                  maxLength={9}
-                                  required
-                                  className={cepError ? "border-destructive" : ""}
-                                />
-                                {isSearchingCep && (
-                                  <Loader2 className="w-4 h-4 animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                                )}
-                              </div>
-                              {cepError && (
-                                <p className="text-sm text-destructive mt-1.5">{cepError}</p>
-                              )}
-                              <p className="text-xs text-muted-foreground mt-1.5">
-                                O endereço será preenchido automaticamente ao digitar o CEP completo
-                              </p>
-                            </div>
-
-                            {/* City and Neighborhood in same row */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="city" className="text-sm font-medium">
-                                  Cidade <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                  id="city"
-                                  value={deliveryCity}
-                                  onChange={(e) => setDeliveryCity(e.target.value)}
-                                  placeholder="Ex: São Paulo"
-                                  required
-                                  maxLength={100}
-                                  className="mt-1.5"
-                                />
-                              </div>
-
-                              <div>
-                                <Label htmlFor="neighborhood" className="text-sm font-medium">
-                                  Bairro <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                  id="neighborhood"
-                                  value={deliveryNeighborhood}
-                                  onChange={(e) => setDeliveryNeighborhood(e.target.value)}
-                                  placeholder="Ex: Centro"
-                                  required
-                                  maxLength={100}
-                                  className="mt-1.5"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Street Field */}
-                            <div>
-                              <Label htmlFor="street" className="text-sm font-medium">
-                                Rua/Avenida <span className="text-destructive">*</span>
-                              </Label>
-                              <Input
-                                id="street"
-                                value={deliveryStreet}
-                                onChange={(e) => setDeliveryStreet(e.target.value)}
-                                placeholder="Ex: Rua das Flores"
-                                required
-                                className="mt-1.5"
+                            {/* Show AddressSelector if user has saved addresses, otherwise show form */}
+                            {!isLoadingAddresses && addresses.length > 0 ? (
+                              <AddressSelector
+                                addresses={addresses}
+                                selectedAddressId={selectedAddressId}
+                                onSelectAddress={handleSelectAddress}
+                                onAddAddress={addAddress}
+                                onUpdateAddress={async (data) => {
+                                  const success = await updateAddress(data);
+                                  if (success) {
+                                    // Refresh selected address data if it was updated
+                                    const updatedAddr = addresses.find(a => a.id === data.id);
+                                    if (updatedAddr && selectedAddressId === data.id) {
+                                      handleSelectAddress({ ...updatedAddr, ...data } as any);
+                                    }
+                                  }
+                                  return success;
+                                }}
+                                onDeleteAddress={async (id) => {
+                                  const success = await deleteAddress(id);
+                                  if (success && selectedAddressId === id) {
+                                    // Select another address if we deleted the selected one
+                                    const remaining = addresses.filter(a => a.id !== id);
+                                    if (remaining.length > 0) {
+                                      handleSelectAddress(remaining[0]);
+                                    } else {
+                                      setSelectedAddressId(null);
+                                      setDeliveryCep("");
+                                      setDeliveryCity("");
+                                      setDeliveryStreet("");
+                                      setDeliveryNumber("");
+                                      setDeliveryNeighborhood("");
+                                      setDeliveryComplement("");
+                                    }
+                                  }
+                                  return success;
+                                }}
+                                onSetDefault={setDefaultAddress}
+                                isLoading={isLoadingAddresses}
                               />
-                            </div>
-                            
-                            {/* Number and Complement */}
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <Label htmlFor="number" className="text-sm font-medium">
-                                  Número <span className="text-destructive">*</span>
-                                </Label>
-                                <Input
-                                  id="number"
-                                  value={deliveryNumber}
-                                  onChange={(e) => setDeliveryNumber(e.target.value)}
-                                  placeholder="Ex: 123"
-                                  required
-                                  className="mt-1.5"
-                                />
-                              </div>
-                              
-                              <div>
-                                <Label htmlFor="complement" className="text-sm font-medium">
-                                  Complemento
-                                </Label>
-                                <Input
-                                  id="complement"
-                                  value={deliveryComplement}
-                                  onChange={(e) => setDeliveryComplement(e.target.value)}
-                                  placeholder="Apto, Bloco..."
-                                  className="mt-1.5"
-                                />
-                              </div>
-                            </div>
+                            ) : (
+                              <>
+                                <h3 className="text-lg font-semibold">Endereço de Entrega</h3>
+                                
+                                <Alert>
+                                  <MapPin className="h-4 w-4" />
+                                  <AlertDescription className="text-sm">
+                                    Para calcular a taxa de entrega, preencha seu endereço completo. Os campos com asterisco (*) são obrigatórios.
+                                  </AlertDescription>
+                                </Alert>
+
+                                {/* CEP Field */}
+                                <div>
+                                  <Label htmlFor="cep" className="text-sm font-medium">
+                                    CEP <span className="text-destructive">*</span>
+                                  </Label>
+                                  <div className="relative mt-1.5">
+                                    <Input
+                                      id="cep"
+                                      value={deliveryCep}
+                                      onChange={(e) => handleCepChange(e.target.value)}
+                                      placeholder="00000-000"
+                                      maxLength={9}
+                                      required
+                                      className={cepError ? "border-destructive" : ""}
+                                    />
+                                    {isSearchingCep && (
+                                      <Loader2 className="w-4 h-4 animate-spin absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                                    )}
+                                  </div>
+                                  {cepError && (
+                                    <p className="text-sm text-destructive mt-1.5">{cepError}</p>
+                                  )}
+                                  <p className="text-xs text-muted-foreground mt-1.5">
+                                    O endereço será preenchido automaticamente ao digitar o CEP completo
+                                  </p>
+                                </div>
+
+                                {/* City and Neighborhood in same row */}
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  <div>
+                                    <Label htmlFor="city" className="text-sm font-medium">
+                                      Cidade <span className="text-destructive">*</span>
+                                    </Label>
+                                    <Input
+                                      id="city"
+                                      value={deliveryCity}
+                                      onChange={(e) => setDeliveryCity(e.target.value)}
+                                      placeholder="Ex: São Paulo"
+                                      required
+                                      maxLength={100}
+                                      className="mt-1.5"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <Label htmlFor="neighborhood" className="text-sm font-medium">
+                                      Bairro <span className="text-destructive">*</span>
+                                    </Label>
+                                    <Input
+                                      id="neighborhood"
+                                      value={deliveryNeighborhood}
+                                      onChange={(e) => setDeliveryNeighborhood(e.target.value)}
+                                      placeholder="Ex: Centro"
+                                      required
+                                      maxLength={100}
+                                      className="mt-1.5"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Street Field */}
+                                <div>
+                                  <Label htmlFor="street" className="text-sm font-medium">
+                                    Rua/Avenida <span className="text-destructive">*</span>
+                                  </Label>
+                                  <Input
+                                    id="street"
+                                    value={deliveryStreet}
+                                    onChange={(e) => setDeliveryStreet(e.target.value)}
+                                    placeholder="Ex: Rua das Flores"
+                                    required
+                                    className="mt-1.5"
+                                  />
+                                </div>
+                                
+                                {/* Number and Complement */}
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <Label htmlFor="number" className="text-sm font-medium">
+                                      Número <span className="text-destructive">*</span>
+                                    </Label>
+                                    <Input
+                                      id="number"
+                                      value={deliveryNumber}
+                                      onChange={(e) => setDeliveryNumber(e.target.value)}
+                                      placeholder="Ex: 123"
+                                      required
+                                      className="mt-1.5"
+                                    />
+                                  </div>
+                                  
+                                  <div>
+                                    <Label htmlFor="complement" className="text-sm font-medium">
+                                      Complemento
+                                    </Label>
+                                    <Input
+                                      id="complement"
+                                      value={deliveryComplement}
+                                      onChange={(e) => setDeliveryComplement(e.target.value)}
+                                      placeholder="Apto, Bloco..."
+                                      className="mt-1.5"
+                                    />
+                                  </div>
+                                </div>
+                              </>
+                            )}
                           </div>
                         </>
                       )}
