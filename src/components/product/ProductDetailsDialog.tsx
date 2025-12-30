@@ -1296,11 +1296,8 @@ export function ProductDetailsDialog({
   }
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-hidden flex flex-col p-0 rounded-lg">
-        <DialogHeader className="absolute top-0 left-0 right-0 z-10 p-0">
-          <DialogTitle className="sr-only">{product.name}</DialogTitle>
-          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="absolute top-2 right-2 z-50 rounded-full h-8 w-8 bg-red-500 hover:bg-red-600 text-white transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2">
-            <X className="h-4 w-4" />
-          </Button>
+        <DialogHeader className="sr-only">
+          <DialogTitle>{product.name}</DialogTitle>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto">
